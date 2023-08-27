@@ -79,9 +79,15 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, Resourc
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub), _savePath(savePath) {
 	_stateSlot = 1;
-	_inp_demo = 0;
-	_inp_record = false;
-	_inp_replay = false;
+	_inp_demPos = 0;
+	_skillLevel = _menu._skill = kSkillNormal;
+	_currentLevel = _menu._level = 0;
+	_demoBin = -1;
+//	_widescreenMode = widescreenMode;
+//	_autoSave = autoSave;
+//	_rewindPtr = -1;
+//	_rewindLen = 0;
+//	_cheats = cheats;
 }
 
 void Game::run() {
@@ -123,29 +129,64 @@ void Game::run() {
 		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
-		emu_printf("playCutscene(0x40)    \n");	
-	playCutscene(0x40);
-		emu_printf("playCutscene(0x0D)    \n");	
-	playCutscene(0x0D);
-	
-	if (!_cut._interrupted) {
-		emu_printf("playCutscene(0x4A)    \n");			
-		playCutscene(0x4A);
+//	playCutscene(0x40); // vbt à remettre
+//	playCutscene(0x0D);
+
+	switch (_res._type) {
+	case kResourceTypeDOS:
+		_res.load("GLOBAL", Resource::OT_ICN);
+		_res.load("GLOBAL", Resource::OT_SPC);
+		_res.load("PERSO", Resource::OT_SPR);
+		_res.load_SPR_OFF("PERSO", _res._spr1);
+		_res.load_FIB("GLOBAL");
+		break;
+	case kResourceTypeMac:
+		_res.MAC_loadIconData();
+		_res.MAC_loadPersoData();
+		_res.MAC_loadSounds();
+		break;
 	}
 
-	if (_res._type==kResourceTypeMac) {
-		slZoomNbg1(toFIXED(0.727272), toFIXED(1));
-	}
-		emu_printf("_res.load(GLOBAL    \n");	
-	_res.load("GLOBAL", Resource::OT_ICN);
-	_res.load("PERSO", Resource::OT_SPR);
-	_res.load_SPR_OFF("PERSO", _res._spr1);
-	_res.load_FIB("GLOBAL");
-
-	_skillLevel = 1;
-	_currentLevel = 0;
-
-	while (!_stub->_pi.quit && _menu.handleTitleScreen(_skillLevel, _currentLevel)) {
+	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
+	while (!_stub->_pi.quit) {
+		if (presentMenu) {
+//			_mix.playMusic(1); // vbt : à remplacer
+			switch (_res._type) {
+			case kResourceTypeDOS:
+				_menu.handleTitleScreen();
+				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _stub->_pi.quit) {
+					_stub->_pi.quit = true;
+					break;
+				}
+				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
+					_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
+					const char *fn = _demoInputs[_demoBin].name;
+					emu_printf("Loading inputs from '%s'\n", fn);
+					_res.load_DEM(fn);
+					if (_res._demLen == 0) {
+						continue;
+					}
+					_skillLevel = kSkillNormal;
+					_currentLevel = _demoInputs[_demoBin].level;
+					_randSeed = 0;
+				} else {
+					_demoBin = -1;
+					_skillLevel = _menu._skill;
+					_currentLevel = _menu._level;
+				}
+				break;
+			case kResourceTypeMac:
+				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
+				break;
+			}
+//			_mix.stopMusic(); // vbt à remettre
+		}
+		if (_stub->_pi.quit) {
+			break;
+		}
+//		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
+//			_stub->clearWidescreen();
+//		}
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
 			_vid.setTextPalette();
@@ -154,12 +195,32 @@ void Game::run() {
 			_vid.setTextPalette();
 			_vid.setPalette0xF();
 			_stub->setOverscanColor(0xE0);
-			mainLoop();
+			_vid._unkPalSlot1 = 0;
+			_vid._unkPalSlot2 = 0;
+			_score = 0;
+			//clearStateRewind();
+			loadLevelData();
+			resetGameState();
+			_endLoop = false;
+			_frameTimestamp = _stub->getTimeStamp();
+			_saveTimestamp = _frameTimestamp;
+			while (!_stub->_pi.quit && !_endLoop) {
+				mainLoop();
+				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
+					emu_printf("End of demo\n");
+					// exit level
+					_endLoop = true;
+				}
+			}
+			// flush inputs
+			_stub->_pi.dirMask = 0;
+			_stub->_pi.enter = false;
+			_stub->_pi.space = false;
+			_stub->_pi.shift = false;
 		}
 	}
 
 	_res.free_TEXT();
-
 	_mix.free();
 	_stub->destroy();
 }
@@ -270,109 +331,119 @@ void Game::resetGameState() {
 	_animBuffers._curPos[3] = 0xFF;
 	_currentRoom = _res._pgeInit[0].init_room;
 	_cut._deathCutsceneId = 0xFFFF;
-	_pge_opTempVar2 = 0xFFFF;
 	_deathCutsceneCounter = 0;
 	_saveStateCompleted = false;
 	_loadMap = true;
-	pge_resetGroups();
+	pge_resetMessages();
 	_blinkingConradCounter = 0;
 	_pge_processOBJ = false;
-	_pge_opTempVar1 = 0;
+	_pge_opGunVar = 0;
 	_textToDisplay = 0xFFFF;
+	_pge_zoomPiegeNum = 0;
+	_pge_zoomCounter = 0;
+	_pge_zoomX = _pge_zoomY = 0;
 }
 
 void Game::mainLoop() {
-	_vid._unkPalSlot1 = 0;
-	_vid._unkPalSlot2 = 0;
-	_score = 0;
-	_firstBankData = _bankData;
-	_lastBankData = _bankData + sizeof(_bankData);
-emu_printf("loadLevelData    \n");		
-	
-	loadLevelData();
-	resetGameState();
-	while (!_stub->_pi.quit) {
-		playCutscene();
-		if (_cut._id == 0x3D) {
-			showFinalScore();
-			break;
-		}
-		if (_deathCutsceneCounter) {
-			--_deathCutsceneCounter;
-			if (_deathCutsceneCounter == 0) {
-				playCutscene(_cut._deathCutsceneId);
-				if (!handleContinueAbort()) {
-					playCutscene(0x41);
-					break;
-				} else {
-					if (_validSaveState) {
-						if (!loadGameState(0)) {
-							break;
-						}
-					} else {
-						loadLevelData();
-						resetGameState();
-					}
-					continue;
-				}
-
-			}
-		}
-		memcpy(_vid._frontLayer, _vid._backLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-		pge_getInput();
-		pge_prepare();
-		col_prepareRoomState();
-		uint8 oldLevel = _currentLevel;
-		for (uint16 i = 0; i < _res._pgeNum; ++i) {
-			LivePGE *pge = _pge_liveTable2[i];
-			if (pge) {
-				_col_currentPiegeGridPosY = (pge->pos_y / 36) & ~1;
-				_col_currentPiegeGridPosX = (pge->pos_x + 8) >> 4;
-				pge_process(pge);
-			}
-		}
-		if (oldLevel != _currentLevel) {
-			changeLevel();
-			_pge_opTempVar1 = 0;
-			continue;
-		}
-		if (_loadMap) {
-			if (_currentRoom == 0xFF) {
-				_cut._id = 6;
-				_deathCutsceneCounter = 1;
-			} else {
-				_currentRoom = _pgeLive[0].room_location;
-				loadLevelMap();
-				_loadMap = false;
-				_vid.fullRefresh();
-			}
-		}
-		prepareAnims();
-		drawAnims();
-		drawCurrentInventoryItem();
-		drawLevelTexts();
-		printLevelCode();
-		if (_blinkingConradCounter != 0) {
-			--_blinkingConradCounter;
-		}
-		_vid.updateScreen();
-		updateTiming();
-		drawStoryTexts();
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
-			handleInventory();
-		}
-		if (_stub->_pi.escape) {
-			_stub->_pi.escape = false;
-			if (handleConfigPanel()) {
-				break;
-			}
-		}
-		inp_handleSpecialKeys();
-
-		// Wait for slave to finish work
-		//SPR_WaitEndSlaveSH();
+	playCutscene();
+	if (_cut._id == 0x3D) {
+		showFinalScore();
+		_endLoop = true;
+		return;
 	}
+	if (_deathCutsceneCounter) {
+		--_deathCutsceneCounter;
+		if (_deathCutsceneCounter == 0) {
+			playCutscene(_cut._deathCutsceneId);
+			if (!handleContinueAbort()) {
+				playCutscene(0x41);
+				_endLoop = true;
+			} else {
+			/*	if (_autoSave && _rewindLen != 0 && loadGameState(kAutoSaveSlot)) {
+					// autosave
+				} else if (_validSaveState && loadGameState(kIngameSaveSlot)) {
+					// ingame save
+				} else*/
+				{
+//					clearStateRewind();
+					loadLevelData();
+//					resetGameState();
+				}
+			}
+			return;
+		}
+	}
+	memcpy(_vid._frontLayer, _vid._backLayer, _vid._layerSize);
+	pge_getInput();
+	pge_prepare();
+	col_prepareRoomState();
+	uint8_t oldLevel = _currentLevel;
+	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
+		LivePGE *pge = _pge_liveTable2[i];
+		if (pge) {
+			_col_currentPiegeGridPosY = (pge->pos_y / 36) & ~1;
+			_col_currentPiegeGridPosX = (pge->pos_x + 8) >> 4;
+			pge_process(pge);
+		}
+	}
+	if (oldLevel != _currentLevel) {
+		/*if (_res._isDemo) {
+			_currentLevel = oldLevel;
+		}*/
+		changeLevel();
+		_pge_opGunVar = 0;
+		return;
+	}
+	if (_currentLevel == 3 && _cut._id == 50) {
+		// do not draw next room when boarding taxi
+		return;
+	}
+	if (_loadMap) {
+		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
+			_cut._id = 6;
+			_deathCutsceneCounter = 1;
+		} else {
+			_currentRoom = _pgeLive[0].room_location;
+			loadLevelMap();
+			_loadMap = false;
+			_vid.fullRefresh();
+		}
+	}
+/*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
+		pge_updateZoom();
+	}*/
+	prepareAnims();
+	drawAnims();
+	drawCurrentInventoryItem();
+	drawLevelTexts();
+	/*if (g_options.enable_password_menu) {
+		printLevelCode();
+	}*/
+	if (_blinkingConradCounter != 0) {
+		--_blinkingConradCounter;
+	}
+	_vid.updateScreen();
+	updateTiming();
+	drawStoryTexts();
+	if (_stub->_pi.backspace) {
+		_stub->_pi.backspace = false;
+		handleInventory();
+	}
+	if (_stub->_pi.escape) {
+		_stub->_pi.escape = false;
+		if (_demoBin != -1 || handleConfigPanel()) {
+			_endLoop = true;
+			return;
+		}
+	}
+	inp_handleSpecialKeys();
+/*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
+		// do not save if we died or about to
+		if (_pgeLive[0].life > 0 && _deathCutsceneCounter == 0) {
+			saveGameState(kAutoSaveSlot);
+			_saveTimestamp = _stub->getTimeStamp();
+		}
+	}*/
 }
 
 void Game::updateTiming() {
@@ -474,16 +545,19 @@ void Game::drawCurrentInventoryItem() {
 }
 
 void Game::showFinalScore() {
+//	if (_stub->hasWidescreen()) {   // vbt à boir si on remet
+//		_stub->clearWidescreen();
+//	}
 	playCutscene(0x49);
-	char textBuf[50];
-	sprintf(textBuf, "SCORE %08lu", _score);
-	_vid.drawString(textBuf, (256 - strlen(textBuf) * 8) / 2, 40, 0xE5);
-	strcpy(textBuf, _menu._passwords[7][_skillLevel]);
-	_vid.drawString(textBuf, (256 - strlen(textBuf) * 8) / 2, 16, 0xE7);
+	char buf[50];
+	snprintf(buf, sizeof(buf), "SCORE %08u", _score);
+	_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 40, 0xE5);
+	const char *str = _menu.getLevelPassword(7, _skillLevel);
+	_vid.drawString(str, (Video::GAMESCREEN_W - strlen(str) * Video::CHAR_W) / 2, 16, 0xE7);
 	while (!_stub->_pi.quit) {
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._frontLayer, 256);
+		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
-		//_stub->processEvents();
+		_stub->processEvents();
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
 			break;
@@ -1327,6 +1401,17 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 	return 0xFFFF;
 }
 
+bool Game::hasLevelMap(int level, int room) const {
+	if (_res._type == kResourceTypeMac) {
+		return _res.MAC_hasLevelMap(level, room);
+	}
+	if (_res._map) {
+		return READ_LE_UINT32(_res._map + room * 6) != 0;
+	} else if (_res._lev) {
+		return READ_BE_UINT32(_res._lev + room * 4) > 0x100;
+	}
+	return false;
+}
 void Game::loadLevelMap() {
 	debug(DBG_GAME, "Game::loadLevelMap() room=%d", _currentRoom);
 	_currentIcon = 0xFF;
@@ -1380,7 +1465,7 @@ void Game::loadLevelData() {
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
-	pge_resetGroups();
+	pge_resetMessages();
 	_validSaveState = false;
 }
 
@@ -1740,7 +1825,7 @@ void Game::saveState(SAVE_BUFFER *sbuf) {
 		sbuf->buffer[sbuf->idx] = pge->collision_slot; sbuf->idx++;
 		sbuf->buffer[sbuf->idx] = pge->next_inventory_PGE; sbuf->idx++;
 		sbuf->buffer[sbuf->idx] = pge->current_inventory_PGE; sbuf->idx++;
-		sbuf->buffer[sbuf->idx] = pge->unkF; sbuf->idx++;
+//		sbuf->buffer[sbuf->idx] = pge->unkF; sbuf->idx++;
 		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->anim_number); sbuf->idx += 2;
 		sbuf->buffer[sbuf->idx] = pge->flags; sbuf->idx++;
 		sbuf->buffer[sbuf->idx] = pge->index; sbuf->idx++;
@@ -1812,7 +1897,7 @@ void Game::loadState(SAVE_BUFFER *sbuf) {
 		pge->collision_slot = sbuf->buffer[sbuf->idx]; sbuf->idx++;
 		pge->next_inventory_PGE = sbuf->buffer[sbuf->idx]; sbuf->idx++;
 		pge->current_inventory_PGE = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->unkF = sbuf->buffer[sbuf->idx]; sbuf->idx++;
+//		pge->unkF = sbuf->buffer[sbuf->idx]; sbuf->idx++;
 		pge->anim_number = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
 		pge->flags = sbuf->buffer[sbuf->idx]; sbuf->idx++;
 		pge->index = sbuf->buffer[sbuf->idx]; sbuf->idx++;

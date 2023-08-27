@@ -51,6 +51,7 @@ struct LocaleData {
 		LI_20_LOAD_GAME,
 		LI_21_SAVE_GAME,
 		LI_22_SAVE_SLOT,
+		LI_23_DEMO,
 
 		LI_NUM
 	};
@@ -185,12 +186,21 @@ struct Resource {
 
 	void init();
 
+	void setLanguage(Language lang);
+
+	bool isDOS()   const { return _type == kResourceTypeDOS; }
+	bool isMac()   const { return _type == kResourceTypeMac; }
+
+	bool fileExists(const char *filename);
+
 	void clearLevelRes();
+	void load_DEM(const char *filename);	
 	void load_FIB(const char *fileName);
 	void load_MAP_menu(const char *fileName, uint8_t *dstPtr);
 	void load_PAL_menu(const char *fileName, uint8_t *dstPtr);
 	void load_SPR_OFF(const char *fileName, uint8_t *sprData);
 	void load_CINE();
+	void free_CINE();	
 	void load_TEXT();
 	void free_TEXT();
 	void unload(int objType);
@@ -222,6 +232,16 @@ struct Resource {
 	void load_SGD(File *pf);
 	void load_BNQ(File *pf);
 	void load_SPM(File *f);	
+	const uint8_t *getAniData(int num) const {
+		if (_type == kResourceTypeMac) {
+			const int count = READ_BE_UINT16(_ani);
+			assert(num < count);
+			const int offset = READ_BE_UINT16(_ani + 2 + num * 2);
+			return _ani + offset;
+		}
+		const int offset = _readUint16(_ani + 2 + num * 2);
+		return _ani + 2 + offset;
+	}	
 	const uint8_t *getGameString(int num) {
 		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);
 	}

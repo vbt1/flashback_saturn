@@ -44,6 +44,16 @@ inline void SWAP(T &a, T &b) {
 	b = tmp;
 }
 
+template<typename T>
+inline T CLIP(const T& val, const T& a, const T& b) {
+	if (val < a) {
+		return a;
+	} else if (val > b) {
+		return b;
+	}
+	return val;
+}
+
 enum Language {
 	LANG_FR,
 	LANG_EN,
@@ -58,6 +68,12 @@ enum ResourceType {
 	kResourceTypeMac,
 };
 
+enum Skill {
+	kSkillEasy = 0,
+	kSkillNormal,
+	kSkillExpert,
+};
+
 struct Color {
 	uint8 r;
 	uint8 g;
@@ -67,6 +83,13 @@ struct Color {
 struct Point {
 	int16 x;
 	int16 y;
+};
+
+struct Demo {
+	const char *name;
+	int level;
+	int room;
+	int x, y;
 };
 
 struct Level {
@@ -97,29 +120,29 @@ struct InitPGE {
 };
 
 struct LivePGE {
-	uint16 obj_type;
-	int16 pos_x;
-	int16 pos_y;
-	uint8 anim_seq;
-	uint8 room_location;
-	int16 life;
-	int16 counter_value;
-	uint8 collision_slot;
-	uint8 next_inventory_PGE;
-	uint8 current_inventory_PGE;
-	uint8 unkF; // unk_inventory_PGE
-	uint16 anim_number;
-	uint8 flags;
-	uint8 index;
-	uint16 first_obj_number;
+	uint16_t obj_type;
+	int16_t pos_x;
+	int16_t pos_y;
+	uint8_t anim_seq;
+	uint8_t room_location;
+	int16_t life;
+	int16_t counter_value;
+	uint8_t collision_slot;
+	uint8_t next_inventory_PGE;
+	uint8_t current_inventory_PGE;
+	uint8_t ref_inventory_PGE;
+	uint16_t anim_number;
+	uint8_t flags;
+	uint8_t index;
+	uint16_t first_obj_number;
 	LivePGE *next_PGE_in_room;
 	InitPGE *init_PGE;
 };
 
-struct GroupPGE {
-	GroupPGE *next_entry;
-	uint16 index;
-	uint16 group_id;
+struct MessagePGE {
+	MessagePGE *next_entry;
+	uint16_t src_pge;
+	uint16_t msg_num;
 };
 
 struct Object {

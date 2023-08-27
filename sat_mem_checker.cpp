@@ -48,8 +48,8 @@ void *sat_malloc(size_t size) {
 	if (mem == NULL) {
 		emu_printf("MALLOC: size: %u - FAILED", size);
 	}
-	else
-emu_printf("MALLOC success\n");			
+//	else
+//emu_printf("MALLOC success\n");			
 
 	int *val = (int *)mem;		
 //slPrintHex((int)val,slLocate(10,15));

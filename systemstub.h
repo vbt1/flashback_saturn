@@ -36,9 +36,9 @@ struct PlayerInput {
 	enum {
 		DF_FASTMODE = 1 << 0,
 		DF_DBLOCKS  = 1 << 1,
-		DF_SETLIFE  = 1 << 2
+		DF_SETLIFE  = 1 << 2,
+		DF_AUTOZOOM = 1 << 3
 	};
-
 	volatile uint8 dirMask;
 	volatile bool enter;
 	volatile bool space;

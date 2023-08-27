@@ -28,13 +28,21 @@ struct Video;
 
 struct Menu {
 	enum {
-		MENU_OPTION_ITEM_START = 0,
+		MENU_OPTION_ITEM_START,
 		MENU_OPTION_ITEM_SKILL,
 		MENU_OPTION_ITEM_PASSWORD,
+		MENU_OPTION_ITEM_LEVEL,
 		MENU_OPTION_ITEM_INFO,
+		MENU_OPTION_ITEM_DEMO,
 		MENU_OPTION_ITEM_QUIT
 	};
-
+	enum {
+		SCREEN_TITLE,
+		SCREEN_SKILL,
+		SCREEN_PASSWORD,
+		SCREEN_LEVEL,
+		SCREEN_INFO
+	};
 	enum {
 		kMacTitleScreen_MacPlay = 1,
 		kMacTitleScreen_Presage = 2,
@@ -54,19 +62,36 @@ struct Menu {
 	};
 
 	static const char *_levelNames[];
-	static const char *_passwords[8][3];
+	static const char *_passwordsDOS[];	
+//	static const char *_passwords[8][3];
+	static const char *_passwordsMac[];
+	
+	static const uint8_t _flagEn16x12[];
+	static const uint8_t _flagFr16x12[];
+	static const uint8_t _flagDe16x12[];
+	static const uint8_t _flagIt16x12[];
+	static const uint8_t _flagJp16x12[];
+	static const uint8_t _flagSp16x12[];
+
 
 	ModPlayer *_ply;
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;
 
-	const char **_textOptions;
-	uint8 _charVar1;
-	uint8 _charVar2;
-	uint8 _charVar3;
-	uint8 _charVar4;
-	uint8 _charVar5;
+
+	int _currentScreen;
+	int _nextScreen;
+	int _selectedOption;
+
+	int _skill;
+	int _level;
+
+	uint8_t _charVar1;
+	uint8_t _charVar2;
+	uint8_t _charVar3;
+	uint8_t _charVar4;
+	uint8_t _charVar5;
 
 	Menu(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid);
 
@@ -74,9 +99,13 @@ struct Menu {
 	void drawString2(const char *str, int16 y, int16 x);
 	void loadPicture(const char *prefix);
 	void handleInfoScreen();
-	void handleSkillScreen(uint8 &new_skill);
-	bool handlePasswordScreen(uint8 &new_skill, uint8 &new_level);
-	bool handleTitleScreen(uint8 &new_skill, uint8 &new_level);
+	void handleSkillScreen();
+	bool handlePasswordScreen();
+	bool handleLevelScreen();	
+	void handleTitleScreen();
+	
+	const char *getLevelPassword(int level, int skill) const;
+	
 };
 
 #endif // __MENU_H__

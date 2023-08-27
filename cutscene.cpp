@@ -1,20 +1,9 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
+
 extern "C"
 {
 	
@@ -31,9 +20,18 @@ extern "C"
 
 Cutscene::Cutscene(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid, ResourceType ver)
 	: _ply(ply), _res(res), _stub(stub), _vid(vid), _ver(ver) {
+//	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
 }
+/*
+const uint8_t *Cutscene::getCommandData() const {
+	return _res->_cmd;
+}
 
+const uint8_t *Cutscene::getPolygonData() const {
+	return _res->_pol;
+}
+*/
 void Cutscene::sync() {
 	// XXX input handling
 	if (!(_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE)) {
@@ -46,8 +44,8 @@ void Cutscene::sync() {
 	_tstamp = _stub->getTimeStamp();
 }
 
-void Cutscene::copyPalette(const uint8 *palo, uint16 num) {
-	uint8 *dst = (uint8 *)_palBuf;
+void Cutscene::copyPalette(const uint8_t *palo, uint16_t num) {
+	uint8_t *dst = (uint8_t *)_palBuf;
 	if (num != 0) {
 		dst += 0x20;
 	}
@@ -57,9 +55,9 @@ void Cutscene::copyPalette(const uint8 *palo, uint16 num) {
 
 void Cutscene::updatePalette() {
 	if (_newPal) {
-		const uint8 *p = _palBuf;
+		const uint8_t *p = _palBuf;
 		for (int i = 0; i < 32; ++i) {
-			uint16 color = READ_BE_UINT16(p); p += 2;
+			const uint16_t color = READ_BE_UINT16(p); p += 2;
 			uint8 t = (color == 0) ? 0 : 3;
 			Color c;
 // vbt correction des couleurs			
@@ -93,7 +91,7 @@ void Cutscene::initRotationData(uint16 a, uint16 b, uint16 c) {
 	_rotData[3] = (-n3 * n2) >> 8;
 }
 
-uint16 Cutscene::findTextSeparators(const uint8 *p) {
+uint16_t Cutscene::findTextSeparators(const uint8_t *p) {
 	uint8 *q = _textSep;
 	uint16 ret = 0;
 	uint16 pos = 0;
@@ -216,7 +214,7 @@ void Cutscene::drawCreditsText() {
 	}
 }
 
-void Cutscene::drawProtectionShape(uint8 shapeNum, int16 zoom) {
+void Cutscene::drawProtectionShape(uint8_t shapeNum, int16_t zoom) {
 	debug(DBG_CUT, "Cutscene::drawProtectionShape() shapeNum = %d", shapeNum);
 	_shape_ix = 64;
 	_shape_iy = 64;

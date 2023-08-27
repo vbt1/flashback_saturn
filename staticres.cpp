@@ -656,6 +656,12 @@ const uint8 Cutscene::_protectionShapeData[] = {
 	0x03, 0xFD, 0x06, 0xFC, 0x00, 0x19
 };
 
+const Demo Game::_demoInputs[] = {
+	{ "demo1.bin",  0, 0x33, 0x60, 0x46 },
+	{ "demo51.bin", 5, 0x00, 0x60, 0xD6 },
+	{ "demo3.bin" , 2, 0xFF, 0x00, 0x00 }
+};
+
 const Level Game::_gameLevels[] = {
 	{ "level1", "level1", 0x00 },
 	{ "level2", "level2", 0x2F },
@@ -2064,12 +2070,12 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	/* 0x20 */
 	&Game::pge_op_collides2o2u,
 	&Game::pge_op_collides2u2o,
-	&Game::pge_op_isInGroup,
-	&Game::pge_op_updateGroup0,
+	&Game::pge_hasPiegeSentMessage,
+	&Game::pge_op_sendMessageData0,
 	/* 0x24 */
-	&Game::pge_op_updateGroup1,
-	&Game::pge_op_updateGroup2,
-	&Game::pge_op_updateGroup3,
+	&Game::pge_op_sendMessageData1,
+	&Game::pge_op_sendMessageData2,
+	&Game::pge_op_sendMessageData3,
 	&Game::pge_op_isPiegeDead,
 	/* 0x28 */
 	&Game::pge_op_collides1u2o,
@@ -2092,10 +2098,10 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	&Game::pge_op_setCollisionState1,
 	&Game::pge_op_setCollisionState0,
 	/* 0x38 */
-	&Game::pge_op_isInGroup1,
-	&Game::pge_op_isInGroup2,
-	&Game::pge_op_isInGroup3,
-	&Game::pge_op_isInGroup4,
+	&Game::pge_hasMessageData0,
+	&Game::pge_hasMessageData1,
+	&Game::pge_hasMessageData2,
+	&Game::pge_hasMessageData3,
 	/* 0x3C */
 	&Game::pge_o_unk0x3C,
 	&Game::pge_o_unk0x3D,
@@ -2114,7 +2120,7 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	/* 0x48 */
 	&Game::pge_o_unk0x48,
 	&Game::pge_o_unk0x49,
-	&Game::pge_o_unk0x4A,
+	&Game::pge_op_killInventoryPiege,
 	&Game::pge_op_killPiege,
 	/* 0x4C */
 	&Game::pge_op_isInCurrentRoom,
@@ -2135,7 +2141,7 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	&Game::pge_op_setLifeCounter,
 	&Game::pge_op_decLifeCounter,
 	&Game::pge_op_playCutscene,
-	&Game::pge_op_isTempVar2Set,
+	&Game::pge_op_compareUnkVar,
 	/* 0x5C */
 	&Game::pge_op_playDeathCutscene,
 	&Game::pge_o_unk0x5D,
@@ -2155,7 +2161,7 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	&Game::pge_op_setCollisionState2,
 	&Game::pge_op_saveState,
 	&Game::pge_o_unk0x6A,
-	&Game::pge_op_isInGroupSlice,
+	&Game::pge_isToggleable,
 	/* 0x6C */
 	&Game::pge_o_unk0x6C,
 	&Game::pge_op_isCollidingObject,
@@ -2194,8 +2200,8 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	/* 0x88 */
 	&Game::pge_op_adjustPos,
 	0,
-	&Game::pge_op_setTempVar1,
-	&Game::pge_op_isTempVar1Set
+	&Game::pge_op_setGunVar,
+	&Game::pge_op_compareGunVar
 };
 
 const uint8 Game::_pge_modKeysTable[] = {
@@ -2277,16 +2283,18 @@ const char *Menu::_levelNames[] = {
 	"Planet Morphs / Inner Core"
 };
 
-const char *Menu::_passwords[8][3] = {
-	{ "JAGUAR", "BANTHA", "TOHOLD" },
-	{ "COMBEL", "SHIVA",  "PICOLO" },
-	{ "ANTIC",  "KASYYK", "FUGU" },
-	{ "NOLAN",  "SARLAC", "CAPSUL" },
-	{ "ARTHUR", "MAENOC", "ZZZAP" },
-	{ "SHIRYU", "SULUST", "MANIAC" },
-	{ "RENDER", "NEPTUN", "NO WAY" },
-	{ "BELUGA", "BELUGA", "BELUGA" }
+const char *Menu::_passwordsDOS[] = {
+	"JAGUAR", "COMBEL", "ANTIC",  "NOLAN",  "ARTHUR", "SHIRYU", "RENDER", "BELUGA", // easy
+	"BANTHA", "SHIVA",  "KASYYK", "SARLAC", "MAENOC", "SULUST", "NEPTUN", "BELUGA", // normal
+	"TOHOLD", "PICOLO", "FUGU",   "CAPSUL", "ZZZAP",  "MANIAC", "NO WAY", "BELUGA", // hard
 };
+
+const char *Menu::_passwordsMac[] = {
+	"QUENCH",  "GHOST",  "LEGEND", "SPHERE",  "BULLET", "DISRUPT", "TRAUMA", "OPAQUE", // easy
+	"HICK",    "FRGO",   "JERK",   "KOIK",    "KIMO",   "LEDUX",   "MORDO",  "OPAQUE", // normal
+	"CURIOUS", "IMPACT", "LETHAL", "PERSIST", "MORTAL", "VERDICT", "KNIGHT", "OPAQUE", // hard
+};
+
 
 const uint8 Video::_conradPal1[] = {
 	0x00, 0x00, 0xCC, 0x0C, 0x8F, 0x08, 0x7E, 0x07, 0x6C, 0x06, 0x5B, 0x05, 0x4A, 0x04, 0x63, 0x09,

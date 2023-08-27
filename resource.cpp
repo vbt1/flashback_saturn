@@ -85,6 +85,25 @@ void Resource::init() {
 	}
 }
 
+void Resource::setLanguage(Language lang) {
+	if (_lang != lang) {
+		_lang = lang;
+		// reload global language specific data files
+		free_TEXT();
+		load_TEXT();
+		free_CINE();
+		load_CINE();
+	}
+}
+
+bool Resource::fileExists(const char *filename) {
+	File f;
+	if (f.open(_entryName, _dataPath, "rb")) {
+		return true;
+	}
+	return false;
+}
+
 void Resource::clearLevelRes() {
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_mbk); _mbk = 0;
@@ -97,6 +116,25 @@ void Resource::clearLevelRes() {
 	sat_free(_spc); _spc = 0;
 	sat_free(_ani); _ani = 0;
 	free_OBJ();
+}
+
+void Resource::load_DEM(const char *filename) {
+	sat_free(_dem); _dem = 0;
+	_demLen = 0;
+	File f;
+	if (f.open(filename, _dataPath, "rb")) {
+		_demLen = f.size();
+		_dem = (uint8_t *)sat_malloc(_demLen);
+		if (_dem) {
+			f.read(_dem, _demLen);
+		}
+	} else if (_aba) {
+		uint32_t size;
+		_dem = _aba->loadEntry(filename, &size);
+		if (_dem) {
+			_demLen = size;
+		}
+	}
 }
 
 void Resource::load_FIB(const char *fileName) {
@@ -300,6 +338,13 @@ void Resource::load_CINE() {
 		MAC_loadCutsceneText();
 		break;
 	}
+}
+
+void Resource::free_CINE() {
+	sat_free(_cine_off);
+	_cine_off = 0;
+	sat_free(_cine_txt);
+	_cine_txt = 0;
 }
 
 void Resource::load_TEXT() {
@@ -1421,6 +1466,10 @@ void Resource::MAC_loadFontData() {
 
 void Resource::MAC_loadIconData() {
 	_icn = decodeResourceMacData("Icons", true);
+}
+
+void Resource::MAC_loadPersoData() {
+	_perso = decodeResourceMacData("Person", true);
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
