@@ -1,0 +1,27 @@
+SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
+		$(SRCDIR)/saturn_print.cpp \
+		$(SRCDIR)/collision.cpp \
+		$(SRCDIR)/cutscene.cpp \
+		$(SRCDIR)/file.cpp \
+		$(SRCDIR)/game.cpp \
+		$(SRCDIR)/graphics.cpp \
+		$(SRCDIR)/main.cpp \
+		$(SRCDIR)/menu.cpp \
+		$(SRCDIR)/mixer.cpp \
+		$(SRCDIR)/mod_player.cpp \
+		$(SRCDIR)/piege.cpp \
+		$(SRCDIR)/resource.cpp \
+		$(SRCDIR)/sfx_player.cpp \
+		$(SRCDIR)/staticres.cpp \
+		$(SRCDIR)/systemstub_sdl.cpp \
+		$(SRCDIR)/unpack.cpp \
+		$(SRCDIR)/util.cpp \
+		$(SRCDIR)/video.cpp \
+		$(SRCDIR)/sat_mem_checker.cpp \
+		$(SRCDIR)/lz.cpp \
+		$(SRCDIR)/cinit.cpp 
+
+SYSOBJS = $(SGLLDR)/sglarea.o
+OBJS = $(SRCS:.cpp=.o)
+LIBS = $(SGLLDR)/sega_sys.a -lpcm -lsnd -lmem -lper -lint -lcd -lsgl -lspr
+
