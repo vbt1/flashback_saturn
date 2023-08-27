@@ -21,7 +21,7 @@ extern "C" {
 #include "saturn_print.h"
 }
 #include "file.h"
-
+#include "decode_mac.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
@@ -29,16 +29,19 @@ extern "C" {
 
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
+	_layerScale = (_res->_type == kResourceTypeMac) ? 2 : 1; // Macintosh version is 512x448
+	_w = GAMESCREEN_W * _layerScale;
+	_h = GAMESCREEN_H * _layerScale;		
 	//_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_frontLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
+	memset(_frontLayer, 0, _w * _h);
 	//_backLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_backLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
+	memset(_backLayer, 0, _w * _h);
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
+	memset(_tempLayer, 0, _w * _h);
 	//_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
+	memset(_tempLayer2, 0, _w * _h);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
-	memset(_screenBlocks, 0, (GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
+	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	_fullRefresh = true;
 	_shakeOffset = 0;
 	_charFrontColor = 0;
@@ -65,6 +68,31 @@ void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
 	for (; by1 <= by2; ++by1) {
 		for (int i = bx1; i <= bx2; ++i) {
 			_screenBlocks[by1 * (GAMESCREEN_W / SCREENBLOCK_W) + i] = 2;
+		}
+	}
+}
+
+void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
+	debug(DBG_VIDEO, "Video::markBlockAsDirty(%d, %d, %d, %d)", x, y, w, h);
+	int bx1 = scale * x / SCREENBLOCK_W;
+	int by1 = scale * y / SCREENBLOCK_H;
+	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
+	int by2 = scale * (y + h - 1) / SCREENBLOCK_H;
+	if (bx1 < 0) {
+		bx1 = 0;
+	}
+	if (bx2 > (_w / SCREENBLOCK_W) - 1) {
+		bx2 = (_w / SCREENBLOCK_W) - 1;
+	}
+	if (by1 < 0) {
+		by1 = 0;
+	}
+	if (by2 > (_h / SCREENBLOCK_H) - 1) {
+		by2 = (_h / SCREENBLOCK_H) - 1;
+	}
+	for (; by1 <= by2; ++by1) {
+		for (int i = bx1; i <= bx2; ++i) {
+			_screenBlocks[by1 * (_w / SCREENBLOCK_W) + i] = 2;
 		}
 	}
 }
@@ -140,9 +168,11 @@ void Video::setPaletteSlotBE(int palSlot, int palNum) {
 		uint16 color = READ_BE_UINT16(p); p += 2;
 		uint8 t = (color == 0) ? 0 : 3;
 		Color c;
+
 		c.r = ((color & 0x00F) << 2) | t;
 		c.g = ((color & 0x0F0) >> 2) | t;
 		c.b = ((color & 0xF00) >> 6) | t;
+	
 		_stub->setPaletteEntry(palSlot * 0x10 + i, &c);
 	}
 }
@@ -190,7 +220,7 @@ void Video::copyLevelMap(uint16 room) {
 #ifdef _RAMCART_
 	int32 off = READ_LE_UINT32(_res->_map + room * 6);
 #else
-	File f(false);
+	File f;
 	f.open(_res->_mapFilename, "./", "wb");
 	f.seek(room * 6);
 
@@ -416,6 +446,9 @@ void Video::drawChar(uint8 c, int16 y, int16 x) {
 	}
 }
 
+static uint8_t _MAC_fontFrontColor;
+static uint8_t _MAC_fontShadowColor;
+
 const char *Video::drawString(const char *str, int16 x, int16 y, uint8 col) {
 	debug(DBG_VIDEO, "Video::drawString('%s', %d, %d, 0x%X)", str, x, y, col);
 	int len = 0;
@@ -449,4 +482,86 @@ const char *Video::drawString(const char *str, int16 x, int16 y, uint8 col) {
 	}
 	markBlockAsDirty(x, y, len * 8, 8);
 	return str - 1;
+}
+
+
+void Video::MAC_decodeMap(int level, int room) {
+	DecodeBuffer buf;
+	memset(&buf, 0, sizeof(buf));
+	buf.ptr = _frontLayer;
+	buf.w = buf.pitch = _w;
+	buf.h = _h;
+	buf.setPixel = Video::MAC_setPixel;
+	_res->MAC_loadLevelRoom(level, room, &buf);
+	memcpy(_backLayer, _frontLayer, _layerSize);
+	Color roomPalette[256];
+	_res->MAC_setupRoomClut(level, room, roomPalette);
+	for (int j = 0; j < 16; ++j) {
+		if (j == 5 || j == 7 || j == 14 || j == 15) {
+			continue;
+		}
+		for (int i = 0; i < 16; ++i) {
+			const int color = j * 16 + i;
+			_stub->setPaletteEntry(color, &roomPalette[color]);
+		}
+	}
+}
+
+void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	const int offset = y * buf->pitch + x;
+	buf->ptr[offset] = color;
+}
+
+void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	const int offset = y * buf->pitch + x;
+	if ((buf->ptr[offset] & 0x80) == 0) {
+		buf->ptr[offset] = color;
+	}
+}
+
+void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	const int offset = y * buf->pitch + x;
+	switch (color) {
+	case 0xC0:
+		buf->ptr[offset] = _MAC_fontShadowColor;
+		break;
+	case 0xC1:
+		buf->ptr[offset] = _MAC_fontFrontColor;
+		break;
+	}
+}
+
+void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
+	uint8_t *p = _frontLayer + y * _layerScale * _w + x * _layerScale;
+	for (int j = 0; j < h * _layerScale; ++j) {
+		memset(p, color, w * _layerScale);
+		p += _w;
+	}
+}
+
+static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
+        if (buf->xflip) {
+		buf->x += (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
+        } else {
+		buf->x -= (int16_t)READ_BE_UINT16(dataPtr + 4);
+        }
+        buf->y -= (int16_t)READ_BE_UINT16(dataPtr + 6);
+}
+
+void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
+	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
+	if (dataPtr) {
+		DecodeBuffer buf;
+		memset(&buf, 0, sizeof(buf));
+		buf.xflip = xflip;
+		buf.ptr = _frontLayer;
+		buf.w = buf.pitch = _w;
+		buf.h = _h;
+		buf.x = x * _layerScale;
+		buf.y = y * _layerScale;
+		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
+		fixOffsetDecodeBuffer(&buf, dataPtr);
+		_res->MAC_decodeImageData(data, frame, &buf);
+		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
+	}
 }

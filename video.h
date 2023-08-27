@@ -34,49 +34,59 @@ struct Video {
 		CHAR_H = 8
 	};
 
-	static const uint8 _conradPal1[];
-	static const uint8 _conradPal2[];
-	static const uint8 _textPal[];
-	static const uint8 _palSlot0xF[];
+	static const uint8_t _conradPal1[];
+	static const uint8_t _conradPal2[];
+	static const uint8_t _textPal[];
+	static const uint8_t _palSlot0xF[];
 
 	Resource *_res;
 	SystemStub *_stub;
 
-	uint8 _frontLayer[GAMESCREEN_W * GAMESCREEN_H];
-	uint8 _backLayer[GAMESCREEN_W * GAMESCREEN_H];
-	uint8 _tempLayer[GAMESCREEN_W * GAMESCREEN_H];
-	uint8 _tempLayer2[GAMESCREEN_W * GAMESCREEN_H];
-	uint8 _unkPalSlot1, _unkPalSlot2;
-	uint8 _mapPalSlot1, _mapPalSlot2, _mapPalSlot3, _mapPalSlot4;
-	uint8 _charFrontColor;
-	uint8 _charTransparentColor;
-	uint8 _charShadowColor;
-	uint8 _screenBlocks[(GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H)];
+	int _w, _h;
+	int _layerSize;
+	int _layerScale; // 1 for Amiga/PC, 2 for Macintosh
+	uint8_t _frontLayer[GAMESCREEN_W * GAMESCREEN_H];
+	uint8_t _backLayer[GAMESCREEN_W * GAMESCREEN_H];
+	uint8_t _tempLayer[GAMESCREEN_W * GAMESCREEN_H];
+	uint8_t _tempLayer2[GAMESCREEN_W * GAMESCREEN_H];
+	uint8_t _unkPalSlot1, _unkPalSlot2;
+	uint8_t _mapPalSlot1, _mapPalSlot2, _mapPalSlot3, _mapPalSlot4;
+	uint8_t _charFrontColor;
+	uint8_t _charTransparentColor;
+	uint8_t _charShadowColor;
+	uint8_t _screenBlocks[(GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H)];
 	bool _fullRefresh;
-	uint8 _shakeOffset;
+	uint8_t _shakeOffset;
 
 	Video(Resource *res, SystemStub *stub);
 	~Video();
 
 	void markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h);
+	void markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale);	
 	void updateScreen();
 	void fullRefresh();
 	void fadeOut();
 	void setPaletteSlotBE(int palSlot, int palNum);
-	void setPaletteSlotLE(int palSlot, const uint8 *palData);
+	void setPaletteSlotLE(int palSlot, const uint8_t *palData);
 	void setTextPalette();
 	void setPalette0xF();
 	void copyLevelMap(uint16 room);
-	void decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst);
+	void decodeLevelMap(uint16 sz, const uint8_t *src, uint8_t *dst);
 	void setLevelPalettes();
-	void drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask);
-	void drawSpriteSub2(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask);
-	void drawSpriteSub3(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask);
-	void drawSpriteSub4(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask);
-	void drawSpriteSub5(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask);
-	void drawSpriteSub6(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask);
-	void drawChar(uint8 c, int16 y, int16 x);
-	const char *drawString(const char *str, int16 x, int16 y, uint8 col);
+	void drawSpriteSub1(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+	void drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+	void drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+	void drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+	void drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+	void drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+	void drawChar(uint8_t c, int16 y, int16 x);
+	const char *drawString(const char *str, int16 x, int16 y, uint8_t col);
+	void MAC_decodeMap(int level, int room);
+	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
+	void fillRect(int x, int y, int w, int h, uint8_t color);
+	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
 };
 
 #endif // __VIDEO_H__

@@ -29,33 +29,33 @@ extern "C" {
 #define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
 #define LOW_WORK_RAM_SIZE 0x100000
 
-static Version detectVersion(const char *dataPath) {
-	static struct {
+static int detectVersion(const char *dataPath) {
+	static const struct {
 		const char *filename;
-		Version ver;
-	} checkTable[] = {
-		{ "ENGCINE.BIN", VER_EN },
-		{ "FR_CINE.BIN", VER_FR },
-		{ "GERCINE.BIN", VER_DE },
-		{ "SPACINE.BIN", VER_SP }
+		int type;
+		const char *name;
+	} table[] = {
+		{ "FLASHBCK.RSR", kResourceTypeMac, "Macintosh" },
+		{ "LEVEL1.MAP", kResourceTypeDOS, "DOS" },
+		{ 0, -1, 0 }
 	};
-	for (uint8 i = 0; i < ARRAYSIZE(checkTable); ++i) {
+	for (int i = 0; table[i].filename; ++i) {
 		File f;
-		if (f.open(checkTable[i].filename, dataPath, "rb")) {
-			return checkTable[i].ver;
+
+		if (f.open(table[i].filename, dataPath, "rb")) {
+//			debug(DBG_INFO, "Detected %s version", table[i].name);
+			emu_printf("Detected %s version\n", table[i].name);
+			return table[i].type;
 		}
 	}
-	error("Unable to find data files, check that all required files are present");
-	return VER_EN;
+	return -1;
 }
 
 void ss_main(void) {
-	Version ver = detectVersion("/");
+	const int version = detectVersion("/");
 	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
-slPrint((char *)"SystemStub_SDL_create     ",slLocate(10,12));
 	SystemStub *stub = SystemStub_SDL_create();
-slPrint((char *)"Game     ",slLocate(10,12));
-	Game *g = new Game(stub, ".", ".", ver);
+	Game *g = new Game(stub, ".", ".", (ResourceType)version);
 	
 	g->run();
 	delete g;

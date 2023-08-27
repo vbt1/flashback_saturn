@@ -38,7 +38,7 @@ void debug(uint16 cm, const char *msg, ...) {
 		vsprintf(buf, msg, va);
 		va_end(va);
 //		fprintf_saturn(stdout, "%s\n", buf);
-slPrint((char *)buf,slLocate(10,12));
+//slPrint((char *)buf,slLocate(10,12));
 		//fflush(stdout);
 	}
 }
@@ -50,7 +50,7 @@ void error(const char *msg, ...) {
 	vsprintf(buf, msg, va);
 	va_end(va);
 //	fprintf_saturn(stderr, "ERROR: %s!\n", buf);
-slPrint((char *)buf,slLocate(10,12));
+//slPrint((char *)buf,slLocate(10,12));
 //	while(1) slSynch();
 //	SYS_Exit(0);
 }
@@ -63,7 +63,7 @@ void warning(const char *msg, ...) {
 	vsprintf(buf, msg, va);
 	va_end(va);
 //	fprintf_saturn(stderr, "WARNING: %s!\n", buf);
-slPrint((char *)buf,slLocate(10,12));
+//slPrint((char *)buf,slLocate(10,12));
 }
 
 void string_lower(char *p) {

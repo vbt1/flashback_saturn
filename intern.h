@@ -44,11 +44,18 @@ inline void SWAP(T &a, T &b) {
 	b = tmp;
 }
 
-enum Version {
-	VER_FR,
-	VER_EN,
-	VER_DE,
-	VER_SP
+enum Language {
+	LANG_FR,
+	LANG_EN,
+	LANG_DE,
+	LANG_SP,
+	LANG_IT,
+	LANG_JP,
+};
+
+enum ResourceType {
+	kResourceTypeDOS,
+	kResourceTypeMac,
 };
 
 struct Color {
@@ -69,24 +76,24 @@ struct Level {
 };
 
 struct InitPGE {
-	uint16 type;
-	int16 pos_x;
-	int16 pos_y;
-	uint16 obj_node_number;
-	uint16 life;
-	int16 counter_values[4];
-	uint8 object_type;
-	uint8 init_room;
-	uint8 room_location;
-	uint8 init_flags;
-	uint8 colliding_icon_num;
-	uint8 icon_num;
-	uint8 object_id;
-	uint8 skill;
-	uint8 mirror_x;
-	uint8 flags;
-	uint8 unk1C; // collidable, collision_data_len
-	uint8 text_num;
+	uint16_t type;
+	int16_t pos_x;
+	int16_t pos_y;
+	uint16_t obj_node_number;
+	uint16_t life;
+	int16_t data[4];
+	uint8_t object_type; // 1:conrad, 10:monster
+	uint8_t init_room;
+	uint8_t room_location;
+	uint8_t init_flags;
+	uint8_t colliding_icon_num;
+	uint8_t icon_num;
+	uint8_t object_id;
+	uint8_t skill;
+	uint8_t mirror_x;
+	uint8_t flags; // 1:xflip 4:active
+	uint8_t collision_data_len;
+	uint16_t text_num;
 };
 
 struct LivePGE {
@@ -143,9 +150,9 @@ struct ObjectOpcodeArgs {
 };
 
 struct AnimBufferState {
-	int16 x;
-	int16 y;
-	const uint8 *dataPtr;
+	int16_t x, y;
+	uint8_t w, h;
+	const uint8_t *dataPtr;
 	LivePGE *pge;
 };
 
@@ -153,7 +160,7 @@ struct AnimBuffers {
 	AnimBufferState *_states[4];
 	uint8 _curPos[4];
 
-	void addState(uint8 stateNum, int16 x, int16 y, const uint8 *dataPtr, LivePGE *pge);
+	void addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w = 0, uint8_t h = 0);
 };
 
 struct CollisionSlot {
@@ -187,9 +194,11 @@ struct InventoryItem {
 };
 
 struct SoundFx {
-	uint32 offset;
-	uint16 len;
-	uint8 *data;
+	uint32_t offset;
+	uint16_t len;
+	uint16_t freq;
+	uint8_t *data;
+	int8_t peak;
 };
 
 #endif // __INTERN_H__

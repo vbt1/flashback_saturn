@@ -136,7 +136,7 @@ GFS_FILE *sat_fopen(const char *path) {
 
 	Uint16 path_len = strlen(path);
 	Uint16 tokens = 0; // How many "entries" we have in this path?
-slPrint((char *)"strncpy     ",slLocate(10,12));
+//slPrint((char *)"strncpy     ",slLocate(10,12));
 //slSynch();
 	strncpy(satpath, path, path_len + 1); // Prepare the string to work on
 
@@ -190,7 +190,7 @@ slPrint((char *)"strncpy     ",slLocate(10,12));
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
 	{
-slPrint((char *)path_token,slLocate(10,11));		
+emu_printf("%s \n",path_token);		
 //slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
 	}
@@ -208,8 +208,8 @@ slPrint((char *)path_token,slLocate(10,11));
 		fp->f_seek_pos = 0;
 //slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));			
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
-slPrint((char *)"            ",slLocate(10,13));					
-slPrintHex(fsize,slLocate(10,13));					
+//slPrint((char *)"            ",slLocate(10,13));					
+//slPrintHex(fsize,slLocate(10,13));					
 		fp->f_size = fsize;
 		fp->file_hash = hashString(path);
 
@@ -223,10 +223,10 @@ slPrintHex(fsize,slLocate(10,13));
 
 			fully_cached = 1;
 			cache_offset = 0;
-slPrint((char *)"GFS_Fread1     ",slLocate(10,12));			
+//slPrint((char *)"GFS_Fread1     ",slLocate(10,12));			
 
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
-slPrint((char *)"GFS_Fread1 done    ",slLocate(10,12));						
+//slPrint((char *)"GFS_Fread1 done    ",slLocate(10,12));						
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
 			
@@ -237,9 +237,9 @@ slPrint((char *)"GFS_Fread1 done    ",slLocate(10,12));
 
 			fully_cached = 0;
 			cache_offset = 0;
-slPrint((char *)"GFS_Fread2     ",slLocate(10,12));	
+//slPrint((char *)"GFS_Fread2     ",slLocate(10,12));	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
-slPrint((char *)"GFS_Fread2 done    ",slLocate(10,12));					
+//slPrint((char *)"GFS_Fread2 done    ",slLocate(10,12));					
 		}
 	}
 

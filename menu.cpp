@@ -104,21 +104,20 @@ void Menu::loadPicture(const char *prefix) {
 void Menu::handleInfoScreen() {
 	debug(DBG_MENU, "Menu::handleInfoScreen()");
 	_vid->fadeOut();
-	switch (_res->_ver) {
-	case VER_FR:
-		loadPicture("INSTRU_F");
-		break;
-	case VER_EN:
-	case VER_DE:
-	case VER_SP:
-		loadPicture("INSTRU_E");
-		break;
+	if (_res->_lang == LANG_FR) {
+		loadPicture("instru_f");
+	} else {
+		loadPicture("instru_e");
 	}
 	_vid->fullRefresh();
 	_vid->updateScreen();
 	do {
 		_stub->sleep(EVENTS_DELAY);
-		//_stub->processEvents();
+		_stub->processEvents();
+		if (_stub->_pi.escape) {
+			_stub->_pi.escape = false;
+			break;
+		}
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
 			break;

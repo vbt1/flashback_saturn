@@ -42,6 +42,7 @@ extern "C" {
 #include "lz.h"
 
 #include <ctime>
+#include "decode_mac.h"
 #include "file.h"
 #include "systemstub.h"
 #include "unpack.h"
@@ -73,7 +74,7 @@ static Uint32 getFreeSaveBlocks(void) {
 
 /* *** */
 
-Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, Version ver)
+Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, ResourceType ver)
 	: _cut(&_modPly, &_res, stub, &_vid, ver), _menu(&_modPly, &_res, stub, &_vid),
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub), _savePath(savePath) {
@@ -85,11 +86,22 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, Version
 
 void Game::run() {
 
-	_stub->init("REminiscence", Video::GAMESCREEN_W, Video::GAMESCREEN_H);
+	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 
 	_randSeed = time(0);
+	_res.init();   // vbt : ajout pour la partie mac	
 	_res.load_TEXT();
-	_res.load("FB_TXT", Resource::OT_FNT);
+
+	switch (_res._type) {
+	case kResourceTypeDOS:
+		_res.load("FB_TXT", Resource::OT_FNT);
+		break;
+	case kResourceTypeMac:
+		_res.MAC_loadClutData();
+		_res.MAC_loadFontData();
+		break;
+	}
+
 
 #ifndef BYPASS_PROTECTION
 	while (!handleProtectionScreen());
@@ -98,12 +110,33 @@ void Game::run() {
 	}
 #endif
 	_mix.init();
-	
+
+	if (_res._type==kResourceTypeMac) {
+		emu_printf("displayTitleScreenMac 1    \n");
+		
+		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
+		if (!_stub->_pi.quit) {
+		emu_printf("displayTitleScreenMac 2    \n");			
+			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
+		}
+
+		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
+
+	}	
+		emu_printf("playCutscene(0x40)    \n");	
 	playCutscene(0x40);
+		emu_printf("playCutscene(0x0D)    \n");	
 	playCutscene(0x0D);
+	
 	if (!_cut._interrupted) {
+		emu_printf("playCutscene(0x4A)    \n");			
 		playCutscene(0x4A);
 	}
+
+	if (_res._type==kResourceTypeMac) {
+		slZoomNbg1(toFIXED(0.727272), toFIXED(1));
+	}
+		emu_printf("_res.load(GLOBAL    \n");	
 	_res.load("GLOBAL", Resource::OT_ICN);
 	_res.load("PERSO", Resource::OT_SPR);
 	_res.load_SPR_OFF("PERSO", _res._spr1);
@@ -129,6 +162,101 @@ void Game::run() {
 
 	_mix.free();
 	_stub->destroy();
+}
+
+void Game::displayTitleScreenMac(int num) {
+	const int w = 512;
+	int h = 384;
+	int clutBaseColor = 0;
+	switch (num) {
+	case Menu::kMacTitleScreen_MacPlay:
+		break;
+	case Menu::kMacTitleScreen_Presage:
+		clutBaseColor = 12;
+		break;
+	case Menu::kMacTitleScreen_Flashback:
+	case Menu::kMacTitleScreen_LeftEye:
+	case Menu::kMacTitleScreen_RightEye:
+		h = 448;
+		break;
+	case Menu::kMacTitleScreen_Controls:
+		break;
+	}
+	DecodeBuffer buf;
+	memset(&buf, 0, sizeof(buf));
+	buf.ptr = _vid._frontLayer;
+	buf.pitch = buf.w = _vid._w;
+	buf.h = _vid._h;
+	buf.x = (_vid._w - w) / 2;
+	buf.y = (_vid._h - h) / 2;
+	buf.setPixel = Video::MAC_setPixel;
+	memset(_vid._frontLayer, 0, _vid._layerSize);
+	
+		emu_printf("MAC_loadTitleImage    \n");	
+	_res.MAC_loadTitleImage(num, &buf);
+		emu_printf("MAC_copyClut16    \n");		
+	for (int i = 0; i < 12; ++i) {
+		Color palette[16];
+		_res.MAC_copyClut16(palette, 0, clutBaseColor + i);
+		const int basePaletteColor = i * 16;
+		for (int j = 0; j < 16; ++j) {
+			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+		}
+	}
+	if (num == Menu::kMacTitleScreen_MacPlay) {
+		emu_printf("kMacTitleScreen_MacPlay    \n");		
+		Color palette[16];
+		_res.MAC_copyClut16(palette, 0, 56);
+		for (int i = 12; i < 16; ++i) {
+			const int basePaletteColor = i * 16;
+			for (int j = 0; j < 16; ++j) {
+				_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+			}
+		}
+	} else if (num == Menu::kMacTitleScreen_Presage) {
+		Color c;
+		c.r = c.g = c.b = 0;
+		_stub->setPaletteEntry(0, &c);
+	} else if (num == Menu::kMacTitleScreen_Flashback) {
+		_vid.setTextPalette();
+		_vid._charShadowColor = 0xE0;
+	}
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
+
+	
+	while (1) {
+		if (num == Menu::kMacTitleScreen_Flashback) {
+			static const uint8_t selectedColor = 0xE4;
+			static const uint8_t defaultColor = 0xE8;
+			for (int i = 0; i < 7; ++i) {
+				const char *str = Menu::_levelNames[i];
+				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
+			}
+			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+				if (_currentLevel > 0) {
+					--_currentLevel;
+				}
+			}
+			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+				if (_currentLevel < 6) {
+					++_currentLevel;
+				}
+			}
+			_vid.updateScreen();
+		}
+		_stub->processEvents();
+		if (_stub->_pi.quit) {
+			break;
+		}
+		if (_stub->_pi.enter) {
+			_stub->_pi.enter = false;
+			break;
+		}
+		_stub->sleep(30);
+	}
 }
 
 void Game::resetGameState() {
@@ -159,7 +287,7 @@ void Game::mainLoop() {
 	_score = 0;
 	_firstBankData = _bankData;
 	_lastBankData = _bankData + sizeof(_bankData);
-slPrint((char *)"loadLevelData    ",slLocate(10,12));		
+emu_printf("loadLevelData    \n");		
 	
 	loadLevelData();
 	resetGameState();
@@ -263,7 +391,9 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
+		emu_printf("sfxPly.stop    \n");		
 		_sfxPly.stop();
+		emu_printf("_cut.play    \n");			
 		_cut.play();
 	}
 }
@@ -297,7 +427,7 @@ void Game::inp_handleSpecialKeys() {
 			_inp_demo->close();
 			delete _inp_demo;
 		}
-		_inp_demo = new File(true);
+		_inp_demo = new File();
 		if (_stub->_pi.inpRecord) {
 			if (_inp_record) {
 				debug(DBG_INFO, "Stop recording input keys");
@@ -777,51 +907,72 @@ void Game::prepareAnims() {
 	}
 }
 
-void Game::prepareAnimsHelper(LivePGE *pge, int16 dx, int16 dy) {
-	debug(DBG_GAME, "Game::prepareAnimsHelper() dx=0x%X dy=0x%X pge_num=%d pge->flags=0x%X pge->anim_number=0x%X", dx, dy, pge - &_pgeLive[0], pge->flags, pge->anim_number);
-	int16 xpos, ypos;
+void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
+	debug(DBG_GAME, "Game::prepareAnimsHelper() dx=0x%X dy=0x%X pge_num=%ld pge->flags=0x%X pge->anim_number=0x%X", dx, dy, pge - &_pgeLive[0], pge->flags, pge->anim_number);
 	if (!(pge->flags & 8)) {
 		if (pge->index != 0 && loadMonsterSprites(pge) == 0) {
 			return;
 		}
-		assert(pge->anim_number < 1287);
-		const uint8 *dataPtr = _res._spr_off[pge->anim_number];
-		if (dataPtr == 0) {
-			return;
+		const uint8_t *dataPtr = 0;
+		int8_t dw = 0, dh = 0;
+		switch (_res._type) {
+		case kResourceTypeDOS:
+			assert(pge->anim_number < 1287);
+			dataPtr = _res._sprData[pge->anim_number];
+			if (dataPtr == 0) {
+				return;
+			}
+			dw = (int8_t)dataPtr[0];
+			dh = (int8_t)dataPtr[1];
+			break;
+		case kResourceTypeMac:
+			break;
 		}
-
+		uint8_t w = 0, h = 0;
+		switch (_res._type) {
+		case kResourceTypeDOS:
+			w = dataPtr[2];
+			h = dataPtr[3];
+			dataPtr += 4;
+			break;
+		case kResourceTypeMac:
+			break;
+		}
+		int16_t ypos = dy + pge->pos_y - dh + 2;
+		int16_t xpos = dx + pge->pos_x - dw;
 		if (pge->flags & 2) {
-			xpos = (int8)dataPtr[0] + dx + pge->pos_x;
-			uint8 _cl = dataPtr[2];
+			xpos = dw + dx + pge->pos_x;
+			uint8_t _cl = w;
 			if (_cl & 0x40) {
-				_cl = dataPtr[3];
+				_cl = h;
 			} else {
 				_cl &= 0x3F;
 			}
 			xpos -= _cl;
-		} else {
-			xpos = dx + pge->pos_x - (int8)dataPtr[0];
 		}
-
-		ypos = dy + pge->pos_y - (int8)dataPtr[1] + 2;
 		if (xpos <= -32 || xpos >= 256 || ypos < -48 || ypos >= 224) {
 			return;
 		}
 		xpos += 8;
-		dataPtr += 4;
 		if (pge == &_pgeLive[0]) {
-			_animBuffers.addState(1, xpos, ypos, dataPtr, pge);
+			_animBuffers.addState(1, xpos, ypos, dataPtr, pge, w, h);
 		} else if (pge->flags & 0x10) {
-			_animBuffers.addState(2, xpos, ypos, dataPtr, pge);
+			_animBuffers.addState(2, xpos, ypos, dataPtr, pge, w, h);
 		} else {
-			_animBuffers.addState(0, xpos, ypos, dataPtr, pge);
+			_animBuffers.addState(0, xpos, ypos, dataPtr, pge, w, h);
 		}
 	} else {
-		assert(pge->anim_number < _res._numSpc);
-		const uint8 *dataPtr = _res._spc + READ_BE_UINT16(_res._spc + pge->anim_number * 2);
-		xpos = dx + pge->pos_x + 8;
-		ypos = dy + pge->pos_y + 2;
-
+		const uint8_t *dataPtr = 0;
+		switch (_res._type) {
+		case kResourceTypeDOS:
+			assert(pge->anim_number < _res._numSpc);
+			dataPtr = _res._spc + READ_BE_UINT16(_res._spc + pge->anim_number * 2);
+			break;
+		case kResourceTypeMac:
+			break;
+		}
+		const int16_t xpos = dx + pge->pos_x + 8;
+		const int16_t ypos = dy + pge->pos_y + 2;
 		if (pge->init_PGE->object_type == 11) {
 			_animBuffers.addState(3, xpos, ypos, dataPtr, pge);
 		} else if (pge->flags & 0x10) {
@@ -877,7 +1028,7 @@ void Game::drawObject(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) {
 	uint8 slot = _res._rp[dataPtr[0]];
 	uint8 *data = findBankData(slot);
 	if (data == 0) {
-		data = loadBankData(slot);
+		data = _res.loadBankData(slot);
 	}
 	_bankDataPtrs = data;
 	int16 posy = y - (int8)dataPtr[2];
@@ -1130,38 +1281,6 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h);
 }
 
-uint8 *Game::loadBankData(uint16 mbkEntryNum) {
-	debug(DBG_GAME, "Game::loadBankData(%d)", mbkEntryNum);
-	MbkEntry *me = &_res._mbk[mbkEntryNum];
-	const uint16 avail = _lastBankData - _firstBankData;
-	const uint16 size = (me->len & 0x7FFF) * 32;
-	if (avail < size) {
-		_curBankSlot = &_bankSlots[0];
-		_curBankSlot->entryNum = 0xFFFF;
-		_curBankSlot->ptr = 0;
-		_firstBankData = _bankData;
-	}
-	_curBankSlot->entryNum = mbkEntryNum;
-	_curBankSlot->ptr = _firstBankData;
-	++_curBankSlot;
-	_curBankSlot->entryNum = 0xFFFF;
-	_curBankSlot->ptr = 0;
-	const uint8 *data = _res._mbkData + me->offset;
-	if (me->len & 0x8000) {
-		warning("Uncompressed bank data %d", mbkEntryNum);
-		memcpy(_firstBankData, data, size);
-	} else {
-		assert(me->offset != 0);
-		if (!delphine_unpack(_firstBankData, data, 0)) {
-			error("Bad CRC for bank data %d", mbkEntryNum);
-		}
-	}
-	uint8 *bankData = _firstBankData;
-	_firstBankData += size;
-	assert(_firstBankData < _lastBankData);
-	return bankData;
-}
-
 int Game::loadMonsterSprites(LivePGE *pge) {
 	debug(DBG_GAME, "Game::loadMonsterSprites()");
 	InitPGE *init_pge = pge->init_PGE;
@@ -1175,7 +1294,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 		return 0;
 	}
 
-	const uint8 *mList = _monsterListLevels[_currentLevel];
+	const uint8_t *mList = _monsterListLevels[_currentLevel];
 	while (*mList != init_pge->obj_node_number) {
 		if (*mList == 0xFF) { // end of list
 			return 0;
@@ -1185,9 +1304,25 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 	_curMonsterFrame = mList[0];
 	if (_curMonsterNum != mList[1]) {
 		_curMonsterNum = mList[1];
-		_res.load(_monsterNames[_curMonsterNum], Resource::OT_SPRM);
-		_res.load_SPR_OFF(_monsterNames[_curMonsterNum], _res._sprm);
-		_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
+		switch (_res._type) {
+		case kResourceTypeDOS: {
+				const char *name = _monsterNames[0][_curMonsterNum];
+				_res.load(name, Resource::OT_SPRM);
+				_res.load_SPR_OFF(name, _res._sprm);
+				_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
+			}
+			break;
+		case kResourceTypeMac: {
+				Color palette[256];
+				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+				static const int kMonsterPalette = 5;
+				for (int i = 0; i < 16; ++i) {
+					const int color = kMonsterPalette * 16 + i;
+					_stub->setPaletteEntry(color, &palette[color]);
+				}
+			}
+			break;
+		}
 	}
 	return 0xFFFF;
 }
@@ -1755,12 +1890,14 @@ void Game::clearSaveSlots(uint8 level) {
 	}
 }
 
-void AnimBuffers::addState(uint8 stateNum, int16 x, int16 y, const uint8 *dataPtr, LivePGE *pge) {
-	debug(DBG_GAME, "AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=0x%X pge=0x%X", stateNum, x, y, dataPtr, pge);
+void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
+	debug(DBG_GAME, "AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p", stateNum, x, y, dataPtr, pge);
 	assert(stateNum < 4);
 	AnimBufferState *state = _states[stateNum];
 	state->x = x;
 	state->y = y;
+	state->w = w;
+	state->h = h;
 	state->dataPtr = dataPtr;
 	state->pge = pge;
 	++_curPos[stateNum];

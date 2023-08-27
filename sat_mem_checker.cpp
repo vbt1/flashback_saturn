@@ -31,8 +31,8 @@ void *sat_calloc(size_t nmemb, size_t size) {
 	//fprintf_saturn(stdout, "CALLOC: all: %u bytes - 0x%.8X", nmemb * size, mem);
 
 	if (mem == NULL) {
-//		fprintf_saturn(stdout, "CALLOC: nmemb: %u, size: %u - FAILED", nmemb, size);
-		while(1) slSynch();
+		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
+//		while(1) slSynch();
 	}
 
 	return (void*)mem;
@@ -43,18 +43,16 @@ void *sat_malloc(size_t size) {
 	mem = (void*)MEM_Malloc(size);
 //	mem = (void*)malloc(size);
 
-	//fprintf_saturn(stdout, "MALLOC: all: %u bytes - 0x%.8X", size, mem);
+	//fprintf_saturn(stdout, "MALLOC: all: %u bytes - 0x%.8X\n", size, mem);
 
 	if (mem == NULL) {
-slPrint((char *)"MALLOC failed    ",slLocate(10,16));		
-//		fprintf_saturn(stdout, "MALLOC: size: %u - FAILED", size);
-		while(1) slSynch();
+		emu_printf("MALLOC: size: %u - FAILED", size);
 	}
 	else
-slPrint((char *)"MALLOC success    ",slLocate(10,16));			
+emu_printf("MALLOC success\n");			
 
 	int *val = (int *)mem;		
-slPrintHex((int)val,slLocate(10,15));
+//slPrintHex((int)val,slLocate(10,15));
 
 	return (void*)mem;
 }
@@ -82,8 +80,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	//fprintf_saturn(stdout, "REALLOC: all: %u bytes - 0x%.8X", size, mem);
 
 	if (mem == NULL) {
-//		fprintf_saturn(stdout, "REALLOC: ptr: %.8X, size: %u - FAILED", ptr, size);
-		while(1) slSynch();
+		emu_printf("REALLOC: ptr: %.8X, size: %u - FAILED\n", ptr, size);
 	}
 
 	return (void*)mem;

@@ -9,11 +9,14 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/mixer.cpp \
 		$(SRCDIR)/mod_player.cpp \
 		$(SRCDIR)/piege.cpp \
+		$(SRCDIR)/unpack.cpp \
 		$(SRCDIR)/resource.cpp \
+		$(SRCDIR)/resource_mac.cpp \
+		$(SRCDIR)/resource_aba.cpp \
+		$(SRCDIR)/decode_mac.cpp \
 		$(SRCDIR)/sfx_player.cpp \
 		$(SRCDIR)/staticres.cpp \
 		$(SRCDIR)/systemstub_sdl.cpp \
-		$(SRCDIR)/unpack.cpp \
 		$(SRCDIR)/util.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \

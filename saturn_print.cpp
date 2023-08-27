@@ -17,7 +17,7 @@ Uint32 CartRAMsize = 0;
 Sint16 cartRAMdetected = 0;
 Sint16 CartRAM_init(Uint8);
 
-
+/*
 void fprintf_saturn(void *stream, char *format, ...) {
 	char outstring[40];
 	
@@ -53,7 +53,7 @@ inline void printf_saturn(char *format, ...) {
 	slPrint(outstring, slLocate(1,curline%25));
 	curline = (curline == 25) ? 1 : curline + 1;	
 }
-
+*/
 Sint16 CartRAM_init(Uint8 cs) {
 	Uint32 setReg, refReg, *DRAM0, *DRAM1;
 	Uint8 id;

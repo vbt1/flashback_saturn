@@ -53,8 +53,10 @@ extern "C" {
 
 #ifdef _352_CLOCK_
 #define HOR_OFFSET (-29.0)
+#define HOR_OFFSET (0.0)// vbt pas d'offset
 #else
 #define HOR_OFFSET (-30.0)
+#define HOR_OFFSET (0.0) // vbt pas d'offset
 #endif
 
 /* Input devices */
@@ -176,13 +178,13 @@ SystemStub *SystemStub_SDL_create() {
 
 void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	
-slPrint((char *)"memset     ",slLocate(10,12));	
+//slPrint((char *)"memset     ",slLocate(10,12));	
 	memset(&_pi, 0, sizeof(_pi)); // Clean inout
-slPrint((char *)"load_audio_driver     ",slLocate(10,12));
+//slPrint((char *)"load_audio_driver     ",slLocate(10,12));
 	load_audio_driver(); // Load M68K audio driver
-slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
+//slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	prepareGfxMode(); // Prepare graphic output
-slPrint((char *)"setup_input     ",slLocate(10,12));
+//slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
 
 	memset(_pal, 0, sizeof(_pal));
@@ -260,10 +262,12 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);
+//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2); // vbt : à enlever
 	//memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);
 
 	// Move scroll to shake screen
-	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
+//	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
+	slScrPosNbg0(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
 
 	//slSynch();
 	//SPR_WaitEndSlaveSH();
@@ -430,7 +434,7 @@ void SystemStub_SDL::prepareGfxMode() {
 
 	slColRAMMode(CRM16_1024); // Color mode: 1024 colors, choosed between 16 bit
 
-	slBitMapNbg1(COL_TYPE_256, BM_512x256, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
+	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
 	
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
@@ -522,7 +526,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 	uint32 drv_size = 0;
 	uint8 *sddrvstsk = NULL;
 
-slPrint((char *)"sat_fopen     ",slLocate(10,12));
+//slPrint((char *)"sat_fopen     ",slLocate(10,12));
 
 	drv_file = sat_fopen("SDDRVS.TSK");
 
@@ -531,7 +535,7 @@ slPrint((char *)"sat_fopen     ",slLocate(10,12));
 	{
 		error("Unable to load sound driver");
 	}
-slPrint((char *)"sat_fseek     ",slLocate(10,12));	
+//slPrint((char *)"sat_fseek     ",slLocate(10,12));	
 
 	sat_fseek(drv_file, 0, SEEK_END);
 	drv_size = sat_ftell(drv_file);
@@ -758,7 +762,7 @@ void SCU_DMAWait(void) {
 	while((res = DMA_ScuResult()) == 2);
 	
 	if(res == 1) {
-		slPrint((char *)"SCU DMA COPY FAILED!",slLocate(10,15));
+		emu_printf("SCU DMA COPY FAILED!\n");
 	}
 }
 

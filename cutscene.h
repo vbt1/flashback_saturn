@@ -36,7 +36,7 @@ struct Cutscene {
 	};
 
 	static const OpcodeStub _opcodeTable[];
-	static const char *_namesTable[];
+	static const char *_namesTableDOS[];	
 	static const uint16 _offsetsTable[];
 	static const uint16 _cosTable[];
 	static const uint16 _sinTable[];
@@ -50,7 +50,7 @@ struct Cutscene {
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;
-	Version _ver;
+	ResourceType _ver;
 
 	uint16 _id;
 	uint16 _deathCutsceneId;
@@ -95,7 +95,7 @@ struct Cutscene {
 	int16 _creditsTextCounter;
 	uint8 *_page0, *_page1, *_pageC;
 
-	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid, Version ver);
+	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid, ResourceType ver);
 
 	void sync();
 	void copyPalette(const uint8 *palo, uint16 num);
@@ -129,7 +129,7 @@ struct Cutscene {
 	uint8 fetchNextCmdByte();
 	uint16 fetchNextCmdWord();
 	void mainLoop(uint16 offset);
-	void load(uint16 cutName);
+	bool load(uint16_t cutName);
 	void prepare();
 	void startCredits();
 	void play();

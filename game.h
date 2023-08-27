@@ -62,7 +62,7 @@ struct Game {
 	static const uint8 _monsterListLevel5_2[];
 	static const uint8 *_monsterListLevels[];
 	static const uint8 _monsterPals[4][32];
-	static const char *_monsterNames[];
+	static const char *_monsterNames[2][4];
 	static const pge_OpcodeProc _pge_opcodeTable[];
 	static const uint8 _pge_modKeysTable[];
 	static const uint8 _protectionCodeData[];
@@ -108,9 +108,10 @@ struct Game {
 	uint16 _deathCutsceneCounter;
 	bool _saveStateCompleted;
 
-	Game(SystemStub *, const char *dataPath, const char *savePath, Version ver);
+	Game(SystemStub *, const char *dataPath, const char *savePath, ResourceType ver);
 
 	void run();
+	void displayTitleScreenMac(int num);	
 	void resetGameState();
 	void mainLoop();
 	void updateTiming();

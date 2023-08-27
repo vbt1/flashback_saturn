@@ -36,9 +36,24 @@ struct Menu {
 	};
 
 	enum {
+		kMacTitleScreen_MacPlay = 1,
+		kMacTitleScreen_Presage = 2,
+		kMacTitleScreen_Flashback = 3,
+		kMacTitleScreen_LeftEye = 4,
+		kMacTitleScreen_RightEye = 5,
+		kMacTitleScreen_Controls = 6
+	};
+
+	enum {
 		EVENTS_DELAY = 80
 	};
 
+	struct Item {
+		int str;
+		int opt;
+	};
+
+	static const char *_levelNames[];
 	static const char *_passwords[8][3];
 
 	ModPlayer *_ply;

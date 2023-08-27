@@ -55,7 +55,7 @@ DFLAGS =
 include $(OBJECTS)
 
 TARGET   = sl.elf
-TARGET1  = sl.bin
+TARGET1  = C:/Temp/flashb/root/sl.bin
 LDFILE	 = $(CMNDIR)/saturn.lnk
 MPFILE   = $(TARGET:.elf=.map)
 MAKEFILE = Makefile

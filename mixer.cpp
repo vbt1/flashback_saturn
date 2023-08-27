@@ -31,15 +31,15 @@ Mixer::Mixer(SystemStub *stub)
 
 void Mixer::init() {
 	
-slPrint((char *)"mix.memset    ",slLocate(10,12));	
+//slPrint((char *)"mix.memset    ",slLocate(10,12));	
 	memset(_channels, 0, sizeof(_channels));
 	_premixHook = 0;
-slPrint((char *)"mix.createMutex    ",slLocate(10,12));		
+//slPrint((char *)"mix.createMutex    ",slLocate(10,12));		
 	_mutex = _stub->createMutex();
-slPrint((char *)"mix.startAudio    ",slLocate(10,12));	
+//slPrint((char *)"mix.startAudio    ",slLocate(10,12));	
 //slSynch();
 	_stub->startAudio(Mixer::mixCallback, this);
-slPrint((char *)"mix.started Audio    ",slLocate(10,12));	
+//slPrint((char *)"mix.started Audio    ",slLocate(10,12));	
 }
 
 void Mixer::free() {

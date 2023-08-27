@@ -15,15 +15,21 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
+extern "C"
+{
+	
+#include 	<sl_def.h>	
+}
 #include "mod_player.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
 #include "cutscene.h"
+#include "saturn_print.h"
 
 
-Cutscene::Cutscene(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid, Version ver)
+
+Cutscene::Cutscene(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid, ResourceType ver)
 	: _ply(ply), _res(res), _stub(stub), _vid(vid), _ver(ver) {
 	memset(_palBuf, 0, sizeof(_palBuf));
 }
@@ -56,6 +62,7 @@ void Cutscene::updatePalette() {
 			uint16 color = READ_BE_UINT16(p); p += 2;
 			uint8 t = (color == 0) ? 0 : 3;
 			Color c;
+// vbt correction des couleurs			
 			c.r = ((color & 0xF00) >> 6) | t;
 			c.g = ((color & 0x0F0) >> 2) | t;
 			c.b = ((color & 0x00F) << 2) | t;
@@ -959,12 +966,20 @@ void Cutscene::mainLoop(uint16 offset) {
 	}
 }
 
-void Cutscene::load(uint16 cutName) {
+bool Cutscene::load(uint16_t cutName) {
 	assert(cutName != 0xFFFF);
-	const char *name = _namesTable[cutName & 0xFF];
-	_res->load(name, Resource::OT_CMD);
-	_res->load(name, Resource::OT_POL);
+	const char *name = _namesTableDOS[cutName & 0xFF];
+	switch (_res->_type) {
+	case kResourceTypeDOS:
+		_res->load(name, Resource::OT_CMD);
+		_res->load(name, Resource::OT_POL);
+		break;
+	case kResourceTypeMac:
+		_res->MAC_loadCutscene(name);
+		break;
+	}
 	_res->load_CINE();
+	return _res->_cmd && _res->_pol;
 }
 
 void Cutscene::prepare() {
@@ -1010,11 +1025,14 @@ void Cutscene::play() {
 		_textCurBuf = NULL;
 		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
 		_creditsSequence = false;
+		emu_printf("prepare    \n");
 		prepare();
 		uint16 cutName = _offsetsTable[_id * 2 + 0];
 		uint16 cutOff  = _offsetsTable[_id * 2 + 1];
 		if (cutName != 0xFFFF) {
+		emu_printf("load    \n");			
 			load(cutName);
+		emu_printf("mainLoop    \n");			
 			mainLoop(cutOff);
 			if (_id == 0x3D) {
 				startCredits();
