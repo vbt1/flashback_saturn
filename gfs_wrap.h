@@ -1,8 +1,8 @@
 #ifndef _GFS_BYTE_WRAPPER_
 #define _GFS_BYTE_WRAPPER_
 
-#include <sgl.h> // Needed defines
-#include <sega_cdc.h> // For cd accessing vars and functions
+//#include "C:/SaturnOrbit/SGL_302j/INC320/sgl.h" // Needed defines
+#include "sega_cdc.h" // For cd accessing vars and functions
 #include <sega_gfs.h> 
 #include <stdio.h>
 

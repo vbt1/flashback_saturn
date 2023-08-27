@@ -98,7 +98,7 @@ struct Cutscene {
 	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid, Version ver);
 
 	void sync();
-	void copyPalette(const uint8 *pal, uint16 num);
+	void copyPalette(const uint8 *palo, uint16 num);
 	void updatePalette();
 	void setPalette();
 	void initRotationData(uint16 a, uint16 b, uint16 c);

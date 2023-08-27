@@ -1,18 +1,20 @@
+extern "C" {
 #include <sgl.h>
 #include <sl_def.h>
 #include <sega_cdc.h>
 #include <sega_gfs.h>
-#include <sega_mem.h>
-
+//#include <sega_mem.h>
+#include "gfs_wrap.h"
+#include "sat_mem_checker.h"
+}
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
-
-#include "gfs_wrap.h"
-
 #include "systemstub.h"
-#include "sat_mem_checker.h"
+
+
+
 #include "saturn_print.h"
 
 #define CACHE_SIZE (SECTOR_SIZE * 20)
@@ -108,18 +110,34 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path) {
+//slPrint((char *)"memset     ",slLocate(10,12));
+//slSynch();
 	memset(satpath, 0, 25);
 
-	if (path == NULL) return NULL; // nothing to do...
+	if (path == NULL) 
+	{	
+//slPrint((char *)"path == NULL     ",slLocate(10,12));
+//slSynch();
+	return NULL; // nothing to do...
+	}
 	Uint16 idx;
 	GFS_FILE *fp = NULL;
 
 	idx = 0;
-	if (path[idx] == '\0') return NULL; // Malformed path
+	if (path[idx] == '\0')
+	{
+//slPrint((char *)"Malformed path     ",slLocate(10,12));
+//slSynch();		
+		return NULL; // Malformed path
+	}
+
+//slPrint((char *)"good path     ",slLocate(10,12));
+//slSynch();
 
 	Uint16 path_len = strlen(path);
 	Uint16 tokens = 0; // How many "entries" we have in this path?
-
+slPrint((char *)"strncpy     ",slLocate(10,12));
+//slSynch();
 	strncpy(satpath, path, path_len + 1); // Prepare the string to work on
 
 	if ((char*)strtok(satpath, "/") != NULL) tokens++; // it's not an empty path...
@@ -127,6 +145,8 @@ GFS_FILE *sat_fopen(const char *path) {
 	while((char*)strtok(NULL, "/") != NULL) tokens++; // count remaining
 
 	strncpy(satpath, path, path_len + 1);
+//slPrint((char *)"strncpy2     ",slLocate(10,12));
+//slSynch();
 
 	char *path_token = (char*)strtok(satpath, "/");
 	Uint8 sameDir = 1;
@@ -169,19 +189,27 @@ GFS_FILE *sat_fopen(const char *path) {
 	GfsHn fid = NULL;
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
+	{
+slPrint((char *)path_token,slLocate(10,11));		
+//slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
-
+	}
+	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-		
+//slPrint((char *)"GFS_SetTmode     ",slLocate(10,12));		
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 		
 		// Encapsulate the file data
+//slPrint((char *)"sat_malloc     ",slLocate(10,12));			
 		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
 		if (fp == NULL) {return NULL;}
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
+//slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));			
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
+slPrint((char *)"            ",slLocate(10,13));					
+slPrintHex(fsize,slLocate(10,13));					
 		fp->f_size = fsize;
 		fp->file_hash = hashString(path);
 
@@ -195,8 +223,10 @@ GFS_FILE *sat_fopen(const char *path) {
 
 			fully_cached = 1;
 			cache_offset = 0;
+slPrint((char *)"GFS_Fread1     ",slLocate(10,12));			
 
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
+slPrint((char *)"GFS_Fread1 done    ",slLocate(10,12));						
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
 			
@@ -207,14 +237,15 @@ GFS_FILE *sat_fopen(const char *path) {
 
 			fully_cached = 0;
 			cache_offset = 0;
-
+slPrint((char *)"GFS_Fread2     ",slLocate(10,12));	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
+slPrint((char *)"GFS_Fread2 done    ",slLocate(10,12));					
 		}
 	}
 
 	// Now... get back to the roots!
 	//back_to_root();
-
+//slPrint((char *)"return fp     ",slLocate(10,12));
 	return fp;
 }
 

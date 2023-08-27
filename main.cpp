@@ -15,9 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
+extern "C" {
 #include <sega_mem.h>
+#include <sl_def.h>
 #include "gfs_wrap.h"
+}
 #include "saturn_print.h"
 
 #include "file.h"
@@ -50,9 +52,9 @@ static Version detectVersion(const char *dataPath) {
 void ss_main(void) {
 	Version ver = detectVersion("/");
 	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
-
+slPrint((char *)"SystemStub_SDL_create     ",slLocate(10,12));
 	SystemStub *stub = SystemStub_SDL_create();
-
+slPrint((char *)"Game     ",slLocate(10,12));
 	Game *g = new Game(stub, ".", ".", ver);
 	
 	g->run();

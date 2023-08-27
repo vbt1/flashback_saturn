@@ -15,11 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
-#include <sega_dma.h>
+ 
+ 
+extern "C" {
+//#include "sega_dma.h"
+#include <sl_def.h>
 #include <sega_bup.h>
 #include <sega_per.h>
-#include <sega_spr.h>
+//#include <sega_spr.h>
+
+
+#define	BUP_LIB_ADDRESS		(*(volatile Uint32 *)(0x6000350+8))
+#define	BUP_VECTOR_ADDRESS	(*(volatile Uint32 *)(0x6000350+4))
+
+#define	BUP_Init	((void (*)(volatile Uint32 *lib,Uint32 *work,BupConfig tp[3])) (BUP_LIB_ADDRESS))
+#define	BUP_Format	((Sint32 (*)(Uint32 device)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+8)))
+#define	BUP_Stat	((Sint32 (*)(Uint32 device,Uint32 datasize,BupStat *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+12)))
+#define	BUP_Write	((Sint32 (*)(Uint32 device,BupDir *tb,volatile Uint8 *data,Uint8 wmode)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+16)))
+#define	BUP_Read	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+20)))
+#define	BUP_Delete	((Sint32 (*)(Uint32 device,Uint8 *filename)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+24)))
+#define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
+#define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
+#define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
+}
 #include "saturn_print.h"
 #include "lz.h"
 
@@ -66,6 +84,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, Version
 }
 
 void Game::run() {
+
 	_stub->init("REminiscence", Video::GAMESCREEN_W, Video::GAMESCREEN_H);
 
 	_randSeed = time(0);
@@ -78,15 +97,13 @@ void Game::run() {
 		return;
 	}
 #endif
-
 	_mix.init();
-
+	
 	playCutscene(0x40);
 	playCutscene(0x0D);
 	if (!_cut._interrupted) {
 		playCutscene(0x4A);
 	}
-
 	_res.load("GLOBAL", Resource::OT_ICN);
 	_res.load("PERSO", Resource::OT_SPR);
 	_res.load_SPR_OFF("PERSO", _res._spr1);
@@ -142,6 +159,8 @@ void Game::mainLoop() {
 	_score = 0;
 	_firstBankData = _bankData;
 	_lastBankData = _bankData + sizeof(_bankData);
+slPrint((char *)"loadLevelData    ",slLocate(10,12));		
+	
 	loadLevelData();
 	resetGameState();
 	while (!_stub->_pi.quit) {

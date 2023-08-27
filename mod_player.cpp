@@ -15,11 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
+extern "C"
+{
 #include <sega_mem.h>
-#include <sega_spr.h>
-#include <sega_csh.h>
+//#include <sega_spr.h>
+//#include <sega_csh.h>
 #include "sat_mem_checker.h"
+}
 #include "saturn_print.h"
 
 #include "sys.h"

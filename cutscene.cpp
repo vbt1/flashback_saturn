@@ -40,12 +40,12 @@ void Cutscene::sync() {
 	_tstamp = _stub->getTimeStamp();
 }
 
-void Cutscene::copyPalette(const uint8 *pal, uint16 num) {
+void Cutscene::copyPalette(const uint8 *palo, uint16 num) {
 	uint8 *dst = (uint8 *)_palBuf;
 	if (num != 0) {
 		dst += 0x20;
 	}
-	memcpy(dst, pal, 0x20);
+	memcpy(dst, palo, 0x20);
 	_newPal = true;
 }
 

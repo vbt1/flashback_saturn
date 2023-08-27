@@ -1,16 +1,18 @@
+extern "C" {
 #include	<sgl.h>
 #include 	<sl_def.h>
 #include 	<sega_mem.h>
 #include 	<sega_spr.h>
 #include	<sega_csh.h>
 #include	<sega_sys.h>
-
 #include	"gfs_wrap.h"
+}
+
 #include 	"saturn_print.h"
 #include 	"systemstub.h"
 
 #define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x100000
+#define LOW_WORK_RAM_SIZE 0x80000
 
 
 #define		SystemWork		0x060ffc00		/* System Variable Address */
@@ -48,19 +50,15 @@ int	main( void )
 #endif
 
 	CSH_Init(CSH_4WAY);
-
 	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
 	//MEM_Init(0x22600000, 0x200000);
 
 #ifdef _PAR_UPLOAD_
 	cdUnlock(); // Unlock the cd drive
 #endif
-
 	DMA_ScuInit(); // Init for SCU DMA
 	init_GFS(); // Initialize GFS system
-
 	SPR_InitSlaveSH();
-
 	/* Application Call */
 	ss_main();
 

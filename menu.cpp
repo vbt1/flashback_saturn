@@ -106,12 +106,12 @@ void Menu::handleInfoScreen() {
 	_vid->fadeOut();
 	switch (_res->_ver) {
 	case VER_FR:
-		loadPicture("instru_f");
+		loadPicture("INSTRU_F");
 		break;
 	case VER_EN:
 	case VER_DE:
 	case VER_SP:
-		loadPicture("instru_e");
+		loadPicture("INSTRU_E");
 		break;
 	}
 	_vid->fullRefresh();
@@ -130,7 +130,7 @@ void Menu::handleSkillScreen(uint8 &new_skill) {
 	debug(DBG_MENU, "Menu::handleSkillScreen()");
 	static const uint8 option_colors[3][3] = { { 2, 3, 3 }, { 3, 2, 3}, { 3, 3, 2 } };
 	_vid->fadeOut();
-	loadPicture("menu3");
+	loadPicture("MENU3");
 	_vid->fullRefresh();
 	drawString(_res->getMenuString(LocaleData::LI_12_SKILL_LEVEL), 12, 4, 3);
 	int skill_level = new_skill;
@@ -186,7 +186,7 @@ bool Menu::handlePasswordScreen(uint8 &new_skill, uint8 &new_level) {
 	
 	char outstr[20];
 
-	loadPicture("menu2");
+	loadPicture("MENU2");
 	do {
 		//drawString2(_res->getMenuString(LocaleData::LI_16_ENTER_PASSWORD1), 15, 3);
 		//drawString2(_res->getMenuString(LocaleData::LI_17_ENTER_PASSWORD2), 17, 3);
@@ -267,7 +267,7 @@ bool Menu::handleTitleScreen(uint8 &new_skill, uint8 &new_level) {
 	while (!quit_loop) {
 		if (reinit_screen) {
 			_vid->fadeOut();
-			loadPicture("menu1");
+			loadPicture("MENU1");
 			_vid->fullRefresh();
 			_charVar3 = 1;
 			_charVar4 = 2;

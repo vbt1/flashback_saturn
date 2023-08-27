@@ -17,8 +17,10 @@
  */
 
 #include "file.h"
+extern "C"
+{
 #include "gfs_wrap.h"
-
+}
 
 struct File_impl {
 	bool _ioErr;

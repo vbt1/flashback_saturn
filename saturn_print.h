@@ -1,5 +1,5 @@
 #include <sgl.h>
-#include <sega_mem.h>
+//#include <sega_mem.h>
 
 extern "C" {
 

@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
+extern "C" {
 #include <sgl.h>
 #include <sl_def.h>
 #include <sega_mem.h>
@@ -25,10 +25,12 @@
 #include <sega_csh.h>
 #include <sega_spr.h>
 #include <sega_sys.h>
-
 #include "gfs_wrap.h"
 #include "saturn_print.h"
 #include "sat_mem_checker.h"
+}
+
+
 
 #include "sys.h"
 #include "mixer.h"
@@ -173,12 +175,14 @@ SystemStub *SystemStub_SDL_create() {
 }
 
 void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
+	
+slPrint((char *)"memset     ",slLocate(10,12));	
 	memset(&_pi, 0, sizeof(_pi)); // Clean inout
-
+slPrint((char *)"load_audio_driver     ",slLocate(10,12));
 	load_audio_driver(); // Load M68K audio driver
-
+slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	prepareGfxMode(); // Prepare graphic output
-
+slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
 
 	memset(_pal, 0, sizeof(_pal));
@@ -194,7 +198,6 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 		tickPerVblank = 17;
 	else
 		tickPerVblank = 20;
-
 	slIntFunction(vblIn); // Function to call at each vblank-in
 
 	return;
@@ -398,6 +401,7 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 void *SystemStub_SDL::createMutex() {
 	SatMutex *mtx = (SatMutex*)sat_malloc(sizeof(SatMutex));
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
+	return mtx;
 }
 
 void SystemStub_SDL::destroyMutex(void *mutex) {
@@ -467,7 +471,7 @@ void SystemStub_SDL::forceGfxRedraw() {
 void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch) {
 	return;
 }
-
+/*
 int cdUnlock (void) {
      Sint32 ret;
      CdcStat stat;
@@ -483,7 +487,7 @@ int cdUnlock (void) {
 
      return (int) CDC_STAT_STATUS(&stat);
 }
-
+*/
 // Store the info on connected peripheals inside an array
 void SystemStub_SDL::setup_input (void) {
 	if ((Per_Connect1 + Per_Connect2) == 0) {
@@ -518,16 +522,25 @@ void SystemStub_SDL::load_audio_driver(void) {
 	uint32 drv_size = 0;
 	uint8 *sddrvstsk = NULL;
 
-	drv_file = sat_fopen("sddrvs.tsk");
+slPrint((char *)"sat_fopen     ",slLocate(10,12));
+
+	drv_file = sat_fopen("SDDRVS.TSK");
+
 
 	if(drv_file == NULL) 
+	{
 		error("Unable to load sound driver");
+	}
+slPrint((char *)"sat_fseek     ",slLocate(10,12));	
 
 	sat_fseek(drv_file, 0, SEEK_END);
 	drv_size = sat_ftell(drv_file);
 	sat_fseek(drv_file, 0, SEEK_SET);
 
-	sddrvstsk = (uint8*)sat_malloc(drv_size);
+#define	SDDRV_ADDR	0x6080000
+
+//	sddrvstsk = (uint8*)sat_malloc(drv_size);
+	sddrvstsk = (uint8*)SDDRV_ADDR;
 
 	sat_fread(sddrvstsk, drv_size, 1, drv_file);
 	sat_fclose(drv_file);
@@ -538,8 +551,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 	SND_INI_ARA_SZ(snd_init) 	= sizeof(sound_map);
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
-
-	sat_free(sddrvstsk);
+//	sat_free(sddrvstsk);
 
 	return;
 }
@@ -738,5 +750,15 @@ void play_manage_buffers(void) {
 	}
 
 	return;
+}
+
+void SCU_DMAWait(void) {
+	Uint32 res;
+
+	while((res = DMA_ScuResult()) == 2);
+	
+	if(res == 1) {
+		slPrint((char *)"SCU DMA COPY FAILED!",slLocate(10,15));
+	}
 }
 

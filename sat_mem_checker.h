@@ -1,7 +1,7 @@
 #ifndef _SAT_MEM_CHECK_
 #define _SAT_MEM_CHECK_
 
-#include <sega_mem.h>
+//#include <sega_mem.h>
 #include <stdlib.h>
 
 void *sat_calloc(size_t nmemb, size_t size);

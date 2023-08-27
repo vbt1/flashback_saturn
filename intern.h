@@ -21,10 +21,10 @@
 
 #include <cstdio>
 #include <cstring>
-#include <cstdlib>
+#include <stdlib.h>
 #include <cassert>
 
-#include <sl_def.h>
+#include "sl_def.h"
 
 #include "sys.h"
 #include "util.h"

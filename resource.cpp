@@ -15,11 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
+extern "C"
+{
 #include <sega_mem.h>
+#include <sl_def.h>
 
 #include "sat_mem_checker.h"
-
+}
 #include "file.h"
 #include "unpack.h"
 #include "resource.h"
@@ -122,15 +124,19 @@ void Resource::load_MAP_menu(const char *fileName, uint8 *dstPtr) {
 	debug(DBG_RES, "Resource::load_MAP_menu('%s')", fileName);
 	sprintf(_entryName, "%s.MAP", fileName);
 	File f;
+			slPrint((char *)_entryName,slLocate(10,17));		
 	if (f.open(_entryName, _dataPath, "rb")) {
 		if (f.size() != 0x3800 * 4) {
+			slPrint((char *)"Wrong file size     ",slLocate(10,16));
 			error("Wrong file size for '%s', %d", _entryName, f.size());
 		}
 		f.read(dstPtr, 0x3800 * 4);
 		if (f.ioErr()) {
+			slPrint((char *)"I/O error when reading     ",slLocate(10,16));			
 			error("I/O error when reading '%s'", _entryName);
 		}
 	} else {
+			slPrint((char *)"Can't open     ",slLocate(10,16));		
 		error("Can't open '%s'", _entryName);
 	}
 }
