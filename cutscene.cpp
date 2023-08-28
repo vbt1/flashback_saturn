@@ -16,7 +16,7 @@ extern "C"
 #include "cutscene.h"
 #include "saturn_print.h"
 
-
+#undef sleep
 
 Cutscene::Cutscene(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid, ResourceType ver)
 	: _ply(ply), _res(res), _stub(stub), _vid(vid), _ver(ver) {

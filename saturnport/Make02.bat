@@ -1,0 +1,2 @@
+mkisofs -quiet -sysid "SEGA SEGASATURN" -volid "WOLF3D" -volset "WOLF3D" -publisher "VBT" -preparer "VBT" -appid "CD0001" -abstract "ABS.TXT" -copyright "CPY.TXT" -biblio "BIB.TXT" -generic-boot ip.bin -full-iso9660-filenames -o j:\MULTIB\trck2.iso -exclude-list EXCLUDE.txt -graft-point -path-list FILES.txt
+rem PAUSE

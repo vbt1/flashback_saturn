@@ -49,6 +49,8 @@ extern "C" {
 #include "game.h"
 #include "sys.h"
 
+#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
+
 static SAVE_BUFFER sbuf;
 static Uint8 rle_buf[SAV_BUFSIZE];
 

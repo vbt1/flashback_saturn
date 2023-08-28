@@ -4,7 +4,7 @@
 /*                                                                         */
 /*-------------------------------------------------------------------------*/
 
-#include	"sl_def.h"
+#include	"sl_def2.h"
 
 /*---- [1.This part must not be modified] ---------------------------------*/
 #define		SystemWork		0x060ffc00			/* System Variable         */

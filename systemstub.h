@@ -16,10 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#undef sleep 
+
 #ifndef __SYSTEMSTUB_H__
 #define __SYSTEMSTUB_H__
 
 #include "intern.h"
+
+#undef sleep 
 
 #define PCM_ADDR ((void*)0x25a20000)
 #define PCM_SIZE (4096L*8)

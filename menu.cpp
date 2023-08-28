@@ -24,6 +24,8 @@
 #include "menu.h"
 #include "saturn_print.h"
 
+#undef sleep 
+
 Menu::Menu(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid)
 	: _ply(ply), _res(res), _stub(stub), _vid(vid) {
 }

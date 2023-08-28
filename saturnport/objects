@@ -21,14 +21,14 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \
 		$(SRCDIR)/lz.cpp \
-		$(SRCDIR)/cinit.cpp 
+		$(SRCDIR)/cinit.cpp
 
-SYSOBJS = $(SRCDIR)/workarea.c
+SYSOBJS = $(SRCDIR)/workarea.o
 OBJS = $(SRCS:.cpp=.o)
-LIBS = C:/vbt/saturn/SBL6/SEGALIB/LIB/elf/sega_gfs.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_csh.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_mem.a \
+LIBS = $(SGLLDR)/sega_gfs.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_csh.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_mem.a \
 $(SGLLDR)/sega_dma.a $(SGLLDR)/sega_spr.a $(SGLLDR)/sega_pcm.a $(SGLLDR)/sega_snd.a $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a 
 
-
+#L:\saturn\SBL6\SEGALIB\LIB\vbtelf4
 
 #C:/vbt/saturn/vbtsh9/toolchain/sh-elf/lib/libc.a  $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_pcm.a $(SGLLDR)/sega_snd.a $(SGLLDR)/sega_mem.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_int.a $(SGLLDR)/cdcrep.a C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_spr.a
 
