@@ -28,27 +28,29 @@ extern "C"
 
 uint16 g_debugMask;
 
-static char buf[128];
+//static char buf[128];
 
 void debug(uint16 cm, const char *msg, ...) {
+	return;
 	//char buf[1024];
-	if (/*cm & g_debugMask*/0) {
-		va_list va;
-		va_start(va, msg);
-		vsprintf(buf, msg, va);
-		va_end(va);
+//	if (/*cm & g_debugMask*/0) {
+//		va_list va;
+//		va_start(va, msg);
+//		vsprintf(buf, msg, va);
+//		va_end(va);
 //		fprintf_saturn(stdout, "%s\n", buf);
 //slPrint((char *)buf,slLocate(10,12));
 		//fflush(stdout);
-	}
+//	}
 }
 
 void error(const char *msg, ...) {
+	return;
 	//char buf[1024];
-	va_list va;
-	va_start(va, msg);
-	vsprintf(buf, msg, va);
-	va_end(va);
+//	va_list va;
+//	va_start(va, msg);
+//	vsprintf(buf, msg, va);
+//	va_end(va);
 //	fprintf_saturn(stderr, "ERROR: %s!\n", buf);
 //slPrint((char *)buf,slLocate(10,12));
 //	while(1) slSynch();
@@ -58,10 +60,10 @@ void error(const char *msg, ...) {
 void warning(const char *msg, ...) {
 	return;
 	//char buf[1024];
-	va_list va;
-	va_start(va, msg);
-	vsprintf(buf, msg, va);
-	va_end(va);
+//	va_list va;
+//	va_start(va, msg);
+//	vsprintf(buf, msg, va);
+//	va_end(va);
 //	fprintf_saturn(stderr, "WARNING: %s!\n", buf);
 //slPrint((char *)buf,slLocate(10,12));
 }

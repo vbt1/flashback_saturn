@@ -13,8 +13,8 @@ extern "C" {
 #include 	"systemstub.h"
 
 #define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x80000
-
+#define LOW_WORK_RAM_SIZE 0x100000
+#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 
 #define		SystemWork		0x060ffc00		/* System Variable Address */
 #define		SystemSize		(0x06100000-0x060ffc00)		/* System Variable Size */

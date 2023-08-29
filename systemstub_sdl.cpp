@@ -35,7 +35,7 @@ extern "C" {
 #include "sys.h"
 #include "mixer.h"
 #include "systemstub.h"
-
+#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 /* Needed to unlock cd drive */
 #define SYS_CDINIT1(i) ((**(void(**)(int))0x60002dc)(i)) // Init functions for Saturn CD drive
 #define SYS_CDINIT2() ((**(void(**)(void))0x600029c)())
@@ -184,6 +184,8 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	prepareGfxMode(); // Prepare graphic output
+		emu_printf("prepareGfxMode\n");	
+	
 //slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
 

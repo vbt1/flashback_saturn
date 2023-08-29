@@ -1415,6 +1415,10 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 		ptr = basePtr + offset;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
+
+			emu_printf("MAC_decodeImageData %d %d %x\n", w, h,sig);
+			
+			
 		switch (sig) {
 		case 0xC211:
 			decodeC211(ptr + 4, w, h, dst);

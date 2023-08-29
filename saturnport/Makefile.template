@@ -22,7 +22,7 @@ RM = rm -R
 #RM = del /s
 
 SGLDIR = C:/SaturnOrbit/SGL_302j
-SGLIDR = $(SGLDIR)/inc320
+SGLIDR = $(SGLDIR)/inc
 
 #DEVKIT = /home/nightshade/SATURN/SH-COFF
 
@@ -40,8 +40,8 @@ OBJECTS = ./objects
 # -D_352_CLOCK_ Enables 352xYYY resolution to set saturn clock speed to 28mhz, graphic stretching
 # might cause some artifacts
 # option
-CCFLAGS  = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include 
-CXXFLAGS = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include
+CCFLAGS  = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include -nostdlib
+CXXFLAGS = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include -nostdlib
 
 # -m2 must be specified in LDFLAGS so the linker will search the SH2 lib dirs
 # Specify path of libsgl.a by using "-L" option
@@ -49,7 +49,7 @@ CXXFLAGS = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno
 # Sega's ld might not understand the --format command used here...
 
 LDFLAGS = -m2 -L$(SGLLDR) -L$(SBLLDR) -Xlinker --strip-debug -Xlinker -T$(LDFILE) -Xlinker -Map \
-          -Xlinker $(MPFILE) -Xlinker -e -Xlinker ___Start -nostartfiles -fno-builtin
+          -Xlinker $(MPFILE) -Xlinker -e -Xlinker ___Start -nostartfiles -fno-builtin 
 DFLAGS =
 # source_program
 include $(OBJECTS)

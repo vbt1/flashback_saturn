@@ -3,18 +3,18 @@
 /*          for SGL ver. 2.10 (default)                                    */
 /*                                                                         */
 /*-------------------------------------------------------------------------*/
-
+extern "C" {
 #include	"sl_def2.h"
-
+}
 /*---- [1.This part must not be modified] ---------------------------------*/
 #define		SystemWork		0x060ffc00			/* System Variable         */
 
 /*---- [2.This part must not be modified] ---------------------------------*/
 
-#define		MAX_VERTICES	100	/* number of vertices that can be used */
+#define		MAX_VERTICES	1	/* number of vertices that can be used */
 #define		MAX_POLYGONS	100	/* number of vertices that can be used */
-#define		MAX_EVENTS		  16	/* number of events that can be used   */
-#define		MAX_WORKS		 64	/* number of works that can be used    */
+#define		MAX_EVENTS		  1	/* number of events that can be used   */
+#define		MAX_WORKS		 1	/* number of works that can be used    */
 
 #define		WORK_AREA		0x06080000			/* SGL Work Area           */
 
@@ -64,10 +64,9 @@
     const void*   PCM_Work      = (void*)(pcmbuf) ;
     const Uint32  PCM_WkSize    = PCM_SIZE ;
     const void*   TransList     = (void*)(trans_list) ;
-
+/*
     EVENT  EventBuf[MAX_EVENTS] ;
     WORK   WorkBuf[MAX_WORKS] ;
     EVENT* RemainEvent[MAX_EVENTS] ;
     WORK*  RemainWork[MAX_WORKS] ;
-
-/*------------------------------------------------------------------------*/
+*/	
