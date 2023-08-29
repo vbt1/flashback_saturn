@@ -167,6 +167,8 @@ void Cutscene::drawText(int16 x, int16 y, const uint8 *p, uint16 color, uint8 *p
 void Cutscene::swapLayers() {
 	if (_clearScreen == 0) {
 		memcpy(_page1, _pageC, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//		memset(_page1, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+
 	} else {
 		memset(_page1, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	}

@@ -55,7 +55,7 @@ static int detectVersion(const char *dataPath) {
 
 void ss_main(void) {
 	const int version = detectVersion("/");
-	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
+//	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
 	SystemStub *stub = SystemStub_SDL_create();
 	Game *g = new Game(stub, ".", ".", (ResourceType)version);
 	

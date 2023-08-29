@@ -26,7 +26,7 @@ extern "C"
 
 #include "saturn_print.h"
 
-uint16 g_debugMask;
+//uint16 g_debugMask;
 
 //static char buf[128];
 

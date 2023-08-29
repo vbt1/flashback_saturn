@@ -51,7 +51,7 @@ extern "C" {
 
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 
-static SAVE_BUFFER sbuf;
+//static SAVE_BUFFER sbuf;
 static Uint8 rle_buf[SAV_BUFSIZE];
 
 Uint8 vceEnabled = 1;
@@ -479,15 +479,15 @@ void Game::inp_handleSpecialKeys() {
 		_pgeLive[0].life = 0x7FFF;
 	}
 	if (_stub->_pi.load) {
-		loadGameState(_stateSlot);
+//		loadGameState(_stateSlot);
 		_stub->_pi.load = false;
 	}
 	if (_stub->_pi.save) {
-		saveGameState(_stateSlot);
+//		saveGameState(_stateSlot);
 		_stub->_pi.save = false;
 	}
 	if (_stub->_pi.stateSlot != 0) {
-		int8 slot = _stateSlot + _stub->_pi.stateSlot;
+		int8_t slot = _stateSlot + _stub->_pi.stateSlot;
 		if (slot >= 1 && slot < 100) {
 			_stateSlot = slot;
 			debug(DBG_INFO, "Current game state slot is %d", _stateSlot);
@@ -542,7 +542,7 @@ void Game::inp_handleSpecialKeys() {
 }
 
 void Game::drawCurrentInventoryItem() {
-	uint16 src = _pgeLive[0].current_inventory_PGE;
+	uint16_t src = _pgeLive[0].current_inventory_PGE;
 	if (src != 0xFF) {
 		_currentIcon = _res._pgeInit[src].icon_num;
 		drawIcon(_currentIcon, 232, 8, 0xA);
@@ -572,24 +572,23 @@ void Game::showFinalScore() {
 }
 
 bool Game::handleConfigPanel() {
-	int i, j;
-	const int x = 7;
-	const int y = 7;
-	const int w = 17;
-	const int h = 16;
+	static const int x = 7;
+	static const int y = 10;
+	static const int w = 17;
+	static const int h = 12;
 
 	_vid._charShadowColor = 0xE2;
 	_vid._charFrontColor = 0xEE;
 	_vid._charTransparentColor = 0xFF;
 
 	_vid.drawChar(0x81, y, x);
-	for (i = 1; i < w; ++i) {
+	for (int i = 1; i < w; ++i) {
 		_vid.drawChar(0x85, y, x + i);
 	}
 	_vid.drawChar(0x82, y, x + w);
-	for (j = 1; j < h; ++j) {
+	for (int j = 1; j < h; ++j) {
 		_vid.drawChar(0x86, y + j, x);
-		for (i = 1; i < w; ++i) {
+		for (int i = 1; i < w; ++i) {
 			_vid._charTransparentColor = 0xE2;
 			_vid.drawChar(0x20, y + j, x + i);
 		}
@@ -597,7 +596,7 @@ bool Game::handleConfigPanel() {
 		_vid.drawChar(0x87, y + j, x + w);
 	}
 	_vid.drawChar(0x83, y + h, x);
-	for (i = 1; i < w; ++i) {
+	for (int i = 1; i < w; ++i) {
 		_vid.drawChar(0x88, y + h, x + i);
 	}
 	_vid.drawChar(0x84, y + h, x + w);
@@ -638,11 +637,11 @@ bool Game::handleConfigPanel() {
 		int prev = current;
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-			current = (current + 5) % 6;
+			current = (current + 3) % 4;
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-			current = (current + 1) % 6;
+			current = (current + 1) % 4;
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
@@ -670,18 +669,15 @@ bool Game::handleConfigPanel() {
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
 				break;
-			case MENU_ITEM_SPEECH:
-				vceEnabled ^= 1;
-				break;
-			case MENU_ITEM_CLEAR:
-				clearSaveSlots(_currentLevel);
-				break;	
 			}
+			break;
+		}
+		if (_stub->_pi.escape) {
+			_stub->_pi.escape = false;
 			break;
 		}
 	}
 	_vid.fullRefresh();
-	_stub->_pi.escape = false;
 	return (current == MENU_ITEM_ABORT);
 }
 
@@ -690,8 +686,8 @@ bool Game::handleContinueAbort() {
 	char textBuf[50];
 	int timeout = 100;
 	int current_color = 0;
-	uint8 colors[] = { 0xE4, 0xE5 };
-	uint8 color_inc = 0xFF;
+	uint8_t colors[] = { 0xE4, 0xE5 };
+	uint8_t color_inc = 0xFF;
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
 	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
@@ -833,26 +829,9 @@ void Game::printLevelCode() {
 	if (_printLevelCodeCounter != 0) {
 		--_printLevelCodeCounter;
 		if (_printLevelCodeCounter != 0) {
-			char levelCode[50];
-			const char *skill = NULL;
-			switch (_skillLevel) {
-				case 0:
-					skill = _res.getMenuString(LocaleData::LI_13_EASY);
-					break;
-				case 1:
-					skill = _res.getMenuString(LocaleData::LI_14_NORMAL);
-					break;
-				case 2:
-					skill = _res.getMenuString(LocaleData::LI_15_EXPERT);
-					break;
-				default:
-					skill = "UNKNOWN";
-					break;
-			}
-
-			sprintf(levelCode, "LEVEL: %u - %s", _currentLevel + 1, skill);
-			//sprintf(levelCode, "CODE: %s", _menu._passwords[_currentLevel][_skillLevel]);
-			_vid.drawString(levelCode, (Video::GAMESCREEN_W - strlen(levelCode) * 8) / 2, 16, 0xE7);
+			char buf[32];
+			snprintf(buf, sizeof(buf), "CODE: %s", _menu.getLevelPassword(_currentLevel, _skillLevel));
+			_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 16, 0xE7);
 		}
 	}
 }
@@ -866,16 +845,16 @@ void Game::printSaveStateCompleted() {
 
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
-	int8 obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
+	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
 	if (obj == 0) {
 		obj = col_findCurrentCollidingObject(pge, 0xFF, 5, 9, &pge);
 	}
 	if (obj > 0) {
 		_printLevelCodeCounter = 0;
 		if (_textToDisplay == 0xFFFF) {
-			uint8 icon_num = obj - 1;
+			uint8_t icon_num = obj - 1;
 			drawIcon(icon_num, 80, 8, 0xA);
-			uint8 txt_num = pge->init_PGE->text_num;
+			uint8_t txt_num = pge->init_PGE->text_num;
 			const char *str = (const char *)_res._tbn + READ_LE_UINT16(_res._tbn + txt_num * 2);
 			_vid.drawString(str, (176 - strlen(str) * 8) / 2, 26, 0xE6);
 			if (icon_num == 2) {
@@ -936,8 +915,8 @@ void Game::drawStoryTexts() {
 }
 
 void Game::prepareAnims() {
-	if (!(_currentRoom & 0x80) && _currentRoom < 0x40) {
-		int8 pge_room;
+	if (_currentRoom < 0x40) {
+		int8_t pge_room;
 		LivePGE *pge = _pge_liveTable1[_currentRoom];
 		while (pge) {
 			prepareAnimsHelper(pge, 0, 0);
@@ -1154,7 +1133,7 @@ void Game::drawObjectFrame(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) 
 
 	src = _res._memBuf;
 	bool sprite_mirror_x = false;
-	int16 sprite_clipped_w;
+	int16_t sprite_clipped_w;
 	if (sprite_x >= 0) {
 		sprite_clipped_w = sprite_x + sprite_w;
 		if (sprite_clipped_w < 256) {
@@ -1181,7 +1160,7 @@ void Game::drawObjectFrame(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) 
 		return;
 	}
 
-	int16 sprite_clipped_h;
+	int16_t sprite_clipped_h;
 	if (sprite_y >= 0) {
 		sprite_clipped_h = 224 - sprite_h;
 		if (sprite_y < sprite_clipped_h) {
@@ -1202,8 +1181,8 @@ void Game::drawObjectFrame(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) 
 		src += sprite_w - 1;
 	}
 
-	uint32 dst_offset = 256 * sprite_y + sprite_x;
-	uint8 sprite_col_mask = (flags & 0x60) >> 1;
+	uint32_t dst_offset = 256 * sprite_y + sprite_x;
+	uint8_t sprite_col_mask = (flags & 0x60) >> 1;
 
 	if (_eraseBackground) {
 		if (!(sprite_flags & 0x10)) {
@@ -1494,7 +1473,7 @@ void Game::drawIcon(uint8 iconNum, int16 x, int16 y, uint8 colMask) {
 		buf[i * 2 + 0] = (col & 0xF0) >> 4;
 		buf[i * 2 + 1] = (col & 0x0F) >> 0;
 	}
-	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * 256, 16, 16, 16, colMask << 4);
+	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
 	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
@@ -1704,7 +1683,7 @@ void Game::makeGameDemoName(char *buf) {
 void Game::makeGameStateName(uint8 slot, char *buf) {
 	sprintf(buf, "rs%d-%02d", _currentLevel + 1, slot);
 }
-
+/*
 bool Game::saveGameState(uint8 slot) {
 	bool success = false;
 	char stateFile[8];
@@ -1979,7 +1958,7 @@ void Game::clearSaveSlots(uint8 level) {
 		}
 	}
 }
-
+*/
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
 	debug(DBG_GAME, "AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p", stateNum, x, y, dataPtr, pge);
 	assert(stateNum < 4);
@@ -1993,3 +1972,4 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 	++_curPos[stateNum];
 	++_states[stateNum];
 }
+

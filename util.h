@@ -36,7 +36,7 @@ enum {
 	DBG_SFX    = 1 << 11
 };
 
-extern uint16 g_debugMask;
+//extern uint16 g_debugMask;
 
 extern void debug(uint16 cm, const char *msg, ...);
 extern void error(const char *msg, ...);
