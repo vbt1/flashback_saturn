@@ -131,8 +131,8 @@ void Game::run() {
 		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
-//	playCutscene(0x40); // vbt à remettre
-//	playCutscene(0x0D);
+	playCutscene(0x40); // vbt à remettre
+	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -294,9 +294,10 @@ void Game::displayTitleScreenMac(int num) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
-			for (int i = 0; i < 7; ++i) {
+//			for (int i = 0; i < 7; ++i) {
+			for (int i = 0; i < 2; ++i) {
 				const char *str = Menu::_levelNames[i];
-//					emu_printf("drawString %d %s\n",i,str);				
+					emu_printf("drawString %d %s\n",i,str);				
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -311,9 +312,11 @@ void Game::displayTitleScreenMac(int num) {
 					++_currentLevel;
 				}
 			}
-			_vid.updateScreen();
+//			_vid.updateScreen();
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
 		}
-		_stub->processEvents();
+//		_stub->processEvents();
 		if (_stub->_pi.quit) {
 			break;
 		}

@@ -112,14 +112,14 @@ void Video::updateScreen() {
 	debug(DBG_VIDEO, "Video::updateScreen()");
 //	_fullRefresh = true;
 	if (_fullRefresh) {
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H, _frontLayer, 512); // vbt 512 au lieu de 256
+		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
 		_stub->updateScreen(_shakeOffset);
 		_fullRefresh = false;
 	} else {
 		int i, j;
 		int count = 0;
 		uint8 *p = _screenBlocks;
-		for (j = 0; j < GAMESCREEN_H / SCREENBLOCK_H; ++j) {
+		for (j = 0; j < GAMESCREEN_H*2 / SCREENBLOCK_H; ++j) {
 			uint16 nh = 0;
 			for (i = 0; i < GAMESCREEN_W*2 / SCREENBLOCK_W; ++i) {
 				if (p[i] != 0) {
@@ -493,7 +493,7 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.x = x * _layerScale;
 	buf.y = y * _layerScale;
 	
-	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d)\n", _w,_h,x,y,buf.pitch,_layerScale);	
+	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %c)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);	
 	
 	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
