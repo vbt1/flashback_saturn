@@ -83,7 +83,7 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 		++str;
 		++len;
 	}
-	_vid->markBlockAsDirty(x * 8, y * 8, len * 8, 8);
+	_vid->markBlockAsDirty(x * 8, y * 8, len * 8, 8, _vid->_layerScale);
 }
 
 void Menu::loadPicture(const char *prefix) {

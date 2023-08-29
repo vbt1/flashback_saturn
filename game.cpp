@@ -178,6 +178,8 @@ void Game::run() {
 				}
 				break;
 			case kResourceTypeMac:
+				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
+					emu_printf("displayTitleScreenMac\n");				
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -294,6 +296,7 @@ void Game::displayTitleScreenMac(int num) {
 			static const uint8_t defaultColor = 0xE8;
 			for (int i = 0; i < 7; ++i) {
 				const char *str = Menu::_levelNames[i];
+//					emu_printf("drawString %d %s\n",i,str);				
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -1215,7 +1218,7 @@ void Game::drawObjectFrame(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) 
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h);
+	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 void Game::decodeCharacterFrame(const uint8 *dataPtr, uint8 *dstPtr) {
@@ -1354,7 +1357,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h);
+	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 int Game::loadMonsterSprites(LivePGE *pge) {
@@ -1492,7 +1495,7 @@ void Game::drawIcon(uint8 iconNum, int16 x, int16 y, uint8 colMask) {
 		buf[i * 2 + 1] = (col & 0x0F) >> 0;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * 256, 16, 16, 16, colMask << 4);
-	_vid.markBlockAsDirty(x, y, 16, 16);
+	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
 void Game::playSound(uint8 sfxId, uint8 softVol) {

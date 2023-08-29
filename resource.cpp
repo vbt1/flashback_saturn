@@ -1367,11 +1367,10 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-
 		emu_printf("findEntry        \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
-		emu_printf("Resource 'name' found\n");		
+		emu_printf("Resource '%s' found %d\n",name, decompressLzss);		
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
@@ -1379,6 +1378,10 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 		emu_printf("Resource '%s' not found\n", name);
 	}
 		emu_printf("Resource return datz\n");	
+
+//if (strcmp(name, "Font") == 0)
+//	while(1);
+
 	return data;
 }
 

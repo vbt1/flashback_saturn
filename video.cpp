@@ -47,6 +47,17 @@ Video::Video(Resource *res, SystemStub *stub)
 	_charFrontColor = 0;
 	_charTransparentColor = 0;
 	_charShadowColor = 0;
+	//_drawChar = 0;
+	switch (_res->_type) {
+	case kResourceTypeDOS:
+		_drawChar = &Video::PC_drawStringChar;
+		break;
+	case kResourceTypeMac:
+		_drawChar = &Video::MAC_drawStringChar;
+		
+	emu_printf("VBT VBT MAC_drawStringChar init \n");		
+		break;
+	}	
 }
 
 Video::~Video() {
@@ -56,9 +67,9 @@ Video::~Video() {
 	//sat_free(_tempLayer2);
 	//sat_free(_screenBlocks);
 }
-
+/*
 void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
-	debug(DBG_VIDEO, "Video::markBlockAsDirty(%d, %d, %d, %d)", x, y, w, h);
+	debug(DBG_VIDEO, "Video::markBlockAsDirty1(%d, %d, %d, %d)", x, y, w, h);
 	assert(x >= 0 && x + w <= GAMESCREEN_W && y >= 0 && y + h <= GAMESCREEN_H);
 	int bx1 = x / SCREENBLOCK_W;
 	int by1 = y / SCREENBLOCK_H;
@@ -70,10 +81,10 @@ void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
 			_screenBlocks[by1 * (GAMESCREEN_W / SCREENBLOCK_W) + i] = 2;
 		}
 	}
-}
+}*/
 
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
-	debug(DBG_VIDEO, "Video::markBlockAsDirty(%d, %d, %d, %d)", x, y, w, h);
+	debug(DBG_VIDEO, "Video::markBlockAsDirty2(%d, %d, %d, %d)", x, y, w, h);
 	int bx1 = scale * x / SCREENBLOCK_W;
 	int by1 = scale * y / SCREENBLOCK_H;
 	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
@@ -101,7 +112,7 @@ void Video::updateScreen() {
 	debug(DBG_VIDEO, "Video::updateScreen()");
 //	_fullRefresh = true;
 	if (_fullRefresh) {
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _frontLayer, 256);
+		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H, _frontLayer, 512); // vbt 512 au lieu de 256
 		_stub->updateScreen(_shakeOffset);
 		_fullRefresh = false;
 	} else {
@@ -110,23 +121,23 @@ void Video::updateScreen() {
 		uint8 *p = _screenBlocks;
 		for (j = 0; j < GAMESCREEN_H / SCREENBLOCK_H; ++j) {
 			uint16 nh = 0;
-			for (i = 0; i < GAMESCREEN_W / SCREENBLOCK_W; ++i) {
+			for (i = 0; i < GAMESCREEN_W*2 / SCREENBLOCK_W; ++i) {
 				if (p[i] != 0) {
 					--p[i];
 					++nh;
 				} else if (nh != 0) {
 					int16 x = (i - nh) * SCREENBLOCK_W;
-					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 256);
+					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 					nh = 0;
 					++count;
 				}
 			}
 			if (nh != 0) {
 				int16 x = (i - nh) * SCREENBLOCK_W;
-				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 256);
+				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 				++count;
 			}
-			p += GAMESCREEN_W / SCREENBLOCK_W;
+			p += GAMESCREEN_W*2 / SCREENBLOCK_W;
 		}
 		if (count != 0) {
 			_stub->updateScreen(_shakeOffset);
@@ -409,7 +420,7 @@ void Video::drawSpriteSub6(const uint8 *src, uint8 *dst, int pitch, int h, int w
 }
 
 void Video::drawChar(uint8 c, int16 y, int16 x) {
-	debug(DBG_VIDEO, "Video::drawChar(0x%X, %d, %d)", c, y, x);
+	emu_printf("Video::drawChar(0x%X, %d, %d)\n", c, y, x);
 	y *= 8;
 	x *= 8;
 	const uint8 *src = _res->_fnt + (c - 32) * 32;
@@ -446,41 +457,67 @@ void Video::drawChar(uint8 c, int16 y, int16 x) {
 	}
 }
 
+void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+	dst += y * pitch + x;
+	assert(chr >= 32);
+	src += (chr - 32) * 8 * 4;
+	for (int y = 0; y < 8; ++y) {
+		for (int x = 0; x < 4; ++x) {
+			const uint8_t c1 = src[x] >> 4;
+			if (c1 != 0) {
+				*dst = (c1 == 15) ? color : (0xE0 + c1);
+			}
+			++dst;
+			const uint8_t c2 = src[x] & 15;
+			if (c2 != 0) {
+				*dst = (c2 == 15) ? color : (0xE0 + c2);
+			}
+			++dst;
+		}
+		src += 4;
+		dst += pitch - CHAR_W;
+	}
+}
+
 static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
-const char *Video::drawString(const char *str, int16 x, int16 y, uint8 col) {
-	debug(DBG_VIDEO, "Video::drawString('%s', %d, %d, 0x%X)", str, x, y, col);
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+	emu_printf("Video::MAC_drawStringChar\n");	
+	DecodeBuffer buf;
+	memset(&buf, 0, sizeof(buf));
+	buf.ptr = dst;
+	buf.w = _w;
+	buf.pitch = _w;
+	buf.h = _h;
+	buf.x = x * _layerScale;
+	buf.y = y * _layerScale;
+	
+	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d)\n", _w,_h,x,y,buf.pitch,_layerScale);	
+	
+	buf.setPixel = Video::MAC_setPixelFont;
+	_MAC_fontFrontColor = color;
+	_MAC_fontShadowColor = _charShadowColor;
+	assert(chr >= 32);
+	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
+}
+
+const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
+	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+	const uint8_t *fnt = _res->_fnt;
 	int len = 0;
-	int offset = y * 256 + x;
-	uint8 *dst = _frontLayer + offset;
 	while (1) {
-		uint8 c = *str++;
+		const uint8_t c = *str++;
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		uint8 *dst_char = dst;
-		const uint8 *src = _res->_fnt + (c - 32) * 32;
-		for (int h = 0; h < 8; ++h) {
-			for (int w = 0; w < 4; ++w) {
-				uint8 c1 = (*src & 0xF0) >> 4;
-				uint8 c2 = (*src & 0x0F) >> 0;
-				++src;
-				if (c1 != 0) {
-					*dst_char = (c1 == 0xF) ? col : (0xE0 + c1);
-				}
-				++dst_char;
-				if (c2 != 0) {
-					*dst_char = (c2 == 0xF) ? col : (0xE0 + c2);
-				}
-				++dst_char;
-			}
-			dst_char += 256 - 8;
-		}
-		dst += 8; // character width
+//	emu_printf("avant _drawChar dc null? %p fladdr %x w %d x+l %d y %d fntaddr %x col %d c %02x\n",_drawChar,_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+
+		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+//emu_printf("apres _drawChar\n");		
 		++len;
 	}
-	markBlockAsDirty(x, y, len * 8, 8);
+	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 

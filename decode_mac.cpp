@@ -4,16 +4,21 @@
 #include <string.h>
 #include "decode_mac.h"
 #include "util.h"
+#include "saturn_print.h"
 
 extern "C" {
 #include "sat_mem_checker.h"
 }
 
 uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
+
+	emu_printf("decodeLzss\n");
+	
 	decodedSize = f.readUint32BE();
+	emu_printf("decodedSize %d\n",decodedSize);	
 	uint8_t *dst = (uint8_t *)sat_malloc(decodedSize);
 	if (!dst) {
-		warning("Failed to allocate %d bytes for LZSS", decodedSize);
+		emu_printf("Failed to allocate %d bytes for LZSS", decodedSize);
 		return 0;
 	}
 	uint32_t count = 0;
