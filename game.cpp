@@ -52,7 +52,7 @@ extern "C" {
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 
 //static SAVE_BUFFER sbuf;
-static Uint8 rle_buf[SAV_BUFSIZE];
+//static Uint8 rle_buf[SAV_BUFSIZE];
 
 Uint8 vceEnabled = 1;
 /* *** */

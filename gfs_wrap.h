@@ -6,8 +6,12 @@
 #include <sega_gfs.h> 
 #include <stdio.h>
 
-#define   OPEN_MAX  (Sint32)20
-#define   DIR_MAX   (Sint32)170
+//#define   OPEN_MAX  (Sint32)20
+//#define   DIR_MAX   (Sint32)170
+
+#define   OPEN_MAX  (Sint32)6
+#define   DIR_MAX   (Sint32)8
+
 
 #define SECTOR_SIZE 2048 // Bytes for each sector
 
