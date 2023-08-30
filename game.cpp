@@ -204,11 +204,13 @@ void Game::run() {
 			_score = 0;
 			//clearStateRewind();
 			loadLevelData();
+emu_printf( "resetGameState\n");					
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
+emu_printf( "mainLoop\n");									
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					emu_printf("End of demo\n");
@@ -359,6 +361,7 @@ void Game::mainLoop() {
 		_endLoop = true;
 		return;
 	}
+emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);	
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
@@ -411,18 +414,26 @@ void Game::mainLoop() {
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
 		} else {
+emu_printf( "loadLevelMap \n");				
 			_currentRoom = _pgeLive[0].room_location;
 			loadLevelMap();
 			_loadMap = false;
-			_vid.fullRefresh();
+//			_vid.fullRefresh();
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
+
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
 	}*/
+emu_printf( "prepareAnims \n");			
 	prepareAnims();
+emu_printf( "drawAnims \n");				
 	drawAnims();
+emu_printf( "drawCurrentInventoryItem \n");					
 	drawCurrentInventoryItem();
+emu_printf( "drawLevelTexts \n");						
 	drawLevelTexts();
 	/*if (g_options.enable_password_menu) {
 		printLevelCode();
@@ -430,7 +441,11 @@ void Game::mainLoop() {
 	if (_blinkingConradCounter != 0) {
 		--_blinkingConradCounter;
 	}
-	_vid.updateScreen();
+//	_vid.updateScreen();
+	
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
+	
 	updateTiming();
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
@@ -1400,13 +1415,22 @@ bool Game::hasLevelMap(int level, int room) const {
 	return false;
 }
 void Game::loadLevelMap() {
-	debug(DBG_GAME, "Game::loadLevelMap() room=%d", _currentRoom);
+	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
-	_vid.copyLevelMap(_currentRoom);
-	_vid.setLevelPalettes();
+	switch (_res._type) {
+	case kResourceTypeDOS:
+//		_vid.PC_decodeMap(_currentLevel, _currentRoom);  // vbt à remettre
+		break;
+	case kResourceTypeMac:
+		_vid.MAC_decodeMap(_currentLevel, _currentRoom);
+		break;
+	}
 }
 
 void Game::loadLevelData() {
+	emu_printf( "loadLevelData %d\n", _currentLevel);	
+	emu_printf( "clearLevelRes\n");	
 	_res.clearLevelRes();
 
 	const Level *lvl = &_gameLevels[_currentLevel];
@@ -1452,6 +1476,7 @@ void Game::loadLevelData() {
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
+	emu_printf( "pge_resetMessages\n");		
 	pge_resetMessages();
 	_validSaveState = false;
 }
