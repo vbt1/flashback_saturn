@@ -166,7 +166,7 @@ void Cutscene::drawText(int16 x, int16 y, const uint8 *p, uint16 color, uint8 *p
 
 void Cutscene::swapLayers() {
 	if (_clearScreen == 0) {
-		memcpy(_page1, _pageC, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//		memcpy(_page1, _pageC, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 //		memset(_page1, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 
 	} else {
@@ -373,7 +373,7 @@ void Cutscene::op_drawShape() {
 		drawShape(primitiveVertices, x + dx, y + dy);
 	}
 	if (_clearScreen != 0) {
-		memcpy(_pageC, _page1, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//		memcpy(_pageC, _page1, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	}
 }
 
@@ -394,13 +394,13 @@ void Cutscene::op_drawStringAtBottom() {
 	debug(DBG_CUT, "Cutscene::op_drawStringAtBottom()");
 	uint16 strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
-		memset(_pageC + 179 * 256, 0xC0, 45 * 256);
+//		memset(_pageC + 179 * 256, 0xC0, 45 * 256);
 		memset(_page1 + 179 * 256, 0xC0, 45 * 256);
 		memset(_page0 + 179 * 256, 0xC0, 45 * 256);
 		if (strId != 0xFFFF) {
 			uint16 offset = READ_BE_UINT16(_res->_cine_off + strId * 2);
 			drawText(0, 129, _res->_cine_txt + offset, 0xEF, _page1, 1);
-			drawText(0, 129, _res->_cine_txt + offset, 0xEF, _pageC, 1);
+//			drawText(0, 129, _res->_cine_txt + offset, 0xEF, _pageC, 1);
 		}
 	}
 }
@@ -985,7 +985,7 @@ bool Cutscene::load(uint16_t cutName) {
 void Cutscene::prepare() {
 	_page0 = _vid->_frontLayer;
 	_page1 = _vid->_tempLayer;
-	_pageC = _vid->_tempLayer2;
+//	_pageC = _vid->_tempLayer2;
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;

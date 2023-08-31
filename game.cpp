@@ -131,8 +131,8 @@ void Game::run() {
 		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
-	playCutscene(0x40); // vbt à remettre
-	playCutscene(0x0D);
+//	playCutscene(0x40); // vbt à remettre
+//	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -297,9 +297,9 @@ void Game::displayTitleScreenMac(int num) {
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
 //			for (int i = 0; i < 7; ++i) {
-			for (int i = 0; i < 2; ++i) {
+			for (int i = 0; i < 7; ++i) {
 				const char *str = Menu::_levelNames[i];
-					emu_printf("drawString %d %s\n",i,str);				
+//					emu_printf("drawString %d %s\n",i,str);				
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -763,7 +763,7 @@ bool Game::handleContinueAbort() {
 	}
 	return false;
 }
-
+/*
 bool Game::handleProtectionScreen() {
 	bool valid = true;
 	_cut.prepare();
@@ -842,7 +842,7 @@ bool Game::handleProtectionScreen() {
 	_vid.fadeOut();
 	return valid;
 }
-
+*/
 void Game::printLevelCode() {
 	if (_printLevelCodeCounter != 0) {
 		--_printLevelCodeCounter;

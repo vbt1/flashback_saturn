@@ -1419,7 +1419,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
 
-			emu_printf("MAC_decodeImageData %d %d %x\n", w, h,sig);
+//			emu_printf("MAC_decodeImageData %d %d %x\n", w, h,sig);
 			
 			
 		switch (sig) {
@@ -1508,10 +1508,10 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 	snprintf(name, sizeof(name), "Title %d", i);
 	
 		emu_printf("%s\n",name);
-		emu_printf("decodeResourceMacData        \n");			
+//		emu_printf("decodeResourceMacData        \n");			
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
-		emu_printf("MAC_decodeImageData        \n");		
+//		emu_printf("MAC_decodeImageData        \n");		
 		MAC_decodeImageData(ptr, 0, buf);
 		sat_free(ptr);
 	}

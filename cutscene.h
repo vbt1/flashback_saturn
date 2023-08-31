@@ -93,7 +93,7 @@ struct Cutscene {
 	uint8 _creditsTextPosX;
 	uint8 _creditsTextPosY;
 	int16 _creditsTextCounter;
-	uint8 *_page0, *_page1, *_pageC;
+	uint8 *_page0, *_page1; //, *_pageC;
 
 	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid, ResourceType ver);
 

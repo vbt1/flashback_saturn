@@ -39,7 +39,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 	memset(_tempLayer, 0, _w * _h);
 	//_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_tempLayer2, 0, _w * _h);
+//	memset(_tempLayer2, 0, _w * _h);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	_fullRefresh = true;
@@ -111,6 +111,7 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 void Video::updateScreen() {
 	debug(DBG_VIDEO, "Video::updateScreen()");
 //	_fullRefresh = true;
+//_shakeOffset=0;
 	if (_fullRefresh) {
 		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
 		_stub->updateScreen(_shakeOffset);
@@ -485,8 +486,13 @@ static uint8_t _MAC_fontShadowColor;
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
 	//emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf;
+	
+//emu_printf("a\n");	
 	memset(&buf, 0, sizeof(buf));
+//		int *val = (int *)dst;	
+//emu_printf("b %08x\n",(int)val);	
 	buf.ptr = dst;
+//emu_printf("c\n");	
 	buf.w = _w;
 	buf.pitch = _w;
 	buf.h = _h;
@@ -494,12 +500,15 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.y = y * _layerScale;
 	
 //	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %c)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);	
-	
+//emu_printf("d\n");		
 	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
+//emu_printf("e\n");		
 	assert(chr >= 32);
+//emu_printf("f\n");		
 	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
+//emu_printf("g\n");		
 }
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
@@ -517,7 +526,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //emu_printf("apres _drawChar\n");		
 		++len;
 	}
-	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+	//markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 
