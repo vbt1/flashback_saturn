@@ -38,6 +38,12 @@ Resource::Resource(const char *dataPath, ResourceType ver) {
 	_dataPath = dataPath;
 	_type = ver;
 	_memBuf = (uint8 *)sat_malloc(0xE000);
+
+//	_lang = lang;
+	_aba = 0;
+	_mac = 0;
+	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
+	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
 }
 
 Resource::~Resource() {
@@ -942,32 +948,42 @@ void Resource::load_PGE(File *f) {
 }
 
 void Resource::decodePGE(const uint8_t *p, int size) {
-	_pgeNum = _readUint16(p); p += 2;
+	emu_printf("pge 0 %p\n",p);			
+	_pgeNum = _readUint16(p); 
+	emu_printf("pge 1\n");		
+	p += 2;
+	emu_printf("pge 2\n");			
 	memset(_pgeInit, 0, sizeof(_pgeInit));
-	debug(DBG_RES, "len=%d _pgeNum=%d", size, _pgeNum);
+	emu_printf("len=%d _pgeNum=%d\n", size, _pgeNum);
 	assert(_pgeNum <= ARRAYSIZE(_pgeInit));
 	for (uint16_t i = 0; i < _pgeNum; ++i) {
 		InitPGE *pge = &_pgeInit[i];
+	emu_printf("pge a\n");		
 		pge->type = _readUint16(p); p += 2;
 		pge->pos_x = _readUint16(p); p += 2;
 		pge->pos_y = _readUint16(p); p += 2;
 		pge->obj_node_number = _readUint16(p); p += 2;
+	emu_printf("pge b\n");				
 		pge->life = _readUint16(p); p += 2;
 		for (int lc = 0; lc < 4; ++lc) {
 			pge->data[lc] = _readUint16(p); p += 2;
 		}
+	emu_printf("pge c\n");				
 		pge->object_type = *p++;
 		pge->init_room = *p++;
 		pge->room_location = *p++;
 		pge->init_flags = *p++;
+	emu_printf("pge d\n");				
 		pge->colliding_icon_num = *p++;
 		pge->icon_num = *p++;
 		pge->object_id = *p++;
 		pge->skill = *p++;
+	emu_printf("pge e\n");				
 		pge->mirror_x = *p++;
 		pge->flags = *p++;
 		pge->collision_data_len = *p++;
 		++p;
+	emu_printf("pge f\n");				
 		pge->text_num = _readUint16(p); p += 2;
 	}
 }
@@ -1315,6 +1331,7 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 }
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
+		emu_printf("decodeResourceMacText        \n");
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
@@ -1399,6 +1416,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 }
 
 void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
+emu_printf("MAC_decodeDataCLUT\n");					emu_printf("MAC_decodeDataCLUT\n");					
 	ptr += 6; // seed+flags
 	_clutSize = READ_BE_UINT16(ptr); ptr += 2;
 	
@@ -1427,24 +1445,29 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 }
 
 void Resource::MAC_loadClutData() {
+emu_printf("MAC_loadClutData\n");		
 	uint8_t *ptr = decodeResourceMacData("Flashback colors", false);
 	MAC_decodeDataCLUT(ptr);
 	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
+emu_printf("MAC_loadFontData\n");	
 	_fnt = decodeResourceMacData("Font", true);
 }
 
 void Resource::MAC_loadIconData() {
+emu_printf("MAC_loadIconData\n");			
 	_icn = decodeResourceMacData("Icons", true);
 }
 
 void Resource::MAC_loadPersoData() {
+emu_printf("MAC_loadPersoData\n");				
 	_perso = decodeResourceMacData("Person", true);
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
+emu_printf("MAC_loadMonsterData\n");						
 	static const struct {
 		const char *id;
 		const char *name;
@@ -1469,6 +1492,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 }
 
 void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
+emu_printf("MAC_loadTitleImage\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Title %d", i);
 	
@@ -1504,12 +1528,13 @@ static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5
 
 void Resource::MAC_loadLevelData(int level) {
 	char name[64];
-
+emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
+emu_printf("decodePGE\n");		
 	decodePGE(ptr, _resourceMacDataSize);
-	free(ptr);
+	sat_free(ptr);
 
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
@@ -1521,14 +1546,14 @@ void Resource::MAC_loadLevelData(int level) {
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	decodeOBJ(ptr, _resourceMacDataSize);
-	free(ptr);
+	sat_free(ptr);
 
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
-	free(ptr);
+	sat_free(ptr);
 
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
@@ -1542,6 +1567,7 @@ void Resource::MAC_loadLevelData(int level) {
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
+emu_printf("MAC_loadLevelRoom\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);

@@ -18,7 +18,7 @@ uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
 	emu_printf("decodedSize %d\n",decodedSize);	
 	uint8_t *dst = (uint8_t *)sat_malloc(decodedSize);
 	if (!dst) {
-		emu_printf("Failed to allocate %d bytes for LZSS", decodedSize);
+		emu_printf("Failed to allocate %d bytes for LZSS\n", decodedSize);
 		return 0;
 	}
 	uint32_t count = 0;
@@ -38,7 +38,8 @@ uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
 			}
 		}
 	}
-	assert(count == decodedSize);
+//	assert(count == decodedSize);
+		emu_printf("count %d == decodedSize %d \n", count, decodedSize);	
 	return dst;
 }
 

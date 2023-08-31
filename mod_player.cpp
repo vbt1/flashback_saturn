@@ -23,7 +23,7 @@ extern "C"
 #include "sat_mem_checker.h"
 }
 #include "saturn_print.h"
-
+#include <cstdint>
 #include "sys.h"
 #include "file.h"
 #include "mixer.h"
@@ -451,7 +451,7 @@ void ModPlayer::handleTick() {
 		uint8 currentPattern = _modInfo.patternOrderTable[_currentPatternOrder];
 		const uint8 *p = _modInfo.patternsTable + (currentPattern * 64 + _currentPatternPos) * 16;
 		for (int i = 0; i < NUM_TRACKS; ++i) {
-			uint32 noteData = READ_BE_UINT32(p);
+			uint32_t noteData = READ_BE_UINT32(p);
 			handleNote(i, noteData);
 			p += 4;
 		}
