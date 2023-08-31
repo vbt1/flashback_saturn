@@ -192,6 +192,7 @@ void Game::run() {
 //			_stub->clearWidescreen();
 //		}
 		if (_currentLevel == 7) {
+emu_printf("_currentLevel == 7 \n");				
 			_vid.fadeOut();
 			_vid.setTextPalette();
 			playCutscene(0x3D);
@@ -355,8 +356,10 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
+emu_printf( "mainLoop playCutscene\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
+emu_printf( "showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
@@ -365,6 +368,7 @@ emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
+emu_printf( "playCutscene(_cut._deathCutsceneId)\n");							
 			playCutscene(_cut._deathCutsceneId);
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
@@ -377,6 +381,7 @@ emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);
 				} else*/
 				{
 //					clearStateRewind();
+emu_printf( "loadLevelData\n");							
 					loadLevelData();
 //					resetGameState();
 				}
@@ -385,8 +390,11 @@ emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);
 		}
 	}
 	memcpy(_vid._frontLayer, _vid._backLayer, _vid._layerSize);
+emu_printf( "pge_getInput %d\n",_deathCutsceneCounter);								
 	pge_getInput();
+emu_printf( "pge_prepare %d\n",_deathCutsceneCounter);									
 	pge_prepare();
+emu_printf( "col_prepareRoomState %d\n",_deathCutsceneCounter);			
 	col_prepareRoomState();
 	uint8_t oldLevel = _currentLevel;
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
@@ -394,13 +402,16 @@ emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);
 		if (pge) {
 			_col_currentPiegeGridPosY = (pge->pos_y / 36) & ~1;
 			_col_currentPiegeGridPosX = (pge->pos_x + 8) >> 4;
+emu_printf( "pge_process0 %d\n",_deathCutsceneCounter);				
 			pge_process(pge);
+emu_printf( "pge_process1 %d\n",_deathCutsceneCounter);			
 		}
 	}
 	if (oldLevel != _currentLevel) {
 		/*if (_res._isDemo) {
 			_currentLevel = oldLevel;
 		}*/
+emu_printf( "changeLevel %d\n",_deathCutsceneCounter);			
 		changeLevel();
 		_pge_opGunVar = 0;
 		return;
@@ -411,6 +422,10 @@ emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);
 	}
 	if (_loadMap) {
 		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
+			
+emu_printf( "_currentRoom == %02x\n",_currentRoom);	
+emu_printf( "_deathCutsceneCounter = 1\n");			
+emu_printf( "hasLevelMap ? == %02d\n",hasLevelMap(_currentLevel, _pgeLive[0].room_location));			
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
 		} else {
@@ -1404,6 +1419,9 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 }
 
 bool Game::hasLevelMap(int level, int room) const {
+
+	emu_printf("Game::hasLevelMap() level %d room%d\n", level, room);
+	
 	if (_res._type == kResourceTypeMac) {
 		return _res.MAC_hasLevelMap(level, room);
 	}
@@ -1429,32 +1447,40 @@ void Game::loadLevelMap() {
 }
 
 void Game::loadLevelData() {
-	emu_printf( "loadLevelData %d\n", _currentLevel);	
-	emu_printf( "clearLevelRes\n");	
 	_res.clearLevelRes();
-
 	const Level *lvl = &_gameLevels[_currentLevel];
-	_res.load(lvl->name, Resource::OT_SPC);
-	_res.load(lvl->name, Resource::OT_MBK);
-	_res.load(lvl->name, Resource::OT_RP);
-	_res.load(lvl->name, Resource::OT_CT);
-	_res.load(lvl->name, Resource::OT_MAP);
-	_res.load(lvl->name, Resource::OT_PAL);
-
-	_res.load(lvl->name2, Resource::OT_PGE);
-	_res.load(lvl->name2, Resource::OT_OBJ);
-	_res.load(lvl->name2, Resource::OT_ANI);
-	_res.load(lvl->name2, Resource::OT_TBN);
+	switch (_res._type) {
+	case kResourceTypeDOS:
+		_res.load(lvl->name, Resource::OT_MBK);
+		_res.load(lvl->name, Resource::OT_CT);
+		_res.load(lvl->name, Resource::OT_PAL);
+		_res.load(lvl->name, Resource::OT_RP);
+		/*if (_res._isDemo || g_options.use_tile_data || _res._aba) { // use .BNQ/.LEV/(.SGD) instead of .MAP (PC demo)
+			if (_currentLevel == 0) {
+				_res.load(lvl->name, Resource::OT_SGD);
+			}
+			_res.load(lvl->name, Resource::OT_LEV);
+			_res.load(lvl->name, Resource::OT_BNQ);
+		} else*/ {
+			_res.load(lvl->name, Resource::OT_MAP);
+		}
+		_res.load(lvl->name2, Resource::OT_PGE);
+		_res.load(lvl->name2, Resource::OT_OBJ);
+		_res.load(lvl->name2, Resource::OT_ANI);
+		_res.load(lvl->name2, Resource::OT_TBN);
+		break;
+	case kResourceTypeMac:
+		_res.MAC_unloadLevelData();
+		_res.MAC_loadLevelData(_currentLevel);
+		break;
+	}
 
 	_cut._id = lvl->cutscene_id;
 
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
 
-	_curBankSlot = &_bankSlots[0];
-	_curBankSlot->entryNum = 0xFFFF;
-	_curBankSlot->ptr = 0;
-	_firstBankData = _bankData;
+	_res.clearBankData();
 	_printLevelCodeCounter = 150;
 
 	_col_slots2Cur = _col_slots2;
@@ -1464,21 +1490,35 @@ void Game::loadLevelData() {
 	memset(_pge_liveTable1, 0, sizeof(_pge_liveTable1));
 
 	_currentRoom = _res._pgeInit[0].init_room;
-	uint16 n = _res._pgeNum;
+	uint16_t n = _res._pgeNum;
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
 
-	for (uint16 i = 0; i < _res._pgeNum; ++i) {
+	if (_demoBin != -1) {
+		_cut._id = -1;
+		if (_demoInputs[_demoBin].room != 255) {
+			_pgeLive[0].room_location = _demoInputs[_demoBin].room;
+			_pgeLive[0].pos_x = _demoInputs[_demoBin].x;
+			_pgeLive[0].pos_y = _demoInputs[_demoBin].y;
+			_inp_demPos = 0;
+		} else {
+			_inp_demPos = 1;
+		}
+		_printLevelCodeCounter = 0;
+	}
+
+	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {
 			LivePGE *pge = &_pgeLive[i];
 			pge->next_PGE_in_room = _pge_liveTable1[pge->room_location];
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
-	emu_printf( "pge_resetMessages\n");		
 	pge_resetMessages();
 	_validSaveState = false;
+
+//	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre
 }
 
 uint8 *Game::findBankData(uint16 entryNum) {

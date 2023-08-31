@@ -245,7 +245,7 @@ void Resource::load_SPR_OFF(const char *fileName, uint8 *sprData) {
 		}
 	} else if (_aba) {
 		offData = _aba->loadEntry(_entryName);
-	}		
+	}
 	if (offData) {
 		const uint8_t *p = offData;
 		uint16_t pos;
@@ -351,82 +351,47 @@ void Resource::load_TEXT() {
 	File f;
 	// Load game strings
 	_stringsTable = 0;
-	if (f.open("STRINGS.TXT", _dataPath, "rb")) {
-		const int sz = f.size();
-		_extStringsTable = (uint8 *)sat_malloc(sz);
-		if (_extStringsTable) {
-			f.read(_extStringsTable, sz);
-			_stringsTable = _extStringsTable;
-		}
-		f.close();
-	}
-	if (!_stringsTable) {
-		/*switch (_ver) {
-		case VER_FR:
-			_stringsTable = LocaleData::_stringsTableFR;
-			break;
-		case VER_EN:
-			_stringsTable = LocaleData::_stringsTableEN;
-			break;
-		case VER_DE:
-			_stringsTable = LocaleData::_stringsTableDE;
-			break;
-		case VER_SP:
-			_stringsTable = LocaleData::_stringsTableSP;
-			break;
-		}*/
-		_stringsTable = LocaleData::_stringsTableEN;		
+	switch (_lang) {
+	case LANG_FR:
+		_stringsTable = LocaleData::_stringsTableFR;
+		break;
+	case LANG_EN:
+		_stringsTable = LocaleData::_stringsTableEN;
+		break;/*
+	case LANG_DE:
+		_stringsTable = LocaleData::_stringsTableDE;
+		break;
+	case LANG_SP:
+		_stringsTable = LocaleData::_stringsTableSP;
+		break;
+	case LANG_IT:
+		_stringsTable = LocaleData::_stringsTableIT;
+		break;
+	case LANG_JP:
+		_stringsTable = LocaleData::_stringsTableJP;
+		break;*/
 	}
 	// Load menu strings
 	_textsTable = 0;
-	if (f.open("MENUS.TXT", _dataPath, "rb")) {
-		const int offs = LocaleData::LI_NUM * sizeof(char *);
-		const int sz = f.size() + 1;
-		_extTextsTable = (char **)sat_malloc(offs + sz);
-		if (_extTextsTable) {
-			char *textData = (char *)_extTextsTable + offs;
-			f.read(textData, sz);
-			textData[sz] = 0;
-			int textsCount = 0;
-			for (char *eol; (eol = strpbrk(textData, "\r\n")) != 0; ) {
-				*eol++ = 0;
-				if (*eol == '\r' || *eol == '\n') {
-					*eol++ = 0;
-				}
-				if (textsCount < LocaleData::LI_NUM && textData[0] != 0) {
-					_extTextsTable[textsCount] = textData;
-					++textsCount;
-				}
-				textData = eol;
-			}
-			if (textsCount < LocaleData::LI_NUM && textData[0] != 0) {
-				_extTextsTable[textsCount] = textData;
-				++textsCount;
-			}
-			if (textsCount < LocaleData::LI_NUM) {
-				sat_free(_extTextsTable);
-				_extTextsTable = 0;
-			} else {
-				_textsTable = (const char **)_extTextsTable;
-			}
-		}
-	}
-	if (!_textsTable) {
-		/*switch (_ver) {
-		case VER_FR:
-			_textsTable = LocaleData::_textsTableFR;
-			break;
-		case VER_EN:
-			_textsTable = LocaleData::_textsTableEN;
-			break;
-		case VER_DE:
-			_textsTable = LocaleData::_textsTableDE;
-			break;
-		case VER_SP:
-			_textsTable = LocaleData::_textsTableSP;
-			break;
-		}*/
+	switch (_lang) {
+	case LANG_FR:
+		_textsTable = LocaleData::_textsTableFR;
+		break;
+	case LANG_EN:
 		_textsTable = LocaleData::_textsTableEN;
+		break;/*
+	case LANG_DE:
+		_textsTable = LocaleData::_textsTableDE;
+		break;
+	case LANG_SP:
+		_textsTable = LocaleData::_textsTableSP;
+		break;
+	case LANG_IT:
+		_textsTable = LocaleData::_textsTableIT;
+		break;
+	case LANG_JP:
+		_textsTable = LocaleData::_textsTableEN;
+		break;*/
 	}
 }
 
@@ -1537,6 +1502,45 @@ void Resource::MAC_unloadLevelData() {
 static const int _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red palette: 32
 static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5-2" };
 
+void Resource::MAC_loadLevelData(int level) {
+	char name[64];
+
+	// .PGE
+	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
+	uint8_t *ptr = decodeResourceMacData(name, true);
+	decodePGE(ptr, _resourceMacDataSize);
+	free(ptr);
+
+	// .ANI
+	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
+	_ani = decodeResourceMacData(name, true);
+	assert(READ_BE_UINT16(_ani) == 0x48D);
+
+	// .OBJ
+	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
+	ptr = decodeResourceMacData(name, true);
+	assert(READ_BE_UINT16(ptr) == 0xE6);
+	decodeOBJ(ptr, _resourceMacDataSize);
+	free(ptr);
+
+	// .CT
+	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
+	ptr = decodeResourceMacData(name, true);
+	assert(_resourceMacDataSize == 0x1D00);
+	memcpy(_ctData, ptr, _resourceMacDataSize);
+	free(ptr);
+
+	// .SPC
+	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
+	_spc = decodeResourceMacData(name, true);
+
+	// .TBN
+	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
+	_tbn = decodeResourceMacText(name, "names");
+
+	_str = decodeResourceMacText("Flashback", "strings");
+}
+
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
@@ -1597,6 +1601,9 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 bool Resource::MAC_hasLevelMap(int level, int room) const {
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], room);
+	
+	emu_printf("MAC_hasLevelMap %s\n", name);
+	
 	return _mac->findEntry(name) != 0;
 }
 
