@@ -154,6 +154,7 @@ struct Resource {
 	uint8_t *_bnq;
 	uint16 _numObjectNodes;
 	ObjectNode *_objectNodesMap[255];
+	uint8_t *_scratchBuffer;	
 	uint8_t *_memBuf;
 	SoundFx *_sfxList;
 	uint8_t _numSfx;
@@ -277,6 +278,41 @@ struct Resource {
 	void MAC_loadCutsceneText();
 	void MAC_loadCreditsText();
 	void MAC_loadSounds();
+
+	int MAC_getPersoFrame(int anim) const {
+		static const int16_t data[] = {
+			0x000, 0x22E,
+			0x28E, 0x2E9,
+			0x4E9, 0x506,
+			-1
+		};
+		int offset = 0;
+		for (int i = 0; data[i] != -1; i += 2) {
+			if (anim >= data[i] && anim <= data[i + 1]) {
+				return offset + anim - data[i];
+			}
+			const int count = data[i + 1] + 1 - data[i];
+			offset += count;
+		}
+		assert(0);
+		return 0;
+	}
+	int MAC_getMonsterFrame(int anim) const {
+		static const int16_t data[] = {
+			0x22F, 0x28D, // junky - 94
+			0x2EA, 0x385, // mercenai - 156
+			0x387, 0x42F, // replican - 169
+			0x430, 0x4E8, // glue - 185
+			-1
+		};
+		for (int i = 0; data[i] != -1; i += 2) {
+			if (anim >= data[i] && anim <= data[i + 1]) {
+				return anim - data[i];
+			}
+		}
+		assert(0);
+		return 0;
+	}
 };
 
 #endif // __RESOURCE_H__

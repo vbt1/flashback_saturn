@@ -216,7 +216,7 @@ void Video::setTextPalette() {
 
 void Video::setPalette0xF() {
 	debug(DBG_VIDEO, "Video::setPalette0xF()");
-	const uint8 *p = _palSlot0xF;
+	const uint8_t *p = _palSlot0xF;
 	for (int i = 0; i < 16; ++i) {
 		Color c;
 		c.r = *p++ >> 2;
@@ -324,18 +324,23 @@ void Video::setLevelPalettes() {
 	if (_unkPalSlot1 == 0) {
 		_unkPalSlot1 = _mapPalSlot3;
 	}
+	// background
 	setPaletteSlotBE(0x0, _mapPalSlot1);
+	// objects
 	setPaletteSlotBE(0x1, _mapPalSlot2);
 	setPaletteSlotBE(0x2, _mapPalSlot3);
 	setPaletteSlotBE(0x3, _mapPalSlot4);
+	// conrad
 	if (_unkPalSlot1 == _mapPalSlot3) {
 		setPaletteSlotLE(4, _conradPal1);
 	} else {
 		setPaletteSlotLE(4, _conradPal2);
 	}
 	// slot 5 is monster palette
+	// foreground
 	setPaletteSlotBE(0x8, _mapPalSlot1);
 	setPaletteSlotBE(0x9, _mapPalSlot2);
+	// inventory
 	setPaletteSlotBE(0xA, _unkPalSlot2);
 	setPaletteSlotBE(0xB, _mapPalSlot4);
 	// slots 0xC and 0xD are cutscene palettes
@@ -355,7 +360,7 @@ void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w
 	}
 }
 
-void Video::drawSpriteSub2(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
+void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
 	debug(DBG_VIDEO, "Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
@@ -368,7 +373,7 @@ void Video::drawSpriteSub2(const uint8 *src, uint8 *dst, int pitch, int h, int w
 	}
 }
 
-void Video::drawSpriteSub3(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
+void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
 	debug(DBG_VIDEO, "Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
@@ -381,7 +386,7 @@ void Video::drawSpriteSub3(const uint8 *src, uint8 *dst, int pitch, int h, int w
 	}
 }
 
-void Video::drawSpriteSub4(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
+void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
 	debug(DBG_VIDEO, "Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
@@ -394,7 +399,7 @@ void Video::drawSpriteSub4(const uint8 *src, uint8 *dst, int pitch, int h, int w
 	}
 }
 
-void Video::drawSpriteSub5(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
+void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
 	debug(DBG_VIDEO, "Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
@@ -407,7 +412,7 @@ void Video::drawSpriteSub5(const uint8 *src, uint8 *dst, int pitch, int h, int w
 	}
 }
 
-void Video::drawSpriteSub6(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
+void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
 	debug(DBG_VIDEO, "Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
@@ -530,6 +535,13 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 	return str - 1;
 }
 
+void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color) {
+	const uint8_t *fnt = _res->_fnt;
+	for (int i = 0; i < len; ++i) {
+		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
+	}
+	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+}
 
 void Video::MAC_decodeMap(int level, int room) {
 	DecodeBuffer buf;

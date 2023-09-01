@@ -64,7 +64,7 @@ struct Video {
 	Video(Resource *res, SystemStub *stub);
 	~Video();
 
-	void markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale);	
+	void markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale);
 	void updateScreen();
 	void fullRefresh();
 	void fadeOut();
@@ -84,7 +84,8 @@ struct Video {
 	void PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);
 	void MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);	
 	void drawChar(uint8_t c, int16 y, int16 x);
-	const char *drawString(const char *str, int16 x, int16 y, uint8_t col);
+	const char *drawString(const char *str, int16_t x, int16_t y, uint8_t col);
+	void drawStringLen(const char *str, int len, int x, int y, uint8_t color);
 	void MAC_decodeMap(int level, int room);
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);

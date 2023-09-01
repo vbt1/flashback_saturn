@@ -383,7 +383,8 @@ emu_printf( "playCutscene(_cut._deathCutsceneId)\n");
 //					clearStateRewind();
 emu_printf( "loadLevelData\n");							
 					loadLevelData();
-//					resetGameState();
+			emu_printf( "resetGameState\n");			
+					resetGameState();
 				}
 			}
 			return;
@@ -755,26 +756,28 @@ bool Game::handleContinueAbort() {
 			_stub->_pi.enter = false;
 			return (current_color == 0);
 		}
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._frontLayer, 256);
+		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
-		if (col.b >= 0x3D) {
+		static const int COLOR_STEP = 8;
+		static const int COLOR_MIN = 16;
+		static const int COLOR_MAX = 256 - 16;
+		if (col.b >= COLOR_MAX) {
 			color_inc = 0;
-		}
-		if (col.b < 2) {
+		} else if (col.b < COLOR_MIN) {
 			color_inc = 0xFF;
 		}
 		if (color_inc == 0xFF) {
-			col.b += 2;
-			col.g += 2;
+			col.b += COLOR_STEP;
+			col.g += COLOR_STEP;
 		} else {
-			col.b -= 2;
-			col.g -= 2;
+			col.b -= COLOR_STEP;
+			col.g -= COLOR_STEP;
 		}
 		_stub->setPaletteEntry(0xE4, &col);
 		//_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
-		memcpy(_vid._frontLayer, _vid._tempLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+		memcpy(_vid._frontLayer, _vid._tempLayer, _vid._layerSize);
 	}
 	return false;
 }
@@ -872,7 +875,7 @@ void Game::printLevelCode() {
 void Game::printSaveStateCompleted() {
 	if (_saveStateCompleted) {
 		const char *str = _res.getMenuString(LocaleData::LI_05_COMPLETED);
-		_vid.drawString(str, (176 - strlen(str) * 8) / 2, 34, 0xE6);
+		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE6);
 	}
 }
 
@@ -901,27 +904,88 @@ void Game::drawLevelTexts() {
 	_saveStateCompleted = false;
 }
 
+static int getLineLength(const uint8_t *str) {
+	int len = 0;
+	while (*str && *str != 0xB && *str != 0xA) {
+		++str;
+		++len;
+	}
+	return len;
+}
+
 void Game::drawStoryTexts() {
 	if (_textToDisplay != 0xFFFF) {
-		uint16 text_col_mask = 0xE8;
-		const uint8 *str = _res.getGameString(_textToDisplay);
+		uint8_t textColor = 0xE8;
+		const uint8_t *str = _res.getGameString(_textToDisplay);
 		memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 		int textSpeechSegment = 0;
+		int textSegmentsCount = 0;
 		while (!_stub->_pi.quit) {
 			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
-			if (*str == 0xFF) {
-				text_col_mask = READ_LE_UINT16(str + 1);
-				str += 3;
-			}
-			int16 text_y_pos = 26;
-			while (1) {
-				uint16 len = getLineLength(str);
-				str = (const uint8 *)_vid.drawString((const char *)str, (176 - len * 8) / 2, text_y_pos, text_col_mask);
-				text_y_pos += 8;
-				if (*str == 0 || *str == 0xB) {
-					break;
+			int yPos = 26;
+			if (_res._type == kResourceTypeMac) {
+				if (textSegmentsCount == 0) {
+					textSegmentsCount = *str++;
 				}
-				++str;
+				int len = *str++;
+				if (*str == '@') {
+					switch (str[1]) {
+					case '1':
+						textColor = 0xE9;
+						break;
+					case '2':
+						textColor = 0xEB;
+						break;
+					default:
+						warning("Unhandled MAC text color code 0x%x", str[1]);
+						break;
+					}
+					str += 2;
+					len -= 2;
+				}
+				for (; len > 0; yPos += 8) {
+					const uint8_t *next = (const uint8_t *)memchr(str, 0x7C, len);
+					if (!next) {
+						_vid.drawStringLen((const char *)str, len, (176 - len * Video::CHAR_W) / 2, yPos, textColor);
+						// point 'str' to beginning of next text segment
+						str += len;
+						break;
+					}
+					const int lineLength = next - str;
+					_vid.drawStringLen((const char *)str, lineLength, (176 - lineLength * Video::CHAR_W) / 2, yPos, textColor);
+					str = next + 1;
+					len -= lineLength + 1;
+				}
+			} else {
+				if (*str == 0xFF) {
+					if (_res._lang == LANG_JP) {
+						switch (str[1]) {
+						case 0:
+							textColor = 0xE9;
+							break;
+						case 1:
+							textColor = 0xEB;
+							break;
+						default:
+							warning("Unhandled JP text color code 0x%x", str[1]);
+							break;
+						}
+						str += 2;
+					} else {
+						textColor = str[1];
+						// str[2] is an unused color (possibly the shadow)
+						str += 3;
+					}
+				}
+				while (1) {
+					const int len = getLineLength(str);
+					str = (const uint8_t *)_vid.drawString((const char *)str, (176 - len * Video::CHAR_W) / 2, yPos, textColor);
+					if (*str == 0 || *str == 0xB) {
+						break;
+					}
+					++str;
+					yPos += 8;
+				}
 			}
 			MixerChunk chunk;
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &chunk.data, &chunk.len);
@@ -945,6 +1009,21 @@ void Game::drawStoryTexts() {
 		}
 		_textToDisplay = 0xFFFF;
 	}
+}
+
+void Game::drawString(const uint8_t *p, int x, int y, uint8_t color, bool hcenter) {
+	const char *str = (const char *)p;
+	int len = 0;
+	if (_res._type == kResourceTypeMac) {
+		len = *p;
+		++str;
+	} else {
+		len = strlen(str);
+	}
+	if (hcenter) {
+		x = (x - len * Video::CHAR_W) / 2;
+	}
+	_vid.drawStringLen(str, len, x, y, color);
 }
 
 void Game::prepareAnims() {
@@ -1075,22 +1154,26 @@ void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
 }
 
 void Game::drawAnims() {
-	debug(DBG_GAME, "Game::drawAnims()");
+	emu_printf("Game::drawAnims()\n");
 	_eraseBackground = false;
+	emu_printf("drawAnimBuffer(2\n");	
 	drawAnimBuffer(2, _animBuffer2State);
+emu_printf("drawAnimBuffer(1\n");		
 	drawAnimBuffer(1, _animBuffer1State);
+emu_printf("drawAnimBuffer(0\n");		
 	drawAnimBuffer(0, _animBuffer0State);
 	_eraseBackground = true;
+emu_printf("drawAnimBuffer(3\n");		
 	drawAnimBuffer(3, _animBuffer3State);
 }
 
-void Game::drawAnimBuffer(uint8 stateNum, AnimBufferState *state) {
-	debug(DBG_GAME, "Game::drawAnimBuffer() state=%d", stateNum);
+void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
+	emu_printf("Game::drawAnimBuffer() state=%d\n", stateNum);
 	assert(stateNum < 4);
 	_animBuffers._states[stateNum] = state;
-	uint8 lastPos = _animBuffers._curPos[stateNum];
+	uint8_t lastPos = _animBuffers._curPos[stateNum];
 	if (lastPos != 0xFF) {
-		uint8 numAnims = lastPos + 1;
+		uint8_t numAnims = lastPos + 1;
 		state += lastPos;
 		_animBuffers._curPos[stateNum] = 0xFF;
 		do {
@@ -1099,72 +1182,110 @@ void Game::drawAnimBuffer(uint8 stateNum, AnimBufferState *state) {
 				if (stateNum == 1 && (_blinkingConradCounter & 1)) {
 					break;
 				}
-				if (!(state->dataPtr[-2] & 0x80)) {
-					decodeCharacterFrame(state->dataPtr, _res._memBuf);
-					drawCharacter(_res._memBuf, state->x, state->y, state->dataPtr[-1], state->dataPtr[-2], pge->flags);
-				} else {
-					drawCharacter(state->dataPtr, state->x, state->y, state->dataPtr[-1], state->dataPtr[-2], pge->flags);
+				switch (_res._type) {
+				case kResourceTypeDOS:
+					if (!(state->dataPtr[-2] & 0x80)) {
+//						_vid.PC_decodeSpm(state->dataPtr, _res._scratchBuffer); // vbt à  remettre
+						drawCharacter(_res._scratchBuffer, state->x, state->y, state->h, state->w, pge->flags);
+					} else {
+						drawCharacter(state->dataPtr, state->x, state->y, state->h, state->w, pge->flags);
+					}
+					break;
+				case kResourceTypeMac:
+					drawPiege(state);
+					break;
 				}
 			} else {
-				drawObject(state->dataPtr, state->x, state->y, pge->flags);
+				drawPiege(state);
 			}
 			--state;
 		} while (--numAnims != 0);
 	}
 }
 
-void Game::drawObject(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) {
-	debug(DBG_GAME, "Game::drawObject() dataPtr[]=0x%X dx=%d dy=%d",  dataPtr[0], (int8)dataPtr[1], (int8)dataPtr[2]);
-	assert(dataPtr[0] < 0x4A);
-	uint8 slot = _res._rp[dataPtr[0]];
-	uint8 *data = findBankData(slot);
-	if (data == 0) {
-		data = _res.loadBankData(slot);
-	}
-	_bankDataPtrs = data;
-	int16 posy = y - (int8)dataPtr[2];
-	int16 posx = x;
-	if (flags & 2) {
-		posx += (int8)dataPtr[1];
-	} else {
-		posx -= (int8)dataPtr[1];
-	}
-	int i = dataPtr[5];
-	dataPtr += 6;
-	while (i--) {
-		drawObjectFrame(dataPtr, posx, posy, flags);
-		dataPtr += 4;
+void Game::drawPiege(AnimBufferState *state) {
+	LivePGE *pge = state->pge;
+	switch (_res._type) {
+	case kResourceTypeDOS:
+		drawObject(state->dataPtr, state->x, state->y, pge->flags);
+		break;
+	case kResourceTypeMac:
+		if (pge->flags & 8) {
+			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
+		} else if (pge->index == 0) {
+			if (pge->anim_number == 0x386) {
+				break;
+			}
+			const int frame = _res.MAC_getPersoFrame(pge->anim_number);
+			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
+		} else {
+			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
+			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
+		}
+		break;
 	}
 }
 
-void Game::drawObjectFrame(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) {
-	debug(DBG_GAME, "Game::drawObjectFrame(0x%X, %d, %d, 0x%X)", dataPtr, x, y, flags);
-	const uint8 *src = _bankDataPtrs + dataPtr[0] * 32;
+void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
+	emu_printf("Game::drawObject() dataPtr[]=0x%X dx=%d dy=%d\n",  dataPtr[0], (int8_t)dataPtr[1], (int8_t)dataPtr[2]);
+	assert(dataPtr[0] < 0x4A);
+	uint8_t slot = _res._rp[dataPtr[0]];
+	uint8_t *data = _res.findBankData(slot);
+	if (data == 0) {
+		data = _res.loadBankData(slot);
+	}
+	int16_t posy = y - (int8_t)dataPtr[2];
+	int16_t posx = x;
+	if (flags & 2) {
+		posx += (int8_t)dataPtr[1];
+	} else {
+		posx -= (int8_t)dataPtr[1];
+	}
+	int count = 0;
+	switch (_res._type) {
+	case kResourceTypeDOS:
+		count = dataPtr[5];
+		dataPtr += 6;
+		break;
+	case kResourceTypeMac:
+		assert(0); // different graphics format
+		break;
+	}
+	for (int i = 0; i < count; ++i) {
+		drawObjectFrame(data, dataPtr, posx, posy, flags);
+		dataPtr += 4;
+	}
+}
+void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
+	emu_printf("Game::drawObjectFrame(%p, %d, %d, 0x%X)\n", dataPtr, x, y, flags);
+	const uint8_t *src = bankDataPtr + dataPtr[0] * 32;
 
-	int16 sprite_y = y + dataPtr[2];
-	int16 sprite_x;
+	int16_t sprite_y = y + dataPtr[2];
+	int16_t sprite_x;
 	if (flags & 2) {
 		sprite_x = x - dataPtr[1] - (((dataPtr[3] & 0xC) + 4) * 2);
 	} else {
 		sprite_x = x + dataPtr[1];
 	}
 
-	uint8 sprite_flags = dataPtr[3];
+	uint8_t sprite_flags = dataPtr[3];
 	if (flags & 2) {
 		sprite_flags ^= 0x10;
 	}
 
-	uint8 sprite_h = (((sprite_flags >> 0) & 3) + 1) * 8;
-	uint8 sprite_w = (((sprite_flags >> 2) & 3) + 1) * 8;
+	uint8_t sprite_h = (((sprite_flags >> 0) & 3) + 1) * 8;
+	uint8_t sprite_w = (((sprite_flags >> 2) & 3) + 1) * 8;
 
-	int size = sprite_w * sprite_h / 2;
-	for (int i = 0; i < size; ++i) {
-		uint8 col = *src++;
-		_res._memBuf[i * 2 + 0] = (col & 0xF0) >> 4;
-		_res._memBuf[i * 2 + 1] = (col & 0x0F) >> 0;
+	switch (_res._type) {
+	case kResourceTypeDOS:
+//		_vid.PC_decodeSpc(src, sprite_w, sprite_h, _res._scratchBuffer);   // vbt à remettre
+		break;
+	case kResourceTypeMac:
+		assert(0); // different graphics format
+		break;
 	}
 
-	src = _res._memBuf;
+	src = _res._scratchBuffer;
 	bool sprite_mirror_x = false;
 	int16_t sprite_clipped_w;
 	if (sprite_x >= 0) {
@@ -1233,56 +1354,22 @@ void Game::drawObjectFrame(const uint8 *dataPtr, int16 x, int16 y, uint8 flags) 
 	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
-void Game::decodeCharacterFrame(const uint8 *dataPtr, uint8 *dstPtr) {
-	int n = READ_BE_UINT16(dataPtr); dataPtr += 2;
-	uint16 len = n * 2;
-	uint8 *dst = dstPtr + 0x400;
-	while (n--) {
-		uint8 c = *dataPtr++;
-		dst[0] = (c & 0xF0) >> 4;
-		dst[1] = (c & 0x0F) >> 0;
-		dst += 2;
-	}
-	dst = dstPtr;
-	const uint8 *src = dstPtr + 0x400;
-	do {
-		uint8 c1 = *src++;
-		if (c1 == 0xF) {
-			uint8 c2 = *src++;
-			uint16 c3 = *src++;
-			if (c2 == 0xF) {
-				c1 = *src++;
-				c2 = *src++;
-				c3 = (c3 << 4) | c1;
-				len -= 2;
-			}
-			memset(dst, c2, c3 + 4);
-			dst += c3 + 4;
-			len -= 3;
-		} else {
-			*dst++ = c1;
-			--len;
-		}
-	} while (len != 0);
-}
-
-
 void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
-	debug(DBG_GAME, "Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)", dataPtr, pos_x, pos_y, a, b, flags);
+	emu_printf("Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)\n", dataPtr, pos_x, pos_y, a, b, flags);
 
-	bool var16 = false; // sprite_mirror_y
+	bool sprite_mirror_y = false;
 	if (b & 0x40) {
-		b &= 0xBF;
+		b &= ~0x40;
 		SWAP(a, b);
-		var16 = true;
+		sprite_mirror_y = true;
 	}
-	uint16 sprite_h = a;
-	uint16 sprite_w = b;
+	uint16_t sprite_h = a;
+	uint16_t sprite_w = b;
 
-	const uint8 *src = dataPtr;
+	const uint8_t *src = dataPtr;
 	bool var14 = false;
 
-	int16 sprite_clipped_w;
+	int16_t sprite_clipped_w;
 	if (pos_x >= 0) {
 		if (pos_x + sprite_w < 256) {
 			sprite_clipped_w = sprite_w;
@@ -1290,7 +1377,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 			sprite_clipped_w = 256 - pos_x;
 			if (flags & 2) {
 				var14 = true;
-				if (var16) {
+				if (sprite_mirror_y) {
 					src += (sprite_w - 1) * sprite_h;
 				} else {
 					src += sprite_w - 1;
@@ -1300,7 +1387,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 	} else {
 		sprite_clipped_w = pos_x + sprite_w;
 		if (!(flags & 2)) {
-			if (var16) {
+			if (sprite_mirror_y) {
 				src -= sprite_h * pos_x;
 				pos_x = 0;
 			} else {
@@ -1309,7 +1396,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 			}
 		} else {
 			var14 = true;
-			if (var16) {
+			if (sprite_mirror_y) {
 				src += sprite_h * (pos_x + sprite_w - 1);
 				pos_x = 0;
 			} else {
@@ -1323,7 +1410,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 		return;
 	}
 
-	int16 sprite_clipped_h;
+	int16_t sprite_clipped_h;
 	if (pos_y >= 0) {
 		if (pos_y < 224 - sprite_h) {
 			sprite_clipped_h = sprite_h;
@@ -1332,7 +1419,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 		}
 	} else {
 		sprite_clipped_h = sprite_h + pos_y;
-		if (var16) {
+		if (sprite_mirror_y) {
 			src -= pos_y;
 		} else {
 			src -= sprite_w * pos_y;
@@ -1344,26 +1431,26 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 	}
 
 	if (!var14 && (flags & 2)) {
-		if (var16) {
+		if (sprite_mirror_y) {
 			src += sprite_h * (sprite_w - 1);
 		} else {
 			src += sprite_w - 1;
 		}
 	}
 
-	uint32 dst_offset = 256 * pos_y + pos_x;
-	uint8 sprite_col_mask = ((flags & 0x60) == 0x60) ? 0x50 : 0x40;
+	uint32_t dst_offset = 256 * pos_y + pos_x;
+	uint8_t sprite_col_mask = ((flags & 0x60) == 0x60) ? 0x50 : 0x40;
 
-	debug(DBG_GAME, "dst_offset=0x%X src_offset=0x%X", dst_offset, src - dataPtr);
+	emu_printf("dst_offset=0x%X src_offset=0x%X\n", dst_offset, src - dataPtr);
 
 	if (!(flags & 2)) {
-		if (var16) {
+		if (sprite_mirror_y) {
 			_vid.drawSpriteSub5(src, _vid._frontLayer + dst_offset, sprite_h, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		} else {
 			_vid.drawSpriteSub3(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	} else {
-		if (var16) {
+		if (sprite_mirror_y) {
 			_vid.drawSpriteSub6(src, _vid._frontLayer + dst_offset, sprite_h, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		} else {
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
@@ -1532,14 +1619,26 @@ uint8 *Game::findBankData(uint16 entryNum) {
 	return 0;
 }
 
-void Game::drawIcon(uint8 iconNum, int16 x, int16 y, uint8 colMask) {
-	uint16 offset = READ_LE_UINT16(_res._icn + iconNum * 2);
-	uint8 buf[256];
-	uint8 *p = _res._icn + offset + 2;
-	for (int i = 0; i < 128; ++i) {
-		uint8 col = *p++;
-		buf[i * 2 + 0] = (col & 0xF0) >> 4;
-		buf[i * 2 + 1] = (col & 0x0F) >> 0;
+void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
+	uint8_t buf[16 * 16];
+	switch (_res._type) {
+	case kResourceTypeDOS:
+//		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt � remettre
+		break;
+	case kResourceTypeMac:
+		switch (iconNum) {
+		case 76: // cursor
+			iconNum = 32;
+			break;
+		case 77: // up
+			iconNum = 33;
+			break;
+		case 78: // down
+			iconNum = 34;
+			break;
+		}
+		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
+		return;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
 	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
@@ -1560,9 +1659,9 @@ void Game::playSound(uint8 sfxId, uint8 softVol) {
 	}
 }
 
-uint16 Game::getRandomNumber() {
-	uint32 n = _randSeed * 2;
-	if (_randSeed > n) {
+uint16_t Game::getRandomNumber() {
+	uint32_t n = _randSeed * 2;
+	if (((int32_t)_randSeed) >= 0) {
 		n ^= 0x1D872B41;
 	}
 	_randSeed = n;
@@ -1578,15 +1677,6 @@ void Game::changeLevel() {
 	_vid.fullRefresh();
 }
 
-uint16 Game::getLineLength(const uint8 *str) const {
-	uint16 len = 0;
-	while (*str && *str != 0xB && *str != 0xA) {
-		++str;
-		++len;
-	}
-	return len;
-}
-
 void Game::handleInventory() {
 	LivePGE *selected_pge = 0;
 	LivePGE *pge = &_pgeLive[0];
@@ -1594,7 +1684,7 @@ void Game::handleInventory() {
 		playSound(66, 0);
 		InventoryItem items[24];
 		int num_items = 0;
-		uint8 inv_pge = pge->current_inventory_PGE;
+		uint8_t inv_pge = pge->current_inventory_PGE;
 		while (inv_pge != 0xFF) {
 			items[num_items].icon_num = _res._pgeInit[inv_pge].icon_num;
 			items[num_items].init_pge = &_res._pgeInit[inv_pge];
@@ -1608,21 +1698,24 @@ void Game::handleInventory() {
 		int current_line = 0;
 		bool display_score = false;
 		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
-			// draw inventory background
-			int icon_h = 5;
-			int icon_y = 140;
-			int icon_num = 31;
-			do {
-				int icon_x = 56;
-				int icon_w = 9;
-				do {
-					drawIcon(icon_num, icon_x, icon_y, 0xF);
-					++icon_num;
-					icon_x += 16;
-				} while (--icon_w);
-				icon_y += 16;
-			} while (--icon_h);
-
+			static const int icon_spr_w = 16;
+			static const int icon_spr_h = 16;
+			switch (_res._type) {
+			case kResourceTypeDOS: {
+					// draw inventory background
+					int icon_num = 31;
+					for (int y = 140; y < 140 + 5 * icon_spr_h; y += icon_spr_h) {
+						for (int x = 56; x < 56 + 9 * icon_spr_w; x += icon_spr_w) {
+							drawIcon(icon_num, x, y, 0xF);
+							++icon_num;
+						}
+					}
+				}
+				break;
+			case kResourceTypeMac:
+				drawIcon(31, 56, 140, 0xF);
+				break;
+			}
 			if (!display_score) {
 				int icon_x_pos = 72;
 				for (int i = 0; i < 4; ++i) {
