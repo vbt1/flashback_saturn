@@ -100,7 +100,6 @@ struct Resource {
 		OT_SPM
 	};
 
-
 	enum {
 		NUM_SFXS = 66,
 		NUM_BANK_BUFFERS = 50,
@@ -120,42 +119,41 @@ struct Resource {
 	static const uint8_t _gameSavedSoundData[];
 	static const uint16_t _gameSavedSoundLen;
 
-	ResourceMac *_mac;
-	ResourceAba *_aba;
 	Language _lang;
+	ResourceAba *_aba;
+	ResourceMac *_mac;
 	uint16_t (*_readUint16)(const void *);
-	uint32_t (*_readUint32)(const void *);	
+	uint32_t (*_readUint32)(const void *);
 	const char *_dataPath;
 	ResourceType _type;
-	char _entryName[30];
+	char _entryName[32];
 	uint8_t *_fnt;
 	uint8_t *_mbk;
 	uint8_t *_icn;
-	int _icnLen;	
+	int _icnLen;
 	uint8_t *_tab;
-	uint8_t *_spc; // BE
-	uint16 _numSpc;
-	uint8_t _rp[0x4A];
-	uint8_t *_pal; // BE
+	uint8_t *_spc;
+	uint16_t _numSpc;
+	uint8_t _rp[74];
+	uint8_t *_pal;
 	uint8_t *_ani;
 	uint8_t *_tbn;
-	int8 _ctData[0x1D00];
+	int8_t _ctData[256 + 112 * 64];
 	uint8_t *_spr1;
 	uint8_t *_sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
-	uint8_t _sprm[0x8411]; // MERCENAI.SPR size
-	uint16 _pgeNum;
+	uint8_t _sprm[0x10000];
+	uint16_t _pgeNum;
 	InitPGE _pgeInit[256];
 	
 	uint8_t *_map;
-	uint8_t *_lev;	
-	char _mapFilename[50];
-
+	uint8_t *_lev;
+	int _levNum;
 	uint8_t *_sgd;
 	uint8_t *_bnq;
-	uint16 _numObjectNodes;
+	uint16_t _numObjectNodes;
 	ObjectNode *_objectNodesMap[255];
-	uint8_t *_scratchBuffer;	
-	uint8_t *_memBuf;
+	uint8_t *_scratchBuffer;
+	//uint8_t *_memBuf;
 	SoundFx *_sfxList;
 	uint8_t _numSfx;
 	uint8_t *_cmd;

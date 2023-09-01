@@ -225,7 +225,7 @@ void Video::setPalette0xF() {
 		_stub->setPaletteEntry(0xF0 + i, &c);
 	}
 }
-
+/*
 void Video::copyLevelMap(uint16 room) {
 	debug(DBG_VIDEO, "Video::copyLevelMap(%d)", room);
 	assert(room < 0x40);
@@ -269,10 +269,10 @@ void Video::copyLevelMap(uint16 room) {
 			uint16 sz = f.readUint16LE();
 			uint8 *tmpbuf = (uint8*)sat_malloc(sz);
 			f.read(tmpbuf, sz);
-			decodeLevelMap(sz, tmpbuf, _res->_memBuf);
+			decodeLevelMap(sz, tmpbuf, _res->_scratchBuffer);
 			sat_free(tmpbuf);
 #endif
-			memcpy(vid, _res->_memBuf, 256 * 56);
+			memcpy(vid, _res->_scratchBuffer, 256 * 56);
 			vid += 256 * 56;
 		}
 	} else {
@@ -297,7 +297,7 @@ void Video::copyLevelMap(uint16 room) {
 	f.close();
 #endif
 }
-
+*/
 void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
 	debug(DBG_VIDEO, "Video::decodeLevelMap() sz = 0x%X", sz);
 	const uint8 *end = src + sz;

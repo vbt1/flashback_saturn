@@ -88,16 +88,16 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 
 void Menu::loadPicture(const char *prefix) {
 	debug(DBG_MENU, "Menu::loadPicture('%s')", prefix);
-	_res->load_MAP_menu(prefix, _res->_memBuf);
+	_res->load_MAP_menu(prefix, _res->_scratchBuffer);
 	for (int i = 0; i < 4; ++i) {
 		for (int y = 0; y < 224; ++y) {
 			for (int x = 0; x < 64; ++x) {
-				_vid->_frontLayer[i + x * 4 + 256 * y] = _res->_memBuf[0x3800 * i + x + 64 * y];
+				_vid->_frontLayer[i + x * 4 + 256 * y] = _res->_scratchBuffer[0x3800 * i + x + 64 * y];
 			}
 		}
 	}
-	_res->load_PAL_menu(prefix, _res->_memBuf);
-	_stub->setPalette(_res->_memBuf, 256);
+	_res->load_PAL_menu(prefix, _res->_scratchBuffer);
+	_stub->setPalette(_res->_scratchBuffer, 256);
 	
 	// To fix overscan colours in saturn port
 	_stub->setOverscanColor(0);

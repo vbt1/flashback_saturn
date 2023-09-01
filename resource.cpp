@@ -37,22 +37,26 @@ Resource::Resource(const char *dataPath, ResourceType ver) {
 	memset(this, 0, sizeof(Resource));
 	_dataPath = dataPath;
 	_type = ver;
-	_memBuf = (uint8 *)sat_malloc(0xE000);
 
 //	_lang = lang;
 	_aba = 0;
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
+	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize);
+	if (!_scratchBuffer) {
+		error("Unable to allocate temporary memory buffer");
+	}
 }
 
 Resource::~Resource() {
 	clearLevelRes();
+	MAC_unloadLevelData();	
 	sat_free(_fnt);
 	sat_free(_icn);
 	sat_free(_tab);
 	sat_free(_spr1);
-	sat_free(_memBuf);
+	sat_free(_scratchBuffer);
 	sat_free(_cmd);
 	sat_free(_pol);
 	sat_free(_cine_off);
@@ -62,6 +66,8 @@ Resource::~Resource() {
 	}
 	sat_free(_sfxList);
 	sat_free(_voiceBuf);
+	delete _aba;
+	delete _mac;
 }
 
 
@@ -117,8 +123,9 @@ void Resource::clearLevelRes() {
 #ifdef _RAMCART_
 	sat_free(_map); _map = 0;
 #endif
+	sat_free(_lev); _lev = 0;
+	_levNum = -1;
 	sat_free(_sgd); _sgd = 0;
-	sat_free(_bnq); _bnq = 0;
 	sat_free(_spc); _spc = 0;
 	sat_free(_ani); _ani = 0;
 	free_OBJ();
@@ -751,7 +758,6 @@ void Resource::load_PAL(File *f) {
 void Resource::load_MAP(File *f) {
 	debug(DBG_RES, "Resource::load_MAP()");
 
-	memcpy(_mapFilename, f->fileName(), 50);
 #ifdef _RAMCART_
 	int len = f->size();
 	_map = (uint8_t *)sat_malloc(len);
