@@ -1643,12 +1643,14 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 		emu_printf("MAC_getImageData ptr+2\n");	
 	ptr += 2;
 	emu_printf("MAC_getImageData sig val %x\n",sig);		
-	assert(sig == 0xC211);
+	if(sig != 0xC211)
+		return NULL;
 	const int count = READ_BE_UINT16(ptr);
 	ptr += 2;
 	emu_printf("MAC_getImageData sig count %x\n",count);
 	
-	assert(i < count);
+	if (!(i < count))
+		return NULL;		
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
 	emu_printf("MAC_getImageData sig offset %x\n",offset);

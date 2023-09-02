@@ -153,7 +153,7 @@ void Video::updateScreen() {
 void Video::fullRefresh() {
 	debug(DBG_VIDEO, "Video::fullRefresh()");
 	_fullRefresh = true;
-	memset(_screenBlocks, 0, (GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
+	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 }
 
 void Video::fadeOut() {
@@ -532,7 +532,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		++len;
 	}
 	emu_printf("mark dirty\n");	
-//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 
@@ -541,7 +541,7 @@ void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color)
 	for (int i = 0; i < len; ++i) {
 		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
 	}
-//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 }
 
 void Video::MAC_decodeMap(int level, int room) {
@@ -629,7 +629,7 @@ emu_printf("MAC_getImageData dataPtr memset\n");
 		emu_printf("MAC_decodeImageData data %p frame %d\n", data, frame);	 
 		_res->MAC_decodeImageData(data, frame, &buf);
 emu_printf("markBlockAsDirty\n");	
-//		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
+		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
 	}
 	else
 		emu_printf("MAC_getImageData no dataPtr\n");	 

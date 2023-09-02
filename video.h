@@ -56,7 +56,7 @@ struct Video {
 	uint8_t _charFrontColor;
 	uint8_t _charTransparentColor;
 	uint8_t _charShadowColor;
-	uint8_t _screenBlocks[(GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H)];
+	uint8_t _screenBlocks[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
 	bool _fullRefresh;
 	uint8_t _shakeOffset;
 	drawCharFunc _drawChar;

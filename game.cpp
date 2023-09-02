@@ -458,11 +458,14 @@ emu_printf( "drawLevelTexts \n");
 		--_blinkingConradCounter;
 	}
 //	_vid.updateScreen();
-	
+emu_printf( "copyRect \n");	
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+emu_printf( "updateScreen \n");		
 	_stub->updateScreen(0);
-	
+emu_printf( "updateTiming \n");		
 	updateTiming();
+emu_printf( "drawStoryTexts \n");		
+
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
@@ -881,27 +884,40 @@ void Game::printSaveStateCompleted() {
 
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
+emu_printf( "drawLevelTexts a\n");	
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
 	if (obj == 0) {
+emu_printf( "drawLevelTexts b\n");			
 		obj = col_findCurrentCollidingObject(pge, 0xFF, 5, 9, &pge);
 	}
+emu_printf( "drawLevelTexts c\n");		
 	if (obj > 0) {
 		_printLevelCodeCounter = 0;
 		if (_textToDisplay == 0xFFFF) {
+emu_printf( "drawLevelTexts d\n");				
 			uint8_t icon_num = obj - 1;
+emu_printf( "drawLevelTexts e\n");				
 			drawIcon(icon_num, 80, 8, 0xA);
+emu_printf( "drawLevelTexts f\n");				
 			uint8_t txt_num = pge->init_PGE->text_num;
 			const char *str = (const char *)_res._tbn + READ_LE_UINT16(_res._tbn + txt_num * 2);
+emu_printf( "drawLevelTexts g\n");				
 			_vid.drawString(str, (176 - strlen(str) * 8) / 2, 26, 0xE6);
 			if (icon_num == 2) {
+emu_printf( "drawLevelTexts h\n");					
 				printSaveStateCompleted();
+emu_printf( "drawLevelTexts i\n");					
 				return;
 			}
 		} else {
+emu_printf( "drawLevelTexts j\n");				
 			_currentInventoryIconNum = obj - 1;
+emu_printf( "drawLevelTexts k\n");				
 		}
 	}
+emu_printf( "drawLevelTexts l\n");		
 	_saveStateCompleted = false;
+emu_printf( "drawLevelTexts m\n");		
 }
 
 static int getLineLength(const uint8_t *str) {
@@ -1375,7 +1391,7 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-//	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
+	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
@@ -1480,7 +1496,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-//	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
+	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 int Game::loadMonsterSprites(LivePGE *pge) {
@@ -1665,7 +1681,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 		return;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
-//	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
+	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
 void Game::playSound(uint8 sfxId, uint8 softVol) {
