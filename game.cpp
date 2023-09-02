@@ -1196,15 +1196,24 @@ void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 //						_vid.PC_decodeSpm(state->dataPtr, _res._scratchBuffer); // vbt à  remettre
 						drawCharacter(_res._scratchBuffer, state->x, state->y, state->h, state->w, pge->flags);
 					} else {
+	emu_printf("Game::drawCharacter() start\n");						
 						drawCharacter(state->dataPtr, state->x, state->y, state->h, state->w, pge->flags);
+	emu_printf("Game::drawCharacter() end\n");						
+
 					}
 					break;
 				case kResourceTypeMac:
+	emu_printf("Game::drawPiege() start\n");						
+				
 					drawPiege(state);
+	emu_printf("Game::drawPiege() end\n");						
+					
 					break;
 				}
 			} else {
+	emu_printf("Game::drawPiege2() start\n");					
 				drawPiege(state);
+	emu_printf("Game::drawPiege2() end\n");					
 			}
 			--state;
 		} while (--numAnims != 0);
@@ -1219,16 +1228,23 @@ void Game::drawPiege(AnimBufferState *state) {
 		break;
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
+	emu_printf("drawPiege MAC_drawSprite1 start\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
+	emu_printf("drawPiege MAC_drawSprite1 end\n");
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
 				break;
 			}
+	emu_printf("drawPiege MAC_getPersoFrame start\n");			
 			const int frame = _res.MAC_getPersoFrame(pge->anim_number);
+	emu_printf("drawPiege MAC_drawSprite2 start\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
+	emu_printf("drawPiege MAC_drawSprite2 end\n");			
 		} else {
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
+	emu_printf("drawPiege MAC_drawSprite3 start\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
+	emu_printf("drawPiege MAC_drawSprite3 end\n");			
 		}
 		break;
 	}
@@ -1359,7 +1375,7 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
+//	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
@@ -1464,7 +1480,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
+//	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 int Game::loadMonsterSprites(LivePGE *pge) {
@@ -1649,7 +1665,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 		return;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
-	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
+//	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
 void Game::playSound(uint8 sfxId, uint8 softVol) {

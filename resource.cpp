@@ -1636,13 +1636,23 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
+	emu_printf("MAC_getImageData %d\n", i);
 	const uint8_t *basePtr = ptr;
-	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
+	emu_printf("MAC_getImageData sig ptrval %p\n", ptr);	
+	const uint16_t sig = READ_BE_UINT16(ptr); 
+		emu_printf("MAC_getImageData ptr+2\n");	
+	ptr += 2;
+	emu_printf("MAC_getImageData sig val %x\n",sig);		
 	assert(sig == 0xC211);
-	const int count = READ_BE_UINT16(ptr); ptr += 2;
+	const int count = READ_BE_UINT16(ptr);
+	ptr += 2;
+	emu_printf("MAC_getImageData sig count %x\n",count);
+	
 	assert(i < count);
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
+	emu_printf("MAC_getImageData sig offset %x\n",offset);
+	
 	return (offset != 0) ? basePtr + offset : 0;
 }
 

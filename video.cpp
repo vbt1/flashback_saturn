@@ -531,7 +531,8 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //emu_printf("apres _drawChar\n");		
 		++len;
 	}
-	//markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+	emu_printf("mark dirty\n");	
+//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 
@@ -540,7 +541,7 @@ void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color)
 	for (int i = 0; i < len; ++i) {
 		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
 	}
-	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 }
 
 void Video::MAC_decodeMap(int level, int room) {
@@ -607,9 +608,15 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
 }
 
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
+emu_printf("MAC_drawSprite\n");	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
+emu_printf("MAC_getImageData done\n");	
+
+
 	if (dataPtr) {
+emu_printf("MAC_getImageData dataPtr %p\n", dataPtr);	 
 		DecodeBuffer buf;
+emu_printf("MAC_getImageData dataPtr memset\n");	 
 		memset(&buf, 0, sizeof(buf));
 		buf.xflip = xflip;
 		buf.ptr = _frontLayer;
@@ -619,7 +626,12 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.y = y * _layerScale;
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
+		emu_printf("MAC_decodeImageData data %p frame %d\n", data, frame);	 
 		_res->MAC_decodeImageData(data, frame, &buf);
-		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
+emu_printf("markBlockAsDirty\n");	
+//		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
 	}
+	else
+		emu_printf("MAC_getImageData no dataPtr\n");	 
+	
 }
