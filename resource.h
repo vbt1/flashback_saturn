@@ -119,13 +119,14 @@ struct Resource {
 	static const uint8_t _gameSavedSoundData[];
 	static const uint16_t _gameSavedSoundLen;
 
+	ResourceType _type;
 	Language _lang;
 	ResourceAba *_aba;
 	ResourceMac *_mac;
 	uint16_t (*_readUint16)(const void *);
 	uint32_t (*_readUint32)(const void *);
 	const char *_dataPath;
-	ResourceType _type;
+
 	char _entryName[32];
 	uint8_t *_fnt;
 	uint8_t *_mbk;
@@ -158,6 +159,7 @@ struct Resource {
 	uint8_t _numSfx;
 	uint8_t *_cmd;
 	uint8_t *_pol;
+	uint8_t *_cineStrings[NUM_CUTSCENE_TEXTS];
 	uint8_t *_cine_off;
 	uint8_t *_cine_txt;
 	uint8_t *_voiceBuf;
@@ -180,7 +182,7 @@ struct Resource {
 	uint8_t *_str;
 	uint8_t *_credits;
 	
-	Resource(const char *dataPath, ResourceType ver);
+	Resource(const char *dataPath, ResourceType type, Language lang);
 	~Resource();
 
 	void init();
@@ -193,13 +195,14 @@ struct Resource {
 	bool fileExists(const char *filename);
 
 	void clearLevelRes();
-	void load_DEM(const char *filename);	
+	void load_DEM(const char *filename);
 	void load_FIB(const char *fileName);
 	void load_MAP_menu(const char *fileName, uint8_t *dstPtr);
 	void load_PAL_menu(const char *fileName, uint8_t *dstPtr);
+	void load_CMP_menu(const char *fileName);
 	void load_SPR_OFF(const char *fileName, uint8_t *sprData);
 	void load_CINE();
-	void free_CINE();	
+	void free_CINE();
 	void load_TEXT();
 	void free_TEXT();
 	void unload(int objType);
@@ -217,20 +220,20 @@ struct Resource {
 	void load_OBJ(File *pf);
 	void free_OBJ();
 	void load_OBC(File *pf);
-	void decodeOBJ(const uint8_t *, int);	
+	void decodeOBJ(const uint8_t *, int);
 	void load_PGE(File *pf);
-	void decodePGE(const uint8_t *, int);	
+	void decodePGE(const uint8_t *, int);
 	void load_ANI(File *pf);
 	void load_TBN(File *pf);
 	void load_CMD(File *pf);
 	void load_POL(File *pf);
-	void load_CMP(File *pf);	
-	void load_VCE(int num, int segment, uint8_t **buf, uint32 *bufSize);
+	void load_CMP(File *pf);
+	void load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize);
 	void load_SPL(File *pf);
 	void load_LEV(File *pf);
 	void load_SGD(File *pf);
 	void load_BNQ(File *pf);
-	void load_SPM(File *f);	
+	void load_SPM(File *f);
 	const uint8_t *getAniData(int num) const {
 		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_ani);
@@ -240,18 +243,42 @@ struct Resource {
 		}
 		const int offset = _readUint16(_ani + 2 + num * 2);
 		return _ani + 2 + offset;
-	}	
-	const uint8_t *getGameString(int num) {
+	}
+	const uint8_t *getTextString(int level, int num) const {
+		if (_type == kResourceTypeMac) {
+			const int count = READ_BE_UINT16(_tbn);
+			assert(num < count);
+			const int offset = READ_BE_UINT16(_tbn + 2 + num * 2);
+			return _tbn + offset;
+		}
+		return _tbn + _readUint16(_tbn + num * 2);
+	}
+	const uint8_t *getGameString(int num) const {
+		if (_type == kResourceTypeMac) {
+			const int count = READ_BE_UINT16(_str);
+			assert(num < count);
+			const int offset = READ_BE_UINT16(_str + 2 + num * 2);
+			return _str + offset;
+		}
 		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);
 	}
 	const char *getMenuString(int num) {
 		return (num >= 0 && num < LocaleData::LI_NUM) ? _textsTable[num] : "";
 	}
+	const uint8_t *getCreditsString(int num) {
+		assert(_type == kResourceTypeMac);
+		const int count = READ_BE_UINT16(_credits);
+		if (num < count) {
+			const int offset = READ_BE_UINT16(_credits + 2 + num * 2);
+			return _credits + offset;
+		}
+		return 0;
+	}
 	void clearBankData();
-	int getBankDataSize(uint16_t num);	
+	int getBankDataSize(uint16_t num);
 	uint8_t *findBankData(uint16_t num);
-	uint8_t *loadBankData(uint16_t num);	
-	
+	uint8_t *loadBankData(uint16_t num);
+
 	uint8_t *decodeResourceMacText(const char *name, const char *suffix);
 	uint8_t *decodeResourceMacData(const char *name, bool decompressLzss);
 	uint8_t *decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss);

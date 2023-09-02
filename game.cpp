@@ -23,7 +23,7 @@ extern "C" {
 #include <sega_bup.h>
 #include <sega_per.h>
 //#include <sega_spr.h>
-
+#include "sat_mem_checker.h"
 
 #define	BUP_LIB_ADDRESS		(*(volatile Uint32 *)(0x6000350+8))
 #define	BUP_VECTOR_ADDRESS	(*(volatile Uint32 *)(0x6000350+4))
@@ -76,14 +76,14 @@ static Uint32 getFreeSaveBlocks(void) {
 
 /* *** */
 
-Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, ResourceType ver)
-	: _cut(&_modPly, &_res, stub, &_vid, ver), _menu(&_modPly, &_res, stub, &_vid),
-	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver), _sfxPly(&_mix), _vid(&_res, stub),
+Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
+	: _cut(&_modPly, &_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
+	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub), _savePath(savePath) {
 	_stateSlot = 1;
 	_inp_demPos = 0;
 	_skillLevel = _menu._skill = kSkillNormal;
-	_currentLevel = _menu._level = 0;
+	_currentLevel = _menu._level = level;
 	_demoBin = -1;
 //	_widescreenMode = widescreenMode;
 //	_autoSave = autoSave;
@@ -987,25 +987,33 @@ void Game::drawStoryTexts() {
 					yPos += 8;
 				}
 			}
-			MixerChunk chunk;
-			_res.load_VCE(_textToDisplay, textSpeechSegment++, &chunk.data, &chunk.len);
-			if (chunk.data) {
-				_mix.play(&chunk, 32000, Mixer::MAX_VOLUME);
+			uint8_t *voiceSegmentData = 0;
+			uint32_t voiceSegmentLen = 0;
+			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+			if (voiceSegmentData) {
+//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt à remettre
 			}
 			_vid.updateScreen();
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				inp_update();
 				_stub->sleep(80);
 			}
-			if (chunk.data) {
+			if (voiceSegmentData) {
 				_mix.stopAll();
+				sat_free(voiceSegmentData);
 			}
 			_stub->_pi.backspace = false;
-			if (*str == 0) {
-				break;
+			if (_res._type == kResourceTypeMac) {
+				if (textSpeechSegment == textSegmentsCount) {
+					break;
+				}
+			} else {
+				if (*str == 0) {
+					break;
+				}
+				++str;
 			}
-			++str;
-			memcpy(_vid._frontLayer, _vid._tempLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+			memcpy(_vid._frontLayer, _vid._tempLayer, _vid._layerSize);
 		}
 		_textToDisplay = 0xFFFF;
 	}

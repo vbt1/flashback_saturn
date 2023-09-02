@@ -86,22 +86,22 @@ struct Game {
 	const char *_savePath;
 	uint32_t _cheats;
 
-	const uint8 *_stringsTable;
+	const uint8_t *_stringsTable;
 	const char **_textsTable;
-	uint8 _currentLevel;
-	uint8 _skillLevel;
-	int _demoBin;	
-	uint32 _score;
-	uint8 _currentRoom;
-	uint8 _currentIcon;
+	uint8_t _currentLevel;
+	uint8_t _skillLevel;
+	int _demoBin;
+	uint32_t _score;
+	uint8_t _currentRoom;
+	uint8_t _currentIcon;
 	bool _loadMap;
-	uint8 _printLevelCodeCounter;
-	uint32 _randSeed;
-	uint16 _currentInventoryIconNum;
-	uint16 _curMonsterFrame;
-	uint16 _curMonsterNum;
-	uint8 _blinkingConradCounter;
-	uint16 _textToDisplay;
+	uint8_t _printLevelCodeCounter;
+	uint32_t _randSeed;
+	uint16_t _currentInventoryIconNum;
+	uint16_t _curMonsterFrame;
+	uint16_t _curMonsterNum;
+	uint8_t _blinkingConradCounter;
+	uint16_t _textToDisplay;
 	bool _eraseBackground;
 	AnimBufferState _animBuffer0State[41];
 	AnimBufferState _animBuffer1State[6]; // Conrad
@@ -120,7 +120,7 @@ struct Game {
 	uint32_t _frameTimestamp;
 	uint32_t _saveTimestamp;
 	
-	Game(SystemStub *, const char *dataPath, const char *savePath, ResourceType ver);
+	Game(SystemStub *, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang);
 
 	void run();
 	void displayTitleScreenMac(int num);	

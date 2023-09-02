@@ -33,12 +33,11 @@ extern "C"
 
 extern Uint8 vceEnabled;
 
-Resource::Resource(const char *dataPath, ResourceType ver) {
+Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	memset(this, 0, sizeof(Resource));
 	_dataPath = dataPath;
-	_type = ver;
-
-//	_lang = lang;
+	_type = type;
+	_lang = lang;
 	_aba = 0;
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
@@ -47,6 +46,13 @@ Resource::Resource(const char *dataPath, ResourceType ver) {
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
+	static const int kBankDataSize = 0x7000;
+	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
+	if (!_bankData) {
+		error("Unable to allocate bank data buffer");
+	}
+	_bankDataTail = _bankData + kBankDataSize;
+	clearBankData();
 }
 
 Resource::~Resource() {
@@ -112,6 +118,8 @@ bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
 		return true;
+	} else if (_aba) {
+		return _aba->findEntry(filename) != 0;
 	}
 	return false;
 }
@@ -203,25 +211,34 @@ void Resource::load_FIB(const char *fileName) {
 	}
 }
 
-void Resource::load_MAP_menu(const char *fileName, uint8 *dstPtr) {
+void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 	debug(DBG_RES, "Resource::load_MAP_menu('%s')", fileName);
-	sprintf(_entryName, "%s.MAP", fileName);
+	static const int kMenuMapSize = 0x3800 * 4;
+	snprintf(_entryName, sizeof(_entryName), "%s.MAP", fileName);
 	File f;
 			emu_printf("%s\n",_entryName);		
 	if (f.open(_entryName, _dataPath, "rb")) {
-		if (f.size() != 0x3800 * 4) {
-//			slPrint((char *)"Wrong file size     ",slLocate(10,16));
-			emu_printf("Wrong file size for '%s', %d\n", _entryName, f.size());
+		f.read(dstPtr, kMenuMapSize);
+//		if (f.read(dstPtr, kMenuMapSize) != kMenuMapSize) {
+//			error("Failed to read '%s'", _entryName);
+//		}
+//		if (f.ioErr()) {
+//			error("I/O error when reading '%s'", _entryName);
+//		}
+		return;
+	} else if (_aba) {
+		uint32_t size = 0;
+		uint8_t *dat = _aba->loadEntry(_entryName, &size);
+		if (dat) {
+			if (size != kMenuMapSize) {
+				error("Unexpected size %d for '%s'", size, _entryName);
+			}
+			memcpy(dstPtr, dat, size);
+			sat_free(dat);
+			return;
 		}
-		f.read(dstPtr, 0x3800 * 4);
-		if (f.ioErr()) {
-//			slPrint((char *)"I/O error when reading     ",slLocate(10,16));			
-			emu_printf("I/O error when reading '%s'\n", _entryName);
-		}
-	} else {
-//			slPrint((char *)"Can't open     ",slLocate(10,16));		
-		emu_printf("Can't open '%s'\n", _entryName);
 	}
+	error("Cannot load '%s'", _entryName);
 }
 
 void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
@@ -241,7 +258,7 @@ void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 	}
 }
 
-void Resource::load_SPR_OFF(const char *fileName, uint8 *sprData) {
+void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 	debug(DBG_RES, "Resource::load_SPR_OFF('%s')", fileName);
 	snprintf(_entryName, sizeof(_entryName), "%s.OFF", fileName);
 	uint8_t *offData = 0;
@@ -658,12 +675,12 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 void Resource::load_CT(File *pf) {
 	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
-	uint8 *tmp = (uint8 *)sat_malloc(len);
+	uint8_t *tmp = (uint8 *)sat_malloc(len);
 	if (!tmp) {
 		error("Unable to allocate CT buffer");
 	} else {
 		pf->read(tmp, len);
-		if (!delphine_unpack((uint8 *)_ctData, tmp, len)) {
+		if (!bytekiller_unpack((uint8_t *)_ctData, sizeof(_ctData), tmp, len)) {
 			error("Bad CRC for collision data");
 		}
 		sat_free(tmp);
@@ -713,7 +730,7 @@ void Resource::load_SPR(File *f) {
 	int len = f->size() - 12;
 	_spr1 = (uint8 *)sat_malloc(len);
 	if (!_spr1) {
-		error("Unable to allocate SPR buffer");
+		error("Unable to allocate SPR1 buffer");
 	} else {
 		f->seek(12);
 		f->read(_spr1, len);
@@ -722,14 +739,15 @@ void Resource::load_SPR(File *f) {
 
 void Resource::load_SPRM(File *f) {
 	debug(DBG_RES, "Resource::load_SPRM()");
-	int len = f->size() - 12;
+	const uint32_t len = f->size() - 12;
+	assert(len <= sizeof(_sprm));
 	f->seek(12);
 	f->read(_sprm, len);
 }
 
 void Resource::load_RP(File *f) {
 	debug(DBG_RES, "Resource::load_RP()");
-	f->read(_rp, 0x4A);
+	f->read(_rp, sizeof(_rp));
 }
 
 void Resource::load_SPC(File *f) {
@@ -827,6 +845,20 @@ void Resource::load_OBJ(File *f) {
 	}
 }
 
+void Resource::free_OBJ() {
+	debug(DBG_RES, "Resource::free_OBJ()");
+	ObjectNode *prevNode = 0;
+	for (int i = 0; i < _numObjectNodes; ++i) {
+		if (_objectNodesMap[i] != prevNode) {
+			ObjectNode *curNode = _objectNodesMap[i];
+			free(curNode->objects);
+			free(curNode);
+			prevNode = curNode;
+		}
+		_objectNodesMap[i] = 0;
+	}
+}
+
 void Resource::load_OBC(File *f) {
 	const int packedSize = f->readUint32BE();
 	uint8_t *packedData = (uint8_t *)sat_malloc(packedSize);
@@ -847,20 +879,6 @@ void Resource::load_OBC(File *f) {
 	sat_free(packedData);
 	decodeOBJ(tmp, unpackedSize);
 	sat_free(tmp);
-}
-
-void Resource::free_OBJ() {
-	debug(DBG_RES, "Resource::free_OBJ()");
-	ObjectNode *prevNode = 0;
-	for (int i = 0; i < _numObjectNodes; ++i) {
-		if (_objectNodesMap[i] != prevNode) {
-			ObjectNode *curNode = _objectNodesMap[i];
-			sat_free(curNode->objects);
-			sat_free(curNode);
-			prevNode = curNode;
-		}
-		_objectNodesMap[i] = 0;
-	}
 }
 
 void Resource::decodeOBJ(const uint8_t *tmp, int size) {
@@ -996,12 +1014,11 @@ void Resource::decodePGE(const uint8_t *p, int size) {
 
 void Resource::load_ANI(File *f) {
 	debug(DBG_RES, "Resource::load_ANI()");
-	int size = f->size() - 2;
-	_ani = (uint8 *)sat_malloc(size);
+	const int size = f->size();
+	_ani = (uint8_t *)sat_malloc(size);
 	if (!_ani) {
 		error("Unable to allocate ANI buffer");
 	} else {
-		f->seek(2);
 		f->read(_ani, size);
 	}
 }
@@ -1009,7 +1026,7 @@ void Resource::load_ANI(File *f) {
 void Resource::load_TBN(File *f) {
 	debug(DBG_RES, "Resource::load_TBN()");
 	int len = f->size();
-	_tbn = (uint8 *)sat_malloc(len);
+	_tbn = (uint8_t *)sat_malloc(len);
 	if (!_tbn) {
 		error("Unable to allocate TBN buffer");
 	} else {
@@ -1021,7 +1038,7 @@ void Resource::load_CMD(File *pf) {
 	debug(DBG_RES, "Resource::load_CMD()");
 	sat_free(_cmd);
 	int len = pf->size();
-	_cmd = (uint8 *)sat_malloc(len);
+	_cmd = (uint8_t *)sat_malloc(len);
 	if (!_cmd) {
 		error("Unable to allocate CMD buffer");
 	} else {
@@ -1033,7 +1050,7 @@ void Resource::load_POL(File *pf) {
 	debug(DBG_RES, "Resource::load_POL()");
 	sat_free(_pol);
 	int len = pf->size();
-	_pol = (uint8 *)sat_malloc(len);
+	_pol = (uint8_t *)sat_malloc(len);
 	if (!_pol) {
 		error("Unable to allocate POL buffer");
 	} else {
@@ -1087,21 +1104,20 @@ void Resource::load_CMP(File *pf) {
 	sat_free(tmp);
 }
 
-void Resource::load_VCE(int num, int segment, uint8 **buf, uint32 *bufSize) {
+void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
 	*buf = 0;
 	int offset = _voicesOffsetsTable[num];
 	if (offset != 0xFFFF) {
-		const uint16 *p = _voicesOffsetsTable + offset / 2;
+		const uint16_t *p = _voicesOffsetsTable + offset / 2;
 		offset = (*p++) * 2048;
 		int count = *p++;
 		if (segment < count) {
 			File f;
 			if (vceEnabled && f.open("VOICE.VCE", _dataPath, "rb")) {
 				int voiceSize = p[segment] * 2048 / 5;
-				sat_free(_voiceBuf);
-				_voiceBuf = (uint8 *)sat_malloc(voiceSize);
-				if (_voiceBuf) {
-					uint8 *dst = _voiceBuf;
+				uint8_t *voiceBuf = (uint8_t *)sat_malloc(voiceSize);
+				if (voiceBuf) {
+					uint8_t *dst = voiceBuf;
 					offset += 0x2000;
 					for (int s = 0; s < count; ++s) {
 						int len = p[s] * 2048;
@@ -1114,7 +1130,7 @@ void Resource::load_VCE(int num, int segment, uint8 **buf, uint32 *bufSize) {
 									if (v & 0x80) {
 										v = -(v & 0x7F);
 									}
-									*dst++ = (uint8)(v & 0xFF);
+									*dst++ = (uint8_t)(v & 0xFF);
 								}
 							}
 							offset += 0x2000 + 2048;
@@ -1123,7 +1139,7 @@ void Resource::load_VCE(int num, int segment, uint8 **buf, uint32 *bufSize) {
 							break;
 						}
 					}
-					*buf = _voiceBuf;
+					*buf = voiceBuf;
 					*bufSize = voiceSize;
 				}
 			}

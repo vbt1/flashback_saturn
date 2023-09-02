@@ -31,17 +31,41 @@ struct Cutscene {
 	typedef void (Cutscene::*OpcodeStub)();
 
 	enum {
-		NUM_OPCODES = 15,
-		TIMER_SLICE = 15
+		MAX_VERTICES = 128,
+		NUM_OPCODES = 15
+	};
+
+	enum {
+		kTextJustifyLeft = 0,
+		kTextJustifyAlign = 1,
+		kTextJustifyCenter = 2,
+	};
+
+	enum {
+		kCineDebut = 0,
+		kCineChute = 47,
+		kCineMemo = 48,
+		kCineVoyage = 52,
+		kCineEspions = 57
+	};
+
+	struct SetShape {
+		uint16_t offset;
+		uint16_t size;
+	};
+
+	struct Text {
+		int num;
+		const char *str;
 	};
 
 	static const OpcodeStub _opcodeTable[];
-	static const char *_namesTableDOS[];	
-	static const uint16 _offsetsTable[];
-	static const uint16 _cosTable[];
-	static const uint16 _sinTable[];
-	static const uint8 _creditsData[];
-	static const uint16 _creditsCutSeq[];
+	static const char *_namesTableDOS[];
+	static const uint16_t _offsetsTableDOS[];
+	static const uint16_t _cosTable[];
+	static const uint16_t _sinTable[];
+	static const uint8_t _creditsDataDOS[];
+	static const uint16_t _creditsCutSeq[];
 	static const uint8 _musicTable[];
 	static const uint8 _protectionShapeData[];
 
@@ -50,52 +74,56 @@ struct Cutscene {
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;
-	ResourceType _ver;
+	const uint8_t *_patchedOffsetsTable;
 
-	uint16 _id;
-	uint16 _deathCutsceneId;
+	uint16_t _id;
+	uint16_t _deathCutsceneId;
 	bool _interrupted;
 	bool _stop;
-	uint8 *_polPtr;
-	uint8 *_cmdPtr;
-	uint8 *_cmdPtrBak;
-	uint32 _tstamp;
-	uint8 _frameDelay;
+	const uint8_t *_polPtr;
+	const uint8_t *_cmdPtr;
+	const uint8_t *_cmdPtrBak;
+	uint32_t _tstamp;
+	uint8_t _frameDelay;
 	bool _newPal;
-	uint8 _palBuf[0x20 * 2];
-	uint16 _startOffset;
+	uint8_t _palBuf[16 * sizeof(uint16_t) * 2];
+	uint16_t _baseOffset;
 	bool _creditsSequence;
 	uint32 _rotData[4];
-	uint8 _primitiveColor;
-	uint8 _clearScreen;
-	Point _vertices[0x80];
+	uint8_t _primitiveColor;
+	uint8_t _clearScreen;
+	Point _vertices[MAX_VERTICES];
 	bool _hasAlphaColor;
-	uint8 _varText;
-	uint8 _varKey;
-	int16 _shape_ix;
-	int16 _shape_iy;
-	int16 _shape_ox;
-	int16 _shape_oy;
-	int16 _shape_cur_x;
-	int16 _shape_cur_y;
-	int16 _shape_prev_x;
-	int16 _shape_prev_y;
-	uint16 _shape_count;
-	uint32 _shape_cur_x16;
-	uint32 _shape_cur_y16;
-	uint32 _shape_prev_x16;
-	uint32 _shape_prev_y16;
-	uint8 _textSep[0x14];
-	uint8 _textBuf[500];
-	const uint8 *_textCurPtr;
-	uint8 *_textCurBuf;
-	uint8 _textUnk2;
-	uint8 _creditsTextPosX;
-	uint8 _creditsTextPosY;
-	int16 _creditsTextCounter;
-	uint8 *_page0, *_page1; //, *_pageC;
+	uint8_t _varKey;
+	int16_t _shape_ix;
+	int16_t _shape_iy;
+	int16_t _shape_ox;
+	int16_t _shape_oy;
+	int16_t _shape_cur_x;
+	int16_t _shape_cur_y;
+	int16_t _shape_prev_x;
+	int16_t _shape_prev_y;
+	uint16_t _shape_count;
+	uint32_t _shape_cur_x16;
+	uint32_t _shape_cur_y16;
+	uint32_t _shape_prev_x16;
+	uint32_t _shape_prev_y16;
+	uint8_t _textSep[0x14];
+	uint8_t _textBuf[500];
+	const uint8_t *_textCurPtr;
+	uint8_t *_textCurBuf;
+	bool _creditsSlowText;
+	bool _creditsKeepText;
+	uint8_t _creditsTextPosX;
+	uint8_t _creditsTextPosY;
+	int16_t _creditsTextCounter;
+	int _creditsTextIndex; /* MAC has the credits data in a resource */
+	int _creditsTextLen;
+	uint8_t *_frontPage, *_backPage, *_auxPage;
 
-	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid, ResourceType ver);
+	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid);
+	const uint8_t *getCommandData() const;
+	const uint8_t *getPolygonData() const;
 
 	void sync();
 	void copyPalette(const uint8 *palo, uint16 num);
@@ -130,6 +158,7 @@ struct Cutscene {
 	uint16 fetchNextCmdWord();
 	void mainLoop(uint16 offset);
 	bool load(uint16_t cutName);
+	void unload();
 	void prepare();
 	void startCredits();
 	void play();
