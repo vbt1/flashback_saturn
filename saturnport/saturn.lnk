@@ -1,19 +1,24 @@
+MEMORY 
+  {
+  ram  : ORIGIN = 0x6000000, l = 983040
+  }
+  
 SECTIONS {		
 	SLSTART 0x06004000 : {	
 		___Start = .;	
 		*(SLSTART)	
-	}			
+	}	> ram		
 	.text ALIGN(0x20) :			
 	{			
 		* (.text)			
 		*(.strings)			
 		__etext = .;			
-	}			
+	}	> ram		
 	SLPROG ALIGN(0x20): {	
 		__slprog_start = .;	
 		*(SLPROG)	
 		__slprog_end = .;	
-	}			
+	}	> ram		
 	.tors  ALIGN(0x10) :			
 	{			
 		___ctors = . ;			
@@ -22,25 +27,25 @@ SECTIONS {
 		___dtors = . ;			
 		*(.dtors)			
 		___dtors_end = . ;			
-	}			
+	}	> ram		
 	.data ALIGN(0x10):			
 	{			
 		* (.data)			
 		__edata = . ;			
-	}
+	}	> ram
 	.rodata ALIGN(0x10):
 	{
 		* (.rodata)
-	}			
+	}	> ram		
 	.bss ALIGN(0x10) (NOLOAD):			
 	{			
 		__bstart = . ;			
 		*(.bss)			
 		* ( COMMON )			
 		__bend = . ;
-	}
+	}	> ram
 	.comment ALIGN(0x10) (NOLOAD):
 	{			
 	_end = .;			
-	}			
+	}	> ram
 }				

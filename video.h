@@ -20,6 +20,8 @@
 #define __VIDEO_H__
 
 #include "intern.h"
+#define	    VDP2_VRAM_B0	0x25e40000
+#define	    VDP2_VRAM_B1	0x25e60000
 
 struct Resource;
 struct SystemStub;
@@ -45,10 +47,11 @@ struct Video {
 	SystemStub *_stub;
 
 	int _w, _h;
-	int _layerSize;
+//	int _layerSize;
 	int _layerScale; // 1 for Amiga/PC, 2 for Macintosh
 	uint8_t _frontLayer[GAMESCREEN_W * GAMESCREEN_H*4];
-	uint8_t _backLayer[GAMESCREEN_W * GAMESCREEN_H];
+//	uint8_t _backLayer[GAMESCREEN_W * GAMESCREEN_H*2];
+	uint8_t *_backLayer;
 	uint8_t _tempLayer[GAMESCREEN_W * GAMESCREEN_H];
 //	uint8_t _tempLayer2[GAMESCREEN_W * GAMESCREEN_H];  // à remettre sans x4 (buffer video low res
 	uint8_t _unkPalSlot1, _unkPalSlot2;
@@ -58,7 +61,7 @@ struct Video {
 	uint8_t _charShadowColor;
 	uint8_t _screenBlocks[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
 	bool _fullRefresh;
-	uint8_t _shakeOffset;
+//	uint8_t _shakeOffset;
 	drawCharFunc _drawChar;
 	
 	Video(Resource *res, SystemStub *stub);
@@ -68,6 +71,7 @@ struct Video {
 	void updateScreen();
 	void fullRefresh();
 	void fadeOut();
+	void fadeOutPalette();
 	void setPaletteSlotBE(int palSlot, int palNum);
 	void setPaletteSlotLE(int palSlot, const uint8_t *palData);
 	void setTextPalette();

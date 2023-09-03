@@ -31,10 +31,12 @@ Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
 	_layerScale = (_res->_type == kResourceTypeMac) ? 2 : 1; // Macintosh version is 512x448
 	_w = GAMESCREEN_W * _layerScale;
-	_h = GAMESCREEN_H * _layerScale;		
+	_h = GAMESCREEN_H * _layerScale;
+//	_layerSize = _w * _h;
 	//_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 	memset(_frontLayer, 0, _w * _h);
 	//_backLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
+	_backLayer = (uint8_t *)VDP2_VRAM_B0;	
 	memset(_backLayer, 0, _w * _h);
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 	memset(_tempLayer, 0, _w * _h);
@@ -43,7 +45,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	_fullRefresh = true;
-	_shakeOffset = 0;
+//	_shakeOffset = 0;
 	_charFrontColor = 0;
 	_charTransparentColor = 0;
 	_charShadowColor = 0;
@@ -61,11 +63,11 @@ Video::Video(Resource *res, SystemStub *stub)
 }
 
 Video::~Video() {
-	//sat_free(_frontLayer);
-	//sat_free(_backLayer);
-	//sat_free(_tempLayer);
-	//sat_free(_tempLayer2);
-	//sat_free(_screenBlocks);
+//	sat_free(_frontLayer);
+//	sat_free(_backLayer);
+//	sat_free(_tempLayer);
+//	sat_free(_tempLayer2);
+//	sat_free(_screenBlocks);
 }
 /*
 void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
@@ -114,12 +116,12 @@ void Video::updateScreen() {
 //_shakeOffset=0;
 	if (_fullRefresh) {
 		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
-		_stub->updateScreen(_shakeOffset);
+		_stub->updateScreen(0);
 		_fullRefresh = false;
 	} else {
 		int i, j;
 		int count = 0;
-		uint8 *p = _screenBlocks;
+		uint8_t *p = _screenBlocks;
 		for (j = 0; j < GAMESCREEN_H*2 / SCREENBLOCK_H; ++j) {
 			uint16 nh = 0;
 			for (i = 0; i < GAMESCREEN_W*2 / SCREENBLOCK_W; ++i) {
@@ -127,25 +129,26 @@ void Video::updateScreen() {
 					--p[i];
 					++nh;
 				} else if (nh != 0) {
-					int16 x = (i - nh) * SCREENBLOCK_W;
+					int16_t x = (i - nh) * SCREENBLOCK_W;
 					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 					nh = 0;
 					++count;
 				}
 			}
 			if (nh != 0) {
-				int16 x = (i - nh) * SCREENBLOCK_W;
+				int16_t x = (i - nh) * SCREENBLOCK_W;
 				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 				++count;
 			}
 			p += GAMESCREEN_W*2 / SCREENBLOCK_W;
 		}
 		if (count != 0) {
-			_stub->updateScreen(_shakeOffset);
+			_stub->updateScreen(0);
 		}
 	}
-	if (_shakeOffset != 0) {
-		_shakeOffset = 0;
+//	if (_shakeOffset != 0) 
+	{
+//		_shakeOffset = 0;
 		_fullRefresh = true;
 	}
 }
@@ -158,6 +161,14 @@ void Video::fullRefresh() {
 
 void Video::fadeOut() {
 	debug(DBG_VIDEO, "Video::fadeOut()");
+	if (1) {
+		fadeOutPalette();
+	} else {
+//		_stub->fadeScreen();
+	}
+}
+
+void Video::fadeOutPalette() {
 	for (int step = 16; step >= 0; --step) {
 		for (int c = 0; c < 256; ++c) {
 			Color col;
@@ -175,7 +186,7 @@ void Video::fadeOut() {
 
 void Video::setPaletteSlotBE(int palSlot, int palNum) {
 	debug(DBG_VIDEO, "Video::setPaletteSlotBE()");
-	const uint8 *p = _res->_pal + palNum * 0x20;
+	const uint8_t *p = _res->_pal + palNum * 32;
 	for (int i = 0; i < 16; ++i) {
 		uint16 color = READ_BE_UINT16(p); p += 2;
 		uint8 t = (color == 0) ? 0 : 3;
@@ -189,10 +200,10 @@ void Video::setPaletteSlotBE(int palSlot, int palNum) {
 	}
 }
 
-void Video::setPaletteSlotLE(int palSlot, const uint8 *palData) {
+void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 	debug(DBG_VIDEO, "Video::setPaletteSlotLE()");
 	for (int i = 0; i < 16; ++i) {
-		uint16 color = READ_LE_UINT16(palData); palData += 2;
+		const uint16_t color = READ_LE_UINT16(palData); palData += 2;
 		Color c;
 		c.b = (color & 0x00F) << 2;
 		c.g = (color & 0x0F0) >> 2;
@@ -291,7 +302,7 @@ void Video::copyLevelMap(uint16 room) {
 			}
 		}
 	}
-	memcpy(_backLayer, _frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//	memcpy(_backLayer, _frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 
 #ifdef _RAMCART_
 	f.close();
@@ -541,7 +552,7 @@ void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color)
 	for (int i = 0; i < len; ++i) {
 		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
 	}
-	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H , GAMESCREEN_W * GAMESCREEN_H * 4);
 }
 
 void Video::MAC_decodeMap(int level, int room) {
@@ -552,7 +563,7 @@ void Video::MAC_decodeMap(int level, int room) {
 	buf.h = _h;
 	buf.setPixel = Video::MAC_setPixel;
 	_res->MAC_loadLevelRoom(level, room, &buf);
-	memcpy(_backLayer, _frontLayer, _layerSize);
+	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
 	Color roomPalette[256];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {
@@ -614,9 +625,7 @@ emu_printf("MAC_getImageData done\n");
 
 
 	if (dataPtr) {
-emu_printf("MAC_getImageData dataPtr %p\n", dataPtr);	 
 		DecodeBuffer buf;
-emu_printf("MAC_getImageData dataPtr memset\n");	 
 		memset(&buf, 0, sizeof(buf));
 		buf.xflip = xflip;
 		buf.ptr = _frontLayer;
@@ -626,12 +635,7 @@ emu_printf("MAC_getImageData dataPtr memset\n");
 		buf.y = y * _layerScale;
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
-		emu_printf("MAC_decodeImageData data %p frame %d\n", data, frame);	 
 		_res->MAC_decodeImageData(data, frame, &buf);
-emu_printf("markBlockAsDirty\n");	
 		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
 	}
-	else
-		emu_printf("MAC_getImageData no dataPtr\n");	 
-	
 }

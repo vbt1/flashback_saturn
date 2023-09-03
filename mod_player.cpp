@@ -53,7 +53,7 @@ uint16 ModPlayer::findPeriod(uint16 period, uint8 fineTune) const {
 void ModPlayer::load(File *f) {
 	f->read(_modInfo.songName, 20);
 	_modInfo.songName[20] = 0;
-	debug(DBG_MOD, "songName = '%s'", _modInfo.songName);
+//	debug(DBG_MOD, "songName = '%s'", _modInfo.songName);
 
 	for (int s = 0; s < NUM_SAMPLES; ++s) {
 		SampleInfo *si = &_modInfo.samples[s];

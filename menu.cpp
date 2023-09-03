@@ -31,7 +31,7 @@ Menu::Menu(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid)
 }
 
 void Menu::drawString(const char *str, int16 y, int16 x, uint8 color) {
-	debug(DBG_MENU, "Menu::drawString()");
+//	debug(DBG_MENU, "Menu::drawString()");
 	uint8 v1b = _vid->_charFrontColor;
 	uint8 v2b = _vid->_charTransparentColor;
 	uint8 v3b = _vid->_charShadowColor;
@@ -76,7 +76,7 @@ void Menu::drawString(const char *str, int16 y, int16 x, uint8 color) {
 }
 
 void Menu::drawString2(const char *str, int16 y, int16 x) {
-	debug(DBG_MENU, "Menu::drawString2()");
+//	debug(DBG_MENU, "Menu::drawString2()");
 	int len = 0;
 	while (*str) {
 		_vid->drawChar((uint8)*str, y, x + len);
@@ -87,7 +87,7 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 }
 
 void Menu::loadPicture(const char *prefix) {
-	debug(DBG_MENU, "Menu::loadPicture('%s')", prefix);
+//	debug(DBG_MENU, "Menu::loadPicture('%s')", prefix);
 	_res->load_MAP_menu(prefix, _res->_scratchBuffer);
 	for (int i = 0; i < 4; ++i) {
 		for (int y = 0; y < 224; ++y) {
@@ -104,7 +104,7 @@ void Menu::loadPicture(const char *prefix) {
 }
 
 void Menu::handleInfoScreen() {
-	debug(DBG_MENU, "Menu::handleInfoScreen()");
+//	debug(DBG_MENU, "Menu::handleInfoScreen()");
 	_vid->fadeOut();
 	if (_res->_lang == LANG_FR) {
 		loadPicture("instru_f");
@@ -128,7 +128,7 @@ void Menu::handleInfoScreen() {
 }
 
 void Menu::handleSkillScreen() {
-	debug(DBG_MENU, "Menu::handleSkillScreen()");
+//	debug(DBG_MENU, "Menu::handleSkillScreen()");
 	static const uint8_t colors[3][3] = {
 		{ 2, 3, 3 }, // easy
 		{ 3, 2, 3 }, // normal
@@ -245,7 +245,7 @@ bool Menu::handlePasswordScreen() {
 }
 
 bool Menu::handleLevelScreen() {
-	debug(DBG_MENU, "Menu::handleLevelScreen()");
+//	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	_vid->fadeOut();
 	loadPicture("menu2");
 	_vid->fullRefresh();
@@ -320,7 +320,7 @@ bool Menu::handleLevelScreen() {
 
 
 void Menu::handleTitleScreen() {
-	debug(DBG_MENU, "Menu::handleTitleScreen()");
+//	debug(DBG_MENU, "Menu::handleTitleScreen()");
 
 	_charVar1 = 0;
 	_charVar2 = 0;
@@ -472,7 +472,7 @@ void Menu::handleTitleScreen() {
 		if (previousLanguage != currentLanguage) {
 			_res->setLanguage(languages[currentLanguage].lang);
 			// clear previous language text
-			memcpy(_vid->_frontLayer, _vid->_backLayer, _vid->_layerSize);
+			memcpy(_vid->_frontLayer, _vid->_backLayer, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H * 4);
 		}
 
 		// draw the options

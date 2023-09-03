@@ -50,7 +50,7 @@ void ResourceAba::readEntries(const char *aba) {
 			_entries[j].fileIndex = _filesCount;
 			const uint32_t tag = f.readUint32BE();
 			assert(tag == TAG);
-			debug(DBG_RES, "'%s' offset 0x%X size %d/%d", _entries[j].name,  _entries[j].offset, _entries[j].compressedSize, _entries[j].size);
+//			debug(DBG_RES, "'%s' offset 0x%X size %d/%d", _entries[j].name,  _entries[j].offset, _entries[j].compressedSize, _entries[j].size);
 			if (i != 0) {
 				assert(nextOffset == _entries[j].offset);
 			}

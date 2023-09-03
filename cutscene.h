@@ -67,7 +67,7 @@ struct Cutscene {
 	static const uint8_t _creditsDataDOS[];
 	static const uint16_t _creditsCutSeq[];
 	static const uint8 _musicTable[];
-	static const uint8 _protectionShapeData[];
+//	static const uint8 _protectionShapeData[];
 
 	Graphics _gfx;
 	ModPlayer *_ply;
@@ -134,7 +134,7 @@ struct Cutscene {
 	void drawText(int16 x, int16 y, const uint8 *p, uint16 color, uint8 *page, uint8 n);
 	void swapLayers();
 	void drawCreditsText();
-	void drawProtectionShape(uint8 shapeNum, int16 zoom);
+//	void drawProtectionShape(uint8 shapeNum, int16 zoom);
 	void drawShape(const uint8 *data, int16 x, int16 y);
 	void drawShapeScale(const uint8 *data, int16 zoom, int16 b, int16 c, int16 d, int16 e, int16 f, int16 g);
 	void drawShapeScaleRotate(const uint8 *data, int16 zoom, int16 b, int16 c, int16 d, int16 e, int16 f, int16 g);

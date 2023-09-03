@@ -118,7 +118,7 @@ bool delphine_unpack(uint8 *dst, const uint8 *src, int len) {
 	uc.size = 0;
 	uc.crc = READ_BE_UINT32(uc.src); uc.src -= 4;
 	uc.chk = READ_BE_UINT32(uc.src); uc.src -= 4;
-	debug(DBG_UNPACK, "delphine_unpack() crc=0x%X datasize=0x%X", uc.crc, uc.datasize);
+//	debug(DBG_UNPACK, "delphine_unpack() crc=0x%X datasize=0x%X", uc.crc, uc.datasize);
 	uc.crc ^= uc.chk;
 	do {
 		if (!next_chunk(&uc)) {

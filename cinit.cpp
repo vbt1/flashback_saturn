@@ -69,7 +69,7 @@ extern Uint16 VDP2_RAMCTL;
 
 //    slScrAutoDisp(NBG0ON);	
 //	slSynch();
-	slScrAutoDisp(NBG0ON|NBG1ON);
+	slScrAutoDisp(NBG1ON);
     slBitMapNbg0(COL_TYPE_256, BM_512x256, (void *)VDP2_VRAM_B0);
 	slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
 //    slBitMapNbg1(COL_TYPE_256, BM_512x256, (void *)VDP2_VRAM_B0);

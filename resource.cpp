@@ -81,7 +81,7 @@ void Resource::init() {
 	
 //	_type = kResourceTypeMac; // vbt ajout
 	
-	emu_printf("Resource::init\n");
+//	emu_printf("Resource::init\n");
 	
 	switch (_type) {
 	case kResourceTypeDOS:
@@ -159,7 +159,7 @@ void Resource::load_DEM(const char *filename) {
 }
 
 void Resource::load_FIB(const char *fileName) {
-	debug(DBG_RES, "Resource::load_FIB('%s')", fileName);
+//	debug(DBG_RES, "Resource::load_FIB('%s')", fileName);
 	static const uint8 fibonacciTable[] = {
 		0xDE, 0xEB, 0xF3, 0xF8, 0xFB, 0xFD, 0xFE, 0xFF,
 		0x00, 0x01, 0x02, 0x03, 0x05, 0x08, 0x0D, 0x15
@@ -212,7 +212,7 @@ void Resource::load_FIB(const char *fileName) {
 }
 
 void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
-	debug(DBG_RES, "Resource::load_MAP_menu('%s')", fileName);
+//	debug(DBG_RES, "Resource::load_MAP_menu('%s')", fileName);
 	static const int kMenuMapSize = 0x3800 * 4;
 	snprintf(_entryName, sizeof(_entryName), "%s.MAP", fileName);
 	File f;
@@ -242,7 +242,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 }
 
 void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
-	debug(DBG_RES, "Resource::load_PAL_menu('%s')", fileName);
+//	debug(DBG_RES, "Resource::load_PAL_menu('%s')", fileName);
 	sprintf(_entryName, "%s.PAL", fileName);
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
@@ -259,7 +259,7 @@ void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 }
 
 void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
-	debug(DBG_RES, "Resource::load_SPR_OFF('%s')", fileName);
+//	debug(DBG_RES, "Resource::load_SPR_OFF('%s')", fileName);
 	snprintf(_entryName, sizeof(_entryName), "%s.OFF", fileName);
 	uint8_t *offData = 0;
 	File f;
@@ -299,12 +299,12 @@ static const char *getCineName(Language lang, ResourceType type) {
 	switch (lang) {
 	case LANG_FR:
 		return "FR_";
-	case LANG_DE:
+/*	case LANG_DE:
 		return "GER";
 	case LANG_SP:
 		return "SPA";
 	case LANG_IT:
-		return "ITA";
+		return "ITA";*/
 	case LANG_EN:
 	default:
 		return "ENG";
@@ -444,12 +444,12 @@ static const char *getTextBin(Language lang, ResourceType type) {
 	switch (lang) {
 	case LANG_FR:
 		return "TBF";
-	case LANG_DE:
+/*	case LANG_DE:
 		return "TBG";
 	case LANG_SP:
 		return "TBS";
 	case LANG_IT:
-		return "TBI";
+		return "TBI";*/
 	case LANG_EN:
 	default:
 		return "TBN";
@@ -929,7 +929,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 				obj->opcode_arg1 = _readUint16(objData); objData += 2;
 				obj->opcode_arg2 = _readUint16(objData); objData += 2;
 				obj->opcode_arg3 = _readUint16(objData); objData += 2;
-				debug(DBG_RES, "obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
+//				debug(DBG_RES, "obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
 			}
 			++iObj;
 			prevOffset = offsets[i];
@@ -940,10 +940,10 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 }
 
 void Resource::load_PGE(File *f) {
-	debug(DBG_RES, "Resource::load_PGE()");
+//	debug(DBG_RES, "Resource::load_PGE()");
 	_pgeNum = f->readUint16LE();
 	memset(_pgeInit, 0, sizeof(_pgeInit));
-	debug(DBG_RES, "_pgeNum=%d", _pgeNum);
+//	debug(DBG_RES, "_pgeNum=%d", _pgeNum);
 	assert(_pgeNum <= ARRAYSIZE(_pgeInit));
 	for (uint16_t i = 0; i < _pgeNum; ++i) {
 		InitPGE *pge = &_pgeInit[i];
@@ -972,42 +972,32 @@ void Resource::load_PGE(File *f) {
 }
 
 void Resource::decodePGE(const uint8_t *p, int size) {
-	emu_printf("pge 0 %p\n",p);			
 	_pgeNum = _readUint16(p); 
-	emu_printf("pge 1\n");		
 	p += 2;
-	emu_printf("pge 2\n");			
 	memset(_pgeInit, 0, sizeof(_pgeInit));
-	emu_printf("len=%d _pgeNum=%d\n", size, _pgeNum);
 	assert(_pgeNum <= ARRAYSIZE(_pgeInit));
 	for (uint16_t i = 0; i < _pgeNum; ++i) {
 		InitPGE *pge = &_pgeInit[i];
-	emu_printf("pge a\n");		
 		pge->type = _readUint16(p); p += 2;
 		pge->pos_x = _readUint16(p); p += 2;
 		pge->pos_y = _readUint16(p); p += 2;
 		pge->obj_node_number = _readUint16(p); p += 2;
-	emu_printf("pge b\n");				
 		pge->life = _readUint16(p); p += 2;
 		for (int lc = 0; lc < 4; ++lc) {
 			pge->data[lc] = _readUint16(p); p += 2;
 		}
-	emu_printf("pge c\n");				
 		pge->object_type = *p++;
 		pge->init_room = *p++;
 		pge->room_location = *p++;
 		pge->init_flags = *p++;
-	emu_printf("pge d\n");				
 		pge->colliding_icon_num = *p++;
 		pge->icon_num = *p++;
 		pge->object_id = *p++;
 		pge->skill = *p++;
-	emu_printf("pge e\n");				
 		pge->mirror_x = *p++;
 		pge->flags = *p++;
 		pge->collision_data_len = *p++;
 		++p;
-	emu_printf("pge f\n");				
 		pge->text_num = _readUint16(p); p += 2;
 	}
 }
@@ -1381,10 +1371,6 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 		
 		emu_printf("Resource '%s' not found\n", name);
 	}
-		emu_printf("Resource return datz\n");	
-
-//if (strcmp(name, "Font") == 0)
-//	while(1);
 
 	return data;
 }
@@ -1438,7 +1424,6 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 }
 
 void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
-emu_printf("MAC_decodeDataCLUT\n");					emu_printf("MAC_decodeDataCLUT\n");					
 	ptr += 6; // seed+flags
 	_clutSize = READ_BE_UINT16(ptr); ptr += 2;
 	
@@ -1636,34 +1621,24 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
-	emu_printf("MAC_getImageData %d\n", i);
 	const uint8_t *basePtr = ptr;
-	emu_printf("MAC_getImageData sig ptrval %p\n", ptr);	
 	const uint16_t sig = READ_BE_UINT16(ptr); 
-		emu_printf("MAC_getImageData ptr+2\n");	
 	ptr += 2;
-	emu_printf("MAC_getImageData sig val %x\n",sig);		
 	if(sig != 0xC211)
 		return NULL;
 	const int count = READ_BE_UINT16(ptr);
 	ptr += 2;
-	emu_printf("MAC_getImageData sig count %x\n",count);
 	
 	if (!(i < count))
 		return NULL;		
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
-	emu_printf("MAC_getImageData sig offset %x\n",offset);
-	
 	return (offset != 0) ? basePtr + offset : 0;
 }
 
 bool Resource::MAC_hasLevelMap(int level, int room) const {
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], room);
-	
-	emu_printf("MAC_hasLevelMap %s\n", name);
-	
 	return _mac->findEntry(name) != 0;
 }
 

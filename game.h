@@ -72,8 +72,8 @@ struct Game {
 	static const char *_monsterNames[2][4];
 	static const pge_OpcodeProc _pge_opcodeTable[];
 	static const uint8 _pge_modKeysTable[];
-	static const uint8 _protectionCodeData[];
-	static const uint8 _protectionPal[];
+//	static const uint8 _protectionCodeData[];
+//	static const uint8 _protectionPal[];
 
 	Cutscene _cut;
 	Menu _menu;
@@ -108,7 +108,7 @@ struct Game {
 	AnimBufferState _animBuffer2State[42];
 	AnimBufferState _animBuffer3State[12];
 	AnimBuffers _animBuffers;
-	uint8 _bankData[0x7000];
+	uint8 *_bankData;//[0x7000];
 	uint8 *_firstBankData;
 	uint8 *_lastBankData;
 	BankSlot _bankSlots[49];
@@ -138,7 +138,7 @@ struct Game {
 	void showFinalScore();
 	bool handleConfigPanel();
 	bool handleContinueAbort();
-	bool handleProtectionScreen();
+//	bool handleProtectionScreen();
 	void printSaveStateCompleted();
 	void drawLevelTexts();
 	void drawStoryTexts();
@@ -392,9 +392,9 @@ struct Game {
 	uint8 _inp_lastKeysHit;
 	uint8 _inp_lastKeysHitLeftRight;
 	int _inp_demPos;	
-	bool _inp_replay;
-	bool _inp_record;
-	File *_inp_demo;
+//	bool _inp_replay;
+//	bool _inp_record;
+//	File *_inp_demo;
 
 	void inp_handleSpecialKeys();
 	void inp_update();

@@ -443,11 +443,11 @@ void SystemStub_SDL::prepareGfxMode() {
 	slZoomNbg1(toFIXED(0.9), toFIXED(1.0));
 #endif
 	
-	memset((void*)VDP2_VRAM_A0, 0x00, 512*256); // Clean the VRAM banks.
+	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.
 
 	slPriorityNbg1(1); // Game screen
 
-	slScrAutoDisp(NBG1ON | NBG0ON); // Enable display for NBG1 (game screen), NBG0 (debug messages/keypad)
+	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen), NBG0 (debug messages/keypad)
 	//slScrAutoDisp(NBG1ON); // Enable display only for game screen: NBG1
 
 	//slScrPosNbg0((FIXED)0, (FIXED)0); // Position NBG0

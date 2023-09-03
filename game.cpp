@@ -120,19 +120,17 @@ void Game::run() {
 	_mix.init();
 
 	if (_res._type==kResourceTypeMac) {
-		emu_printf("displayTitleScreenMac 1    \n");
 		
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
-		emu_printf("displayTitleScreenMac 2    \n");			
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 
 		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
-//	playCutscene(0x40); // vbt à remettre
-//	playCutscene(0x0D);
+	playCutscene(0x40); // vbt à remettre
+	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -163,7 +161,6 @@ void Game::run() {
 				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 					_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
 					const char *fn = _demoInputs[_demoBin].name;
-					emu_printf("Loading inputs from '%s'\n", fn);
 					_res.load_DEM(fn);
 					if (_res._demLen == 0) {
 						continue;
@@ -179,7 +176,6 @@ void Game::run() {
 				break;
 			case kResourceTypeMac:
 				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
-					emu_printf("displayTitleScreenMac\n");				
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -192,7 +188,6 @@ void Game::run() {
 //			_stub->clearWidescreen();
 //		}
 		if (_currentLevel == 7) {
-emu_printf("_currentLevel == 7 \n");				
 			_vid.fadeOut();
 			_vid.setTextPalette();
 			playCutscene(0x3D);
@@ -205,16 +200,13 @@ emu_printf("_currentLevel == 7 \n");
 			_score = 0;
 			//clearStateRewind();
 			loadLevelData();
-emu_printf( "resetGameState\n");					
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-emu_printf( "mainLoop\n");									
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
-					emu_printf("End of demo\n");
 					// exit level
 					_endLoop = true;
 				}
@@ -258,11 +250,9 @@ void Game::displayTitleScreenMac(int num) {
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
 	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid._frontLayer, 0, _vid._layerSize);
+	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 	
-		emu_printf("MAC_loadTitleImage    \n");	
 	_res.MAC_loadTitleImage(num, &buf);
-		emu_printf("MAC_copyClut16    \n");		
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
 		_res.MAC_copyClut16(palette, 0, clutBaseColor + i);
@@ -272,7 +262,6 @@ void Game::displayTitleScreenMac(int num) {
 		}
 	}
 	if (num == Menu::kMacTitleScreen_MacPlay) {
-		emu_printf("kMacTitleScreen_MacPlay    \n");		
 		Color palette[16];
 		_res.MAC_copyClut16(palette, 0, 56);
 		for (int i = 12; i < 16; ++i) {
@@ -297,10 +286,9 @@ void Game::displayTitleScreenMac(int num) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
-//			for (int i = 0; i < 7; ++i) {
+
 			for (int i = 0; i < 7; ++i) {
 				const char *str = Menu::_levelNames[i];
-//					emu_printf("drawString %d %s\n",i,str);				
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -359,16 +347,13 @@ void Game::mainLoop() {
 emu_printf( "mainLoop playCutscene\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
-emu_printf( "showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
 	}
-emu_printf( "_deathCutsceneCounter %d\n",_deathCutsceneCounter);	
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
-emu_printf( "playCutscene(_cut._deathCutsceneId)\n");							
 			playCutscene(_cut._deathCutsceneId);
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
@@ -381,21 +366,16 @@ emu_printf( "playCutscene(_cut._deathCutsceneId)\n");
 				} else*/
 				{
 //					clearStateRewind();
-emu_printf( "loadLevelData\n");							
 					loadLevelData();
-			emu_printf( "resetGameState\n");			
 					resetGameState();
 				}
 			}
 			return;
 		}
 	}
-	memcpy(_vid._frontLayer, _vid._backLayer, _vid._layerSize);
-emu_printf( "pge_getInput %d\n",_deathCutsceneCounter);								
+	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 	pge_getInput();
-emu_printf( "pge_prepare %d\n",_deathCutsceneCounter);									
 	pge_prepare();
-emu_printf( "col_prepareRoomState %d\n",_deathCutsceneCounter);			
 	col_prepareRoomState();
 	uint8_t oldLevel = _currentLevel;
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
@@ -403,16 +383,13 @@ emu_printf( "col_prepareRoomState %d\n",_deathCutsceneCounter);
 		if (pge) {
 			_col_currentPiegeGridPosY = (pge->pos_y / 36) & ~1;
 			_col_currentPiegeGridPosX = (pge->pos_x + 8) >> 4;
-emu_printf( "pge_process0 %d\n",_deathCutsceneCounter);				
 			pge_process(pge);
-emu_printf( "pge_process1 %d\n",_deathCutsceneCounter);			
 		}
 	}
 	if (oldLevel != _currentLevel) {
 		/*if (_res._isDemo) {
 			_currentLevel = oldLevel;
 		}*/
-emu_printf( "changeLevel %d\n",_deathCutsceneCounter);			
 		changeLevel();
 		_pge_opGunVar = 0;
 		return;
@@ -423,14 +400,10 @@ emu_printf( "changeLevel %d\n",_deathCutsceneCounter);
 	}
 	if (_loadMap) {
 		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
-			
-emu_printf( "_currentRoom == %02x\n",_currentRoom);	
-emu_printf( "_deathCutsceneCounter = 1\n");			
-emu_printf( "hasLevelMap ? == %02d\n",hasLevelMap(_currentLevel, _pgeLive[0].room_location));			
+
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
 		} else {
-emu_printf( "loadLevelMap \n");				
 			_currentRoom = _pgeLive[0].room_location;
 			loadLevelMap();
 			_loadMap = false;
@@ -443,13 +416,9 @@ emu_printf( "loadLevelMap \n");
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
 	}*/
-emu_printf( "prepareAnims \n");			
 	prepareAnims();
-emu_printf( "drawAnims \n");				
 	drawAnims();
-emu_printf( "drawCurrentInventoryItem \n");					
 	drawCurrentInventoryItem();
-emu_printf( "drawLevelTexts \n");						
 	drawLevelTexts();
 	/*if (g_options.enable_password_menu) {
 		printLevelCode();
@@ -458,13 +427,9 @@ emu_printf( "drawLevelTexts \n");
 		--_blinkingConradCounter;
 	}
 //	_vid.updateScreen();
-emu_printf( "copyRect \n");	
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-emu_printf( "updateScreen \n");		
 	_stub->updateScreen(0);
-emu_printf( "updateTiming \n");		
 	updateTiming();
-emu_printf( "drawStoryTexts \n");		
 
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
@@ -473,7 +438,7 @@ emu_printf( "drawStoryTexts \n");
 	}
 	if (_stub->_pi.escape) {
 		_stub->_pi.escape = false;
-		if (_demoBin != -1 || handleConfigPanel()) {
+		if (_demoBin != -1 /*|| handleConfigPanel()*/) {
 			_endLoop = true;
 			return;
 		}
@@ -527,10 +492,11 @@ void Game::inp_handleSpecialKeys() {
 		int8_t slot = _stateSlot + _stub->_pi.stateSlot;
 		if (slot >= 1 && slot < 100) {
 			_stateSlot = slot;
-			debug(DBG_INFO, "Current game state slot is %d", _stateSlot);
+//			debug(DBG_INFO, "Current game state slot is %d", _stateSlot);
 		}
 		_stub->_pi.stateSlot = 0;
 	}
+/*	
 	if (_stub->_pi.inpRecord || _stub->_pi.inpReplay) {
 		bool replay = false;
 		bool record = false;
@@ -576,6 +542,7 @@ void Game::inp_handleSpecialKeys() {
 		_stub->_pi.inpReplay = false;
 		_stub->_pi.inpRecord = false;
 	}
+*/	
 }
 
 void Game::drawCurrentInventoryItem() {
@@ -607,7 +574,7 @@ void Game::showFinalScore() {
 		_stub->sleep(100);
 	}
 }
-
+/*
 bool Game::handleConfigPanel() {
 	static const int x = 7;
 	static const int y = 10;
@@ -717,7 +684,7 @@ bool Game::handleConfigPanel() {
 	_vid.fullRefresh();
 	return (current == MENU_ITEM_ABORT);
 }
-
+*/
 bool Game::handleContinueAbort() {
 	playCutscene(0x48);
 	char textBuf[50];
@@ -780,90 +747,11 @@ bool Game::handleContinueAbort() {
 		//_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
-		memcpy(_vid._frontLayer, _vid._tempLayer, _vid._layerSize);
+		memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
 	}
 	return false;
 }
-/*
-bool Game::handleProtectionScreen() {
-	bool valid = true;
-	_cut.prepare();
-	_cut.copyPalette(_protectionPal, 0);
-	_cut.updatePalette();
-	_cut._gfx.setClippingRect(64, 48, 128, 128);
 
-	_menu._charVar1 = 0xE0;
-	_menu._charVar2 = 0xEF;
-	_menu._charVar4 = 0xE5;
-	_menu._charVar5 = 0xE2;
-
-	int shapeNum = getRandomNumber() % 30;
-	for (int16 zoom = 2000; zoom != 0; zoom -= 100) {
-		_cut.drawProtectionShape(shapeNum, zoom);
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._tempLayer, 256);
-		_stub->updateScreen(0);
-		_stub->sleep(30);
-	}
-	int codeNum = getRandomNumber() % 5;
-	_cut.drawProtectionShape(shapeNum, 1);
-	_vid.setTextPalette();
-	char codeText[7];
-	int len = 0;
-	do {
-		codeText[len] = '\0';
-		memcpy(_vid._frontLayer, _vid._tempLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-		_menu.drawString("PROTECTION", 2, 11, 5);
-		char textBuf[20];
-		sprintf(textBuf, "CODE %d :  %s", codeNum + 1, codeText);
-		_menu.drawString(textBuf, 23, 8, 5);
-		_vid.updateScreen();
-		_stub->sleep(50);
-		//_stub->processEvents();
-		char c = _stub->_pi.lastChar;
-		if (c != 0) {
-			_stub->_pi.lastChar = 0;
-			if (len < 6) {
-				if (c >= 'a' && c <= 'z') {
-					c &= ~0x20;
-				}
-				if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
-					codeText[len] = c;
-					++len;
-				}
-			}
-		}
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
-			if (len > 0) {
-				--len;
-			}
-		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
-			if (len > 0) {
-				const uint8 *p = _protectionCodeData + shapeNum * 0x1E + codeNum * 6;
-				for (int i = 0; i < len; ++i) {
-					uint8 r = 0;
-					uint8 ch = codeText[i];
-					for (int b = 0; b < 8; ++b) {
-						if (ch & (1 << b)) {
-							r |= (1 << (7 - b));
-						}
-					}
-					r ^= 0x55;
-					if (r != *p++) {
-						valid = false;
-						break;
-					}
-				}
-				break;
-			}
-		}
-	} while (!_stub->_pi.quit);
-	_vid.fadeOut();
-	return valid;
-}
-*/
 void Game::printLevelCode() {
 	if (_printLevelCodeCounter != 0) {
 		--_printLevelCodeCounter;
@@ -884,40 +772,27 @@ void Game::printSaveStateCompleted() {
 
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
-emu_printf( "drawLevelTexts a\n");	
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
 	if (obj == 0) {
-emu_printf( "drawLevelTexts b\n");			
 		obj = col_findCurrentCollidingObject(pge, 0xFF, 5, 9, &pge);
 	}
-emu_printf( "drawLevelTexts c\n");		
 	if (obj > 0) {
 		_printLevelCodeCounter = 0;
 		if (_textToDisplay == 0xFFFF) {
-emu_printf( "drawLevelTexts d\n");				
 			uint8_t icon_num = obj - 1;
-emu_printf( "drawLevelTexts e\n");				
 			drawIcon(icon_num, 80, 8, 0xA);
-emu_printf( "drawLevelTexts f\n");				
 			uint8_t txt_num = pge->init_PGE->text_num;
 			const char *str = (const char *)_res._tbn + READ_LE_UINT16(_res._tbn + txt_num * 2);
-emu_printf( "drawLevelTexts g\n");				
 			_vid.drawString(str, (176 - strlen(str) * 8) / 2, 26, 0xE6);
 			if (icon_num == 2) {
-emu_printf( "drawLevelTexts h\n");					
 				printSaveStateCompleted();
-emu_printf( "drawLevelTexts i\n");					
 				return;
 			}
 		} else {
-emu_printf( "drawLevelTexts j\n");				
 			_currentInventoryIconNum = obj - 1;
-emu_printf( "drawLevelTexts k\n");				
 		}
 	}
-emu_printf( "drawLevelTexts l\n");		
 	_saveStateCompleted = false;
-emu_printf( "drawLevelTexts m\n");		
 }
 
 static int getLineLength(const uint8_t *str) {
@@ -1011,7 +886,7 @@ void Game::drawStoryTexts() {
 			}
 			_vid.updateScreen();
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
-				inp_update();
+//				inp_update();
 				_stub->sleep(80);
 			}
 			if (voiceSegmentData) {
@@ -1029,7 +904,7 @@ void Game::drawStoryTexts() {
 				}
 				++str;
 			}
-			memcpy(_vid._frontLayer, _vid._tempLayer, _vid._layerSize);
+			memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
 		}
 		_textToDisplay = 0xFFFF;
 	}
@@ -1102,7 +977,7 @@ void Game::prepareAnims() {
 }
 
 void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
-	debug(DBG_GAME, "Game::prepareAnimsHelper() dx=0x%X dy=0x%X pge_num=%ld pge->flags=0x%X pge->anim_number=0x%X", dx, dy, pge - &_pgeLive[0], pge->flags, pge->anim_number);
+//	debug(DBG_GAME, "Game::prepareAnimsHelper() dx=0x%X dy=0x%X pge_num=%ld pge->flags=0x%X pge->anim_number=0x%X", dx, dy, pge - &_pgeLive[0], pge->flags, pge->anim_number);
 	if (!(pge->flags & 8)) {
 		if (pge->index != 0 && loadMonsterSprites(pge) == 0) {
 			return;
@@ -1212,24 +1087,15 @@ void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 //						_vid.PC_decodeSpm(state->dataPtr, _res._scratchBuffer); // vbt à  remettre
 						drawCharacter(_res._scratchBuffer, state->x, state->y, state->h, state->w, pge->flags);
 					} else {
-	emu_printf("Game::drawCharacter() start\n");						
 						drawCharacter(state->dataPtr, state->x, state->y, state->h, state->w, pge->flags);
-	emu_printf("Game::drawCharacter() end\n");						
-
 					}
 					break;
 				case kResourceTypeMac:
-	emu_printf("Game::drawPiege() start\n");						
-				
 					drawPiege(state);
-	emu_printf("Game::drawPiege() end\n");						
-					
 					break;
 				}
 			} else {
-	emu_printf("Game::drawPiege2() start\n");					
 				drawPiege(state);
-	emu_printf("Game::drawPiege2() end\n");					
 			}
 			--state;
 		} while (--numAnims != 0);
@@ -1244,30 +1110,22 @@ void Game::drawPiege(AnimBufferState *state) {
 		break;
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
-	emu_printf("drawPiege MAC_drawSprite1 start\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
-	emu_printf("drawPiege MAC_drawSprite1 end\n");
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
 				break;
 			}
-	emu_printf("drawPiege MAC_getPersoFrame start\n");			
 			const int frame = _res.MAC_getPersoFrame(pge->anim_number);
-	emu_printf("drawPiege MAC_drawSprite2 start\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
-	emu_printf("drawPiege MAC_drawSprite2 end\n");			
 		} else {
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
-	emu_printf("drawPiege MAC_drawSprite3 start\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
-	emu_printf("drawPiege MAC_drawSprite3 end\n");			
 		}
 		break;
 	}
 }
 
 void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
-	emu_printf("Game::drawObject() dataPtr[]=0x%X dx=%d dy=%d\n",  dataPtr[0], (int8_t)dataPtr[1], (int8_t)dataPtr[2]);
 	assert(dataPtr[0] < 0x4A);
 	uint8_t slot = _res._rp[dataPtr[0]];
 	uint8_t *data = _res.findBankData(slot);
@@ -1297,7 +1155,6 @@ void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flag
 	}
 }
 void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
-	emu_printf("Game::drawObjectFrame(%p, %d, %d, 0x%X)\n", dataPtr, x, y, flags);
 	const uint8_t *src = bankDataPtr + dataPtr[0] * 32;
 
 	int16_t sprite_y = y + dataPtr[2];
@@ -1500,7 +1357,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 }
 
 int Game::loadMonsterSprites(LivePGE *pge) {
-	debug(DBG_GAME, "Game::loadMonsterSprites()");
+//	debug(DBG_GAME, "Game::loadMonsterSprites()");
 	InitPGE *init_pge = pge->init_PGE;
 	if (init_pge->obj_node_number != 0x49 && init_pge->object_type != 10) {
 		return 0xFFFF;
@@ -1794,7 +1651,7 @@ void Game::handleInventory() {
 
 			_vid.updateScreen();
 			_stub->sleep(80);
-			inp_update();
+//			inp_update();
 
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
@@ -1841,7 +1698,7 @@ void Game::handleInventory() {
 		playSound(66, 0);
 	}
 }
-
+/*
 void Game::inp_update() {
 	if (_inp_replay && _inp_demo) {
 		uint8 keymask = _inp_demo->readByte();
@@ -1884,6 +1741,7 @@ void Game::makeGameDemoName(char *buf) {
 void Game::makeGameStateName(uint8 slot, char *buf) {
 	sprintf(buf, "rs%d-%02d", _currentLevel + 1, slot);
 }
+*/
 /*
 bool Game::saveGameState(uint8 slot) {
 	bool success = false;
@@ -2161,7 +2019,7 @@ void Game::clearSaveSlots(uint8 level) {
 }
 */
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
-	debug(DBG_GAME, "AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p", stateNum, x, y, dataPtr, pge);
+//	debug(DBG_GAME, "AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p", stateNum, x, y, dataPtr, pge);
 	assert(stateNum < 4);
 	AnimBufferState *state = _states[stateNum];
 	state->x = x;
