@@ -303,9 +303,9 @@ void Game::displayTitleScreenMac(int num) {
 					++_currentLevel;
 				}
 			}
-//			_vid.updateScreen();
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+			_vid.updateScreen();
+//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+//	_stub->updateScreen(0);
 		}
 //		_stub->processEvents();
 		if (_stub->_pi.quit) {
@@ -426,9 +426,9 @@ emu_printf( "mainLoop playCutscene\n");
 	if (_blinkingConradCounter != 0) {
 		--_blinkingConradCounter;
 	}
-//	_vid.updateScreen();
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+	_vid.updateScreen();
+//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+//	_stub->updateScreen(0);
 	updateTiming();
 
 	drawStoryTexts();

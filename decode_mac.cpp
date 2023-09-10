@@ -15,8 +15,15 @@ uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
 	decodedSize = f.readUint32BE();
 	uint8_t *dst = (uint8_t *)sat_malloc(decodedSize);
 	if (!dst) {
-		emu_printf("Failed to allocate %d bytes for LZSS\n", decodedSize);
-		return 0;
+		emu_printf("Failed to allocate %d bytes for LZSS in LWRAM\n", decodedSize);
+//		dst = (uint8_t *)malloc(decodedSize);
+//		if (!dst) {
+			
+			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
+			dst = (uint8_t *)0x25C04000;
+//			return 0;
+//		}
+		
 	}
 	uint32_t count = 0;
 	while (count < decodedSize) {

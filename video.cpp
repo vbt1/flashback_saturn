@@ -112,7 +112,7 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 
 void Video::updateScreen() {
 	debug(DBG_VIDEO, "Video::updateScreen()");
-//	_fullRefresh = true;
+	_fullRefresh = false;
 //_shakeOffset=0;
 	if (_fullRefresh) {
 		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
@@ -619,9 +619,9 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
 }
 
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
-emu_printf("MAC_drawSprite\n");	
+//emu_printf("MAC_drawSprite\n");	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
-emu_printf("MAC_getImageData done\n");	
+//emu_printf("MAC_getImageData done\n");	
 
 
 	if (dataPtr) {
