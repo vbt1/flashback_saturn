@@ -129,8 +129,8 @@ void Game::run() {
 //		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
-	playCutscene(0x40); // vbt à remettre
-	playCutscene(0x0D);
+//	playCutscene(0x40); // vbt à remettre
+//	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -303,9 +303,9 @@ void Game::displayTitleScreenMac(int num) {
 					++_currentLevel;
 				}
 			}
-			_vid.updateScreen();
-//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//	_stub->updateScreen(0);
+//			_vid.updateScreen();
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
 		}
 //		_stub->processEvents();
 		if (_stub->_pi.quit) {
@@ -344,9 +344,10 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-//emu_printf( "mainLoop playCutscene\n");		
+emu_printf( "mainLoop playCutscene1\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
+emu_printf( "mainLoop showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
@@ -540,6 +541,7 @@ void Game::playCutscene(int id) {
 			}*/
 		}
 		_cut.play();
+		/*  // vbt à remettre		
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
@@ -547,6 +549,7 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
+		*/
 /* // vbt à remettre		
 		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
@@ -874,8 +877,8 @@ void Game::drawLevelTexts() {
 			uint8_t icon_num = obj - 1;
 			drawIcon(icon_num, 80, 8, 0xA);
 			uint8_t txt_num = pge->init_PGE->text_num;
-			const char *str = (const char *)_res._tbn + READ_LE_UINT16(_res._tbn + txt_num * 2);
-			_vid.drawString(str, (176 - strlen(str) * 8) / 2, 26, 0xE6);
+			const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
+			drawString(str, 176, 26, 0xE6, true);
 			if (icon_num == 2) {
 				printSaveStateCompleted();
 				return;
@@ -1597,17 +1600,6 @@ void Game::loadLevelData() {
 //	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre
 }
 
-uint8 *Game::findBankData(uint16 entryNum) {
-	BankSlot *slot = &_bankSlots[0];
-	while (slot->entryNum != 0xFFFF) {
-		if (slot->entryNum == entryNum) {
-			return slot->ptr;
-		}
-		++slot;
-	}
-	return 0;
-}
-
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 	uint8_t buf[16 * 16];
 	switch (_res._type) {
@@ -1716,29 +1708,39 @@ void Game::handleInventory() {
 					if (current_item == item_it) {
 						drawIcon(76, icon_x_pos, 157, 0xA);
 						selected_pge = items[item_it].live_pge;
-						uint8 txt_num = items[item_it].init_pge->text_num;
-						const char *str = (const char *)_res._tbn + READ_LE_UINT16(_res._tbn + txt_num * 2);
-						_vid.drawString(str, (256 - strlen(str) * 8) / 2, 189, 0xED);
+						uint8_t txt_num = items[item_it].init_pge->text_num;
+						const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
+						drawString(str, Video::GAMESCREEN_W, 189, 0xED, true);
 						if (items[item_it].init_pge->init_flags & 4) {
-							char counterValue[10];
-							sprintf(counterValue, "%d", selected_pge->life);
-							_vid.drawString(counterValue, (256 - strlen(counterValue) * 8) / 2, 197, 0xED);
+							char buf[10];
+							snprintf(buf, sizeof(buf), "%d", selected_pge->life);
+							_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 197, 0xED);
 						}
 					}
 					icon_x_pos += 32;
 				}
 				if (current_line != 0) {
-					drawIcon(0x4E, 120, 176, 0xA); // down arrow
+					drawIcon(77, 120, 143, 0xA); // up arrow
 				}
 				if (current_line != num_lines - 1) {
-					drawIcon(0x4D, 120, 143, 0xA); // up arrow
+					drawIcon(78, 120, 176, 0xA); // down arrow
 				}
 			} else {
-				char textBuf[50];
-				sprintf(textBuf, "SCORE %08lu", _score);
-				_vid.drawString(textBuf, (114 - strlen(textBuf) * 8) / 2 + 72, 158, 0xE5);
-				sprintf(textBuf, "%s:%s", _res.getMenuString(LocaleData::LI_06_LEVEL), _res.getMenuString(LocaleData::LI_13_EASY + _skillLevel));
-				_vid.drawString(textBuf, (114 - strlen(textBuf) * 8) / 2 + 72, 166, 0xE5);
+				char buf[50];
+				snprintf(buf, sizeof(buf), "SCORE %08u", _score);
+				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 158, 0xE5);
+				snprintf(buf, sizeof(buf), "%s:%s", _res.getMenuString(LocaleData::LI_06_LEVEL), _res.getMenuString(LocaleData::LI_13_EASY + _skillLevel));
+				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 166, 0xE5);
+				if (0) { // if the protection screen code was not properly cracked...
+					static const uint8_t kCrackerText[17] = {
+						0x19, 0x08, 0x1B, 0x19, 0x11, 0x1F, 0x08, 0x67, 0x18,
+						0x16, 0x1B, 0x13, 0x08, 0x1F, 0x1B, 0x0F, 0x5A
+					};
+					for (int i = 0; i < 17; ++i) {
+						buf[i] = kCrackerText[i] ^ 0x5A;
+					}
+					_vid.drawString(buf, 65, 193, 0xE4);
+				}
 			}
 
 			_vid.updateScreen();

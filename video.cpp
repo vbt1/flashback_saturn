@@ -542,7 +542,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //emu_printf("apres _drawChar\n");		
 		++len;
 	}
-	emu_printf("mark dirty\n");	
+//	emu_printf("mark dirty\n");	
 	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }

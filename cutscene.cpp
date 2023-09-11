@@ -57,7 +57,7 @@ void Cutscene::sync(int frameDelay) {
 }
 
 void Cutscene::copyPalette(const uint8_t *palo, uint16_t num) {
-	uint8_t *dst = (uint8_t *)_palBuf;
+	uint8_t *dst = _palBuf;
 	if (num != 0) {
 		dst += 0x20;
 	}
@@ -86,7 +86,7 @@ void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
 	SWAP(_frontPage, _backPage);
-	_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontPage, 512);
+	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, _vid->_w);
 	_stub->updateScreen(0);
 }
 
@@ -949,7 +949,7 @@ void Cutscene::op_drawTextAtPos() {
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
 				if ((_cmdPtr - _cmdPtrBak) == 0xA) {
-					_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _backPage, 256);
+					_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
 					_stub->updateScreen(0);
 				} else {
 					_stub->sleep(15);
@@ -1067,7 +1067,7 @@ void Cutscene::mainLoop(uint16_t num) {
 	_polPtr = getPolygonData();
 	emu_printf("_baseOffset = %d offset = %d", _baseOffset, offset);
 
-//	_paletteNum = -1;
+	_paletteNum = -1;
 		emu_printf("mainLoop m   \n");					
 	_drawMemoSetShapes = (_id == kCineMemo);
 		emu_printf("mainLoop n   \n");						
@@ -1093,9 +1093,6 @@ void Cutscene::mainLoop(uint16_t num) {
 		}
 	}
 		emu_printf("mainLoop r   \n");						
-	if (_interrupted || _id != 0x0D) {
-		_ply->stop();
-	}
 }
 
 bool Cutscene::load(uint16_t cutName) {
