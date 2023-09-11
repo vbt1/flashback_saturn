@@ -334,7 +334,7 @@ void Cutscene::op_waitForSync() {
 
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 	debug(DBG_CUT, "Cutscene::drawShape()");
-	_gfx._layer = _backPage;
+	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		Point pt;
@@ -415,7 +415,7 @@ void Cutscene::op_drawShape() {
 		drawShape(primitiveVertices, x + dx, y + dy);
 	}
 	if (_clearScreen != 0) {
-//		memcpy(_auxPage, _backPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+		memcpy(_auxPage, _backPage, _vid->_w * _vid->_h);
 	}
 }
 
@@ -1294,7 +1294,12 @@ void Cutscene::play() {
 /*		else if (_id == 8) {
 			playSet(_caillouSetData, 0x5E4);
 		}*/
-		_vid->fullRefresh();
+		emu_printf("fullRefresh    \n");										
+//		_vid->fullRefresh();
+	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+	_stub->updateScreen(0);
+	
+		emu_printf("fullRefresh end   \n");												
 		if (_id != 0x3D) {
 			_id = 0xFFFF;
 		}

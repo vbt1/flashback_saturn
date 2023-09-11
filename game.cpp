@@ -547,6 +547,7 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
+/* // vbt à remettre		
 		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
 			Color palette[32];
@@ -556,6 +557,9 @@ void Game::playCutscene(int id) {
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
+		
+*/
+		
 		/*if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
