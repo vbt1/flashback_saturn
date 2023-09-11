@@ -126,7 +126,7 @@ void Game::run() {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 
-		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
+//		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
 	playCutscene(0x40); // vbt à remettre
@@ -344,7 +344,7 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-emu_printf( "mainLoop playCutscene\n");		
+//emu_printf( "mainLoop playCutscene\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
 		showFinalScore();
@@ -469,10 +469,98 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
-		emu_printf("sfxPly.stop    \n");		
-		_sfxPly.stop();
-		emu_printf("_cut.play    \n");			
+/*
+		ToggleWidescreenStack tws(_stub, false);
+		_mix.stopMusic();
+		if (_res._hasSeqData) {
+			int num = 0;
+			switch (_cut._id) {
+			case 0x02: {
+					static const uint8_t tab[] = { 1, 2, 1, 3, 3, 4, 4 };
+					num = tab[_currentLevel];
+				}
+				break;
+			case 0x05: {
+					static const uint8_t tab[] = { 1, 2, 3, 5, 5, 4, 4 };
+					num = tab[_currentLevel];
+				}
+				break;
+			case 0x0A: {
+					static const uint8_t tab[] = { 1, 2, 2, 2, 2, 2, 2 };
+					num = tab[_currentLevel];
+				}
+				break;
+			case 0x10: {
+					static const uint8_t tab[] = { 1, 1, 1, 2, 2, 3, 3 };
+					num = tab[_currentLevel];
+				}
+				break;
+			case 0x3C: {
+					static const uint8_t tab[] = { 1, 1, 1, 1, 1, 2, 2 };
+					num = tab[_currentLevel];
+				}
+				break;
+			case 0x40:
+				return;
+			case 0x4A:
+				return;
+			}
+			
+
+			if (SeqPlayer::_namesTable[_cut._id]) {
+			        char name[16];
+			        snprintf(name, sizeof(name), "%s.SEQ", SeqPlayer::_namesTable[_cut._id]);
+				char *p = strchr(name, '0');
+				if (p) {
+					*p += num;
+				}
+			        if (playCutsceneSeq(name)) {
+					if (_cut._id == 0x3D) {
+						playCutsceneSeq("CREDITS.SEQ");
+						_cut._interrupted = false;
+					} else {
+						_cut._id = 0xFFFF;
+					}
+					_mix.stopMusic();
+					return;
+				}
+			}
+		}
+*/		
+		/*if (_res.isAmiga()) {
+			const int num = Cutscene::_musicTableAmiga[_cut._id * 2];
+			if (num != 0xFF) {
+				const int bpm = Cutscene::_musicTableAmiga[_cut._id * 2 + 1];
+				_mix.playMusic(num, bpm);
+			}
+		} else*/ {
+/*			const int num = Cutscene::_musicTableDOS[_cut._id];
+			if (num != 0xFF) {
+				_mix.playMusic(num);
+			}*/
+		}
 		_cut.play();
+		if (id == 0xD && !_cut._interrupted) {
+//			if (!_res.isAmiga()) 
+			{
+				_cut._id = 0x4A; // second part of the introduction cutscene
+				_cut.play();
+			}
+		}
+		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
+			// restore palette entries modified by the cutscene player (0xC and 0xD)
+			Color palette[32];
+			_res.MAC_copyClut16(palette, 0, 0x37);
+			_res.MAC_copyClut16(palette, 1, 0x38);
+			for (int i = 0; i < 32; ++i) {
+				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
+			}
+		}
+		/*if (_cut._id == 0x3D) {
+			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
+			_cut.playCredits();
+		}*/
+//		_mix.stopMusic();
 	}
 }
 
@@ -1053,21 +1141,21 @@ void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
 }
 
 void Game::drawAnims() {
-	emu_printf("Game::drawAnims()\n");
+//	emu_printf("Game::drawAnims()\n");
 	_eraseBackground = false;
-	emu_printf("drawAnimBuffer(2\n");	
+//	emu_printf("drawAnimBuffer(2\n");	
 	drawAnimBuffer(2, _animBuffer2State);
-emu_printf("drawAnimBuffer(1\n");		
+//emu_printf("drawAnimBuffer(1\n");		
 	drawAnimBuffer(1, _animBuffer1State);
-emu_printf("drawAnimBuffer(0\n");		
+//emu_printf("drawAnimBuffer(0\n");		
 	drawAnimBuffer(0, _animBuffer0State);
 	_eraseBackground = true;
-emu_printf("drawAnimBuffer(3\n");		
+//emu_printf("drawAnimBuffer(3\n");		
 	drawAnimBuffer(3, _animBuffer3State);
 }
 
 void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
-	emu_printf("Game::drawAnimBuffer() state=%d\n", stateNum);
+//	emu_printf("Game::drawAnimBuffer() state=%d\n", stateNum);
 	assert(stateNum < 4);
 	_animBuffers._states[stateNum] = state;
 	uint8_t lastPos = _animBuffers._curPos[stateNum];
@@ -1252,7 +1340,7 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 }
 
 void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
-	emu_printf("Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)\n", dataPtr, pos_x, pos_y, a, b, flags);
+//	emu_printf("Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)\n", dataPtr, pos_x, pos_y, a, b, flags);
 
 	bool sprite_mirror_y = false;
 	if (b & 0x40) {
@@ -1338,7 +1426,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 	uint32_t dst_offset = 256 * pos_y + pos_x;
 	uint8_t sprite_col_mask = ((flags & 0x60) == 0x60) ? 0x50 : 0x40;
 
-	emu_printf("dst_offset=0x%X src_offset=0x%X\n", dst_offset, src - dataPtr);
+//	emu_printf("dst_offset=0x%X src_offset=0x%X\n", dst_offset, src - dataPtr);
 
 	if (!(flags & 2)) {
 		if (sprite_mirror_y) {
@@ -1404,7 +1492,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 
 bool Game::hasLevelMap(int level, int room) const {
 
-	emu_printf("Game::hasLevelMap() level %d room%d\n", level, room);
+//	emu_printf("Game::hasLevelMap() level %d room%d\n", level, room);
 	
 	if (_res._type == kResourceTypeMac) {
 		return _res.MAC_hasLevelMap(level, room);
@@ -1417,7 +1505,7 @@ bool Game::hasLevelMap(int level, int room) const {
 	return false;
 }
 void Game::loadLevelMap() {
-	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+//	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
 	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
 	switch (_res._type) {

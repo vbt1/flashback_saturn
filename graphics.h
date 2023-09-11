@@ -22,11 +22,13 @@
 #include "intern.h"
 
 struct Graphics {
-	uint8 *_layer;
-	int16 _areaPoints[0x200];
-	int16 _crx, _cry, _crw, _crh;
-
-	void setClippingRect(int16 vx, int16 vy, int16 vw, int16 vh);
+	static const int AREA_POINTS_SIZE = 256 * 2; // maxY * sizeof(Point) / sizeof(int16_t)
+	uint8_t *_layer;
+	int _layerPitch;
+	int16_t _areaPoints[AREA_POINTS_SIZE * 2];
+	int16_t _crx, _cry, _crw, _crh;
+	void setLayer(uint8_t *layer, int pitch);
+	void setClippingRect(int16_t vx, int16_t vy, int16_t vw, int16_t vh);	
 	void drawPoint(uint8 color, const Point *pt);
 	void drawLine(uint8 color, const Point *pt1, const Point *pt2);
 	void addEllipseRadius(int16 y, int16 x1, int16 x2);

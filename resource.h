@@ -262,6 +262,23 @@ struct Resource {
 		}
 		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);
 	}
+	const uint8_t *getCineString(int num) const {
+		if (_type == kResourceTypeMac) {
+			const int count = READ_BE_UINT16(_cine_txt);
+			assert(num < count);
+			const int offset = READ_BE_UINT16(_cine_txt + 2 + num * 2);
+			return _cine_txt + offset;
+		}
+		/*if (_lang == LANG_JP) {
+			const int offset = READ_BE_UINT16(LocaleData::_cineBinJP + num * 2);
+			return LocaleData::_cineTxtJP + offset;
+		}*/
+		if (_cine_off) {
+			const int offset = READ_BE_UINT16(_cine_off + num * 2);
+			return _cine_txt + offset;
+		}
+		return (num >= 0 && num < NUM_CUTSCENE_TEXTS) ? _cineStrings[num] : 0;
+	}	
 	const char *getMenuString(int num) {
 		return (num >= 0 && num < LocaleData::LI_NUM) ? _textsTable[num] : "";
 	}

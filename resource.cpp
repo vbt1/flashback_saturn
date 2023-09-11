@@ -1343,7 +1343,7 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 }
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
-		emu_printf("decodeResourceMacText        \n");
+//		emu_printf("decodeResourceMacText        \n");
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);

@@ -18,6 +18,10 @@
 
 #include "graphics.h"
 
+void Graphics::setLayer(uint8_t *layer, int pitch) {
+	_layer = layer;
+	_layerPitch = pitch;
+}
 
 void Graphics::setClippingRect(int16 rx, int16 ry, int16 rw, int16 rh) {
 	debug(DBG_VIDEO, "Graphics::setClippingRect(%d, %d, %d, %d)", rx, ry, rw, rh);

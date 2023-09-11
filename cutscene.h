@@ -66,8 +66,13 @@ struct Cutscene {
 	static const uint16_t _sinTable[];
 	static const uint8_t _creditsDataDOS[];
 	static const uint16_t _creditsCutSeq[];
-	static const uint8 _musicTable[];
+	static const uint8_t _musicTableDOS[];
 //	static const uint8 _protectionShapeData[];
+	static const Text _frTextsTable[];
+	static const Text _enTextsTable[];
+	static const uint8_t _caillouSetData[];
+	static const uint8_t _memoSetShape2Data[];
+	static const uint8_t _memoSetShape4Data[];
 
 	Graphics _gfx;
 	ModPlayer *_ply;
@@ -89,7 +94,7 @@ struct Cutscene {
 	uint8_t _palBuf[16 * sizeof(uint16_t) * 2];
 	uint16_t _baseOffset;
 	bool _creditsSequence;
-	uint32 _rotData[4];
+	uint32_t _rotMat[4];
 	uint8_t _primitiveColor;
 	uint8_t _clearScreen;
 	Point _vertices[MAX_VERTICES];
@@ -125,43 +130,47 @@ struct Cutscene {
 	const uint8_t *getCommandData() const;
 	const uint8_t *getPolygonData() const;
 
-	void sync();
-	void copyPalette(const uint8 *palo, uint16 num);
+	void sync(int delay);
+	void copyPalette(const uint8_t *palo, uint16_t num);
 	void updatePalette();
-	void setPalette();
-	void initRotationData(uint16 a, uint16 b, uint16 c);
-	uint16 findTextSeparators(const uint8 *p);
-	void drawText(int16 x, int16 y, const uint8 *p, uint16 color, uint8 *page, uint8 n);
-	void swapLayers();
+	void updateScreen();
+	void setRotationTransform(uint16_t a, uint16_t b, uint16_t c);
+	uint16_t findTextSeparators(const uint8_t *p, int len);
+	void drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify);
+	void clearBackPage();
 	void drawCreditsText();
-//	void drawProtectionShape(uint8 shapeNum, int16 zoom);
-	void drawShape(const uint8 *data, int16 x, int16 y);
-	void drawShapeScale(const uint8 *data, int16 zoom, int16 b, int16 c, int16 d, int16 e, int16 f, int16 g);
-	void drawShapeScaleRotate(const uint8 *data, int16 zoom, int16 b, int16 c, int16 d, int16 e, int16 f, int16 g);
+//	void drawProtectionShape(uint8 shapeNum, uint16_t zoom);
+	void drawShape(const uint8_t *data, int16_t x, int16_t y);
+	void drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g);
+	void drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g);
 
 	void op_markCurPos();
 	void op_refreshScreen();
 	void op_waitForSync();
 	void op_drawShape();
 	void op_setPalette();
-	void op_drawStringAtBottom();
+	void op_drawCaptionText();
 	void op_nop();
 	void op_skip3();
 	void op_refreshAll();
 	void op_drawShapeScale();
 	void op_drawShapeScaleRotate();
-	void op_drawCreditsText();
-	void op_drawStringAtPos();
+	void op_copyScreen();
+	void op_drawTextAtPos();
 	void op_handleKeys();
 
-	uint8 fetchNextCmdByte();
-	uint16 fetchNextCmdWord();
-	void mainLoop(uint16 offset);
+	uint8_t fetchNextCmdByte();
+	uint16_t fetchNextCmdWord();
+	void mainLoop(uint16_t num);
 	bool load(uint16_t cutName);
 	void unload();
 	void prepare();
-	void startCredits();
+	void playCredits();
+	void playText(const char *str);
 	void play();
+
+	void drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, const uint8_t *paletteLut);
+	void playSet(const uint8_t *p, int offset);
 };
 
 #endif // __CUTSCENE_H__
