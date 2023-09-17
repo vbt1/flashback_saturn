@@ -41,7 +41,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
 //	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
+//	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	_fullRefresh = true;
@@ -144,7 +144,7 @@ void Video::updateScreen() {
 			if (nh != 0) {
 					emu_printf( "Video::nh2 %d\n",nh);				
 				int16_t x = (i - nh) * SCREENBLOCK_W;
-				_stub->copyRect2(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
+				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 				++count;
 			}
 			p += GAMESCREEN_W*2 / SCREENBLOCK_W;

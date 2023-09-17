@@ -477,6 +477,7 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
+			_vid._layerScale=1;
 /*
 		ToggleWidescreenStack tws(_stub, false);
 		_mix.stopMusic();
@@ -576,6 +577,7 @@ void Game::playCutscene(int id) {
 		}*/
 //		_mix.stopMusic();
 	}
+	_vid._layerScale=2;
 }
 
 void Game::inp_handleSpecialKeys() {

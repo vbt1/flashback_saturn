@@ -93,7 +93,8 @@ void Cutscene::updateScreen() {
 
 //	SWAP(_backPage, _auxPage);
 	// vbt ....
-	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
+//	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
+_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256);
 	_stub->updateScreen(0);
 }
 
@@ -422,7 +423,8 @@ void Cutscene::op_drawShape() {
 		drawShape(primitiveVertices, x + dx, y + dy);
 	}
 	if (_clearScreen != 0) {
-		memcpy(_auxPage, _backPage, _vid->_w * _vid->_h);
+//		memcpy(_auxPage, _backPage, _vid->_w * _vid->_h);
+		memcpy(_auxPage, _backPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	}
 }
 
@@ -450,7 +452,7 @@ void Cutscene::op_drawCaptionText() {
 		const int h = 45 * _vid->_layerScale;
 		const int y = Video::GAMESCREEN_H * _vid->_layerScale - h;
 
-		memset(_auxPage + y * _vid->_w, 0xC0, h * _vid->_w);
+//		memset(_auxPage + y * _vid->_w, 0xC0, h * _vid->_w);
 		memset(_backPage + y * _vid->_w, 0xC0, h * _vid->_w);
 		memset(_frontPage + y * _vid->_w, 0xC0, h * _vid->_w);
 		if (strId != 0xFFFF) {
@@ -1133,10 +1135,11 @@ void Cutscene::unload() {
 }
 
 void Cutscene::prepare() {
+	_vid->_layerScale=1;
 	_frontPage = _vid->_frontLayer;
 //	_backPage = _vid->_tempLayer;
 	_backPage = _vid->_backLayer;
-	_auxPage = _vid->_backLayer; //_vid->_tempLayer2;
+	_auxPage = _vid->_tempLayer; //_vid->_tempLayer2;
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
