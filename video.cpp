@@ -39,9 +39,9 @@ Video::Video(Resource *res, SystemStub *stub)
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;	
 	memset(_backLayer, 0, _w * _h);
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_tempLayer, 0, _w * _h);
-	//_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-//	memset(_tempLayer2, 0, _w * _h);
+	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
+//	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
+	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	_fullRefresh = true;
@@ -86,7 +86,7 @@ void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
 }*/
 
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
-	debug(DBG_VIDEO, "Video::markBlockAsDirty2(%d, %d, %d, %d)", x, y, w, h);
+	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)", x, y, w, h);
 	int bx1 = scale * x / SCREENBLOCK_W;
 	int by1 = scale * y / SCREENBLOCK_H;
 	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
@@ -112,11 +112,15 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 
 void Video::updateScreen() {
 	debug(DBG_VIDEO, "Video::updateScreen()");
-	_fullRefresh = false;
+	
+	_stub->updateScreen(0);
+	
+//		memset(_screenBlocks, 1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
+//	_fullRefresh = false;
 //_shakeOffset=0;
 	if (_fullRefresh) {
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
-		_stub->updateScreen(0);
+//		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
+//		_stub->updateScreen(0);
 		_fullRefresh = false;
 	} else {
 		int i, j;
@@ -129,6 +133,8 @@ void Video::updateScreen() {
 					--p[i];
 					++nh;
 				} else if (nh != 0) {
+					
+					emu_printf( "Video::nh1 %d\n",nh);
 					int16_t x = (i - nh) * SCREENBLOCK_W;
 					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 					nh = 0;
@@ -136,20 +142,21 @@ void Video::updateScreen() {
 				}
 			}
 			if (nh != 0) {
+					emu_printf( "Video::nh2 %d\n",nh);				
 				int16_t x = (i - nh) * SCREENBLOCK_W;
-				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
+				_stub->copyRect2(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 				++count;
 			}
 			p += GAMESCREEN_W*2 / SCREENBLOCK_W;
 		}
 		if (count != 0) {
-			_stub->updateScreen(0);
+//			_stub->updateScreen(0);
 		}
 	}
 //	if (_shakeOffset != 0) 
 	{
 //		_shakeOffset = 0;
-		_fullRefresh = true;
+//		_fullRefresh = true;
 	}
 }
 

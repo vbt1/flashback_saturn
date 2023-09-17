@@ -148,6 +148,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void getPaletteEntry(uint8 i, Color *c);
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
+	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
@@ -251,6 +252,18 @@ void SystemStub_SDL::setOverscanColor(uint8 i) {
 	}
 }
 
+void SystemStub_SDL::copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
+	buf += y * pitch + x; // Get to data...
+
+	int idx;
+
+	for (idx = 0; idx < h; idx++) {
+		memset((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x),0x00,w);
+//		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+//		SCU_DMAWait();
+	}
+}
+
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
 	buf += y * pitch + x; // Get to data...
 
@@ -262,14 +275,16 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	}
 }
 
+
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);
+//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
 //	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2); // vbt : à enlever
 	//memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);
 
 	// Move scroll to shake screen
 //	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
-	slScrPosNbg0(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
+//	slScrPosNbg0(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
 
 	//slSynch();
 	//SPR_WaitEndSlaveSH();

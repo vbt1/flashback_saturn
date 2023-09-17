@@ -129,8 +129,8 @@ void Game::run() {
 //		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
-//	playCutscene(0x40); // vbt à remettre
-//	playCutscene(0x0D);
+	playCutscene(0x40); // vbt à remettre
+	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -344,10 +344,10 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-emu_printf( "mainLoop playCutscene1\n");		
+//emu_printf( "mainLoop playCutscene1\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
-emu_printf( "mainLoop showFinalScore\n");				
+//emu_printf( "mainLoop showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
@@ -374,7 +374,11 @@ emu_printf( "mainLoop showFinalScore\n");
 			return;
 		}
 	}
-	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+		SCU_DMAWait();
+
+
 	pge_getInput();
 	pge_prepare();
 	col_prepareRoomState();
@@ -411,6 +415,7 @@ emu_printf( "mainLoop showFinalScore\n");
 //			_vid.fullRefresh();
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	_stub->updateScreen(0);
+//	_vid.updateScreen();
 
 		}
 	}
@@ -466,6 +471,8 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
+	
+//	return;
 	if (id != -1) {
 		_cut._id = id;
 	}

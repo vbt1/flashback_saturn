@@ -85,8 +85,15 @@ void Cutscene::updatePalette() {
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
+//		_vid->fullRefresh();
 	SWAP(_frontPage, _backPage);
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, _vid->_w);
+//	_backPage = _vid->_tempLayer;
+//	_auxPage = _vid->_tempLayer2;
+//	_auxPage = _vid->_tempLayer2;
+
+//	SWAP(_backPage, _auxPage);
+	// vbt ....
+	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
 	_stub->updateScreen(0);
 }
 
@@ -320,7 +327,7 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = _res->isDOS() ? 20 : 60;
 			}
-			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H *4);
 			drawCreditsText();
 			updateScreen();
 		} while (--n);
@@ -929,7 +936,7 @@ void Cutscene::op_copyScreen() {
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
 	}
-	memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+	memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
 	_frameDelay = 10;
 	updateScreen();
 }
@@ -1127,9 +1134,9 @@ void Cutscene::unload() {
 
 void Cutscene::prepare() {
 	_frontPage = _vid->_frontLayer;
-	_backPage = _vid->_tempLayer;
-//	_auxPage = _vid->_tempLayer2;
-	_auxPage = _vid->_tempLayer;
+//	_backPage = _vid->_tempLayer;
+	_backPage = _vid->_backLayer;
+	_auxPage = _vid->_backLayer; //_vid->_tempLayer2;
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
