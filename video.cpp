@@ -119,8 +119,8 @@ void Video::updateScreen() {
 //	_fullRefresh = false;
 //_shakeOffset=0;
 	if (_fullRefresh) {
-//		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
-//		_stub->updateScreen(0);
+		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
+		_stub->updateScreen(0);
 		_fullRefresh = false;
 	} else {
 		int i, j;
@@ -133,8 +133,6 @@ void Video::updateScreen() {
 					--p[i];
 					++nh;
 				} else if (nh != 0) {
-					
-					emu_printf( "Video::nh1 %d\n",nh);
 					int16_t x = (i - nh) * SCREENBLOCK_W;
 					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 					nh = 0;
@@ -142,7 +140,6 @@ void Video::updateScreen() {
 				}
 			}
 			if (nh != 0) {
-					emu_printf( "Video::nh2 %d\n",nh);				
 				int16_t x = (i - nh) * SCREENBLOCK_W;
 				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
 				++count;
@@ -150,7 +147,7 @@ void Video::updateScreen() {
 			p += GAMESCREEN_W*2 / SCREENBLOCK_W;
 		}
 		if (count != 0) {
-//			_stub->updateScreen(0);
+			_stub->updateScreen(0);
 		}
 	}
 //	if (_shakeOffset != 0) 

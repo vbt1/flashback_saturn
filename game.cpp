@@ -119,8 +119,7 @@ void Game::run() {
 #endif
 	_mix.init();
 
-	if (_res._type==kResourceTypeMac) {
-		
+	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
