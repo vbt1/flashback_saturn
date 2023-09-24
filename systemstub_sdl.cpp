@@ -48,8 +48,8 @@ extern "C" {
 #define TVSTAT	(*(Uint16 *)0x25F80004)
 #define CRAM_BANK 0x5f00000 // Beginning of color ram memory addresses
 #define BACK_COL_ADR (VDP2_VRAM_A1 + 0x1fffe) // Address for background colour
-#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x100000
+//#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
+//#define LOW_WORK_RAM_SIZE 0x100000
 
 #ifdef _352_CLOCK_
 #define HOR_OFFSET (-29.0)
@@ -185,7 +185,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	prepareGfxMode(); // Prepare graphic output
-		emu_printf("prepareGfxMode\n");	
+//		emu_printf("prepareGfxMode\n");	
 	
 //slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
@@ -455,7 +455,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
-	slZoomNbg1(toFIXED(0.9), toFIXED(1.0));
+//	slZoomNbg1(toFIXED(0.9), toFIXED(1.0));
 #endif
 	
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.

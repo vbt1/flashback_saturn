@@ -125,7 +125,7 @@ void Game::run() {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 
-//		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
+		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
 	playCutscene(0x40); // vbt à remettre
@@ -664,8 +664,10 @@ void Game::showFinalScore() {
 	char buf[50];
 	snprintf(buf, sizeof(buf), "SCORE %08u", _score);
 	_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 40, 0xE5);
+/*
 	const char *str = _menu.getLevelPassword(7, _skillLevel);
 	_vid.drawString(str, (Video::GAMESCREEN_W - strlen(str) * Video::CHAR_W) / 2, 16, 0xE7);
+*/	
 	while (!_stub->_pi.quit) {
 		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
@@ -797,7 +799,8 @@ bool Game::handleContinueAbort() {
 	uint8_t color_inc = 0xFF;
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
-	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+	memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	while (timeout >= 0 && !_stub->_pi.quit) {
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
@@ -850,11 +853,12 @@ bool Game::handleContinueAbort() {
 		//_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
-		memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+//		memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+		memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
 	}
 	return false;
 }
-
+/*
 void Game::printLevelCode() {
 	if (_printLevelCodeCounter != 0) {
 		--_printLevelCodeCounter;
@@ -865,7 +869,7 @@ void Game::printLevelCode() {
 		}
 	}
 }
-
+*/
 void Game::printSaveStateCompleted() {
 	if (_saveStateCompleted) {
 		const char *str = _res.getMenuString(LocaleData::LI_05_COMPLETED);
@@ -911,7 +915,8 @@ void Game::drawStoryTexts() {
 	if (_textToDisplay != 0xFFFF) {
 		uint8_t textColor = 0xE8;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
-		memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//		memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+		memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
 		while (!_stub->_pi.quit) {
@@ -1007,7 +1012,8 @@ void Game::drawStoryTexts() {
 				}
 				++str;
 			}
-			memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+//			memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+			memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
 		}
 		_textToDisplay = 0xFFFF;
 	}

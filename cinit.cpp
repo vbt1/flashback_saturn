@@ -71,7 +71,7 @@ extern Uint16 VDP2_RAMCTL;
 //	slSynch();
 	slScrAutoDisp(NBG1ON);
     slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
-	slZoomNbg0(toFIXED(0.727272), toFIXED(1.0));
+//	slZoomNbg0(toFIXED(0.727272), toFIXED(1.0));
 	slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
 //    slBitMapNbg1(COL_TYPE_256, BM_512x256, (void *)VDP2_VRAM_B0);
 	slSynch();	
@@ -80,9 +80,10 @@ slTVOn();
 //while(1);
 	
 #endif
-
+memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
+//	
 	//MEM_Init(0x22600000, 0x200000);
 
 #ifdef _PAR_UPLOAD_

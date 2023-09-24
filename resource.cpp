@@ -128,12 +128,11 @@ void Resource::clearLevelRes() {
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_mbk); _mbk = 0;
 	sat_free(_pal); _pal = 0;
-#ifdef _RAMCART_
 	sat_free(_map); _map = 0;
-#endif
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
 	sat_free(_sgd); _sgd = 0;
+	sat_free(_bnq); _bnq = 0;	
 	sat_free(_spc); _spc = 0;
 	sat_free(_ani); _ani = 0;
 	free_OBJ();
@@ -313,7 +312,7 @@ static const char *getCineName(Language lang, ResourceType type) {
 
 void Resource::load_CINE() {
 	const char *prefix = getCineName(_lang, _type);
-	debug(DBG_RES, "Resource::load_CINE('%s')", prefix);
+//	debug(DBG_RES, "Resource::load_CINE('%s')", prefix);
 	File f;
 			
 	switch (_type) {
@@ -479,7 +478,7 @@ void Resource::unload(int objType) {
 }
 
 void Resource::load(const char *objName, int objType, const char *ext) {
-	emu_printf("Resource::load('%s', %d)\n", objName, objType);
+//	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
 	File f;
 		
@@ -526,7 +525,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		break;
 	case OT_ICN:
 		snprintf(_entryName, sizeof(_entryName), "%s.ICN", objName);
-		emu_printf("%s.ICN\n", objName);
+//		emu_printf("%s.ICN\n", objName);
 		loadStub = &Resource::load_ICN;
 		break;
 	case OT_FNT:
@@ -673,7 +672,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 	}
 }
 void Resource::load_CT(File *pf) {
-	debug(DBG_RES, "Resource::load_CT()");
+//	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
 	uint8_t *tmp = (uint8 *)sat_malloc(len);
 	if (!tmp) {
@@ -688,7 +687,7 @@ void Resource::load_CT(File *pf) {
 }
 
 void Resource::load_FNT(File *f) {
-	debug(DBG_RES, "Resource::load_FNT()");
+//	debug(DBG_RES, "Resource::load_FNT()");
 	int len = f->size();
 	_fnt = (uint8 *)sat_malloc(len);
 	if (!_fnt) {
@@ -699,7 +698,7 @@ void Resource::load_FNT(File *f) {
 }
 
 void Resource::load_MBK(File *f) {
-	debug(DBG_RES, "Resource::load_MBK()");
+//	debug(DBG_RES, "Resource::load_MBK()");
 	int len = f->size();
 	_mbk = (uint8_t *)sat_malloc(len);
 	if (!_mbk) {
@@ -710,7 +709,7 @@ void Resource::load_MBK(File *f) {
 }
 
 void Resource::load_ICN(File *f) {
-	debug(DBG_RES, "Resource::load_ICN()");
+//	debug(DBG_RES, "Resource::load_ICN()");
 	int len = f->size();
 	if (_icnLen == 0) {
 		_icn = (uint8_t *)sat_malloc(len);
@@ -726,7 +725,7 @@ void Resource::load_ICN(File *f) {
 }
 
 void Resource::load_SPR(File *f) {
-	debug(DBG_RES, "Resource::load_SPR()");
+//	debug(DBG_RES, "Resource::load_SPR()");
 	int len = f->size() - 12;
 	_spr1 = (uint8 *)sat_malloc(len);
 	if (!_spr1) {
@@ -738,7 +737,7 @@ void Resource::load_SPR(File *f) {
 }
 
 void Resource::load_SPRM(File *f) {
-	debug(DBG_RES, "Resource::load_SPRM()");
+//	debug(DBG_RES, "Resource::load_SPRM()");
 	const uint32_t len = f->size() - 12;
 	assert(len <= sizeof(_sprm));
 	f->seek(12);
@@ -746,12 +745,12 @@ void Resource::load_SPRM(File *f) {
 }
 
 void Resource::load_RP(File *f) {
-	debug(DBG_RES, "Resource::load_RP()");
+//	debug(DBG_RES, "Resource::load_RP()");
 	f->read(_rp, sizeof(_rp));
 }
 
 void Resource::load_SPC(File *f) {
-	debug(DBG_RES, "Resource::load_SPC()");
+//	debug(DBG_RES, "Resource::load_SPC()");
 	int len = f->size();
 	_spc = (uint8 *)sat_malloc(len);
 	if (!_spc) {
@@ -763,7 +762,7 @@ void Resource::load_SPC(File *f) {
 }
 
 void Resource::load_PAL(File *f) {
-	debug(DBG_RES, "Resource::load_PAL()");
+//	debug(DBG_RES, "Resource::load_PAL()");
 	int len = f->size();
 	_pal = (uint8 *)sat_malloc(len);
 	if (!_pal) {
@@ -774,7 +773,7 @@ void Resource::load_PAL(File *f) {
 }
 
 void Resource::load_MAP(File *f) {
-	debug(DBG_RES, "Resource::load_MAP()");
+//	debug(DBG_RES, "Resource::load_MAP()");
 
 #ifdef _RAMCART_
 	int len = f->size();
@@ -788,7 +787,7 @@ void Resource::load_MAP(File *f) {
 }
 
 void Resource::load_OBJ(File *f) {
-	debug(DBG_RES, "Resource::load_OBJ()");
+//	debug(DBG_RES, "Resource::load_OBJ()");
 
 	_numObjectNodes = f->readUint16LE();
 	assert(_numObjectNodes < 255);
@@ -803,7 +802,7 @@ void Resource::load_OBJ(File *f) {
 		int diff = offsets[i + 1] - offsets[i];
 		if (diff != 0) {
 			objectsCount[numObjectsCount] = (diff - 2) / 0x12;
-			debug(DBG_RES, "i=%d objectsCount[numObjectsCount]=%d", i, objectsCount[numObjectsCount]);
+//			debug(DBG_RES, "i=%d objectsCount[numObjectsCount]=%d", i, objectsCount[numObjectsCount]);
 			++numObjectsCount;
 		}
 	}
@@ -818,7 +817,7 @@ void Resource::load_OBJ(File *f) {
 			}
 			f->seek(offsets[i] + 2);
 			on->num_objects = f->readUint16LE();
-			debug(DBG_RES, "count=%d", on->num_objects, objectsCount[iObj]);
+//			debug(DBG_RES, "count=%d", on->num_objects, objectsCount[iObj]);
 			assert(on->num_objects == objectsCount[iObj]);
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 			for (int j = 0; j < on->num_objects; ++j) {
@@ -835,7 +834,7 @@ void Resource::load_OBJ(File *f) {
 				obj->opcode_arg1 = f->readUint16LE();
 				obj->opcode_arg2 = f->readUint16LE();
 				obj->opcode_arg3 = f->readUint16LE();
-				debug(DBG_RES, "obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
+//				debug(DBG_RES, "obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
 			}
 			++iObj;
 			prevOffset = offsets[i];
@@ -846,7 +845,7 @@ void Resource::load_OBJ(File *f) {
 }
 
 void Resource::free_OBJ() {
-	debug(DBG_RES, "Resource::free_OBJ()");
+//	debug(DBG_RES, "Resource::free_OBJ()");
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (_objectNodesMap[i] != prevNode) {
@@ -1003,7 +1002,7 @@ void Resource::decodePGE(const uint8_t *p, int size) {
 }
 
 void Resource::load_ANI(File *f) {
-	debug(DBG_RES, "Resource::load_ANI()");
+//	debug(DBG_RES, "Resource::load_ANI()");
 	const int size = f->size();
 	_ani = (uint8_t *)sat_malloc(size);
 	if (!_ani) {
@@ -1014,7 +1013,7 @@ void Resource::load_ANI(File *f) {
 }
 
 void Resource::load_TBN(File *f) {
-	debug(DBG_RES, "Resource::load_TBN()");
+//	debug(DBG_RES, "Resource::load_TBN()");
 	int len = f->size();
 	_tbn = (uint8_t *)sat_malloc(len);
 	if (!_tbn) {
@@ -1025,7 +1024,7 @@ void Resource::load_TBN(File *f) {
 }
 
 void Resource::load_CMD(File *pf) {
-	debug(DBG_RES, "Resource::load_CMD()");
+//	debug(DBG_RES, "Resource::load_CMD()");
 	sat_free(_cmd);
 	int len = pf->size();
 	_cmd = (uint8_t *)sat_malloc(len);
@@ -1037,7 +1036,7 @@ void Resource::load_CMD(File *pf) {
 }
 
 void Resource::load_POL(File *pf) {
-	debug(DBG_RES, "Resource::load_POL()");
+//	debug(DBG_RES, "Resource::load_POL()");
 	sat_free(_pol);
 	int len = pf->size();
 	_pol = (uint8_t *)sat_malloc(len);
@@ -1361,7 +1360,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-		emu_printf("findEntry        \n");	
+//		emu_printf("findEntry        \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
 		emu_printf("Resource '%s' found %d\n",name, decompressLzss);		
@@ -1452,29 +1451,29 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 }
 
 void Resource::MAC_loadClutData() {
-emu_printf("MAC_loadClutData\n");		
+//emu_printf("MAC_loadClutData\n");		
 	uint8_t *ptr = decodeResourceMacData("Flashback colors", false);
 	MAC_decodeDataCLUT(ptr);
 	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
-emu_printf("MAC_loadFontData\n");	
+//emu_printf("MAC_loadFontData\n");	
 	_fnt = decodeResourceMacData("Font", true);
 }
 
 void Resource::MAC_loadIconData() {
-emu_printf("MAC_loadIconData\n");			
+//emu_printf("MAC_loadIconData\n");			
 	_icn = decodeResourceMacData("Icons", true);
 }
 
 void Resource::MAC_loadPersoData() {
-emu_printf("MAC_loadPersoData\n");				
+//emu_printf("MAC_loadPersoData\n");				
 	_perso = decodeResourceMacData("Person", true);
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
-emu_printf("MAC_loadMonsterData\n");						
+//emu_printf("MAC_loadMonsterData\n");						
 	static const struct {
 		const char *id;
 		const char *name;
@@ -1499,7 +1498,7 @@ emu_printf("MAC_loadMonsterData\n");
 }
 
 void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
-emu_printf("MAC_loadTitleImage\n");	
+//emu_printf("MAC_loadTitleImage\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Title %d", i);
 	
@@ -1535,11 +1534,11 @@ static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5
 
 void Resource::MAC_loadLevelData(int level) {
 	char name[64];
-emu_printf("MAC_loadLevelData\n");	
+//emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-emu_printf("decodePGE\n");		
+//emu_printf("decodePGE\n");		
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
 
@@ -1574,7 +1573,7 @@ emu_printf("decodePGE\n");
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
-emu_printf("MAC_loadLevelRoom\n");	
+//emu_printf("MAC_loadLevelRoom\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);

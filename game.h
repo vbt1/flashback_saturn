@@ -28,7 +28,7 @@
 #include "sfx_player.h"
 #include "video.h"
 
-#define SAV_BUFSIZE (1024 * 30)
+#define SAV_BUFSIZE (1024 * 10)
 
 typedef struct {
 	Uint8 buffer[SAV_BUFSIZE]; // 10 Kilobytes of save buffer

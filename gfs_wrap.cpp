@@ -20,7 +20,8 @@ extern "C" {
 #define CACHE_SIZE (SECTOR_SIZE * 20)
 
 static char satpath[25];
-static char current_path[15][16];
+//static char current_path[15][16];
+static char current_path[3][16];
 
 static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE];
@@ -190,7 +191,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
 	{
-emu_printf("%s \n",path_token);		
+//emu_printf("%s \n",path_token);		
 //slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
 	}

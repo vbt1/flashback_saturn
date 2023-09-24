@@ -19,7 +19,7 @@ uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
 //		dst = (uint8_t *)malloc(decodedSize);
 //		if (!dst) {
 			
-			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
+//			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
 			dst = (uint8_t *)0x25C04000;
 //			return 0;
 //		}

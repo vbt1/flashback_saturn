@@ -39,7 +39,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;	
 	memset(_backLayer, 0, _w * _h);
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
+//	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
 //	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 //	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
@@ -57,7 +57,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	case kResourceTypeMac:
 		_drawChar = &Video::MAC_drawStringChar;
 		
-	emu_printf("VBT VBT MAC_drawStringChar init \n");		
+//	emu_printf("VBT VBT MAC_drawStringChar init \n");		
 		break;
 	}	
 }
@@ -71,7 +71,7 @@ Video::~Video() {
 }
 /*
 void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
-	debug(DBG_VIDEO, "Video::markBlockAsDirty1(%d, %d, %d, %d)", x, y, w, h);
+	//	debug(DBG_VIDEO, "Video::markBlockAsDirty1(%d, %d, %d, %d)", x, y, w, h);
 	assert(x >= 0 && x + w <= GAMESCREEN_W && y >= 0 && y + h <= GAMESCREEN_H);
 	int bx1 = x / SCREENBLOCK_W;
 	int by1 = y / SCREENBLOCK_H;
@@ -86,7 +86,7 @@ void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
 }*/
 
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
-	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)", x, y, w, h);
+//	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)", x, y, w, h);
 	int bx1 = scale * x / SCREENBLOCK_W;
 	int by1 = scale * y / SCREENBLOCK_H;
 	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
@@ -111,7 +111,7 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 }
 
 void Video::updateScreen() {
-	debug(DBG_VIDEO, "Video::updateScreen()");
+	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
 	_stub->updateScreen(0);
 	
@@ -158,13 +158,13 @@ void Video::updateScreen() {
 }
 
 void Video::fullRefresh() {
-	debug(DBG_VIDEO, "Video::fullRefresh()");
+	//	debug(DBG_VIDEO, "Video::fullRefresh()");
 	_fullRefresh = true;
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 }
 
 void Video::fadeOut() {
-	debug(DBG_VIDEO, "Video::fadeOut()");
+	//	debug(DBG_VIDEO, "Video::fadeOut()");
 	if (1) {
 		fadeOutPalette();
 	} else {
@@ -189,7 +189,7 @@ void Video::fadeOutPalette() {
 }
 
 void Video::setPaletteSlotBE(int palSlot, int palNum) {
-	debug(DBG_VIDEO, "Video::setPaletteSlotBE()");
+	//	debug(DBG_VIDEO, "Video::setPaletteSlotBE()");
 	const uint8_t *p = _res->_pal + palNum * 32;
 	for (int i = 0; i < 16; ++i) {
 		uint16 color = READ_BE_UINT16(p); p += 2;
@@ -205,7 +205,7 @@ void Video::setPaletteSlotBE(int palSlot, int palNum) {
 }
 
 void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
-	debug(DBG_VIDEO, "Video::setPaletteSlotLE()");
+	//	debug(DBG_VIDEO, "Video::setPaletteSlotLE()");
 	for (int i = 0; i < 16; ++i) {
 		const uint16_t color = READ_LE_UINT16(palData); palData += 2;
 		Color c;
@@ -217,7 +217,7 @@ void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 }
 
 void Video::setTextPalette() {
-	debug(DBG_VIDEO, "Video::setTextPalette()");
+	//	debug(DBG_VIDEO, "Video::setTextPalette()");
 	const uint8 *p = _textPal;
 	for (int i = 0; i < 16; ++i) {
 		uint16 color = READ_LE_UINT16(p); p += 2;
@@ -230,7 +230,7 @@ void Video::setTextPalette() {
 }
 
 void Video::setPalette0xF() {
-	debug(DBG_VIDEO, "Video::setPalette0xF()");
+	//	debug(DBG_VIDEO, "Video::setPalette0xF()");
 	const uint8_t *p = _palSlot0xF;
 	for (int i = 0; i < 16; ++i) {
 		Color c;
@@ -242,7 +242,7 @@ void Video::setPalette0xF() {
 }
 /*
 void Video::copyLevelMap(uint16 room) {
-	debug(DBG_VIDEO, "Video::copyLevelMap(%d)", room);
+	//	debug(DBG_VIDEO, "Video::copyLevelMap(%d)", room);
 	assert(room < 0x40);
 #ifdef _RAMCART_
 	int32 off = READ_LE_UINT32(_res->_map + room * 6);
@@ -314,7 +314,7 @@ void Video::copyLevelMap(uint16 room) {
 }
 */
 void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
-	debug(DBG_VIDEO, "Video::decodeLevelMap() sz = 0x%X", sz);
+	//	debug(DBG_VIDEO, "Video::decodeLevelMap() sz = 0x%X", sz);
 	const uint8 *end = src + sz;
 	while (src < end) {
 		int16 code = (int8)*src++;
@@ -332,7 +332,7 @@ void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
 }
 
 void Video::setLevelPalettes() {
-	debug(DBG_VIDEO, "Video::setLevelPalettes()");
+	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
 	if (_unkPalSlot2 == 0) {
 		_unkPalSlot2 = _mapPalSlot3;
 	}
@@ -363,7 +363,7 @@ void Video::setLevelPalettes() {
 }
 
 void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
-	debug(DBG_VIDEO, "Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	//	debug(DBG_VIDEO, "Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i] != 0) {
@@ -376,7 +376,7 @@ void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w
 }
 
 void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	debug(DBG_VIDEO, "Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	//	debug(DBG_VIDEO, "Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i] != 0) {
@@ -389,7 +389,7 @@ void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	debug(DBG_VIDEO, "Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	//	debug(DBG_VIDEO, "Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i] != 0 && !(dst[i] & 0x80)) {
@@ -402,7 +402,7 @@ void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	debug(DBG_VIDEO, "Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	//	debug(DBG_VIDEO, "Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i] != 0 && !(dst[i] & 0x80)) {
@@ -415,7 +415,7 @@ void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	debug(DBG_VIDEO, "Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	//	debug(DBG_VIDEO, "Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i * pitch] != 0 && !(dst[i] & 0x80)) {
@@ -428,7 +428,7 @@ void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	debug(DBG_VIDEO, "Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	//	debug(DBG_VIDEO, "Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i * pitch] != 0 && !(dst[i] & 0x80)) {

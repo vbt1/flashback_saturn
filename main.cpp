@@ -26,8 +26,8 @@ extern "C" {
 #include "game.h"
 #include "systemstub.h"
 
-#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x100000
+//#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
+//#define LOW_WORK_RAM_SIZE 0x100000
 
 void *__dso_handle = 0;
 

@@ -182,9 +182,9 @@ void Menu::handleSkillScreen() {
 	} while (!_stub->_pi.quit);
 	_skill = 1;
 }
-
+/*
 bool Menu::handlePasswordScreen() {
-	emu_printf("Menu::handlePasswordScreen()\n");
+//	emu_printf("Menu::handlePasswordScreen()\n");
 	_vid->fadeOut();
 	_vid->_charShadowColor = _charVar1;
 	_vid->_charTransparentColor = 0xFF;
@@ -243,7 +243,7 @@ bool Menu::handlePasswordScreen() {
 	} while (!_stub->_pi.quit);
 	return false;
 }
-
+*/
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	_vid->fadeOut();
@@ -448,9 +448,9 @@ void Menu::handleTitleScreen() {
 				handleSkillScreen();
 				break;
 			case MENU_OPTION_ITEM_PASSWORD:
-				if (handlePasswordScreen()) {
-					return;
-				}
+//				if (handlePasswordScreen()) {
+//					return;
+//				}
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
@@ -496,7 +496,7 @@ void Menu::handleTitleScreen() {
 		_stub->processEvents();
 	}
 }
-
+/*
 const char *Menu::getLevelPassword(int level, int skill) const {
 	switch (_res->_type) {
 
@@ -508,4 +508,6 @@ const char *Menu::getLevelPassword(int level, int skill) const {
 	}
 	return _passwordsDOS[skill * 8 + level];
 }
+*/
+
 

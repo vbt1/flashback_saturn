@@ -35,7 +35,8 @@ void *sat_calloc(size_t nmemb, size_t size) {
 		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
 //		while(1) slSynch();
 	}
-
+	int *val = (int *)mem;	
+		emu_printf("CALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
 	return (void*)mem;
 }
 
@@ -47,7 +48,13 @@ void *sat_malloc(size_t size) {
 	//fprintf_saturn(stdout, "MALLOC: all: %u bytes - 0x%.8X\n", size, mem);
 
 	if (mem == NULL) {
-		emu_printf("MALLOC: size: %u - FAILED", size);
+		emu_printf("MEM_MALLOC: size: %u - FAILED\n", size);
+		
+		mem = (void*)malloc(size);
+		
+		if (mem == NULL) {
+			emu_printf("STD_MALLOC: size: %u - FAILED\n", size);		
+		}
 	}
 //	else
 //emu_printf("MALLOC success\n");			
@@ -64,8 +71,18 @@ void sat_free(void *ptr) {
 
 	if(ptr == NULL) return;
 
-	//fprintf_saturn(stdout, "FREE: ptr: 0x%.8X", ptr);
-	MEM_Free(ptr);
+	int *val = (int *)ptr;	
+		emu_printf("FREE: addr: %08x\n", (int)val);		
+#define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
+#define ADR_WORKRAM_L_END      ((volatile void *)0x300000)		
+	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
+	{
+		//fprintf_saturn(stdout, "FREE: ptr: 0x%.8X", ptr);
+		MEM_Free(ptr);
+	}
+	else
+		free(ptr);
+	
 	ptr = NULL;
 //	free(ptr);
 	
@@ -85,7 +102,8 @@ void *sat_realloc(void *ptr, size_t size) {
 	if (mem == NULL) {
 		emu_printf("REALLOC: ptr: %.8X, size: %u - FAILED\n", ptr, size);
 	}
-
+	int *val = (int *)mem;	
+		emu_printf("REALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
 	return (void*)mem;
 
 }
