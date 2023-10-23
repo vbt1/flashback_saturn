@@ -18,7 +18,7 @@ extern "C" {
 
 #define		SystemWork		0x060ffc00		/* System Variable Address */
 #define		SystemSize		(0x06100000-0x060ffc00)		/* System Variable Size */
-
+extern Uint8 newZoom;
 extern Uint32 _bstart, _bend;
 
 extern void ss_main( void );
@@ -73,10 +73,11 @@ extern Uint16 VDP2_RAMCTL;
     slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 //	slZoomNbg0(toFIXED(0.727272), toFIXED(1.0));
 	slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
+
 //    slBitMapNbg1(COL_TYPE_256, BM_512x256, (void *)VDP2_VRAM_B0);
 	slSynch();	
 slTVOn();
-	
+//	newZoom = 2;	
 //while(1);
 	
 #endif

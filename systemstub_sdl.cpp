@@ -104,6 +104,9 @@ static PcmWork pcm_work[2];
 static PcmHn pcm[2];
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
+
+Uint8 curZoom = 0;
+Uint8 newZoom = 0;
 static Mixer *mix = NULL;
 static volatile Uint8 audioEnabled = 0;
 
@@ -591,6 +594,20 @@ void vblIn (void) {
 
 	// Process input
 	sys->processEvents();
+
+if(newZoom!=curZoom)
+{
+
+	if(newZoom==1) // video
+		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
+	if(newZoom==2) // ingame
+		slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
+	
+	curZoom=newZoom;
+}
+
+
+
 
 	// Pcm elaboration...
 	PCM_VblIn();	

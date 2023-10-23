@@ -55,6 +55,7 @@ extern "C" {
 //static Uint8 rle_buf[SAV_BUFSIZE];
 
 Uint8 vceEnabled = 1;
+extern Uint8 newZoom;
 /* *** */
 static Uint32 getFreeSaveBlocks(void);
 static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
@@ -124,8 +125,7 @@ void Game::run() {
 		if (!_stub->_pi.quit) {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
-
-		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
+//		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
 
 	}	
 	playCutscene(0x40); // vbt à remettre
@@ -175,6 +175,7 @@ void Game::run() {
 				break;
 			case kResourceTypeMac:
 				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
+				newZoom = 2;
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -477,6 +478,8 @@ void Game::playCutscene(int id) {
 	}
 	if (_cut._id != 0xFFFF) {
 			_vid._layerScale=1;
+			
+		newZoom = 1;
 /*
 		ToggleWidescreenStack tws(_stub, false);
 		_mix.stopMusic();
@@ -575,6 +578,8 @@ void Game::playCutscene(int id) {
 			_cut.playCredits();
 		}*/
 //		_mix.stopMusic();
+		
+		newZoom = 2;
 	}
 	_vid._layerScale=2;
 }
