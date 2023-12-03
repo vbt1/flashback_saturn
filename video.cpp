@@ -504,7 +504,7 @@ static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-	//emu_printf("Video::MAC_drawStringChar\n");	
+	emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf;
 	
 //emu_printf("a\n");	
@@ -514,12 +514,12 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.ptr = dst;
 //emu_printf("c\n");	
 	buf.w = _w;
-	buf.pitch = _w;
+	buf.pitch = pitch;
 	buf.h = _h;
 	buf.x = x * _layerScale;
 	buf.y = y * _layerScale;
 	
-//	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %c)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);	
+	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %c)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);	
 //emu_printf("d\n");		
 	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
@@ -532,7 +532,7 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 }
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
-//	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;
 	while (1) {

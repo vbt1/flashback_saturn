@@ -164,8 +164,11 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 }
 
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-//	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
+	emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
 	int len = 0;
+//_vid->_w/=2;
+//_vid->_h/=2;
+_vid->_layerScale=1;
 	if (p != _textBuf && _res->isMac()) {
 		len = *p++;
 	} else {
@@ -186,26 +189,29 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	y += 50;
 	x += (_res->_lang == LANG_JP) ? 0 : 8;
 	int16_t yPos = y;
-	int16_t xPos = x;
+	int16_t xPos = x/2;
 	if (textJustify != kTextJustifyLeft) {
-		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
+		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W*2);
 	}
+
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
-			yPos += Video::CHAR_H;
+			yPos += (Video::CHAR_H);
 			xPos = x;
 			if (textJustify != kTextJustifyLeft) {
-				xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
+				xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W*2);
 			}
 		} else if (p[i] == 0x20) {
-			xPos += Video::CHAR_W;
+			xPos += (Video::CHAR_W*2);
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
-			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
-			xPos += Video::CHAR_W;
+			(_vid->*dcf)(page, _vid->_w/2, xPos, yPos, fnt, color, p[i]);
+			xPos += (Video::CHAR_W*2);
 		}
 	}
+//_vid->_w*=2;	
+//_vid->_h*=2;	
 }
 
 void Cutscene::clearBackPage() {
@@ -944,7 +950,7 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-//	debug(DBG_CUT, "Cutscene::op_drawTextAtPos()");
+	emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
