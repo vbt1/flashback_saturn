@@ -11,9 +11,9 @@ extern "C" {
 
 /*---- [2.This part must not be modified] ---------------------------------*/
 
-#define		MAX_VERTICES	1	/* number of vertices that can be used */
+#define		MAX_VERTICES	10	/* number of vertices that can be used */
 #define		MAX_POLYGONS	100	/* number of vertices that can be used */
-#define		MAX_EVENTS		  1	/* number of events that can be used   */
+#define		MAX_EVENTS		  8	/* number of events that can be used   */
 #define		MAX_WORKS		 1	/* number of works that can be used    */
 
 #define		WORK_AREA		0x06080000			/* SGL Work Area           */

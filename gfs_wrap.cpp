@@ -95,6 +95,9 @@ Sint32 crawl_dir(char *token) {
 }
 
 void init_GFS() { //Initialize GFS system
+
+	CDC_CdInit(0x00,0x00,0x05,0x0f);
+
     GFS_DIRTBL_TYPE(&gfsDirTbl) = GFS_DIR_NAME;
     GFS_DIRTBL_DIRNAME(&gfsDirTbl) = gfsDirName;
     GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;

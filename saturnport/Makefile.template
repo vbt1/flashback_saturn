@@ -40,7 +40,7 @@ OBJECTS = ./objects
 # -D_352_CLOCK_ Enables 352xYYY resolution to set saturn clock speed to 28mhz, graphic stretching
 # might cause some artifacts
 # option
-CCFLAGS  = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include -nostdlib
+CCFLAGS  = -fpermissive-fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include -nostdlib
 CXXFLAGS = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IL:/vbtsh10/toolchain/sh-elf/include -nostdlib
 
 # -m2 must be specified in LDFLAGS so the linker will search the SH2 lib dirs

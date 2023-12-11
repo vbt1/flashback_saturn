@@ -6,15 +6,29 @@
 
 extern "C"
 {
-	
 #include 	<sl_def.h>	
+extern TEXTURE tex_spr[10];	
+
 }
+
+
+
+
 #include "mod_player.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
 #include "cutscene.h"
 #include "saturn_print.h"
+
+#undef cgaddress
+#undef pal
+#undef TEXDEF
+
+#define	cgaddress	0x8000 //SpriteBufSize
+#define	cgaddress8	cgaddress/8
+#define pal1 COL_256
+#define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
 
 static void scalePoints(Point *pt, int count, int scale) {
 	if (scale != 1) {
@@ -94,8 +108,66 @@ void Cutscene::updateScreen() {
 //	SWAP(_backPage, _auxPage);
 	// vbt ....
 //	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
-_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256);
+//_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256); // vbt refresh de l'écran à mettre dans sprite
+//--------------------------------------------------------------------------------------------
+
+#if 0
+
+#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
+do{
+//	slPrioritySpr0(6);
+
+//	slZdspLevel(7); // vbt : ne pas d?placer !!!
+	for (int i=0;i<3;i++)
+	{	
+	TEXTURE *txptr = (TEXTURE *)&tex_spr[i]; 
+	
+	*txptr = TEXDEF(64, (64>>6), 0);
+//	if(height<=64*64)
+	//	memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)_frontPage,64*64);
+		memset((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),0x11,64*64);
+	
+// correct on touche p256as		
+    SPRITE user_sprite;
+    user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
+    user_sprite.CTRL= FUNC_Sprite | _ZmCC /*| 0x0800*/;
+    user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
+    user_sprite.SRCA=txptr->CGadr;
+    user_sprite.COLR=256;
+
+    user_sprite.SIZE=0x804;
+	user_sprite.XA=128;
+	user_sprite.YA=64;
+
+	user_sprite.XC=user_sprite.XA+64;
+	user_sprite.YC=user_sprite.YA+64;
+	
+	user_sprite.XB=user_sprite.XA+64;
+	user_sprite.YB=user_sprite.YA+64;	
+	user_sprite.XD=user_sprite.XA-64;
+	user_sprite.YD=user_sprite.YA-64;	
+	
+    user_sprite.GRDA=0;	
+	
+	slSetSprite(&user_sprite, toFIXED2(480-i*10));	// à remettre // ennemis et objets
+int *val = (int *)tex_spr;
+	
+//		emu_printf("Cutscene::updateScreen _vid->_w %03d, _vid->_h  %03d %06x %06x\n",_vid->_w, _vid->_h,txptr->CGadr,(int)val);
+
+
+	}
+
+slSynch();
+
+}
+while(1);
+#endif
+
+	
+//--------------------------------------------------------------------------------------------
+
 	_stub->updateScreen(0);
+//	slSynch();
 }
 
 #if 0
@@ -168,7 +240,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	int len = 0;
 //_vid->_w/=2;
 //_vid->_h/=2;
-_vid->_layerScale=1;
+//_vid->_layerScale=1;
 	if (p != _textBuf && _res->isMac()) {
 		len = *p++;
 	} else {
@@ -334,7 +406,7 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = _res->isDOS() ? 20 : 60;
 			}
-			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H *4);
+//			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H *4);
 			drawCreditsText();
 			updateScreen();
 		} while (--n);
@@ -430,7 +502,7 @@ void Cutscene::op_drawShape() {
 	}
 	if (_clearScreen != 0) {
 //		memcpy(_auxPage, _backPage, _vid->_w * _vid->_h);
-		memcpy(_auxPage, _backPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+		memcpy(_auxPage, _backPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
 	}
 }
 
@@ -944,7 +1016,7 @@ void Cutscene::op_copyScreen() {
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
 	}
-	memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
+//	memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
 	_frameDelay = 10;
 	updateScreen();
 }
@@ -1141,7 +1213,7 @@ void Cutscene::unload() {
 }
 
 void Cutscene::prepare() {
-	_vid->_layerScale=1;
+//	_vid->_layerScale=1;
 	_frontPage = _vid->_frontLayer;
 //	_backPage = _vid->_tempLayer;
 	_backPage = _vid->_backLayer;
@@ -1310,10 +1382,13 @@ void Cutscene::play() {
 		}*/
 //		emu_printf("fullRefresh    \n");										
 //		_vid->fullRefresh();
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+
+emu_printf("unload end    \n");		
+
 	_stub->updateScreen(0);
 	
-//		emu_printf("fullRefresh end   \n");												
+		emu_printf("_vid->_w %03d, _vid->_h  %03d \n",_vid->_w, _vid->_h);												
 		if (_id != 0x3D) {
 			_id = 0xFFFF;
 		}

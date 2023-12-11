@@ -24,6 +24,7 @@ extern Uint32 _bstart, _bend;
 extern void ss_main( void );
 
 extern "C" {
+TEXTURE tex_spr[10];
 	extern void DMA_ScuInit(void);
 }
 
@@ -42,17 +43,17 @@ int	main( void )
 	for( dst = (Uint8 *)SystemWork, i = 0;i < SystemSize; i++) {
 		*dst = 0;
 	}
-
+	init_GFS(); // Initialize GFS system
 	//CartRAM_init(0);
 #ifdef _352_CLOCK_
-	slInitSystem(TV_352x224, (TEXTURE*)NULL, 1); // Init SGL
+	slInitSystem(TV_352x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
-	slInitSystem(TV_704x448, (TEXTURE*)NULL, 1); // Init SGL
+	slInitSystem(TV_704x448, (TEXTURE*)tex_spr, 1); // Init SGL
  //   slSetScrTVMode(TV_640x448);
  //   slInitSystem(TV_320x240, (TEXTURE*)NULL, 1);
  //   slSetScrTVMode(TV_320x240);	
-    slPriorityNbg0(5);
-    slPriorityNbg1(6);	
+    slPriorityNbg0(4);
+    slPriorityNbg1(5);	
 //	slCharNbg0(COL_TYPE_256, CHAR_SIZE_2x2);
 //	slCharNbg1(COL_TYPE_256, CHAR_SIZE_2x2);
 //	slPageNbg0((void *)NBG0_CEL_ADR, 0, PNB_1WORD|CN_10BIT);
@@ -69,30 +70,45 @@ extern Uint16 VDP2_RAMCTL;
 
 //    slScrAutoDisp(NBG0ON);	
 //	slSynch();
-	slScrAutoDisp(NBG1ON);
+
+int *val = (int *)tex_spr;
+	
+		emu_printf("vbt init %06x\n",(int)val);
+
+memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
+//	CSH_Init(CSH_4WAY);
+	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
+	
+slTVOff();
+	slScrAutoDisp(NBG1ON|SPRON);
     slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 //	slZoomNbg0(toFIXED(0.727272), toFIXED(1.0));
 	slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
+	slPrioritySpr0(6);
 
+	slZdspLevel(7); // vbt : ne pas d?placer !!!
 //    slBitMapNbg1(COL_TYPE_256, BM_512x256, (void *)VDP2_VRAM_B0);
-	slSynch();	
+	
 slTVOn();
+	slSynch();
 //	newZoom = 2;	
-//while(1);
+
 	
 #endif
-memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
-	CSH_Init(CSH_4WAY);
-	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
+
+
 //	
 	//MEM_Init(0x22600000, 0x200000);
 
 #ifdef _PAR_UPLOAD_
 	cdUnlock(); // Unlock the cd drive
 #endif
-	DMA_ScuInit(); // Init for SCU DMA
-	init_GFS(); // Initialize GFS system
+
+//	DMA_ScuInit(); // Init for SCU DMA
+//	init_GFS(); // Initialize GFS system
+
 	SPR_InitSlaveSH();
+
 	/* Application Call */
 	ss_main();
 

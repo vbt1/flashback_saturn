@@ -25,7 +25,7 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 
 SYSOBJS = $(SRCDIR)/workarea.o
 OBJS = $(SRCS:.cpp=.o)
-LIBS = $(SGLLDR)/sega_gfs.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_csh.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_mem.a \
+LIBS = $(SGLLDR)/sega_gfs2.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_csh.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_mem.a \
 $(SGLLDR)/sega_dma.a $(SGLLDR)/sega_spr.a $(SGLLDR)/sega_pcm.a $(SGLLDR)/sega_snd.a $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a 
 
 #L:\saturn\SBL6\SEGALIB\LIB\vbtelf4

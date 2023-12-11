@@ -389,7 +389,7 @@ void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 
 	PCM_Init(); // Initialize PCM playback
 
-	audioEnabled = 1; // Enable audio
+//	audioEnabled = 1; // Enable audio // vbt à remettre
 
 	// Prepare handles
 	pcm[0] = createHandle(0);
@@ -594,7 +594,7 @@ void vblIn (void) {
 
 	// Process input
 	sys->processEvents();
-
+/*
 if(newZoom!=curZoom)
 {
 
@@ -605,7 +605,7 @@ if(newZoom!=curZoom)
 	
 	curZoom=newZoom;
 }
-
+*/
 
 
 
