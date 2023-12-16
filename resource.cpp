@@ -850,8 +850,8 @@ void Resource::free_OBJ() {
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (_objectNodesMap[i] != prevNode) {
 			ObjectNode *curNode = _objectNodesMap[i];
-			free(curNode->objects);
-			free(curNode);
+			sat_free(curNode->objects);
+			sat_free(curNode);
 			prevNode = curNode;
 		}
 		_objectNodesMap[i] = 0;
