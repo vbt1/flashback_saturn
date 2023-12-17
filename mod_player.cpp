@@ -22,7 +22,6 @@ extern "C"
 //#include <sega_csh.h>
 #include "sat_mem_checker.h"
 }
-#include "saturn_print.h"
 #include <cstdint>
 #include "sys.h"
 #include "file.h"
@@ -35,9 +34,8 @@ volatile Uint8 slaveProceed;
 ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 	: _playing(false), _mix(mixer), _dataPath(dataPath) {
 	memset(&_modInfo, 0, sizeof(_modInfo));
-
-	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
-	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+//	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
+//	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
 }
 
 uint16 ModPlayer::findPeriod(uint16 period, uint8 fineTune) const {

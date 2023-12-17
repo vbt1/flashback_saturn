@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 extern "C" {
+#include	<sgl.h>
+#include 	<sl_def.h>
 #include <sega_mem.h>
-#include <sl_def.h>
 #include "gfs_wrap.h"
 }
 #include "saturn_print.h"
@@ -58,10 +59,11 @@ void ss_main(void) {
 //	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
 	int levelNum = 0;
 	const Language language = (Language)LANG_EN;
-	
+
 	SystemStub *stub = SystemStub_SDL_create();
-	Game *g = new Game(stub, ".", ".", levelNum, (ResourceType)version,language);
 	
+	Game *g = new Game(stub, ".", ".", levelNum, (ResourceType)version,language);
+
 	g->run();
 	delete g;
 	delete stub;

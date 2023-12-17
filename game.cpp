@@ -80,7 +80,7 @@ static Uint32 getFreeSaveBlocks(void) {
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
 	: _cut(&_modPly, &_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
-	_stub(stub), _savePath(savePath) {
+	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
 	_inp_demPos = 0;
 	_skillLevel = _menu._skill = kSkillNormal;
@@ -94,58 +94,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 }
 
 void Game::run() {
-#if 0
-extern TEXTURE tex_spr[10];	
-#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
-do{
-	slPrioritySpr0(6);
 
-	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	for (int i=0;i<10;i++)
-	{	
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[i]; 
-	
-	*txptr = TEXDEF(64, (64>>6), 0);
-//	if(height<=64*64)
-	//	memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)_frontPage,64*64);
-		memset((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),0x11,64*64);
-	
-// correct on touche p256as		
-    SPRITE user_sprite;
-    user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
-    user_sprite.CTRL= FUNC_Sprite | _ZmCC /*| 0x0800*/;
-    user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
-    user_sprite.SRCA=txptr->CGadr;
-    user_sprite.COLR=256;
-
-    user_sprite.SIZE=0x810;
-	user_sprite.XA=128;
-	user_sprite.YA=64;
-
-	user_sprite.XC=user_sprite.XA+64;
-	user_sprite.YC=user_sprite.YA+64;
-	
-	user_sprite.XB=user_sprite.XA+64;
-	user_sprite.YB=user_sprite.YA+64;	
-	user_sprite.XD=user_sprite.XA-64;
-	user_sprite.YD=user_sprite.YA-64;	
-	
-    user_sprite.GRDA=0;	
-	
-	slSetSprite(&user_sprite, toFIXED2(480-i*10));	// à remettre // ennemis et objets
-int *val = (int *)tex_spr;
-	
-		emu_printf("Cutscene::updateScreen _vid._w %03d, _vid._h  %03d %06x %06x\n",_vid._w, _vid._h,txptr->CGadr,(int)val);
-
-
-	}
-
-slSynch();
-
-}
-while(1);	
-
-#endif
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 
 	_randSeed = time(0);

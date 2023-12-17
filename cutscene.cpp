@@ -44,6 +44,8 @@ Cutscene::Cutscene(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid)
 	: _ply(ply), _res(res), _stub(stub), _vid(vid) {
 	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
+	
+	emu_printf("Cutscene::Cutscene\n");	
 }
 
 const uint8_t *Cutscene::getCommandData() const {
@@ -111,56 +113,57 @@ void Cutscene::updateScreen() {
 //_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256); // vbt refresh de l'écran à mettre dans sprite
 //--------------------------------------------------------------------------------------------
 
-#if 0
+#if 1
 
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
-do{
+//do{
 //	slPrioritySpr0(6);
 
 //	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	for (int i=0;i<3;i++)
+	for (int i=0;i<2;i++)
 	{	
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[i]; 
+//	TEXTURE *txptr = (TEXTURE *)&tex_spr[i]; 
+	TEXTURE *txptr = (TEXTURE *)&tex_spr[0]; 
 	
-	*txptr = TEXDEF(64, (64>>6), 0);
+	*txptr = TEXDEF(128, (128>>6), 0);
 //	if(height<=64*64)
-	//	memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)_frontPage,64*64);
-		memset((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),0x11,64*64);
+		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)_frontPage,128*128);
+//		memset((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),0x11,128*128);
 	
 // correct on touche p256as		
     SPRITE user_sprite;
     user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
-    user_sprite.CTRL= FUNC_Sprite | _ZmCC /*| 0x0800*/;
+//    user_sprite.CTRL= FUNC_Sprite | _ZmCC /*| 0x0800*/;
     user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
     user_sprite.SRCA=txptr->CGadr;
-    user_sprite.COLR=256;
+    user_sprite.COLR=0;
 
-    user_sprite.SIZE=0x804;
-	user_sprite.XA=128;
-	user_sprite.YA=64;
+    user_sprite.SIZE=0x1080;
+	user_sprite.XA=-128;
+	user_sprite.YA=-128;
 
-	user_sprite.XC=user_sprite.XA+64;
-	user_sprite.YC=user_sprite.YA+64;
-	
+	user_sprite.XB=user_sprite.XA+256;
+	user_sprite.YB=user_sprite.YA+256;
+	/*
 	user_sprite.XB=user_sprite.XA+64;
 	user_sprite.YB=user_sprite.YA+64;	
 	user_sprite.XD=user_sprite.XA-64;
 	user_sprite.YD=user_sprite.YA-64;	
-	
+*/	
     user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(480-i*10));	// à remettre // ennemis et objets
 int *val = (int *)tex_spr;
 	
-//		emu_printf("Cutscene::updateScreen _vid->_w %03d, _vid->_h  %03d %06x %06x\n",_vid->_w, _vid->_h,txptr->CGadr,(int)val);
+		emu_printf("Cutscene::updateScreen _vid->_w %03d, _vid->_h  %03d %06x %06x\n",_vid->_w, _vid->_h,txptr->CGadr,(int)val);
 
 
 	}
 
 slSynch();
 
-}
-while(1);
+//}
+//while(1);
 #endif
 
 	

@@ -30,7 +30,7 @@ extern "C" {
 #include "sat_mem_checker.h"
 }
 
-
+extern void emu_printf(const char *format, ...);
 
 #include "sys.h"
 #include "mixer.h"
@@ -642,7 +642,8 @@ void fill_play_audio(void) {
 		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
 		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 		//CSH_AllClr();
-		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);
+//		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  /: vbt à remettre
+		fill_buffer_slot();
 		firstSoundRun = 0;
 		//slSlaveFunc(fill_buffer_slot, NULL);
 	}
@@ -773,7 +774,7 @@ void play_manage_buffers(void) {
 			curPlyBuf ^= 1;
 			counter++;
 		} else {
-			SPR_WaitEndSlaveSH();
+//			SPR_WaitEndSlaveSH(); // vbt à remettre
 			sat_restart_audio();
 			counter = 0;
 			curPlyBuf = 0;

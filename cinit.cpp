@@ -107,9 +107,10 @@ slTVOn();
 //	DMA_ScuInit(); // Init for SCU DMA
 //	init_GFS(); // Initialize GFS system
 
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 
 	/* Application Call */
+
 	ss_main();
 
 	return 0;
