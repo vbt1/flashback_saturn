@@ -102,16 +102,17 @@ void Cutscene::updateScreen() {
 #if 1
 
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
-
-	int i=1;
+	emu_printf("Cutscene::updateScreen 1\n");
 	TEXTURE *txptr = (TEXTURE *)tex_spr; 
 	 
 	*txptr = TEXDEF(240, (128>>6), 0);
-	txptr->CGadr = cgaddress8+(30*128)*i;
-
+//	txptr->CGadr = cgaddress8+(30*128)*i;
+//	emu_printf("Cutscene::updateScreen 2\n");
+	
 	for(int j=0;j<128;j++)
 		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3))+(j*240),(void *)(_backPage+(j*256)),240);
 
+	emu_printf("Cutscene::updateScreen 3\n");
     SPRITE user_sprite;
     user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
     user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
@@ -125,11 +126,12 @@ void Cutscene::updateScreen() {
 	user_sprite.XB=user_sprite.XA+640;
 	user_sprite.YB=user_sprite.YA+256;
     user_sprite.GRDA=0;	
-	
+	emu_printf("Cutscene::updateScreen 4\n");	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	emu_printf("Cutscene::updateScreen 5\n");	
 	slSynch();
 #endif
-	
+		emu_printf("Cutscene::updateScreen 6\n");
 //--------------------------------------------------------------------------------------------
 
 
@@ -141,7 +143,9 @@ void Cutscene::updateScreen() {
 	// vbt ....
 //	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
 //_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256);
+	emu_printf("Cutscene::updateScreen 7\n");
 	_stub->updateScreen(0);
+	emu_printf("Cutscene::updateScreen 8\n");	
 }
 
 #if 0
@@ -334,7 +338,7 @@ void Cutscene::op_markCurPos() {
 	emu_printf("Cutscene::op_markCurPos()\n");
 	_cmdPtrBak = _cmdPtr;
 	emu_printf("Cutscene::drawCreditsText1()\n");	
-//	drawCreditsText(); // vbt à remettre
+	drawCreditsText(); // vbt à remettre
 	_frameDelay = 5;
 	if (!_creditsSequence) {
 	emu_printf("Cutscene::!_creditsSequence()\n");			
@@ -345,7 +349,7 @@ void Cutscene::op_markCurPos() {
 		}
 	} else {
 	emu_printf("Cutscene::drawCreditsText2()\n");			
-//		drawCreditsText(); // vbt à remettre
+		drawCreditsText(); // vbt à remettre
 	}
 	emu_printf("Cutscene::updateScreen()\n");				
 	updateScreen();
