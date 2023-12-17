@@ -10,10 +10,6 @@ extern "C"
 extern TEXTURE tex_spr[10];	
 
 }
-
-
-
-
 #include "mod_player.h"
 #include "resource.h"
 #include "systemstub.h"
@@ -44,8 +40,6 @@ Cutscene::Cutscene(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid)
 	: _ply(ply), _res(res), _stub(stub), _vid(vid) {
 	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
-	
-	emu_printf("Cutscene::Cutscene\n");	
 }
 
 const uint8_t *Cutscene::getCommandData() const {
@@ -102,7 +96,43 @@ void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
 //		_vid->fullRefresh();
-	SWAP(_frontPage, _backPage);
+//	SWAP(_frontPage, _backPage);
+//--------------------------------------------------------------------------------------------
+
+#if 1
+
+#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
+
+	int i=1;
+	TEXTURE *txptr = (TEXTURE *)tex_spr; 
+	 
+	*txptr = TEXDEF(240, (128>>6), 0);
+	txptr->CGadr = cgaddress8+(30*128)*i;
+
+	for(int j=0;j<128;j++)
+		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3))+(j*240),(void *)(_backPage+(j*256)),240);
+
+    SPRITE user_sprite;
+    user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
+    user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
+    user_sprite.SRCA=txptr->CGadr;
+    user_sprite.COLR=0;
+
+    user_sprite.SIZE=0x1e80;
+	user_sprite.XA=0;
+	user_sprite.YA=0;
+
+	user_sprite.XB=user_sprite.XA+640;
+	user_sprite.YB=user_sprite.YA+256;
+    user_sprite.GRDA=0;	
+	
+	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	slSynch();
+#endif
+	
+//--------------------------------------------------------------------------------------------
+
+
 //	_backPage = _vid->_tempLayer;
 //	_auxPage = _vid->_tempLayer2;
 //	_auxPage = _vid->_tempLayer2;
@@ -110,67 +140,8 @@ void Cutscene::updateScreen() {
 //	SWAP(_backPage, _auxPage);
 	// vbt ....
 //	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
-//_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256); // vbt refresh de l'écran à mettre dans sprite
-//--------------------------------------------------------------------------------------------
-
-#if 1
-
-#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
-//do{
-//	slPrioritySpr0(6);
-
-//	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	for (int i=0;i<2;i++)
-	{	
-//	TEXTURE *txptr = (TEXTURE *)&tex_spr[i]; 
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[0]; 
-	
-	*txptr = TEXDEF(128, (128>>6), 0);
-//	if(height<=64*64)
-		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)_frontPage,128*128);
-//		memset((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),0x11,128*128);
-	
-// correct on touche p256as		
-    SPRITE user_sprite;
-    user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
-//    user_sprite.CTRL= FUNC_Sprite | _ZmCC /*| 0x0800*/;
-    user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
-    user_sprite.SRCA=txptr->CGadr;
-    user_sprite.COLR=0;
-
-    user_sprite.SIZE=0x1080;
-	user_sprite.XA=-128;
-	user_sprite.YA=-128;
-
-	user_sprite.XB=user_sprite.XA+256;
-	user_sprite.YB=user_sprite.YA+256;
-	/*
-	user_sprite.XB=user_sprite.XA+64;
-	user_sprite.YB=user_sprite.YA+64;	
-	user_sprite.XD=user_sprite.XA-64;
-	user_sprite.YD=user_sprite.YA-64;	
-*/	
-    user_sprite.GRDA=0;	
-	
-	slSetSprite(&user_sprite, toFIXED2(480-i*10));	// à remettre // ennemis et objets
-int *val = (int *)tex_spr;
-	
-		emu_printf("Cutscene::updateScreen _vid->_w %03d, _vid->_h  %03d %06x %06x\n",_vid->_w, _vid->_h,txptr->CGadr,(int)val);
-
-
-	}
-
-slSynch();
-
-//}
-//while(1);
-#endif
-
-	
-//--------------------------------------------------------------------------------------------
-
+//_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256);
 	_stub->updateScreen(0);
-//	slSynch();
 }
 
 #if 0
@@ -239,11 +210,8 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 }
 
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-	emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
+	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
 	int len = 0;
-//_vid->_w/=2;
-//_vid->_h/=2;
-//_vid->_layerScale=1;
 	if (p != _textBuf && _res->isMac()) {
 		len = *p++;
 	} else {
@@ -264,29 +232,26 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	y += 50;
 	x += (_res->_lang == LANG_JP) ? 0 : 8;
 	int16_t yPos = y;
-	int16_t xPos = x/2;
+	int16_t xPos = x;
 	if (textJustify != kTextJustifyLeft) {
-		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W*2);
+		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 	}
-
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
-			yPos += (Video::CHAR_H);
+			yPos += Video::CHAR_H;
 			xPos = x;
 			if (textJustify != kTextJustifyLeft) {
-				xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W*2);
+				xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 			}
 		} else if (p[i] == 0x20) {
-			xPos += (Video::CHAR_W*2);
+			xPos += Video::CHAR_W;
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
-			(_vid->*dcf)(page, _vid->_w/2, xPos, yPos, fnt, color, p[i]);
-			xPos += (Video::CHAR_W*2);
+			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
+			xPos += Video::CHAR_W;
 		}
 	}
-//_vid->_w*=2;	
-//_vid->_h*=2;	
 }
 
 void Cutscene::clearBackPage() {
@@ -295,7 +260,7 @@ void Cutscene::clearBackPage() {
 //		memset(_backPage, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 
 	} else {
-		memset(_backPage, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
+		memset(_backPage, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	}
 }
 
@@ -366,32 +331,32 @@ void Cutscene::drawCreditsText() {
 }
 
 void Cutscene::op_markCurPos() {
-//	emu_printf("Cutscene::op_markCurPos()\n");
+	emu_printf("Cutscene::op_markCurPos()\n");
 	_cmdPtrBak = _cmdPtr;
-//	emu_printf("Cutscene::drawCreditsText1()\n");	
+	emu_printf("Cutscene::drawCreditsText1()\n");	
 //	drawCreditsText(); // vbt à remettre
 	_frameDelay = 5;
 	if (!_creditsSequence) {
-//	emu_printf("Cutscene::!_creditsSequence()\n");			
+	emu_printf("Cutscene::!_creditsSequence()\n");			
 		if (_id == kCineDebut) {
 			_frameDelay = 7;
 		} else if (_id == kCineChute) {
 			_frameDelay = 6;
 		}
 	} else {
-//	emu_printf("Cutscene::drawCreditsText2()\n");			
+	emu_printf("Cutscene::drawCreditsText2()\n");			
 //		drawCreditsText(); // vbt à remettre
 	}
-//	emu_printf("Cutscene::updateScreen()\n");				
+	emu_printf("Cutscene::updateScreen()\n");				
 	updateScreen();
-//	emu_printf("Cutscene::clearBackPage()\n");					
+	emu_printf("Cutscene::clearBackPage()\n");					
 	clearBackPage();
-//	emu_printf("Cutscene::_creditsSlowText()\n");						
+	emu_printf("Cutscene::_creditsSlowText()\n");						
 	_creditsSlowText = false;
 }
 
 void Cutscene::op_refreshScreen() {
-//	debug(DBG_CUT, "Cutscene::op_refreshScreen()");
+	debug(DBG_CUT, "Cutscene::op_refreshScreen()");
 	_clearScreen = fetchNextCmdByte();
 	if (_clearScreen != 0) {
 		clearBackPage();
@@ -409,7 +374,7 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = _res->isDOS() ? 20 : 60;
 			}
-//			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H *4);
+			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 			drawCreditsText();
 			updateScreen();
 		} while (--n);
@@ -422,7 +387,7 @@ void Cutscene::op_waitForSync() {
 }
 
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
-//	debug(DBG_CUT, "Cutscene::drawShape()");
+	debug(DBG_CUT, "Cutscene::drawShape()");
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -505,14 +470,14 @@ void Cutscene::op_drawShape() {
 	}
 	if (_clearScreen != 0) {
 //		memcpy(_auxPage, _backPage, _vid->_w * _vid->_h);
-		memcpy(_auxPage, _backPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
+		memcpy(_auxPage, _backPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	}
 }
 
 static int _paletteNum = -1;
 
 void Cutscene::op_setPalette() {
-//	debug(DBG_CUT, "Cutscene::op_setPalette()");
+	debug(DBG_CUT, "Cutscene::op_setPalette()");
 	uint8_t num = fetchNextCmdByte();
 	uint8_t palNum = fetchNextCmdByte();
 	uint16_t off = READ_BE_UINT16(_polPtr + 6);
@@ -526,7 +491,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-//	debug(DBG_CUT, "Cutscene::op_drawCaptionText()");
+	debug(DBG_CUT, "Cutscene::op_drawCaptionText()");
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
@@ -569,7 +534,7 @@ void Cutscene::op_refreshAll() {
 }
 
 void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
-//	debug(DBG_CUT, "Cutscene::drawShapeScale(%d, %d, %d, %d, %d, %d, %d)", zoom, b, c, d, e, f, g);
+	debug(DBG_CUT, "Cutscene::drawShapeScale(%d, %d, %d, %d, %d, %d, %d)", zoom, b, c, d, e, f, g);
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -751,7 +716,7 @@ void Cutscene::op_drawShapeScale() {
 }
 
 void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
-//	debug(DBG_CUT, "Cutscene::drawShapeScaleRotate(%d, %d, %d, %d, %d, %d, %d)", zoom, b, c, d, e, f, g);
+	debug(DBG_CUT, "Cutscene::drawShapeScaleRotate(%d, %d, %d, %d, %d, %d, %d)", zoom, b, c, d, e, f, g);
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -1014,7 +979,7 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 }
 
 void Cutscene::op_copyScreen() {
-//	debug(DBG_CUT, "Cutscene::op_copyScreen()");
+	debug(DBG_CUT, "Cutscene::op_copyScreen()");
 	_creditsSlowText = true;
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
@@ -1025,7 +990,7 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-	emu_printf("Cutscene::op_drawTextAtPos()\n");
+	debug(DBG_CUT, "Cutscene::op_drawTextAtPos()");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
@@ -1050,7 +1015,7 @@ void Cutscene::op_drawTextAtPos() {
 }
 
 void Cutscene::op_handleKeys() {
-//	debug(DBG_CUT, "Cutscene::op_handleKeys()");
+	debug(DBG_CUT, "Cutscene::op_handleKeys()");
 	while (1) {
 		uint8_t key_mask = fetchNextCmdByte();
 		if (key_mask == 0xFF) {
@@ -1123,66 +1088,47 @@ void Cutscene::mainLoop(uint16_t num) {
 
 	Color c;
 	c.r = c.g = c.b = 0;
-//		emu_printf("mainLoop a   \n");					
+					
 	for (int i = 0; i < 0x20; ++i) {
 		_stub->setPaletteEntry(0xC0 + i, &c);
 	}
-//		emu_printf("mainLoop b   \n");						
-//		emu_printf("mainLoop c   \n");						
+					
 	_newPal = false;
 	_hasAlphaColor = false;
-//		emu_printf("mainLoop d   \n");						
+					
 	const uint8_t *p = getCommandData();
-//		emu_printf("mainLoop e   \n");						
 	int offset = 0;
 	if (_res->isMac()) {
-//		emu_printf("mainLoop f   \n");							
 		// const int count = READ_BE_UINT16(p);
 		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
-//		emu_printf("mainLoop g   \n");							
 	} else {
 		if (num != 0) {
-//		emu_printf("mainLoop h   \n");								
 			offset = READ_BE_UINT16(p + 2 + num * 2);
-//		emu_printf("mainLoop i   \n");								
 		}
-//		emu_printf("mainLoop j   \n");							
 		_baseOffset = (READ_BE_UINT16(p) + 1) * 2;
-//		emu_printf("mainLoop k   \n");							
 	}
 	_varKey = 0;
-//		emu_printf("mainLoop l   \n");						
 	_cmdPtr = _cmdPtrBak = p + _baseOffset + offset;
-//		emu_printf("mainLoop l   \n");						
 	_polPtr = getPolygonData();
-//	emu_printf("_baseOffset = %d offset = %d", _baseOffset, offset);
 
 	_paletteNum = -1;
-//		emu_printf("mainLoop m   \n");					
 	_drawMemoSetShapes = (_id == kCineMemo);
-//		emu_printf("mainLoop n   \n");						
 	_memoSetOffset = 0;
-//		emu_printf("mainLoop o   \n");					
 	while (!_stub->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
-//		emu_printf("Cutscene::play() opcode = 0x%X (%d)\n", op, (op >> 2));
 		if (op & 0x80) {
 			break;
 		}
 		op >>= 2;
 		if (op >= NUM_OPCODES) {
-			emu_printf("Invalid cutscene opcode = 0x%02X\n", op);
 		}
-//		emu_printf("mainLoop p   \n");							
 		(this->*_opcodeTable[op])();
 		//_stub->processEvents();
-//		emu_printf("mainLoop q   \n");							
 		if (_stub->_pi.backspace) {
 			_stub->_pi.backspace = false;
 			_interrupted = true;
 		}
 	}
-//		emu_printf("mainLoop r   \n");						
 }
 
 bool Cutscene::load(uint16_t cutName) {
@@ -1208,20 +1154,38 @@ void Cutscene::unload() {
 		_res->unload(Resource::OT_POL);
 		break;
 	case kResourceTypeMac:
-//		emu_printf("MAC_unloadCutscene    \n");	
+		emu_printf("MAC_unloadCutscene    \n");	
 		_res->MAC_unloadCutscene();
-//		emu_printf("MAC_unloadCutscene end   \n");			
+		emu_printf("MAC_unloadCutscene end   \n");			
 		break;
 	}
+	
+    SPRITE user_sprite;
+    user_sprite.CTRL= 0;
+    user_sprite.PMOD=0;
+    user_sprite.SRCA=0;
+    user_sprite.COLR=0;
+
+    user_sprite.SIZE=0;
+	user_sprite.XA=0;
+	user_sprite.YA=0;
+
+	user_sprite.XB=0;
+	user_sprite.YB=0;
+    user_sprite.GRDA=0;	
+	
+	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	slSynch();
+	
+_vid->_layerScale=2;	
 }
 
 void Cutscene::prepare() {
-//	_vid->_layerScale=1;
+	_vid->_layerScale=1;
 	_frontPage = _vid->_frontLayer;
 //	_backPage = _vid->_tempLayer;
 	_backPage = _vid->_backLayer;
-//	_auxPage = _vid->_tempLayer;
-	_auxPage = _vid->_backLayer+(_vid->GAMESCREEN_W * _vid->GAMESCREEN_H); //_vid->_tempLayer2;
+	_auxPage = _vid->_backLayer+(_vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
@@ -1230,8 +1194,8 @@ void Cutscene::prepare() {
 	_stop = false;
 	const int w = 240;
 	const int h = 128;
-	const int x = (Video::GAMESCREEN_W - w) / 2;
-	const int y = 50;
+	const int x = 0;//(Video::GAMESCREEN_W - w) / 2;
+	const int y = 0;//50;
 	const int sw = w * _vid->_layerScale;
 	const int sh = h * _vid->_layerScale;
 	const int sx = x * _vid->_layerScale;
@@ -1306,9 +1270,9 @@ void Cutscene::playText(const char *str) {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-//		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
+		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
 		_creditsSequence = false;
-//		emu_printf("prepare    \n");
+		emu_printf("prepare    \n");
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
 		uint16_t cutName = offsets[_id * 2 + 0];
@@ -1371,27 +1335,24 @@ void Cutscene::play() {
 			}
 		} else*/
 		if (cutName != 0xFFFF) {
-//		emu_printf("load cutname    \n");
+		emu_printf("load cutname    \n");
 			if (load(cutName)) {
-//		emu_printf("mainLoop(cutOff)    \n");				
+		emu_printf("mainLoop(cutOff)    \n");				
 				mainLoop(cutOff);
-//		emu_printf("unload    \n");								
+		emu_printf("unload    \n");								
 				unload();
-//		emu_printf("unload end    \n");												
+		emu_printf("unload end    \n");												
 			}
 		}
 /*		else if (_id == 8) {
 			playSet(_caillouSetData, 0x5E4);
 		}*/
-//		emu_printf("fullRefresh    \n");										
+		emu_printf("fullRefresh    \n");										
 //		_vid->fullRefresh();
-//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
-
-emu_printf("unload end    \n");		
-
+	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 	_stub->updateScreen(0);
 	
-		emu_printf("_vid->_w %03d, _vid->_h  %03d \n",_vid->_w, _vid->_h);												
+		emu_printf("fullRefresh end   \n");												
 		if (_id != 0x3D) {
 			_id = 0xFFFF;
 		}
@@ -1448,93 +1409,3 @@ static uint16_t readSetShapeOffset(const uint8_t *p, int offset) {
 	}
 	return offset;
 }
-/*
-static const int kMaxShapesCount = 16;
-static const int kMaxPaletteSize = 32;
-
-void Cutscene::playSet(const uint8_t *p, int offset) {
-	SetShape backgroundShapes[kMaxShapesCount];
-	const int bgCount = READ_BE_UINT16(p + offset); offset += 2;
-	assert(bgCount <= kMaxShapesCount);
-	for (int i = 0; i < bgCount; ++i) {
-		uint16_t nextOffset = readSetShapeOffset(p, offset);
-		backgroundShapes[i].offset = offset;
-		backgroundShapes[i].size = nextOffset - offset;
-		offset = nextOffset + 45;
-	}
-	SetShape foregroundShapes[kMaxShapesCount];
-	const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
-	assert(fgCount <= kMaxShapesCount);
-	for (int i = 0; i < fgCount; ++i) {
-		uint16_t nextOffset = readSetShapeOffset(p, offset);
-		foregroundShapes[i].offset = offset;
-		foregroundShapes[i].size = nextOffset - offset;
-		offset = nextOffset + 45;
-	}
-
-	prepare();
-	_gfx.setLayer(_backPage, _vid->_w);
-
-	offset = 10;
-	const int frames = READ_BE_UINT16(p + offset); offset += 2;
-	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
-		const uint32_t timestamp = _stub->getTimeStamp();
-
-		memset(_backPage, 0xC0, _vid->_layerSize);
-
-		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
-		const int count = READ_BE_UINT16(p + offset); offset += 2;
-
-		uint16_t paletteBuffer[kMaxPaletteSize];
-		memset(paletteBuffer, 0, sizeof(paletteBuffer));
-		readSetPalette(p, backgroundShapes[shapeBg].offset + backgroundShapes[shapeBg].size, paletteBuffer);
-		int paletteLutSize = 16;
-
-		uint8_t paletteLut[kMaxPaletteSize];
-		for (int j = 0; j < 16; ++j) {
-			paletteLut[j] = 0xC0 + j;
-		}
-
-		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
-		for (int j = 0; j < count; ++j) {
-			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
-			const int shapeX = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
-			const int shapeY = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
-
-			uint16_t tempPalette[16];
-			readSetPalette(p, foregroundShapes[shapeFg].offset + foregroundShapes[shapeFg].size, tempPalette);
-			for (int k = 0; k < 16; ++k) {
-				bool found = false;
-				for (int l = 0; l < paletteLutSize; ++l) {
-					if (tempPalette[k] == paletteBuffer[l]) {
-						found = true;
-						paletteLut[k] = 0xC0 + l;
-						break;
-					}
-				}
-				if (!found) {
-					assert(paletteLutSize < kMaxPaletteSize);
-					paletteLut[k] = 0xC0 + paletteLutSize;
-					paletteBuffer[paletteLutSize++] = tempPalette[k];
-				}
-			}
-
-			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY, paletteLut);
-		}
-
-		for (int j = 0; j < paletteLutSize; ++j) {
-			Color c = Video::AMIGA_convertColor(paletteBuffer[j]);
-			_stub->setPaletteEntry(0xC0 + j, &c);
-		}
-
-		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
-		_stub->updateScreen(0);
-		const int diff = 90 - (_stub->getTimeStamp() - timestamp);
-		_stub->sleep((diff < 16) ? 16 : diff);
-		_stub->processEvents();
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
-			_interrupted = true;
-		}
-	}
-}*/
