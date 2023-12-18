@@ -101,7 +101,7 @@ void Cutscene::updateScreen() {
 //--------------------------------------------------------------------------------------------
 
 #if 1
-slPrioritySpr0(6);
+//slPrioritySpr0(6);
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
 	emu_printf("Cutscene::updateScreen 1\n");
 	TEXTURE *txptr = (TEXTURE *)tex_spr; 
@@ -116,7 +116,7 @@ slPrioritySpr0(6);
 	emu_printf("Cutscene::updateScreen 3\n");
     SPRITE user_sprite;
     user_sprite.CTRL= FUNC_Sprite | _ZmCC;
-    user_sprite.PMOD=CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+    user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
     user_sprite.SRCA=txptr->CGadr;
     user_sprite.COLR=0;
 
@@ -124,7 +124,7 @@ slPrioritySpr0(6);
 	user_sprite.XA=0;
 	user_sprite.YA=0;
 
-	user_sprite.XB=user_sprite.XA+640;
+	user_sprite.XB=user_sprite.XA+480;
 	user_sprite.YB=user_sprite.YA+256;
     user_sprite.GRDA=0;	
 //	emu_printf("Cutscene::updateScreen 4\n");	
@@ -1187,6 +1187,7 @@ void Cutscene::unload() {
     user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	slScrAutoDisp(NBG1ON|SPRON);
 //	memcpy(_vid->_backLayer,_frontPage, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
 //_vid->_fullRefresh = true;
 //	_vid->fullRefresh();
@@ -1218,6 +1219,7 @@ void Cutscene::prepare() {
 	const int sx = x * _vid->_layerScale;
 	const int sy = y * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
+	slScrAutoDisp(SPRON);
 }
 
 void Cutscene::playCredits() {
@@ -1364,12 +1366,12 @@ void Cutscene::play() {
 /*		else if (_id == 8) {
 			playSet(_caillouSetData, 0x5E4);
 		}*/
-		emu_printf("fullRefresh\n");
+//		emu_printf("fullRefresh\n");
 //		_vid->fullRefresh();
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 //	_stub->updateScreen(0);
 	
-		emu_printf("fullRefresh end   \n");												
+//		emu_printf("fullRefresh end   \n");												
 		if (_id != 0x3D) {
 			_id = 0xFFFF;
 		}
