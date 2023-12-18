@@ -93,7 +93,7 @@ void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
 }*/
 
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
-//	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)", x, y, w, h);
+	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)\n", x, y, w, h);
 	int bx1 = scale * x / SCREENBLOCK_W;
 	int by1 = scale * y / SCREENBLOCK_H;
 	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
@@ -165,13 +165,13 @@ void Video::updateScreen() {
 }
 
 void Video::fullRefresh() {
-	//	debug(DBG_VIDEO, "Video::fullRefresh()");
+	emu_printf("Video::fullRefresh()\n");	
 	_fullRefresh = true;
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 }
 
 void Video::fadeOut() {
-	//	debug(DBG_VIDEO, "Video::fadeOut()");
+	emu_printf("Video::fadeOut()\n");	
 	if (1) {
 		fadeOutPalette();
 	} else {
@@ -511,7 +511,7 @@ static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-	emu_printf("Video::MAC_drawStringChar\n");	
+//	emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf;
 	
 //emu_printf("a\n");	

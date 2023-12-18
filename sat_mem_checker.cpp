@@ -35,8 +35,8 @@ void *sat_calloc(size_t nmemb, size_t size) {
 		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
 //		while(1) slSynch();
 	}
-	int *val = (int *)mem;	
-		emu_printf("CALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
+//	int *val = (int *)mem;	
+//		emu_printf("CALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
 	return (void*)mem;
 }
 
@@ -59,8 +59,8 @@ void *sat_malloc(size_t size) {
 //	else
 //emu_printf("MALLOC success\n");			
 
-	int *val = (int *)mem;	
-		emu_printf("MALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
+//	int *val = (int *)mem;	
+//		emu_printf("MALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
 	
 //slPrintHex((int)val,slLocate(10,15));
 

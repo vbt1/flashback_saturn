@@ -176,7 +176,7 @@ void Game::run() {
 				break;
 			case kResourceTypeMac:
 				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
-				newZoom = 2;
+//				newZoom = 2;
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -188,24 +188,30 @@ void Game::run() {
 //		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
 //			_stub->clearWidescreen();
 //		}
+emu_printf("_currentLevel %d\n",_currentLevel);	
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
 			_vid.setTextPalette();
 			playCutscene(0x3D);
 		} else {
+emu_printf("setTextPalette\n");			
 			_vid.setTextPalette();
+emu_printf("setPalette0xF\n");			
 			_vid.setPalette0xF();
 			_stub->setOverscanColor(0xE0);
 			_vid._unkPalSlot1 = 0;
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 			//clearStateRewind();
+emu_printf("loadLevelData\n");			
 			loadLevelData();
+emu_printf("resetGameState\n");			
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
+emu_printf("mainLoop\n");				
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					// exit level
@@ -313,6 +319,7 @@ void Game::displayTitleScreenMac(int num) {
 			break;
 		}
 		if (_stub->_pi.enter) {
+					emu_printf("_pi.enter1\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -679,6 +686,7 @@ void Game::showFinalScore() {
 		_stub->updateScreen(0);
 		_stub->processEvents();
 		if (_stub->_pi.enter) {
+			emu_printf("_pi.enter2\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -835,6 +843,7 @@ bool Game::handleContinueAbort() {
 			}
 		}
 		if (_stub->_pi.enter) {
+			emu_printf("_pi.enter3\n");			
 			_stub->_pi.enter = false;
 			return (current_color == 0);
 		}
@@ -1800,6 +1809,7 @@ void Game::handleInventory() {
 				}
 			}
 			if (_stub->_pi.enter) {
+				emu_printf("_pi.enter4\n");				
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}

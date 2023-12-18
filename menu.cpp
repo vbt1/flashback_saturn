@@ -121,6 +121,7 @@ void Menu::handleInfoScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
+			emu_printf("_pi.enter5\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -175,6 +176,7 @@ void Menu::handleSkillScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
+			emu_printf("_pi.enter6\n");			
 			_stub->_pi.enter = false;
 			_skill = currentSkill;
 			return;
@@ -309,6 +311,7 @@ bool Menu::handleLevelScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
+			emu_printf("_pi.enter8\n");			
 			_stub->_pi.enter = false;
 			_skill = currentSkill;
 			_level = currentLevel;
@@ -436,6 +439,7 @@ void Menu::handleTitleScreen() {
 			}
 		}
 		if (_stub->_pi.enter) {
+			emu_printf("_pi.enter9\n");			
 			_stub->_pi.enter = false;
 			selectedItem = currentEntry;
 		}
@@ -454,6 +458,8 @@ void Menu::handleTitleScreen() {
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
+					emu_printf("handleLevelScreen level selected    \n");	
+					
 					return;
 				}
 				break;

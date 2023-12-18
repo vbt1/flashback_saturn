@@ -105,8 +105,8 @@ static PcmHn pcm[2];
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
 
-Uint8 curZoom = 0;
-Uint8 newZoom = 0;
+//Uint8 curZoom = 0;
+//Uint8 newZoom = 0;
 static Mixer *mix = NULL;
 static volatile Uint8 audioEnabled = 0;
 
@@ -249,15 +249,21 @@ void SystemStub_SDL::getPaletteEntry(uint8 i, Color *c) {
 
 void SystemStub_SDL::setOverscanColor(uint8 i) {
 	_overscanColor = i;
-	
+//emu_printf("setOverscanColor\n");	
+
+memset((void*)VDP2_VRAM_A0, i, 512*448);
+/*
 	for(Uint8 line = 0; line < 224; line++) {
-		memset((uint8*)(VDP2_VRAM_A0 + (line * 512) + 256), i, 256);
+		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
 	}
+	for(Uint8 line = 224; line < 448; line++) {
+		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
+	}*/
 }
 
 void SystemStub_SDL::copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
 	buf += y * pitch + x; // Get to data...
-
+emu_printf("copyRect2\n");
 	int idx;
 
 	for (idx = 0; idx < h; idx++) {
@@ -464,7 +470,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.
 
-	slPriorityNbg1(1); // Game screen
+	slPriorityNbg1(5); // Game screen
 
 	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen), NBG0 (debug messages/keypad)
 	//slScrAutoDisp(NBG1ON); // Enable display only for game screen: NBG1

@@ -91,7 +91,7 @@ void Cutscene::updatePalette() {
 		_newPal = false;
 	}
 }
-
+int first =0;
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
@@ -100,7 +100,7 @@ void Cutscene::updateScreen() {
 //--------------------------------------------------------------------------------------------
 
 #if 1
-
+slPrioritySpr0(6);
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
 	emu_printf("Cutscene::updateScreen 1\n");
 	TEXTURE *txptr = (TEXTURE *)tex_spr; 
@@ -126,12 +126,17 @@ void Cutscene::updateScreen() {
 	user_sprite.XB=user_sprite.XA+640;
 	user_sprite.YB=user_sprite.YA+256;
     user_sprite.GRDA=0;	
-	emu_printf("Cutscene::updateScreen 4\n");	
+//	emu_printf("Cutscene::updateScreen 4\n");	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 	emu_printf("Cutscene::updateScreen 5\n");	
+
+//	if(first==0)
+	{
 	slSynch();
+	first=1;
+	}
 #endif
-		emu_printf("Cutscene::updateScreen 6\n");
+//		emu_printf("Cutscene::updateScreen 6\n");
 //--------------------------------------------------------------------------------------------
 
 
@@ -259,6 +264,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 }
 
 void Cutscene::clearBackPage() {
+emu_printf("clearBackPage\n");		
 	if (_clearScreen == 0) {
 		memcpy(_backPage, _auxPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 //		memset(_backPage, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
@@ -341,7 +347,7 @@ void Cutscene::op_markCurPos() {
 	drawCreditsText(); // vbt à remettre
 	_frameDelay = 5;
 	if (!_creditsSequence) {
-	emu_printf("Cutscene::!_creditsSequence()\n");			
+	emu_printf("Cutscene::!_creditsSequence() %d\n",_id);			
 		if (_id == kCineDebut) {
 			_frameDelay = 7;
 		} else if (_id == kCineChute) {
@@ -495,7 +501,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-	debug(DBG_CUT, "Cutscene::op_drawCaptionText()");
+	emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
@@ -1136,7 +1142,10 @@ void Cutscene::mainLoop(uint16_t num) {
 }
 
 bool Cutscene::load(uint16_t cutName) {
-	assert(cutName != 0xFFFF);
+//	assert(cutName != 0xFFFF);
+	if(cutName == 0xFFFF)
+		return 0;
+	
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	switch (_res->_type) {
 	case kResourceTypeDOS:
@@ -1158,9 +1167,9 @@ void Cutscene::unload() {
 		_res->unload(Resource::OT_POL);
 		break;
 	case kResourceTypeMac:
-		emu_printf("MAC_unloadCutscene    \n");	
+//		emu_printf("MAC_unloadCutscene    \n");	
 		_res->MAC_unloadCutscene();
-		emu_printf("MAC_unloadCutscene end   \n");			
+//		emu_printf("MAC_unloadCutscene end   \n");			
 		break;
 	}
 	
@@ -1179,8 +1188,10 @@ void Cutscene::unload() {
     user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-	slSynch();
-	
+
+//slPrioritySpr0(1);
+slSynch();
+//	first=0;
 _vid->_layerScale=2;	
 }
 
@@ -1274,7 +1285,7 @@ void Cutscene::playText(const char *str) {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
+//		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
 		_creditsSequence = false;
 		emu_printf("prepare    \n");
 		prepare();
@@ -1328,8 +1339,8 @@ void Cutscene::play() {
 				}
 			}
 		}
-		//if (g_options.use_text_cutscenes) 
-/*		{
+/*		if (g_options.use_text_cutscenes) 
+		{
 			const Text *textsTable = (_res->_lang == LANG_FR) ? _frTextsTable : _enTextsTable;
 			for (int i = 0; textsTable[i].str; ++i) {
 				if (_id == textsTable[i].num) {
@@ -1339,22 +1350,22 @@ void Cutscene::play() {
 			}
 		} else*/
 		if (cutName != 0xFFFF) {
-		emu_printf("load cutname    \n");
+//		emu_printf("load cutname    \n");
 			if (load(cutName)) {
-		emu_printf("mainLoop(cutOff)    \n");				
+//		emu_printf("mainLoop(cutOff)    \n");				
 				mainLoop(cutOff);
-		emu_printf("unload    \n");								
+//		emu_printf("unload    \n");								
 				unload();
-		emu_printf("unload end    \n");												
+//		emu_printf("unload end    \n");												
 			}
 		}
 /*		else if (_id == 8) {
 			playSet(_caillouSetData, 0x5E4);
 		}*/
-		emu_printf("fullRefresh    \n");										
+		emu_printf("fullRefresh\n");
 //		_vid->fullRefresh();
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
-	_stub->updateScreen(0);
+//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+//	_stub->updateScreen(0);
 	
 		emu_printf("fullRefresh end   \n");												
 		if (_id != 0x3D) {
