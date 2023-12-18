@@ -267,8 +267,6 @@ void Cutscene::clearBackPage() {
 emu_printf("clearBackPage\n");		
 	if (_clearScreen == 0) {
 		memcpy(_backPage, _auxPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-//		memset(_backPage, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-
 	} else {
 		memset(_backPage, 0xC0, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	}
@@ -1188,7 +1186,9 @@ void Cutscene::unload() {
     user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
+//	memcpy(_vid->_backLayer,_frontPage, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
+//_vid->_fullRefresh = true;
+//	_vid->fullRefresh();
 //slPrioritySpr0(1);
 slSynch();
 //	first=0;
@@ -1199,8 +1199,9 @@ void Cutscene::prepare() {
 	_vid->_layerScale=1;
 	_frontPage = _vid->_frontLayer;
 //	_backPage = _vid->_tempLayer;
-	_backPage = _vid->_backLayer;
-	_auxPage = _vid->_backLayer+(_vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
+	_backPage = (uint8_t *)(SpriteVRAM + 0x8000 + 240*240);//_vid->_backLayer;
+//	_backPage = _vid->_backLayer;
+	_auxPage = (uint8_t *)(SpriteVRAM + 0x8000 + 240*240*2); //_vid->_backLayer+(_vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
