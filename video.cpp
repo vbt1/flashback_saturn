@@ -16,9 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 extern "C" {
-#include <sega_mem.h>
+#include "sega_mem.h"
 #include "sat_mem_checker.h"
 #include "saturn_print.h"
+#include <string.h>
 }
 #include "file.h"
 #include "decode_mac.h"

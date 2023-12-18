@@ -3,6 +3,10 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
+extern "C"
+{
+#include "string.h"	
+}
 
 #include "game.h"
 #include "resource.h"

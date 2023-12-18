@@ -1,5 +1,5 @@
 extern "C" {
-#include	<sgl.h>
+//#include	<sgl.h>
 #include 	<sl_def.h>
 #include 	<sega_mem.h>
 #include 	<sega_spr.h>
@@ -7,6 +7,7 @@ extern "C" {
 #include	<sega_sys.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
+#include <string.h>
 }
 
 #include 	"saturn_print.h"

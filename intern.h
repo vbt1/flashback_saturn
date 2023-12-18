@@ -18,9 +18,9 @@
 
 #ifndef __INTERN_H__
 #define __INTERN_H__
-
+#include "string.h"
 #include <cstdio>
-#include <cstring>
+//#include <cstring>
 #include <stdlib.h>
 #include <cassert>
 

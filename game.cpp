@@ -18,8 +18,11 @@
  
  
 extern "C" {
+	#include 	<string.h>
+	#include <stdio.h>
 //#include "sega_dma.h"
 #include <sl_def.h>
+#include <sgl.h>
 #include <sega_bup.h>
 #include <sega_per.h>
 //#include <sega_spr.h>

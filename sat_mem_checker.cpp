@@ -10,13 +10,9 @@ extern "C" {
 #include <sega_sys.h>
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
-/*
-void	*malloc(size_t) __malloc_like __result_use_check __alloc_size(1) _NOTHROW;
-void	*realloc(void *, size_t) __result_use_check __alloc_size(2) _NOTHROW;
-void	*calloc(size_t, size_t) __malloc_like __result_use_check
-	     __alloc_size2(1, 2) _NOTHROW;
-void	free (void *) _NOTHROW;
-*/
+
+void	*malloc(size_t);
+void	free (void *) ;
 }
 #include "saturn_print.h"
 

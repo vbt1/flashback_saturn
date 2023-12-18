@@ -6,7 +6,8 @@
 
 extern "C"
 {
-#include 	<sl_def.h>	
+#include <sl_def.h>	
+#include <string.h>	
 extern TEXTURE tex_spr[10];	
 
 }
@@ -114,8 +115,8 @@ slPrioritySpr0(6);
 
 	emu_printf("Cutscene::updateScreen 3\n");
     SPRITE user_sprite;
-    user_sprite.CTRL= FUNC_Sprite | _ZmCC | 0x0800;
-    user_sprite.PMOD=CL256Bnk| ECdis;// | ECenb | SPdis;  // pas besoin pour les sprites
+    user_sprite.CTRL= FUNC_Sprite | _ZmCC;
+    user_sprite.PMOD=CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
     user_sprite.SRCA=txptr->CGadr;
     user_sprite.COLR=0;
 

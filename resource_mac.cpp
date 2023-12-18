@@ -1,13 +1,14 @@
 
 
 extern "C" {
+#include <string.h>
 #include <sl_def.h>	
 #include "sat_mem_checker.h"
 }
 
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
+
 //#include "fs.h"
 #include "resource_mac.h"
 #include "util.h"
