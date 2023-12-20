@@ -224,10 +224,10 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 }
 
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-	_vid->_w/=2;
-	_vid->_h/=2;
+//	_vid->_w/=2;
+//	_vid->_h/=2;
 
-	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
+//	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
 		len = *p++;
@@ -270,8 +270,8 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		}
 	}
 	
-	_vid->_w*=2;
-	_vid->_h*=2;	
+//	_vid->_w*=2;
+//	_vid->_h*=2;	
 //	_vid->_layerScale=2;	
 }
 
@@ -519,7 +519,7 @@ void Cutscene::op_drawCaptionText() {
 //		const int y = Video::GAMESCREEN_H * _vid->_layerScale - h;
 
 //		memset(_auxPage + y * _vid->_w, 0xC0, h * _vid->_w);
-		memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0xC0,h * _vid->_w);
+//		memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * 240);
 //		memset(_backPage + y * _vid->_w, 0xC0, h * _vid->_w);
 //		memset(_frontPage + y * _vid->_w, 0xC0, h * _vid->_w);
 
@@ -528,10 +528,12 @@ void Cutscene::op_drawCaptionText() {
 			if (str) {
 //				drawText(0, 129, str, 0xEF, _backPage, kTextJustifyAlign);
 //				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
+_vid->_w=240;
+				memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid->_w);
 				drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
-
+_vid->_w=512;
 				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-				*txptr = TEXDEF(_vid->_w, (h>>6), 0);
+				*txptr = TEXDEF(240, (h>>6), 0);
 
 				SPRITE user_sprite;
 				user_sprite.CTRL= 0; //FUNC_Sprite | _ZmRT;
@@ -539,7 +541,7 @@ void Cutscene::op_drawCaptionText() {
 				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
 				user_sprite.COLR= 0;
 
-				user_sprite.SIZE=0x2030;
+				user_sprite.SIZE=0x1E30;
 				user_sprite.XA=-128;
 				user_sprite.YA=129;
 				user_sprite.GRDA=0;	
@@ -1038,7 +1040,27 @@ void Cutscene::op_drawTextAtPos() {
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				const uint8_t color = 0xD0 + (strId >> 0xC);
-				drawText(x, y, str, color, _backPage, kTextJustifyCenter);
+//				drawText(x, y, str, color, _backPage, kTextJustifyCenter);
+
+_vid->_w=480;
+				memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,0x60 * _vid->_w);
+				drawText(0, 0, str, color, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
+_vid->_w=512;
+				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+				*txptr = TEXDEF(_vid->_w, (128>>6), 0);
+
+				SPRITE user_sprite;
+				user_sprite.CTRL= 0; //FUNC_Sprite | _ZmRT;
+				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
+				user_sprite.COLR= 0;
+
+				user_sprite.SIZE=0x3C60;
+				user_sprite.XA=-240;
+				user_sprite.YA=-129;
+				user_sprite.GRDA=0;	
+				
+				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
