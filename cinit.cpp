@@ -47,9 +47,9 @@ int	main( void )
 	init_GFS(); // Initialize GFS system
 	//CartRAM_init(0);
 #ifdef _352_CLOCK_
-	slInitSystem(TV_352x224, (TEXTURE*)tex_spr, 1); // Init SGL
+	slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
-	slInitSystem(TV_704x448, (TEXTURE*)tex_spr, 1); // Init SGL
+	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
  //   slSetScrTVMode(TV_640x448);
  //   slInitSystem(TV_320x240, (TEXTURE*)NULL, 1);
  //   slSetScrTVMode(TV_320x240);	
@@ -84,7 +84,7 @@ slTVOff();
 	slScrAutoDisp(NBG1ON|SPRON);
     slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 //	slZoomNbg0(toFIXED(0.727272), toFIXED(1.0));
-	slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
+	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 	slPrioritySpr0(6);
 
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
