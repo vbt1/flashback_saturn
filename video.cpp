@@ -529,12 +529,12 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.x = x * _layerScale;
 	buf.y = y * _layerScale;
 	
-	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);	
+//	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
 //emu_printf("d\n");		
 	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
-emu_printf("e\n");		
+//emu_printf("e\n");
 //	assert(chr >= 32);
 	if(chr<32)
 		return;

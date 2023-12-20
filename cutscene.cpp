@@ -102,21 +102,16 @@ void Cutscene::updateScreen() {
 //--------------------------------------------------------------------------------------------
 
 #if 1
-//slPrioritySpr0(6);
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
-	emu_printf("Cutscene::updateScreen 1\n");
 	TEXTURE *txptr = (TEXTURE *)tex_spr; 
 	 
 	*txptr = TEXDEF(240, (128>>6), 0);
-//	txptr->CGadr = cgaddress8+(30*128)*i;
-//	emu_printf("Cutscene::updateScreen 2\n");
 	
 	for(int j=0;j<128;j++)
 		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3))+(j*240),(void *)(_backPage+(j*256)),240);
 
-	emu_printf("Cutscene::updateScreen 3\n");
     SPRITE user_sprite;
-    user_sprite.CTRL= FUNC_Sprite | _ZmCC;
+    user_sprite.CTRL=FUNC_Sprite | _ZmCC;
     user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
     user_sprite.SRCA=txptr->CGadr;
     user_sprite.COLR=0;
@@ -128,20 +123,9 @@ void Cutscene::updateScreen() {
 	user_sprite.XB=user_sprite.XA+480;
 	user_sprite.YB=user_sprite.YA+256;
     user_sprite.GRDA=0;	
-//	emu_printf("Cutscene::updateScreen 4\n");	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
-	
-	
-	emu_printf("Cutscene::updateScreen 5\n");	
-
-//	if(first==0)
-	{
 	slSynch();
-	first=1;
-	}
 #endif
-//		emu_printf("Cutscene::updateScreen 6\n");
 //--------------------------------------------------------------------------------------------
 
 
@@ -153,9 +137,7 @@ void Cutscene::updateScreen() {
 	// vbt ....
 //	_stub->copyRect(0, 0, _vid->GAMESCREEN_W*2, _vid->GAMESCREEN_H*2, _backPage, 512);
 //_stub->copyRect(0, 0, _vid->_w, _vid->_h, _frontPage, 256);
-	emu_printf("Cutscene::updateScreen 7\n");
 	_stub->updateScreen(0);
-	emu_printf("Cutscene::updateScreen 8\n");	
 }
 
 #if 0
@@ -347,31 +329,53 @@ void Cutscene::drawCreditsText() {
 	} else {
 		_creditsTextCounter -= 10;
 	}
-	drawText((_creditsTextPosX - 1) * 8, _creditsTextPosY * 8, _textBuf, 0xEF, _backPage, kTextJustifyLeft);
+//	drawText((_creditsTextPosX - 1) * 8, _creditsTextPosY * 8, _textBuf, 0xEF, _backPage, kTextJustifyLeft);
+	/*
+_vid->_w=480;
+//	memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid->_w);
+//	drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
+	drawText((_creditsTextPosX - 1) * 8, 0, _textBuf, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2+240*240), kTextJustifyLeft);
+_vid->_w=512;
+	TEXTURE *txptr = (TEXTURE *)&tex_spr[2]; 
+	*txptr = TEXDEF(480, (96>>6), 0);
+
+	SPRITE user_sprite;
+	user_sprite.CTRL= 0;
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.SRCA= (TEXT_RAM_VDP2+240*240) >>3;
+	user_sprite.COLR= 0;
+
+	user_sprite.SIZE=0x3C60;
+	user_sprite.XA=-240;
+	user_sprite.YA=_creditsTextPosY * 8;
+	user_sprite.GRDA=0;	
+	
+	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
+	*/
 }
 
 void Cutscene::op_markCurPos() {
 	emu_printf("Cutscene::op_markCurPos()\n");
 	_cmdPtrBak = _cmdPtr;
-	emu_printf("Cutscene::drawCreditsText1()\n");	
+//	emu_printf("Cutscene::drawCreditsText1()\n");
 	drawCreditsText(); // vbt à remettre
 	_frameDelay = 5;
 	if (!_creditsSequence) {
-	emu_printf("Cutscene::!_creditsSequence() %d\n",_id);			
+//	emu_printf("Cutscene::!_creditsSequence() %d\n",_id);
 		if (_id == kCineDebut) {
 			_frameDelay = 7;
 		} else if (_id == kCineChute) {
 			_frameDelay = 6;
 		}
 	} else {
-	emu_printf("Cutscene::drawCreditsText2()\n");			
+//	emu_printf("Cutscene::drawCreditsText2()\n");
 		drawCreditsText(); // vbt à remettre
 	}
-	emu_printf("Cutscene::updateScreen()\n");				
+//	emu_printf("Cutscene::updateScreen()\n");
 	updateScreen();
-	emu_printf("Cutscene::clearBackPage()\n");					
+//	emu_printf("Cutscene::clearBackPage()\n");
 	clearBackPage();
-	emu_printf("Cutscene::_creditsSlowText()\n");						
+//	emu_printf("Cutscene::_creditsSlowText()\n");
 	_creditsSlowText = false;
 }
 
@@ -515,7 +519,7 @@ void Cutscene::op_drawCaptionText() {
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
-		const int h = 48;
+		const int h = 128;
 //		const int y = Video::GAMESCREEN_H * _vid->_layerScale - h;
 
 //		memset(_auxPage + y * _vid->_w, 0xC0, h * _vid->_w);
@@ -528,21 +532,21 @@ void Cutscene::op_drawCaptionText() {
 			if (str) {
 //				drawText(0, 129, str, 0xEF, _backPage, kTextJustifyAlign);
 //				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
-_vid->_w=240;
+_vid->_w=480;
 				memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid->_w);
 				drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
 _vid->_w=512;
 				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-				*txptr = TEXDEF(240, (h>>6), 0);
+				*txptr = TEXDEF(480, (h>>6), 0);
 
 				SPRITE user_sprite;
-				user_sprite.CTRL= 0; //FUNC_Sprite | _ZmRT;
+				user_sprite.CTRL= 0;
 				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
 				user_sprite.COLR= 0;
 
-				user_sprite.SIZE=0x1E30;
-				user_sprite.XA=-128;
+				user_sprite.SIZE=0x3C60;
+				user_sprite.XA=-220;
 				user_sprite.YA=129;
 				user_sprite.GRDA=0;	
 				
@@ -1031,7 +1035,7 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-	debug(DBG_CUT, "Cutscene::op_drawTextAtPos()");
+//	debug(DBG_CUT, "Cutscene::op_drawTextAtPos()");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
@@ -1050,14 +1054,14 @@ _vid->_w=512;
 				*txptr = TEXDEF(_vid->_w, (128>>6), 0);
 
 				SPRITE user_sprite;
-				user_sprite.CTRL= 0; //FUNC_Sprite | _ZmRT;
+				user_sprite.CTRL= 0;
 				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
 				user_sprite.COLR= 0;
 
 				user_sprite.SIZE=0x3C60;
-				user_sprite.XA=-240;
-				user_sprite.YA=-129;
+				user_sprite.XA=-240+x;
+				user_sprite.YA=-129+y;
 				user_sprite.GRDA=0;	
 				
 				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
@@ -1325,6 +1329,7 @@ void Cutscene::playText(const char *str) {
 	const int y = (128 - lines * 8) / 2;
 	memset(_backPage, 0xC0, _vid->_w * _vid->_h);
 	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
+
 	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
 	_stub->updateScreen(0);
 
