@@ -132,8 +132,8 @@ void Game::run() {
 
 	}	
 	
-	playCutscene(0x40); // vbt à remettre
-	playCutscene(0x0D);
+//	playCutscene(0x40); // vbt à remettre
+//	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -178,7 +178,7 @@ void Game::run() {
 				}
 				break;
 			case kResourceTypeMac:
-				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
+//				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
 //				newZoom = 2;
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;

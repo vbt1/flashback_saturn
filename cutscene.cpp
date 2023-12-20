@@ -26,6 +26,7 @@ extern TEXTURE tex_spr[10];
 #define	cgaddress8	cgaddress/8
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
+#define TEXT_RAM_VDP2 (0x8000 + 240*240*3)
 
 static void scalePoints(Point *pt, int count, int scale) {
 	if (scale != 1) {
@@ -129,6 +130,9 @@ void Cutscene::updateScreen() {
     user_sprite.GRDA=0;	
 //	emu_printf("Cutscene::updateScreen 4\n");	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+
+	
+	
 	emu_printf("Cutscene::updateScreen 5\n");	
 
 //	if(first==0)
@@ -220,6 +224,9 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 }
 
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
+	_vid->_w/=2;
+	_vid->_h/=2;
+
 	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
@@ -240,28 +247,32 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	}
 	const uint8_t *sep = _textSep;
 	y += 50;
-	x += (_res->_lang == LANG_JP) ? 0 : 8;
-	int16_t yPos = y;
-	int16_t xPos = x;
+	x += (_res->_lang == LANG_JP) ? 0 : 4;
+	int16_t yPos = y/2;
+	int16_t xPos = x/2;
 	if (textJustify != kTextJustifyLeft) {
-		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
+		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W/2);
 	}
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
-			yPos += Video::CHAR_H;
-			xPos = x;
+			yPos += (Video::CHAR_H*2);
+			xPos = x/2;
 			if (textJustify != kTextJustifyLeft) {
-				xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
+				xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W*2);
 			}
 		} else if (p[i] == 0x20) {
-			xPos += Video::CHAR_W;
+			xPos += (Video::CHAR_W*2);
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
 			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
-			xPos += Video::CHAR_W;
+			xPos += (Video::CHAR_W*2);
 		}
 	}
+	
+	_vid->_w*=2;
+	_vid->_h*=2;	
+//	_vid->_layerScale=2;	
 }
 
 void Cutscene::clearBackPage() {
@@ -504,17 +515,36 @@ void Cutscene::op_drawCaptionText() {
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
-		const int h = 45 * _vid->_layerScale;
-		const int y = Video::GAMESCREEN_H * _vid->_layerScale - h;
+		const int h = 48;
+//		const int y = Video::GAMESCREEN_H * _vid->_layerScale - h;
 
 //		memset(_auxPage + y * _vid->_w, 0xC0, h * _vid->_w);
-		memset(_backPage + y * _vid->_w, 0xC0, h * _vid->_w);
-		memset(_frontPage + y * _vid->_w, 0xC0, h * _vid->_w);
+		memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0xC0,h * _vid->_w);
+//		memset(_backPage + y * _vid->_w, 0xC0, h * _vid->_w);
+//		memset(_frontPage + y * _vid->_w, 0xC0, h * _vid->_w);
+
 		if (strId != 0xFFFF) {
 			const uint8_t *str = _res->getCineString(strId);
 			if (str) {
-				drawText(0, 129, str, 0xEF, _backPage, kTextJustifyAlign);
-				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
+//				drawText(0, 129, str, 0xEF, _backPage, kTextJustifyAlign);
+//				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
+				drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
+
+				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+				*txptr = TEXDEF(_vid->_w, (h>>6), 0);
+
+				SPRITE user_sprite;
+				user_sprite.CTRL= 0; //FUNC_Sprite | _ZmRT;
+				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
+				user_sprite.COLR= 0;
+
+				user_sprite.SIZE=0x2030;
+				user_sprite.XA=-128;
+				user_sprite.YA=129;
+				user_sprite.GRDA=0;	
+				
+				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 			}
 		} else if (_id == kCineEspions) {
 			// cutscene relies on drawCaptionText opcodes for timing
