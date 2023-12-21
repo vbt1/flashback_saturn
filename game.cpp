@@ -81,7 +81,7 @@ static Uint32 getFreeSaveBlocks(void) {
 /* *** */
 
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
-	: _cut(&_modPly, &_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
+	: _cut(&_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
