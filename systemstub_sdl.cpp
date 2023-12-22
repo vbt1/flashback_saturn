@@ -16,14 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 extern "C" {
+#include <string.h>	
 #include <sgl.h>
 #include <sl_def.h>
 #include <sega_mem.h>
 #include <sega_int.h>
 #include <sega_pcm.h>
 #include <sega_snd.h>
-#include <sega_csh.h>
-#include <sega_spr.h>
+#include "sega_csh.h"
+#include "sega_spr.h"
 #include <sega_sys.h>
 #include "gfs_wrap.h"
 #include "saturn_print.h"

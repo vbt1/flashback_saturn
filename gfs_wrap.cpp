@@ -1,19 +1,22 @@
 extern "C" {
-#include <sgl.h>
-#include <sl_def.h>
-#include <sega_cdc.h>
-#include <sega_gfs.h>
+
+#include <string.h>
+#include <strings.h>
+
+#include <ctype.h>
+
+//#include <sgl.h>
+//#include <sl_def.h>
+//#include <sega_cdc.h>
+//#include <sega_gfs.h>
 //#include <sega_mem.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
+
+char 	*strtok (char *__restrict, const char *__restrict);
+int	 strncasecmp(const char *, const char *, size_t) __pure;
+
 }
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdio.h>
-#include "systemstub.h"
-
-
 
 #include "saturn_print.h"
 

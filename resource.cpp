@@ -17,6 +17,8 @@
  */
 extern "C"
 {
+	#include 	<stdio.h>	
+	#include 	<string.h>	
 #include <sega_mem.h>
 #include <sl_def.h>
 

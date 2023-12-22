@@ -15,10 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-extern "C" {
-#include <sega_mem.h>
+extern "C"
+{
+#include <sl_def.h>	
+#include "sega_mem.h"
 #include "sat_mem_checker.h"
 #include "saturn_print.h"
+#include <string.h>
 }
 #include "file.h"
 #include "decode_mac.h"
@@ -526,18 +529,18 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.x = x * _layerScale;
 	buf.y = y * _layerScale;
 	
-	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);	
+//	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
 //emu_printf("d\n");		
 	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
-emu_printf("e\n");		
+//emu_printf("e\n");
 //	assert(chr >= 32);
 	if(chr<32)
 		return;
-emu_printf("f\n");		
+//emu_printf("f\n");		
 	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
-emu_printf("g\n");		
+//emu_printf("g\n");		
 }
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
@@ -552,10 +555,11 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //	emu_printf("avant _drawChar dc null? %p fladdr %x w %d x+l %d y %d fntaddr %x col %d c %02x\n",_drawChar,_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
 
 		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+//		(this->*_drawChar)((uint8_t *)(SpriteVRAM + 0x8000 + 240*240*3), 240, x + len * CHAR_W, y, fnt, col, c);
 //emu_printf("apres _drawChar\n");		
 		++len;
 	}
-//	emu_printf("mark dirty\n");	
+	emu_printf("drawString done\n");	
 	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }

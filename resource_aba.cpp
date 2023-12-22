@@ -1,11 +1,13 @@
-
+extern "C" {
+#include "sat_mem_checker.h"
+#include <stdio.h>
+#include <string.h>
+}
 #include "resource_aba.h"
 #include "unpack.h"
 #include "util.h"
-extern "C" {
-#include "sat_mem_checker.h"
-}
 
+int	 strcasecmp(const char *, const char *) __pure;
 char *_dataPath = "";	
 	
 ResourceAba::ResourceAba(FileSystem *fs)

@@ -17,11 +17,13 @@
  */
 extern "C"
 {
+	#include 	<string.h>	
 #include <sega_mem.h>
 //#include <sega_spr.h>
 //#include <sega_csh.h>
 #include "sat_mem_checker.h"
 }
+#include "saturn_print.h"
 #include <cstdint>
 #include "sys.h"
 #include "file.h"
