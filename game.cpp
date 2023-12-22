@@ -18,8 +18,11 @@
  
  
 extern "C" {
+	#include 	<string.h>
+	#include <stdio.h>
 //#include "sega_dma.h"
 #include <sl_def.h>
+#include <sgl.h>
 #include <sega_bup.h>
 #include <sega_per.h>
 //#include <sega_spr.h>
@@ -78,7 +81,7 @@ static Uint32 getFreeSaveBlocks(void) {
 /* *** */
 
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
-	: _cut(&_modPly, &_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
+	: _cut(&_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
@@ -129,8 +132,8 @@ void Game::run() {
 
 	}	
 	
-	playCutscene(0x40); // vbt à remettre
-	playCutscene(0x0D);
+//	playCutscene(0x40); // vbt à remettre
+//	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -175,7 +178,7 @@ void Game::run() {
 				}
 				break;
 			case kResourceTypeMac:
-				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
+//				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
 //				newZoom = 2;
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;

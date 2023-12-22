@@ -22,7 +22,6 @@
 #include "intern.h"
 #include "graphics.h"
 
-struct ModPlayer;
 struct Resource;
 struct SystemStub;
 struct Video;
@@ -75,7 +74,6 @@ struct Cutscene {
 	static const uint8_t _memoSetShape4Data[];
 
 	Graphics _gfx;
-	ModPlayer *_ply;
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;
@@ -126,7 +124,7 @@ struct Cutscene {
 	int _creditsTextLen;
 	uint8_t *_frontPage, *_backPage, *_auxPage;
 
-	Cutscene(ModPlayer *player, Resource *res, SystemStub *stub, Video *vid);
+	Cutscene(Resource *res, SystemStub *stub, Video *vid);
 	const uint8_t *getCommandData() const;
 	const uint8_t *getPolygonData() const;
 
