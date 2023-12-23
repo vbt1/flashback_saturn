@@ -261,7 +261,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 }
 
 void Cutscene::clearBackPage() {
-emu_printf("clearBackPage\n");		
+//emu_printf("clearBackPage\n");		
 	if (_clearScreen == 0) {
 		memcpy(_backPage, _auxPage, IMG_SIZE);
 	} else {
@@ -1243,7 +1243,7 @@ void Cutscene::unload() {
 	}
 	
     SPRITE user_sprite;
-    user_sprite.CTRL= 0;
+    user_sprite.CTRL= FUNC_End;
     user_sprite.PMOD=0;
     user_sprite.SRCA=0;
     user_sprite.COLR=0;

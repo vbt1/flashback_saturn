@@ -1399,35 +1399,35 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst) {
 	
-//emu_printf("MAC_decodeImageData %p\n",ptr);	
+emu_printf("MAC_decodeImageData %p\n",ptr);	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
-//emu_printf("MAC_decodeImageData %x\n",sig);	
+emu_printf("MAC_decodeImageData %x\n",sig);	
 	assert(sig == 0xC211 || sig == 0xC103);
 	const int count = READ_BE_UINT16(ptr); ptr += 2;
-//emu_printf("MAC_decodeImageData 2 %d %d\n",i , count);		
+emu_printf("MAC_decodeImageData 2 %d %d\n",i , count);		
 //	assert(i < count);
 	if(i>=count)
 		return;
 	
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
-//emu_printf("MAC_decodeImageData 3 %d\n",offset);	
+emu_printf("MAC_decodeImageData 3 %d\n",offset);	
 	if (offset != 0) {
 		ptr = basePtr + offset;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
 
-//			emu_printf("MAC_decodeImageData %d %d %x\n", w, h,sig);
+			emu_printf("MAC_decodeImageData %d %d %x\n", w, h,sig);
 			
 			
 		switch (sig) {
 		case 0xC211:
-//emu_printf("decodeC211\n");		
+emu_printf("decodeC211\n");		
 			decodeC211(ptr + 4, w, h, dst);
 			break;
 		case 0xC103:
-//emu_printf("decodeC103\n");		
+emu_printf("decodeC103\n");		
 			decodeC103(ptr, w, h, dst);
 			break;
 		}

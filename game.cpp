@@ -132,8 +132,8 @@ void Game::run() {
 
 	}	
 	
-//	playCutscene(0x40); // vbt à remettre
-//	playCutscene(0x0D);
+	playCutscene(0x40); // vbt à remettre
+	playCutscene(0x0D);
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -358,15 +358,24 @@ void Game::mainLoop() {
 //emu_printf( "mainLoop playCutscene1\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
-//emu_printf( "mainLoop showFinalScore\n");				
+emu_printf( "mainLoop showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
 	}
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
+		
+		
+		
 		if (_deathCutsceneCounter == 0) {
+
+emu_printf( "mainLoop _deathCutsceneCounter %d\n",_deathCutsceneCounter);			
+
+		
 			playCutscene(_cut._deathCutsceneId);
+			
+		
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
 				_endLoop = true;
@@ -385,6 +394,8 @@ void Game::mainLoop() {
 			return;
 		}
 	}
+	
+emu_printf( "DMA_ScuMemCopy\n");		
 //	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 		SCU_DMAWait();
@@ -489,7 +500,7 @@ void Game::playCutscene(int id) {
 	}
 	if (_cut._id != 0xFFFF) {
 //			_vid._layerScale=1;
-			
+emu_printf( "playCutscene %x\n", _cut._id);		
 //		newZoom = 1;
 /*
 		ToggleWidescreenStack tws(_stub, false);
@@ -562,7 +573,7 @@ void Game::playCutscene(int id) {
 			}*/
 		}
 		_cut.play();
-		/*  // vbt à remettre		
+		  // vbt à remettre		
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
@@ -570,8 +581,8 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
-		*/
-/* // vbt à remettre		
+
+ // vbt à remettre		
 		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
 			Color palette[32];
@@ -581,9 +592,7 @@ void Game::playCutscene(int id) {
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
-		
-*/
-		
+
 		/*if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
@@ -808,7 +817,15 @@ bool Game::handleConfigPanel() {
 }
 */
 bool Game::handleContinueAbort() {
+		
+//	playCutscene(0x48); // vbt à remettre
+
 	playCutscene(0x48);
+//memcpy(_vid._frontLayer, _vid._backLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H*4);
+//memcpy(_vid._frontLayer, _vid._backLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H*4);
+//memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+	
+	
 	char textBuf[50];
 	int timeout = 100;
 	int current_color = 0;
@@ -816,8 +833,9 @@ bool Game::handleContinueAbort() {
 	uint8_t color_inc = 0xFF;
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
+	
 //	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-	memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+//	memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	while (timeout >= 0 && !_stub->_pi.quit) {
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
@@ -850,8 +868,13 @@ bool Game::handleContinueAbort() {
 			_stub->_pi.enter = false;
 			return (current_color == 0);
 		}
+		
+	
 		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
+
+
+
 		static const int COLOR_STEP = 8;
 		static const int COLOR_MIN = 16;
 		static const int COLOR_MAX = 256 - 16;
