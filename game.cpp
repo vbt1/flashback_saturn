@@ -460,8 +460,10 @@ void Game::playCutscene(int id) {
 	}
 	if (_cut._id != 0xFFFF) {
 //			_vid._layerScale=1;
-emu_printf( "playCutscene %x\n", _cut._id);		
-//		newZoom = 1;
+// vbt : clean front layer	
+	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);	
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
 /*		if (_res._hasSeqData) {
