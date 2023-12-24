@@ -8,7 +8,7 @@ extern "C"
 {
 #include <sl_def.h>	
 #include <string.h>	
-extern TEXTURE tex_spr[10];	
+extern TEXTURE tex_spr[4];	
 
 }
 #include "mod_player.h"
@@ -83,40 +83,17 @@ void Cutscene::updatePalette() {
 		_newPal = false;
 	}
 }
-int first =0;
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
 //		_vid->fullRefresh();
 //	SWAP(_frontPage, _backPage);
-//--------------------------------------------------------------------------------------------
 
-#if 1
-	TEXTURE *txptr = (TEXTURE *)tex_spr; 
-	 
-	*txptr = TEXDEF(240, (128>>6), 0);
-	
 	for(int j=0;j<128;j++)
-		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3))+(j*240),(void *)(_backPage+(j*256)),240);
-
-    SPRITE user_sprite;
-    user_sprite.CTRL=FUNC_Sprite | _ZmCC;
-    user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-    user_sprite.SRCA=txptr->CGadr;
-    user_sprite.COLR=0;
-
-    user_sprite.SIZE=0x1e80;
-	user_sprite.XA=0;
-	user_sprite.YA=0;
-
-	user_sprite.XB=user_sprite.XA+480;
-	user_sprite.YB=user_sprite.YA+256;
-    user_sprite.GRDA=0;	
-	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+		memcpy((void *)(SpriteVRAM + cgaddress +(j*240)),(void *)(_backPage+(j*256)),240);
+	
+	_vid->SAT_displayCutscene(0, 0, 128, 240);
 	slSynch();
-#endif
-//--------------------------------------------------------------------------------------------
-//  (SpriteVRAM + 0x8000 + 240*128)
 
 //	SWAP(_backPage, _auxPage);
 /*	if((void *)_backPage==(void *)(SpriteVRAM + BACK_RAM_VDP2))
@@ -318,28 +295,6 @@ void Cutscene::drawCreditsText() {
 		_creditsTextCounter -= 10;
 	}
 //	drawText((_creditsTextPosX - 1) * 8, _creditsTextPosY * 8, _textBuf, 0xEF, _backPage, kTextJustifyLeft);
-	/*
-_vid->_w=480;
-//	memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid->_w);
-//	drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
-	drawText((_creditsTextPosX - 1) * 8, 0, _textBuf, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2+240*240), kTextJustifyLeft);
-_vid->_w=512;
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[2]; 
-	*txptr = TEXDEF(480, (96>>6), 0);
-
-	SPRITE user_sprite;
-	user_sprite.CTRL= 0;
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA= (TEXT_RAM_VDP2+240*240) >>3;
-	user_sprite.COLR= 0;
-
-	user_sprite.SIZE=0x3C60;
-	user_sprite.XA=-240;
-	user_sprite.YA=_creditsTextPosY * 8;
-	user_sprite.GRDA=0;	
-	
-	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
-	*/
 }
 
 void Cutscene::op_markCurPos() {
@@ -503,9 +458,7 @@ void Cutscene::op_drawCaptionText() {
 //		const int y = Video::GAMESCREEN_H * _vid->_layerScale - h;
 
 //		memset(_auxPage + y * _vid->_w, 0xC0, h * _vid->_w);
-//		memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * 240);
-//		memset(_backPage + y * _vid->_w, 0xC0, h * _vid->_w);
-//		memset(_frontPage + y * _vid->_w, 0xC0, h * _vid->_w);
+//		memset((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2),0,h * 240);
 
 		if (strId != 0xFFFF) {
 			const uint8_t *str = _res->getCineString(strId);
@@ -513,16 +466,18 @@ void Cutscene::op_drawCaptionText() {
 //				drawText(0, 129, str, 0xEF, _backPage, kTextJustifyAlign);
 //				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
 _vid->_w=480;
-				memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid->_w);
-				drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
+//				memset((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2),0,h * _vid->_w);
+				drawText(0, 0, str, 0xEF, (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2), kTextJustifyAlign);
 _vid->_w=512;
+				_vid->SAT_displayText(-220, 129, h, 480);
+#if 0				
 				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
 				*txptr = TEXDEF(480, (h>>6), 0);
 
 				SPRITE user_sprite;
 				user_sprite.CTRL= 0;
 				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
+				user_sprite.SRCA= TEXT1_RAM_VDP2 >>3;
 				user_sprite.COLR= 0;
 
 				user_sprite.SIZE=0x3C60;
@@ -531,6 +486,7 @@ _vid->_w=512;
 				user_sprite.GRDA=0;	
 				
 				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
+#endif				
 			}
 		} else if (_id == kCineEspions) {
 			// cutscene relies on drawCaptionText opcodes for timing
@@ -1051,24 +1007,11 @@ void Cutscene::op_drawTextAtPos() {
 //				drawText(x, y, str, color, _backPage, kTextJustifyCenter);
 
 _vid->_w=480;
-				memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,0x60 * _vid->_w);
-				drawText(0, 0, str, color, (uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), kTextJustifyAlign);
+//				memset((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2),0,0x60 * _vid->_w);
+				drawText(0, 0, str, color, (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2), kTextJustifyAlign);
 _vid->_w=512;
-				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-				*txptr = TEXDEF(_vid->_w, (128>>6), 0);
-
-				SPRITE user_sprite;
-				user_sprite.CTRL= 0;
-				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
-				user_sprite.COLR= 0;
-
-				user_sprite.SIZE=0x3C60;
-				user_sprite.XA=-240+x;
-				user_sprite.YA=-129+y;
-				user_sprite.GRDA=0;	
-				
-				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
+				_vid->SAT_displayText(-240+x, -129+y, 128, 480);
+		
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
@@ -1247,14 +1190,9 @@ void Cutscene::unload() {
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 		slScrAutoDisp(NBG1ON|SPRON);
 		slSynch();
-		//	first=0;
 		_vid->_layerScale=2;		
 	}
 //	memcpy(_vid->_backLayer,_frontPage, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
-//_vid->_fullRefresh = true;
-//	_vid->fullRefresh();
-//slPrioritySpr0(1);
-	
 }
 
 void Cutscene::prepare() {
@@ -1277,6 +1215,7 @@ void Cutscene::prepare() {
 	const int sx = x * _vid->_layerScale;
 	const int sy = y * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
+
 	slScrAutoDisp(SPRON);
 }
 

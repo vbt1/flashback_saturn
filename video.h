@@ -32,9 +32,10 @@
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
 #define IMG_SIZE (256*128)
-#define BACK_RAM_VDP2 (0x8000 + IMG_SIZE)
-#define AUX_RAM_VDP2  (0x8000 + IMG_SIZE*2)
-#define TEXT_RAM_VDP2 (0x8000 + IMG_SIZE*3)
+#define BACK_RAM_VDP2 (cgaddress + IMG_SIZE)
+#define AUX_RAM_VDP2  (cgaddress + IMG_SIZE*2)
+#define TEXT1_RAM_VDP2 (cgaddress + IMG_SIZE*3)
+#define TEXT2_RAM_VDP2 (cgaddress + IMG_SIZE*4)
 
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))
 
@@ -112,6 +113,8 @@ struct Video {
 	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
+	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
+	void SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w);	
 };
 
 #endif // __VIDEO_H__

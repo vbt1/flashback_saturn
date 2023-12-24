@@ -152,7 +152,6 @@ struct SystemStub_SDL : SystemStub {
 	virtual void getPaletteEntry(uint8 i, Color *c);
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
-	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
@@ -252,7 +251,7 @@ void SystemStub_SDL::setOverscanColor(uint8 i) {
 	_overscanColor = i;
 //emu_printf("setOverscanColor\n");	
 
-memset((void*)VDP2_VRAM_A0, i, 512*448);
+	memset((void*)VDP2_VRAM_A0, i, 512*448);
 /*
 	for(Uint8 line = 0; line < 224; line++) {
 		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
@@ -260,18 +259,6 @@ memset((void*)VDP2_VRAM_A0, i, 512*448);
 	for(Uint8 line = 224; line < 448; line++) {
 		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
 	}*/
-}
-
-void SystemStub_SDL::copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
-	buf += y * pitch + x; // Get to data...
-emu_printf("copyRect2\n");
-	int idx;
-
-	for (idx = 0; idx < h; idx++) {
-		memset((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x),0x00,w);
-//		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
-//		SCU_DMAWait();
-	}
 }
 
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
@@ -285,21 +272,8 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	}
 }
 
-
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2); // vbt : à enlever
-	//memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);
-
-	// Move scroll to shake screen
-//	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
-//	slScrPosNbg0(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
-
-	//slSynch();
-	//SPR_WaitEndSlaveSH();
-	return;
 }
 
 void SystemStub_SDL::processEvents() {
@@ -463,24 +437,18 @@ void SystemStub_SDL::prepareGfxMode() {
 	slColRAMMode(CRM16_1024); // Color mode: 1024 colors, choosed between 16 bit
 
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
-	
+	slBMPaletteNbg1(0); // NBG1 (game screen) uses palette 0 in CRAM
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
 //	slZoomNbg1(toFIXED(0.9), toFIXED(1.0));
 #endif
 	
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.
-
+	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 	slPriorityNbg1(5); // Game screen
+	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen)
 
-	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen), NBG0 (debug messages/keypad)
-	//slScrAutoDisp(NBG1ON); // Enable display only for game screen: NBG1
-
-	//slScrPosNbg0((FIXED)0, (FIXED)0); // Position NBG0
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
-	//slLookR(toFIXED(0.0) , toFIXED(0.0));
-
-	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
 

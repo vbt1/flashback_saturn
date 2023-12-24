@@ -28,7 +28,7 @@ extern "C" {
 #define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
 #define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
-extern TEXTURE tex_spr[10];
+extern TEXTURE tex_spr[4];
 }
 #include "saturn_print.h"
 #include "lz.h"
@@ -118,6 +118,11 @@ void Game::run() {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
+
+// vbt : clean front layer	
+	memset(_vid._frontLayer, 0xC0, IMG_SIZE);
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
 
 	playCutscene(0x40);
 	playCutscene(0x0D);
@@ -341,6 +346,11 @@ void Game::mainLoop() {
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
+// vbt : clean front layer	
+			memset(_vid._frontLayer, 0xC0, IMG_SIZE);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
+	
 			playCutscene(_cut._deathCutsceneId);
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
@@ -360,8 +370,6 @@ void Game::mainLoop() {
 			return;
 		}
 	}
-	
-emu_printf( "DMA_ScuMemCopy\n");		
 //	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 		SCU_DMAWait();
@@ -460,10 +468,7 @@ void Game::playCutscene(int id) {
 	}
 	if (_cut._id != 0xFFFF) {
 //			_vid._layerScale=1;
-// vbt : clean front layer	
-	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);	
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
 /*		if (_res._hasSeqData) {
@@ -778,10 +783,6 @@ bool Game::handleContinueAbort() {
 //	playCutscene(0x48); // vbt à remettre
 
 	playCutscene(0x48);
-//memcpy(_vid._frontLayer, _vid._backLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H*4);
-//memcpy(_vid._frontLayer, _vid._backLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H*4);
-//memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-	
 	
 	char textBuf[50];
 	int timeout = 100;
@@ -791,12 +792,10 @@ bool Game::handleContinueAbort() {
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
 	
-//	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-//	memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	while (timeout >= 0 && !_stub->_pi.quit) {
 _vid._w=480;
 unsigned int h = 256;
-memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid._w);
+memset((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2),0,h * _vid._w);
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawStringSprite(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
@@ -811,41 +810,10 @@ memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid._w);
 		_vid.drawStringSprite(textBuf, 90, 210, 0xE3);
 
 _vid._w=512;
-				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-				*txptr = TEXDEF(480, (h>>6), 0);
-
-				SPRITE user_sprite;
-				user_sprite.CTRL= 0;
-				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
-				user_sprite.COLR= 0;
-
-				user_sprite.SIZE=0x3CFF;
-				user_sprite.XA=-220;
-				user_sprite.YA=-128;
-				user_sprite.GRDA=0;	
+		_vid.SAT_displayText(-220, -128, h-1, 480);
+		_vid.SAT_displayCutscene(0, 0, 128, 240);
 				
-				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets	
-
-				*txptr = TEXDEF(240, (128>>6), 0);
-
-				user_sprite;
-				user_sprite.CTRL=FUNC_Sprite | _ZmCC;
-				user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-				user_sprite.SRCA=txptr->CGadr;
-				user_sprite.COLR=0;
-
-				user_sprite.SIZE=0x1e80;
-				user_sprite.XA=0;
-				user_sprite.YA=0;
-
-				user_sprite.XB=user_sprite.XA+480;
-				user_sprite.YB=user_sprite.YA+256;
-				user_sprite.GRDA=0;	
-				slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
-				
-	slSynch();	
+		slSynch();	
 		
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;

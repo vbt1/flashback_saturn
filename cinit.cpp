@@ -25,7 +25,7 @@ extern Uint32 _bstart, _bend;
 extern void ss_main( void );
 
 extern "C" {
-TEXTURE tex_spr[10];
+TEXTURE tex_spr[4];
 	extern void DMA_ScuInit(void);
 }
 
@@ -71,16 +71,11 @@ extern Uint16 VDP2_RAMCTL;
 
 //    slScrAutoDisp(NBG0ON);	
 //	slSynch();
-
-int *val = (int *)tex_spr;
-	
-		emu_printf("vbt init %06x\n",(int)val);
-
-memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
+	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
 	
-slTVOff();
+	slTVOff();
 	slScrAutoDisp(NBG1ON|SPRON);
     slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 //	slZoomNbg0(toFIXED(0.727272), toFIXED(1.0));

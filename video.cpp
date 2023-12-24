@@ -22,6 +22,7 @@ extern "C"
 #include "sat_mem_checker.h"
 #include "saturn_print.h"
 #include <string.h>
+extern TEXTURE tex_spr[4];
 }
 #include "file.h"
 #include "decode_mac.h"
@@ -96,7 +97,7 @@ void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
 }*/
 
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
-	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)\n", x, y, w, h);
+//	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)\n", x, y, w, h);
 	int bx1 = scale * x / SCREENBLOCK_W;
 	int by1 = scale * y / SCREENBLOCK_H;
 	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
@@ -514,15 +515,11 @@ static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-	emu_printf("Video::MAC_drawStringChar\n");	
+//	emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf;
 	
-//emu_printf("a\n");	
 	memset(&buf, 0, sizeof(buf));
-//		int *val = (int *)dst;	
-//emu_printf("b %08x\n",(int)val);	
 	buf.ptr = dst;
-//emu_printf("c\n");	
 	buf.w = _w;
 	buf.pitch = pitch;
 	buf.h = _h;
@@ -530,21 +527,17 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.y = y * _layerScale;
 	
 //	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-//emu_printf("d\n");		
 	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
-//emu_printf("e\n");
 //	assert(chr >= 32);
 	if(chr<32)
 		return;
-//emu_printf("f\n");		
 	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
-//emu_printf("g\n");		
 }
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
-	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+//	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;
 	while (1) {
@@ -552,20 +545,15 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-//	emu_printf("avant _drawChar dc null? %p fladdr %x w %d x+l %d y %d fntaddr %x col %d c %02x\n",_drawChar,_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
-
 		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
-//		(this->*_drawChar)((uint8_t *)(SpriteVRAM + 0x8000 + 240*240*3), 240, x + len * CHAR_W, y, fnt, col, c);
-//emu_printf("apres _drawChar\n");		
 		++len;
 	}
-	emu_printf("drawString done\n");	
 	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 
 const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col) {
-	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+//	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;	
 	while (1) {
@@ -573,15 +561,9 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-//		(this->*_drawChar)((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), _w, xPos, yPos, fnt, col, c);
-(this->*_drawChar)((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), _w, x + len * CHAR_W*2, y, fnt, col, c);
-//	emu_printf("avant _drawChar dc null? %p fladdr %x w %d x+l %d y %d fntaddr %x col %d c %02x\n",_drawChar,_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
-//		(this->*_drawChar)((uint8_t *)(SpriteVRAM + 0x8000 + 240*240*3), 240, x + len * CHAR_W, y, fnt, col, c);
-//emu_printf("apres _drawChar\n");		
-//		xPos += (Video::CHAR_W*2);
+		(this->*_drawChar)((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2), _w, x + len * CHAR_W*2, y, fnt, col, c);
 		++len;
 	}
-	emu_printf("drawString done\n");	
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
@@ -677,4 +659,44 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		_res->MAC_decodeImageData(data, frame, &buf);
 		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
 	}
+}
+
+void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
+{
+	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+	*txptr = TEXDEF(w, (h>>6), 0);
+
+	SPRITE user_sprite;
+	user_sprite.CTRL= 0;
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.SRCA= TEXT1_RAM_VDP2 >>3;
+	user_sprite.COLR= 0;
+
+	user_sprite.SIZE=(w/8)<<8|h;
+	user_sprite.XA=x;
+	user_sprite.YA=y;
+	user_sprite.GRDA=0;	
+	
+	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets		
+}
+
+void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w)
+{
+	TEXTURE *txptr = (TEXTURE *)tex_spr;
+	*txptr = TEXDEF(w, (h>>6), 0);
+
+	SPRITE user_sprite;
+	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
+	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.SRCA=txptr->CGadr;
+	user_sprite.COLR=0;
+
+	user_sprite.SIZE=(w/8)<<8|h;
+	user_sprite.XA=x;
+	user_sprite.YA=y;
+
+	user_sprite.XB=user_sprite.XA+(w<<1);
+	user_sprite.YB=user_sprite.YA+(h<<1);
+	user_sprite.GRDA=0;	
+	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
