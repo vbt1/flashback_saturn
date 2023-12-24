@@ -30,8 +30,8 @@ extern "C" {
 
 #undef sleep 
 
-Menu::Menu(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid)
-	: _ply(ply), _res(res), _stub(stub), _vid(vid) {
+Menu::Menu(Resource *res, SystemStub *stub, Video *vid)
+	: _res(res), _stub(stub), _vid(vid) {
 }
 
 void Menu::drawString(const char *str, int16 y, int16 x, uint8 color) {

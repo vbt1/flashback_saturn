@@ -1,19 +1,7 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
  
  
@@ -81,7 +69,7 @@ static Uint32 getFreeSaveBlocks(void) {
 /* *** */
 
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
-	: _cut(&_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
+	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
@@ -128,13 +116,11 @@ void Game::run() {
 		if (!_stub->_pi.quit) {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
-//		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
-
-	}	
-	
-	playCutscene(0x40); // vbt Ã  remettre
+	}
+	playCutscene(0x40);
 	playCutscene(0x0D);
 
+	// global resources
 	switch (_res._type) {
 	case kResourceTypeDOS:
 		_res.load("GLOBAL", Resource::OT_ICN);
@@ -178,8 +164,6 @@ void Game::run() {
 				}
 				break;
 			case kResourceTypeMac:
-//				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
-//				newZoom = 2;
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -197,24 +181,19 @@ emu_printf("_currentLevel %d\n",_currentLevel);
 			_vid.setTextPalette();
 			playCutscene(0x3D);
 		} else {
-emu_printf("setTextPalette\n");			
 			_vid.setTextPalette();
-emu_printf("setPalette0xF\n");			
 			_vid.setPalette0xF();
 			_stub->setOverscanColor(0xE0);
 			_vid._unkPalSlot1 = 0;
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
-			//clearStateRewind();
-emu_printf("loadLevelData\n");			
+//			clearStateRewind();
 			loadLevelData();
-emu_printf("resetGameState\n");			
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-emu_printf("mainLoop\n");				
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					// exit level
@@ -290,13 +269,10 @@ void Game::displayTitleScreenMac(int num) {
 	}
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	_stub->updateScreen(0);
-
-	
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
-
 			for (int i = 0; i < 7; ++i) {
 				const char *str = Menu::_levelNames[i];
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
@@ -322,7 +298,6 @@ void Game::displayTitleScreenMac(int num) {
 			break;
 		}
 		if (_stub->_pi.enter) {
-					emu_printf("_pi.enter1\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -355,27 +330,16 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-//emu_printf( "mainLoop playCutscene1\n");		
 	playCutscene();
 	if (_cut._id == 0x3D) {
-emu_printf( "mainLoop showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
 	}
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
-		
-		
-		
 		if (_deathCutsceneCounter == 0) {
-
-emu_printf( "mainLoop _deathCutsceneCounter %d\n",_deathCutsceneCounter);			
-
-		
 			playCutscene(_cut._deathCutsceneId);
-			
-		
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
 				_endLoop = true;
@@ -427,7 +391,6 @@ emu_printf( "DMA_ScuMemCopy\n");
 	}
 	if (_loadMap) {
 		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
-
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
 		} else {
@@ -455,10 +418,7 @@ emu_printf( "DMA_ScuMemCopy\n");
 		--_blinkingConradCounter;
 	}
 	_vid.updateScreen();
-//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//	_stub->updateScreen(0);
 	updateTiming();
-
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
@@ -493,8 +453,6 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
-	
-//	return;
 	if (id != -1) {
 		_cut._id = id;
 	}
@@ -502,10 +460,9 @@ void Game::playCutscene(int id) {
 //			_vid._layerScale=1;
 emu_printf( "playCutscene %x\n", _cut._id);		
 //		newZoom = 1;
-/*
-		ToggleWidescreenStack tws(_stub, false);
-		_mix.stopMusic();
-		if (_res._hasSeqData) {
+//		ToggleWidescreenStack tws(_stub, false);
+//		_mix.stopMusic();
+/*		if (_res._hasSeqData) {
 			int num = 0;
 			switch (_cut._id) {
 			case 0x02: {
@@ -538,7 +495,6 @@ emu_printf( "playCutscene %x\n", _cut._id);
 			case 0x4A:
 				return;
 			}
-			
 
 			if (SeqPlayer::_namesTable[_cut._id]) {
 			        char name[16];
@@ -593,15 +549,12 @@ emu_printf( "playCutscene %x\n", _cut._id);
 			}
 		}
 
-		/*if (_cut._id == 0x3D) {
-			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
+		if (_cut._id == 0x3D) {
+//			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
-		}*/
+		}
 //		_mix.stopMusic();
-		
-//		newZoom = 2;
 	}
-//	_vid._layerScale=2;
 }
 
 void Game::inp_handleSpecialKeys() {
@@ -1031,7 +984,7 @@ void Game::drawStoryTexts() {
 			uint32_t voiceSegmentLen = 0;
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
 			if (voiceSegmentData) {
-//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt à remettre
+//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt à ²emettre
 			}
 			_vid.updateScreen();
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
@@ -1659,7 +1612,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 	uint8_t buf[16 * 16];
 	switch (_res._type) {
 	case kResourceTypeDOS:
-//		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt à remettre
+//		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt à ²emettre
 		break;
 	case kResourceTypeMac:
 		switch (iconNum) {
@@ -1706,6 +1659,7 @@ uint16_t Game::getRandomNumber() {
 
 void Game::changeLevel() {
 	_vid.fadeOut();
+//	clearStateRewind();
 	loadLevelData();
 	loadLevelMap();
 	_vid.setPalette0xF();

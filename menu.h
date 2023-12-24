@@ -74,7 +74,6 @@ struct Menu {
 //	static const uint8_t _flagSp16x12[];
 
 
-	ModPlayer *_ply;
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;
@@ -93,7 +92,7 @@ struct Menu {
 	uint8_t _charVar4;
 	uint8_t _charVar5;
 
-	Menu(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid);
+	Menu(Resource *res, SystemStub *stub, Video *vid);
 
 	void drawString(const char *str, int16 y, int16 x, uint8 color);
 	void drawString2(const char *str, int16 y, int16 x);
