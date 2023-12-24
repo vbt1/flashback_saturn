@@ -514,7 +514,7 @@ static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-//	emu_printf("Video::MAC_drawStringChar\n");	
+	emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf;
 	
 //emu_printf("a\n");	
@@ -561,6 +561,28 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 	}
 	emu_printf("drawString done\n");	
 	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+	return str - 1;
+}
+
+const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col) {
+	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+	const uint8_t *fnt = _res->_fnt;
+	int len = 0;	
+	while (1) {
+		const uint8_t c = *str++;
+		if (c == 0 || c == 0xB || c == 0xA) {
+			break;
+		}
+//		(this->*_drawChar)((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), _w, xPos, yPos, fnt, col, c);
+(this->*_drawChar)((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2), _w, x + len * CHAR_W*2, y, fnt, col, c);
+//	emu_printf("avant _drawChar dc null? %p fladdr %x w %d x+l %d y %d fntaddr %x col %d c %02x\n",_drawChar,_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+//		(this->*_drawChar)((uint8_t *)(SpriteVRAM + 0x8000 + 240*240*3), 240, x + len * CHAR_W, y, fnt, col, c);
+//emu_printf("apres _drawChar\n");		
+//		xPos += (Video::CHAR_W*2);
+		++len;
+	}
+	emu_printf("drawString done\n");	
+//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 

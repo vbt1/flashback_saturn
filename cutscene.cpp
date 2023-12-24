@@ -14,23 +14,9 @@ extern TEXTURE tex_spr[10];
 #include "mod_player.h"
 #include "resource.h"
 #include "systemstub.h"
-#include "video.h"
 #include "cutscene.h"
 #include "saturn_print.h"
-
-#undef cgaddress
-#undef pal
-#undef TEXDEF
-
-#define	cgaddress	0x8000 //SpriteBufSize
-#define	cgaddress8	cgaddress/8
-#define pal1 COL_256
-#define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
-#define IMG_SIZE (256*128)
-#define BACK_RAM_VDP2 (0x8000 + IMG_SIZE)
-#define AUX_RAM_VDP2  (0x8000 + IMG_SIZE*2)
-#define TEXT_RAM_VDP2 (0x8000 + IMG_SIZE*3)
-unsigned int cutaddr=BACK_RAM_VDP2;
+#include "video.h"
 
 static void scalePoints(Point *pt, int count, int scale) {
 	if (scale != 1) {
@@ -106,7 +92,6 @@ void Cutscene::updateScreen() {
 //--------------------------------------------------------------------------------------------
 
 #if 1
-#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
 	TEXTURE *txptr = (TEXTURE *)tex_spr; 
 	 
 	*txptr = TEXDEF(240, (128>>6), 0);
@@ -1242,29 +1227,34 @@ void Cutscene::unload() {
 		break;
 	}
 	
-    SPRITE user_sprite;
-    user_sprite.CTRL= FUNC_End;
-    user_sprite.PMOD=0;
-    user_sprite.SRCA=0;
-    user_sprite.COLR=0;
-
-    user_sprite.SIZE=0;
-	user_sprite.XA=0;
-	user_sprite.YA=0;
-
-	user_sprite.XB=0;
-	user_sprite.YB=0;
-    user_sprite.GRDA=0;	
 	
-	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-	slScrAutoDisp(NBG1ON|SPRON);
+	if (_res->isMac() && _id != 0x48 && _id != 0x49)
+	{
+		SPRITE user_sprite;
+		user_sprite.CTRL= FUNC_End;
+		user_sprite.PMOD=0;
+		user_sprite.SRCA=0;
+		user_sprite.COLR=0;
+
+		user_sprite.SIZE=0;
+		user_sprite.XA=0;
+		user_sprite.YA=0;
+
+		user_sprite.XB=0;
+		user_sprite.YB=0;
+		user_sprite.GRDA=0;	
+		
+		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+		slScrAutoDisp(NBG1ON|SPRON);
+		slSynch();
+		//	first=0;
+		_vid->_layerScale=2;		
+	}
 //	memcpy(_vid->_backLayer,_frontPage, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H);
 //_vid->_fullRefresh = true;
 //	_vid->fullRefresh();
 //slPrioritySpr0(1);
-slSynch();
-//	first=0;
-_vid->_layerScale=2;	
+	
 }
 
 void Cutscene::prepare() {

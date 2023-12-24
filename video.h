@@ -23,6 +23,21 @@
 #define	    VDP2_VRAM_B0	0x25e40000
 #define	    VDP2_VRAM_B1	0x25e60000
 
+#undef cgaddress
+#undef pal
+#undef TEXDEF
+
+#define	cgaddress	0x8000 //SpriteBufSize
+#define	cgaddress8	cgaddress/8
+#define pal1 COL_256
+#define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
+#define IMG_SIZE (256*128)
+#define BACK_RAM_VDP2 (0x8000 + IMG_SIZE)
+#define AUX_RAM_VDP2  (0x8000 + IMG_SIZE*2)
+#define TEXT_RAM_VDP2 (0x8000 + IMG_SIZE*3)
+
+#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))
+
 struct Resource;
 struct SystemStub;
 
@@ -89,6 +104,7 @@ struct Video {
 	void MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);	
 	void drawChar(uint8_t c, int16 y, int16 x);
 	const char *drawString(const char *str, int16_t x, int16_t y, uint8_t col);
+	const char *drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col);
 	void drawStringLen(const char *str, int len, int x, int y, uint8_t color);
 	void MAC_decodeMap(int level, int room);
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);

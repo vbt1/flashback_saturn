@@ -28,6 +28,7 @@ extern "C" {
 #define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
 #define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
+extern TEXTURE tex_spr[10];
 }
 #include "saturn_print.h"
 #include "lz.h"
@@ -117,6 +118,7 @@ void Game::run() {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
+
 	playCutscene(0x40);
 	playCutscene(0x0D);
 
@@ -790,18 +792,59 @@ bool Game::handleContinueAbort() {
 //	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 //	memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 	while (timeout >= 0 && !_stub->_pi.quit) {
+_vid._w=480;
+unsigned int h = 256;
+memset((uint8_t *)(SpriteVRAM + TEXT_RAM_VDP2),0,h * _vid._w);
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
+		_vid.drawStringSprite(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_02_TIME);
 		sprintf(textBuf, "%s : %d", str, timeout / 10);
-		_vid.drawString(textBuf, 96, 88, 0xE3);
+		_vid.drawStringSprite(textBuf, 90, 160, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_03_CONTINUE);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 104, colors[0]);
+		_vid.drawStringSprite(str, 90, 112, colors[0]);
 		str = _res.getMenuString(LocaleData::LI_04_ABORT);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 112, colors[1]);
+		_vid.drawStringSprite(str, 300, 112, colors[1]);
 		sprintf(textBuf, "SCORE  %08lu", _score);
-		_vid.drawString(textBuf, 64, 154, 0xE3);
+		_vid.drawStringSprite(textBuf, 90, 210, 0xE3);
+
+_vid._w=512;
+				TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+				*txptr = TEXDEF(480, (h>>6), 0);
+
+				SPRITE user_sprite;
+				user_sprite.CTRL= 0;
+				user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+				user_sprite.SRCA= TEXT_RAM_VDP2 >>3;
+				user_sprite.COLR= 0;
+
+				user_sprite.SIZE=0x3CFF;
+				user_sprite.XA=-220;
+				user_sprite.YA=-128;
+				user_sprite.GRDA=0;	
+				
+				slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets	
+
+				*txptr = TEXDEF(240, (128>>6), 0);
+
+				user_sprite;
+				user_sprite.CTRL=FUNC_Sprite | _ZmCC;
+				user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+				user_sprite.SRCA=txptr->CGadr;
+				user_sprite.COLR=0;
+
+				user_sprite.SIZE=0x1e80;
+				user_sprite.XA=0;
+				user_sprite.YA=0;
+
+				user_sprite.XB=user_sprite.XA+480;
+				user_sprite.YB=user_sprite.YA+256;
+				user_sprite.GRDA=0;	
+				slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+
+				
+	slSynch();	
+		
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (current_color > 0) {
@@ -847,8 +890,7 @@ bool Game::handleContinueAbort() {
 		//_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
-//		memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
-		memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+
 	}
 	return false;
 }
