@@ -795,7 +795,7 @@ bool Game::handleContinueAbort() {
 	while (timeout >= 0 && !_stub->_pi.quit) {
 _vid._w=480;
 unsigned int h = 256;
-memset((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2),0,h * _vid._w);
+memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawStringSprite(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
@@ -812,8 +812,9 @@ memset((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2),0,h * _vid._w);
 _vid._w=512;
 		_vid.SAT_displayText(-220, -128, h-1, 480);
 		_vid.SAT_displayCutscene(0, 0, 128, 240);
-				
-		slSynch();	
+		slSynch();
+		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
+		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
 		
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;

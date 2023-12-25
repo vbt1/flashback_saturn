@@ -45,7 +45,9 @@ Video::Video(Resource *res, SystemStub *stub)
 	memset(_frontLayer, 0, _w * _h);
 	//_backLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 
-	_backLayer = (uint8_t *)VDP2_VRAM_B0;	
+	_backLayer = (uint8_t *)VDP2_VRAM_B0;
+	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);
+	_txt2Layer = (uint8_t *)(SpriteVRAM + TEXT2_RAM_VDP2);	
 	memset(_backLayer, 0, _w * _h);
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 //	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
@@ -561,7 +563,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)((uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2), _w, x + len * CHAR_W*2, y, fnt, col, c);
+		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W*2, y, fnt, col, c);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
@@ -665,11 +667,11 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
 	*txptr = TEXDEF(w, (h>>6), 0);
-
+//SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL= 0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA= TEXT1_RAM_VDP2 >>3;
+	user_sprite.SRCA= (((int)_txt1Layer)-SpriteVRAM) / 8;
 	user_sprite.COLR= 0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
@@ -677,7 +679,8 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 	user_sprite.YA=y;
 	user_sprite.GRDA=0;	
 	
-	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets		
+	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
+//	memset((uint8_t *)_txt2Layer,0, w*h);
 }
 
 void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w)
