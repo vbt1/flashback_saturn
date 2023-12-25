@@ -118,12 +118,11 @@ void Game::run() {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
-
 // vbt : clean front layer	
-	memset(_vid._frontLayer, 0xC0, IMG_SIZE);
+	memset(_vid._frontLayer, 0xC0, 512*448);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	_stub->updateScreen(0);
-
+	
 	playCutscene(0x40);
 	playCutscene(0x0D);
 
@@ -347,7 +346,7 @@ void Game::mainLoop() {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
 // vbt : clean front layer	
-			memset(_vid._frontLayer, 0xC0, IMG_SIZE);
+			memset(_vid._frontLayer, 0xC0, 512*448);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 	
