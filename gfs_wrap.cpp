@@ -208,8 +208,9 @@ GFS_FILE *sat_fopen(const char *path) {
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 		
 		// Encapsulate the file data
-//slPrint((char *)"sat_malloc     ",slLocate(10,12));			
+emu_printf("sat_malloc in sat_fopen %s ",path_token);			
 		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
+emu_printf("%p ***\n",fp);		
 		if (fp == NULL) {return NULL;}
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
@@ -255,7 +256,7 @@ GFS_FILE *sat_fopen(const char *path) {
 //slPrint((char *)"return fp     ",slLocate(10,12));
 	return fp;
 }
-
+#if 0
 #define MATCH_SIZE 32
 char *sat_match(const char *path) {
 	memset(satpath, 0, 25);
@@ -339,8 +340,10 @@ char *sat_match(const char *path) {
 		return NULL;
 	}
 }
+#endif
 
 int sat_fclose(GFS_FILE* fp) {
+emu_printf("sat_free in sat_fclose\n");	
 	GFS_Close(fp->fid);
 	sat_free(fp);
 

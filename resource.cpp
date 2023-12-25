@@ -82,11 +82,13 @@ void Resource::init() {
 //		if (_fs->exists(ResourceMac::FILENAME1)) 
 		if (f.open(ResourceMac::FILENAME1, _dataPath, "rb"))
 		{
+			f.close();
 			_mac = new ResourceMac(ResourceMac::FILENAME1, _dataPath);
 		} 
 //		else if (_fs->exists(ResourceMac::FILENAME2)) 
 		else if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
 		{
+			f.close();
 			_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 		}
 		_mac->load();
@@ -108,6 +110,7 @@ void Resource::setLanguage(Language lang) {
 bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
+		f.close();
 		return true;
 	} else if (_aba) {
 		return _aba->findEntry(filename) != 0;
@@ -138,6 +141,7 @@ void Resource::load_DEM(const char *filename) {
 		if (_dem) {
 			f.read(_dem, _demLen);
 		}
+		f.close();
 	} else if (_aba) {
 		uint32_t size;
 		_dem = _aba->loadEntry(filename, &size);
@@ -195,6 +199,7 @@ void Resource::load_FIB(const char *fileName) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else {
 		error("Can't open '%s'", _entryName);
 	}
@@ -214,6 +219,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 //		if (f.ioErr()) {
 //			error("I/O error when reading '%s'", _entryName);
 //		}
+		f.close();
 		return;
 	} else if (_aba) {
 		uint32_t size = 0;
@@ -242,6 +248,7 @@ void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else {
 		error("Can't open '%s'", _entryName);
 	}
@@ -262,6 +269,7 @@ void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else if (_aba) {
 		offData = _aba->loadEntry(_entryName);
 	}
@@ -322,6 +330,7 @@ void Resource::load_CINE() {
 				if (f.ioErr()) {
 					error("I/O error when reading '%s'", _entryName);
 				}
+				f.close();
 			} else if (_aba) {
 				_cine_off = _aba->loadEntry(_entryName);
 			}
@@ -345,6 +354,7 @@ void Resource::load_CINE() {
 				if (f.ioErr()) {
 					error("I/O error when reading '%s'", _entryName);
 				}
+				f.close();
 			} else if (_aba) {
 				_cine_txt = _aba->loadEntry(_entryName);
 			}
@@ -590,6 +600,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else {
 		if (_aba) {
 			uint32_t size;

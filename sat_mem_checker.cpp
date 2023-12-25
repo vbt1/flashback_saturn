@@ -56,7 +56,7 @@ void *sat_malloc(size_t size) {
 //emu_printf("MALLOC success\n");			
 
 //	int *val = (int *)mem;	
-//		emu_printf("MALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
+	emu_printf("MALLOC: addr: %p, size: %u \n", mem, size);
 	
 //slPrintHex((int)val,slLocate(10,15));
 
@@ -67,8 +67,7 @@ void sat_free(void *ptr) {
 
 	if(ptr == NULL) return;
 
-	int *val = (int *)ptr;	
-		emu_printf("FREE: addr: %08x\n", (int)val);		
+	emu_printf("FREE: addr: %p\n", ptr);		
 #define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)		
 	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))

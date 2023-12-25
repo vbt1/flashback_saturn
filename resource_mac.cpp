@@ -34,6 +34,7 @@ ResourceMac::~ResourceMac() {
 		sat_free(_entries);
 	}
 	sat_free(_types);
+	_f.close();
 }
 
 void ResourceMac::load() {
