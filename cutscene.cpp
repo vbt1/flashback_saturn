@@ -89,8 +89,8 @@ void Cutscene::updateScreen() {
 //		_vid->fullRefresh();
 //	SWAP(_frontPage, _backPage);
 
-	for(int j=0;j<128;j++)
-		memcpy((void *)(SpriteVRAM + cgaddress +(j*240)),(void *)(_backPage+(j*256)),240);
+	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+	SCU_DMAWait();
 	
 	_vid->SAT_displayCutscene(0, 0, 128, 240);
 	slSynch();
@@ -1236,7 +1236,7 @@ void Cutscene::playText(const char *str) {
 	const int y = (128 - lines * 8) / 2;
 	memset(_backPage, 0xC0, _vid->_w * _vid->_h);
 	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // menu ?
+	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ?
 	_stub->updateScreen(0);
 
 	while (!_stub->_pi.quit) {

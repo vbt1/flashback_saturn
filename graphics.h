@@ -24,7 +24,7 @@
 struct Graphics {
 	static const int AREA_POINTS_SIZE = 256 * 2; // maxY * sizeof(Point) / sizeof(int16_t)
 	uint8_t *_layer;
-	int _layerPitch;
+//	int _layerPitch;
 	int16_t _areaPoints[AREA_POINTS_SIZE * 2];
 	int16_t _crx, _cry, _crw, _crh;
 	void setLayer(uint8_t *layer, int pitch);
