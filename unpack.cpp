@@ -7,16 +7,15 @@
 #include "unpack.h"
 #include "util.h"
 
-struct UnpackCtx {
-	int size, datasize;
+struct BytekillerCtx {
+	int size;
 	uint32_t crc;
-	uint32_t chk;
 	uint32_t bits;
 	uint8_t *dst;
 	const uint8_t *src;
 };
 
-static int nextBit(UnpackCtx *uc) {
+static int nextBit(BytekillerCtx *uc) {
 	int bit = (uc->bits & 1);
 	uc->bits >>= 1;
 	if (uc->bits == 0) { // getnextlwd
@@ -29,7 +28,7 @@ static int nextBit(UnpackCtx *uc) {
 }
 
 template<int count>
-static uint32_t getBits(UnpackCtx *uc) { // rdd1bits
+static uint32_t getBits(BytekillerCtx *uc) { // rdd1bits
 	uint32_t bits = 0;
 	for (int i = 0; i < count; ++i) {
 		bits = (bits << 1) | nextBit(uc);
@@ -37,7 +36,7 @@ static uint32_t getBits(UnpackCtx *uc) { // rdd1bits
 	return bits;
 }
 
-static void copyLiteral(UnpackCtx *uc, int len) { // getd3chr
+static void copyLiteral(BytekillerCtx *uc, int len) { // getd3chr
 	uc->size -= len;
 	if (uc->size < 0) {
 		len += uc->size;
@@ -48,7 +47,7 @@ static void copyLiteral(UnpackCtx *uc, int len) { // getd3chr
 	}
 }
 
-static void copyReference(UnpackCtx *uc, int len, int offset) { // copyd3bytes
+static void copyReference(BytekillerCtx *uc, int len, int offset) { // copyd3bytes
 	uc->size -= len;
 	if (uc->size < 0) {
 		len += uc->size;
@@ -59,93 +58,8 @@ static void copyReference(UnpackCtx *uc, int len, int offset) { // copyd3bytes
 	}
 }
 
-
-
-static int rcr(UnpackCtx *uc, int CF) {
-	int rCF = (uc->chk & 1);
-	uc->chk >>= 1;
-	if (CF) {
-		uc->chk |= 0x80000000;
-	}
-	return rCF;
-}
-
-static int next_chunk(UnpackCtx *uc) {
-	int CF = rcr(uc, 0);
-	if (uc->chk == 0) {
-		uc->chk = READ_BE_UINT32(uc->src); uc->src -= 4;
-		uc->crc ^= uc->chk;
-		CF = rcr(uc, 1);
-	}
-	return CF;
-}
-
-static uint16 get_code(UnpackCtx *uc, uint8 num_chunks) {
-	uint16 c = 0;
-	while (num_chunks--) {
-		c <<= 1;
-		if (next_chunk(uc)) {
-			c |= 1;
-		}
-	}
-	return c;
-}
-
-static void dec_unk1(UnpackCtx *uc, uint8 num_chunks, uint8 add_count) {
-	uint16 count = get_code(uc, num_chunks) + add_count + 1;
-	uc->datasize -= count;
-	while (count--) {
-		*uc->dst = (uint8)get_code(uc, 8);
-		--uc->dst;
-	}
-}
-
-static void dec_unk2(UnpackCtx *uc, uint8 num_chunks) {
-	uint16 i = get_code(uc, num_chunks);
-	uint16 count = uc->size + 1;
-	uc->datasize -= count;
-	while (count--) {
-		*uc->dst = *(uc->dst + i);
-		--uc->dst;
-	}
-}
-
-bool delphine_unpack(uint8 *dst, const uint8 *src, int len) {
-	UnpackCtx uc;
-	uc.src = src + len - 4;
-	uc.datasize = READ_BE_UINT32(uc.src); uc.src -= 4;
-	uc.dst = dst + uc.datasize - 1;
-	uc.size = 0;
-	uc.crc = READ_BE_UINT32(uc.src); uc.src -= 4;
-	uc.chk = READ_BE_UINT32(uc.src); uc.src -= 4;
-//	debug(DBG_UNPACK, "delphine_unpack() crc=0x%X datasize=0x%X", uc.crc, uc.datasize);
-	uc.crc ^= uc.chk;
-	do {
-		if (!next_chunk(&uc)) {
-			uc.size = 1;
-			if (!next_chunk(&uc)) {
-				dec_unk1(&uc, 3, 0);
-			} else {
-				dec_unk2(&uc, 8);
-			}
-		} else {
-			uint16 c = get_code(&uc, 2);
-			if (c == 3) {
-				dec_unk1(&uc, 8, 8);
-			} else if (c < 2) {
-				uc.size = c + 2;
-				dec_unk2(&uc, c + 9);
-			} else {
-				uc.size = get_code(&uc, 8);
-				dec_unk2(&uc, 12);
-			}
-		}
-	} while (uc.datasize > 0);
-	return uc.crc == 0;
-}
-
 bool bytekiller_unpack(uint8_t *dst, int dstSize, const uint8_t *src, int srcSize) {
-	UnpackCtx uc;
+	BytekillerCtx uc;
 	uc.src = src + srcSize - 4;
 	uc.size = READ_BE_UINT32(uc.src); uc.src -= 4;
 	if (uc.size > dstSize) {
@@ -186,3 +100,105 @@ bool bytekiller_unpack(uint8_t *dst, int dstSize, const uint8_t *src, int srcSiz
 	assert(uc.size == 0);
 	return uc.crc == 0;
 }
+
+struct bitstream_t {
+	uint16_t mask;
+	int size;
+	const uint8_t *src;
+};
+
+static uint8_t read_byte(struct bitstream_t *bs) {
+	const uint8_t b = *(bs->src);
+	++bs->src;
+	return b;
+}
+
+static void fill(struct bitstream_t *bs) {
+	if (bs->size < 9) {
+		const uint8_t b = read_byte(bs);
+		bs->mask |= b << (8 - bs->size);
+		bs->size += 8;
+	}
+}
+
+static int get_bit(struct bitstream_t *bs) {
+	fill(bs);
+	assert(bs->size > 0);
+	const int val = (bs->mask & 0x8000) != 0;
+	bs->mask <<= 1;
+	--bs->size;
+	return val;
+}
+
+static int get_bits(struct bitstream_t *bs, int count) {
+	if (count > bs->size) {
+		const int val = bs->mask >> (16 - bs->size);
+		count -= bs->size;
+		bs->size = 0;
+		bs->mask = 0;
+		fill(bs);
+		return (val << count) | get_bits(bs, count);
+	} else {
+		assert(count <= bs->size);
+		const int val = bs->mask >> (16 - count);
+		bs->mask <<= count;
+		bs->size -= count;
+		return val;
+	}
+}
+
+static uint8_t rol1(uint8_t r) {
+	return (r << 1) | (r >> 7);
+}
+
+struct UnpackCtx {
+	struct bitstream_t bs;
+	uint8_t *dst;
+	uint32_t dstSize, dstOffset;
+};
+
+static void outputb(UnpackCtx *ctx, uint8_t b) {
+	assert(ctx->dstOffset < ctx->dstSize);
+	ctx->dst[ctx->dstOffset++] = b;
+}
+
+static void outputs(UnpackCtx *ctx, int offset, int count) {
+	assert(ctx->dstOffset + count <= ctx->dstSize);
+	for (int i = 0; i < count; ++i) {
+		ctx->dst[ctx->dstOffset + i] = ctx->dst[ctx->dstOffset + offset + i];
+	}
+	ctx->dstOffset += count;
+}
+
+static int decode_bs(UnpackCtx *ctx, const uint8_t *src, int size) {
+	struct bitstream_t *bs = &ctx->bs;
+	bs->mask = 0;
+	bs->size = 0;
+	bs->src = src;
+
+	uint8_t key = read_byte(bs);
+	while (size != 0) {
+		if (get_bit(bs) == 0) {
+			const uint8_t val = get_bits(bs, 8);
+			outputb(ctx, val ^ key);
+			--size;
+			if (size == 0) {
+				break;
+			}
+			key = rol1(val);
+			continue;
+		}
+		int count = 1;
+		while (count <= 8 && get_bit(bs)) {
+			++count;
+		}
+		const int count2 = get_bits(bs, count) + 3;
+		const int offset = get_bits(bs, 13);
+		outputs(ctx, -offset - 1, count2);
+		size -= count2;
+	}
+	const int read = bs->src - src;
+	//printf("end %ld bytes, out %d\n", bs->src - src, _dstOffset);
+	return read;
+}
+

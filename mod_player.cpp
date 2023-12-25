@@ -29,6 +29,7 @@ extern "C"
 #include "file.h"
 #include "mixer.h"
 #include "mod_player.h"
+#include "util.h"
 
 volatile Uint8 slaveMixing;
 volatile Uint8 slaveProceed;
@@ -73,8 +74,9 @@ void ModPlayer::load(File *f) {
 	f->readByte(); // 0x7F
 	f->read(_modInfo.patternOrderTable, NUM_PATTERNS);
 	f->readUint32BE(); // 'M.K.', Protracker, 4 channels
+#define MIN(x,y) ((x)<(y)?(x):(y))
 
-	uint16 n = 0;
+	uint8_t n = 0;
 	for (int i = 0; i < NUM_PATTERNS; ++i) {
 		if (_modInfo.patternOrderTable[i] != 0) {
 			n = MAX(n, _modInfo.patternOrderTable[i]);

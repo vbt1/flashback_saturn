@@ -1,19 +1,7 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 extern "C"
 {
@@ -82,21 +70,6 @@ Video::~Video() {
 //	sat_free(_tempLayer2);
 //	sat_free(_screenBlocks);
 }
-/*
-void Video::markBlockAsDirty(int16 x, int16 y, uint16 w, uint16 h) {
-	//	debug(DBG_VIDEO, "Video::markBlockAsDirty1(%d, %d, %d, %d)", x, y, w, h);
-	assert(x >= 0 && x + w <= GAMESCREEN_W && y >= 0 && y + h <= GAMESCREEN_H);
-	int bx1 = x / SCREENBLOCK_W;
-	int by1 = y / SCREENBLOCK_H;
-	int bx2 = (x + w - 1) / SCREENBLOCK_W;
-	int by2 = (y + h - 1) / SCREENBLOCK_H;
-	assert(bx2 < GAMESCREEN_W / SCREENBLOCK_W && by2 < GAMESCREEN_H / SCREENBLOCK_H);
-	for (; by1 <= by2; ++by1) {
-		for (int i = bx1; i <= bx2; ++i) {
-			_screenBlocks[by1 * (GAMESCREEN_W / SCREENBLOCK_W) + i] = 2;
-		}
-	}
-}*/
 
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
 //	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)\n", x, y, w, h);
@@ -126,7 +99,7 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
-	_stub->updateScreen(0);
+//	_stub->updateScreen(0);
 	
 //		memset(_screenBlocks, 1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 //	_fullRefresh = false;

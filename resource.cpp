@@ -1,19 +1,7 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 extern "C"
 {
@@ -59,10 +47,11 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 Resource::~Resource() {
 	clearLevelRes();
-	MAC_unloadLevelData();	
+	MAC_unloadLevelData();
 	sat_free(_fnt);
 	sat_free(_icn);
 	sat_free(_tab);
+	sat_free(_spc);
 	sat_free(_spr1);
 	sat_free(_scratchBuffer);
 	sat_free(_cmd);
@@ -73,7 +62,7 @@ Resource::~Resource() {
 		sat_free(_sfxList[i].data);
 	}
 	sat_free(_sfxList);
-	sat_free(_voiceBuf);
+	sat_free(_bankData);
 	delete _aba;
 	delete _mac;
 }
@@ -134,8 +123,7 @@ void Resource::clearLevelRes() {
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
 	sat_free(_sgd); _sgd = 0;
-	sat_free(_bnq); _bnq = 0;	
-	sat_free(_spc); _spc = 0;
+	sat_free(_bnq); _bnq = 0;
 	sat_free(_ani); _ani = 0;
 	free_OBJ();
 }
@@ -1237,7 +1225,6 @@ void Resource::load_BNQ(File *f) {
 	}
 }
 
-
 void Resource::load_SPM(File *f) {
 	static const int kPersoDatSize = 178647;
 	const int len = f->size();
@@ -1359,7 +1346,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		return decodeResourceMacData(buf, false);
 	}
 }
-	
+
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
 //		emu_printf("findEntry        \n");	
@@ -1369,10 +1356,8 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
-		
 		emu_printf("Resource '%s' not found\n", name);
 	}
-
 	return data;
 }
 
@@ -1413,7 +1398,6 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 		ptr = basePtr + offset;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
-
 		switch (sig) {
 		case 0xC211:
 			decodeC211(ptr + 4, w, h, dst);
@@ -1445,7 +1429,7 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 		
 		_clut[i].r = ptr[0]; ptr += 2;
 		_clut[i].g = ptr[0]; ptr += 2;
-		_clut[i].b = ptr[0]; ptr += 2;	
+		_clut[i].b = ptr[0]; ptr += 2;
 			c.r = ((color & 0xF00) >> 6);
 			c.g = ((color & 0x0F0) >> 2) | t;
 			c.b = ((color & 0x00F) << 2) | t;		

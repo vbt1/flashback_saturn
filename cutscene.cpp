@@ -296,7 +296,7 @@ void Cutscene::op_markCurPos() {
 			_frameDelay = 6;
 		}
 	} else {
-		drawCreditsText(); // vbt à remettre
+		drawCreditsText();
 	}
 	updateScreen();
 	clearBackPage();

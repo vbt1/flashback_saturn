@@ -1,23 +1,11 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 
-#ifndef __INTERN_H__
-#define __INTERN_H__
+#ifndef INTERN_H__
+#define INTERN_H__
 #include "string.h"
 #include <cstdio>
 //#include <cstring>
@@ -46,12 +34,30 @@ inline void SWAP(T &a, T &b) {
 
 template<typename T>
 inline T CLIP(const T& val, const T& a, const T& b) {
-	if (val < a) {
+	if (val <= a) {
 		return a;
-	} else if (val > b) {
+	} else if (val >= b) {
 		return b;
 	}
 	return val;
+}
+
+#undef MIN
+template<typename T>
+inline T MIN(T v1, T v2) {
+	return (v1 < v2) ? v1 : v2;
+}
+
+#undef MAX
+template<typename T>
+inline T MAX(T v1, T v2) {
+	return (v1 > v2) ? v1 : v2;
+}
+
+#undef ABS
+template<typename T>
+inline T ABS(T t) {
+	return (t < 0) ? -t : t;
 }
 
 enum Language {
@@ -75,14 +81,14 @@ enum Skill {
 };
 
 struct Color {
-	uint8 r;
-	uint8 g;
-	uint8 b;
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
 };
 
 struct Point {
-	int16 x;
-	int16 y;
+	int16_t x;
+	int16_t y;
 };
 
 struct Demo {
@@ -95,7 +101,9 @@ struct Demo {
 struct Level {
 	const char *name;
 	const char *name2;
-	uint16 cutscene_id;
+	uint16_t cutscene_id;
+	uint8_t sound;
+	uint8_t track;
 };
 
 struct InitPGE {
@@ -146,18 +154,18 @@ struct MessagePGE {
 };
 
 struct Object {
-	uint16 type;
-	int8 dx;
-	int8 dy;
-	uint16 init_obj_type;
-	uint8 opcode2;
-	uint8 opcode1;
-	uint8 flags;
-	uint8 opcode3;
-	uint16 init_obj_number;
-	int16 opcode_arg1;
-	int16 opcode_arg2;
-	int16 opcode_arg3;
+	uint16_t type;
+	int8_t dx;
+	int8_t dy;
+	uint16_t init_obj_type;
+	uint8_t opcode2;
+	uint8_t opcode1;
+	uint8_t flags;
+	uint8_t opcode3;
+	uint16_t init_obj_number;
+	int16_t opcode_arg1;
+	int16_t opcode_arg2;
+	int16_t opcode_arg3;
 };
 
 struct ObjectNode {
@@ -168,8 +176,8 @@ struct ObjectNode {
 
 struct ObjectOpcodeArgs {
 	LivePGE *pge; // arg0
-	int16 a; // arg2
-	int16 b; // arg4
+	int16_t a; // arg2
+	int16_t b; // arg4
 };
 
 struct AnimBufferState {
@@ -181,16 +189,16 @@ struct AnimBufferState {
 
 struct AnimBuffers {
 	AnimBufferState *_states[4];
-	uint8 _curPos[4];
+	uint8_t _curPos[4];
 
 	void addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w = 0, uint8_t h = 0);
 };
 
 struct CollisionSlot {
-	int16 ct_pos;
+	int16_t ct_pos;
 	CollisionSlot *prev_slot;
 	LivePGE *live_pge;
-	uint16 index;
+	uint16_t index;
 };
 
 struct MbkEntry {
@@ -199,19 +207,19 @@ struct MbkEntry {
 };
 
 struct BankSlot {
-	uint16 entryNum;
-	uint8 *ptr;
+	uint16_t entryNum;
+	uint8_t *ptr;
 };
 
 struct CollisionSlot2 {
 	CollisionSlot2 *next_slot;
-	int8 *unk2;
-	uint8 data_size;
-	uint8 data_buf[0x10]; // XXX check size
+	int8_t *unk2; // grid_data_pos
+	uint8_t data_size;
+	uint8_t data_buf[0x10]; // <= InitPGE.collision_data_len
 };
 
 struct InventoryItem {
-	uint8 icon_num;
+	uint8_t icon_num;
 	InitPGE *init_pge;
 	LivePGE *live_pge;
 };
@@ -224,4 +232,4 @@ struct SoundFx {
 	int8_t peak;
 };
 
-#endif // __INTERN_H__
+#endif // INTERN_H__
