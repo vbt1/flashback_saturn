@@ -69,6 +69,7 @@ void ResourceMac::load() {
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
+//emu_printf("ResourceMac::loadResourceFork\n");	
 	_f.seek(resourceOffset);
 	_dataOffset = resourceOffset + _f.readUint32BE();
 	uint32_t mapOffset = resourceOffset + _f.readUint32BE();
@@ -80,7 +81,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	_map.typesCount = _f.readUint16BE() + 1;
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
-	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));
+	_types = (ResourceMacType *)std_calloc(_map.typesCount, sizeof(ResourceMacType));
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
 		_types[i].count = _f.readUint16BE() + 1;
@@ -89,10 +90,10 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 			_sndIndex = i;
 		}
 	}
-	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *));
+	_entries = (ResourceMacEntry **)std_calloc(_map.typesCount, sizeof(ResourceMacEntry *));
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
-		_entries[i] = (ResourceMacEntry *)sat_calloc(_types[i].count, sizeof(ResourceMacEntry));
+		_entries[i] = (ResourceMacEntry *)std_calloc(_types[i].count, sizeof(ResourceMacEntry));
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();
 			_entries[i][j].nameOffset = _f.readUint16BE();
@@ -114,6 +115,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {
+emu_printf("ResourceMacEntry *ResourceMac::findEntry\n");	
 	for (int type = 0; type < _map.typesCount; ++type) {
 		for (int i = 0; i < _types[type].count; ++i) {
 			if (strcmp(name, _entries[type][i].name) == 0) {

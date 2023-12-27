@@ -90,7 +90,7 @@ void Game::run() {
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 
 	_randSeed = time(0);
-	_res.init();   // vbt : ajout pour la partie mac	
+	_res.init();   // vbt : ajout pour la partie mac
 	_res.load_TEXT();
 
 	switch (_res._type) {
@@ -105,6 +105,7 @@ void Game::run() {
 
 
 #ifndef BYPASS_PROTECTION
+emu_printf("handleProtectionScreen\n");
 	while (!handleProtectionScreen());
 	if (_stub->_pi.quit) {
 		return;
@@ -113,8 +114,10 @@ void Game::run() {
 	_mix.init();
 
 	if (_res.isMac()) {
+emu_printf("displayTitleScreenMac 1\n");		
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
+emu_printf("displayTitleScreenMac 2\n");			
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
@@ -244,6 +247,7 @@ void Game::displayTitleScreenMac(int num) {
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
+emu_printf("Video::MAC_setPixel\n");
 	buf.setPixel = Video::MAC_setPixel;
 	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 	
@@ -857,7 +861,7 @@ _vid._w=512;
 			col.g -= COLOR_STEP;
 		}
 		_stub->setPaletteEntry(0xE4, &col);
-		//_stub->processEvents();
+		_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
 
@@ -1183,7 +1187,9 @@ void Game::drawAnims() {
 
 void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 //	emu_printf("Game::drawAnimBuffer() state=%d\n", stateNum);
-	assert(stateNum < 4);
+//	assert(stateNum < 4);
+	if(stateNum >= 4)
+		return;
 	_animBuffers._states[stateNum] = state;
 	uint8_t lastPos = _animBuffers._curPos[stateNum];
 	if (lastPos != 0xFF) {

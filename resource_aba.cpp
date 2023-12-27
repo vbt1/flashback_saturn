@@ -6,6 +6,7 @@ extern "C" {
 #include "resource_aba.h"
 #include "unpack.h"
 #include "util.h"
+#include "saturn_print.h"
 
 int	 strcasecmp(const char *, const char *) __pure;
 char *_dataPath = "";	
@@ -77,6 +78,8 @@ uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 			*size = e->size;
 		}
 		uint8_t *tmp = (uint8_t *)sat_malloc(e->compressedSize);
+emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);			
+
 		if (!tmp) {
 			error("Failed to allocate %d bytes", e->compressedSize);
 			return 0;
@@ -96,6 +99,7 @@ uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 			if (!ret) {
 				error("Bad CRC for '%s'", name);
 			}
+emu_printf("ResourceAba::loadEntry: sat_free  %p\n",tmp);			
 			sat_free(tmp);
 		}
 	}

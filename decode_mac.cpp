@@ -10,21 +10,31 @@ extern "C" {
 #include "sat_mem_checker.h"
 }
 
-uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
+uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 
 	decodedSize = f.readUint32BE();
-	uint8_t *dst = (uint8_t *)sat_malloc(decodedSize);
+	uint8_t *dst;
+	if(strcmp("Font", name) == 0)
+	{
+		emu_printf("gros con1 %s in HWRAM\n", name);
+		dst = (uint8_t *)std_malloc(decodedSize);
+	}
+	else
+	{
+		dst = (uint8_t *)sat_malloc(decodedSize);
+	}
 	if (!dst) {
 		emu_printf("Failed to allocate %d bytes for LZSS in LWRAM\n", decodedSize);
-//		dst = (uint8_t *)malloc(decodedSize);
+		dst = (uint8_t *)0x25C08000;
 //		if (!dst) {
 			
 //			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
-			dst = (uint8_t *)0x25C04000;
-//			return 0;
+//			dst = (uint8_t *)0x25C04000;
+			return 0;
 //		}
 		
 	}
+
 	uint32_t count = 0;
 	while (count < decodedSize) {
 		const int code = f.readByte();
@@ -42,7 +52,12 @@ uint8_t *decodeLzss(File &f, uint32_t &decodedSize) {
 			}
 		}
 	}
-	assert(count == decodedSize);  // vbt ne pas toucher
+	if(count != decodedSize)  // vbt ne pas toucher
+	{
+		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);
+		return dst;		
+	}
+	emu_printf("end decodeLzss\n");	
 	return dst;
 }
 
@@ -126,7 +141,9 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 		if ((code & 0x40) == 0) {
 			if ((code & 0x20) == 0) {
 				if (count == 1) {
-					assert(sp > 0);
+//					assert(sp > 0);
+					if(sp <= 0)
+						break;
 					--stack[sp - 1].repeatCount;
 					if (stack[sp - 1].repeatCount >= 0) {
 						src = stack[sp - 1].ptr;
@@ -134,7 +151,9 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 						--sp;
 					}
 				} else {
-					assert(sp < ARRAYSIZE(stack));
+//					assert(sp < ARRAYSIZE(stack));
+					if(sp >= ARRAYSIZE(stack))
+						break;
 					stack[sp].ptr = src;
 					stack[sp].repeatCount = count - 1;
 					++sp;

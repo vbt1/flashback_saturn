@@ -117,7 +117,7 @@ extern void emu_printf(const char *format, ...);
 
 void emu_printf(const char *format, ...)
 {
-   static char emu_printf_buffer[256];
+   static char emu_printf_buffer[128];
    char *s = emu_printf_buffer;
    volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);
    va_list args;

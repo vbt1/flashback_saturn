@@ -247,7 +247,9 @@ void Cutscene::drawCreditsText() {
 			++_textCurPtr;
 			code = *_textCurPtr++;
 			_creditsTextLen -= 2;
-			assert(code > 0x30);
+//			assert(code > 0x30);
+			if(code <= 0x30)
+				return;
 			for (int i = 0; i < (code - 0x30); ++i) {
 				*_textCurBuf++ = ' ';
 			}

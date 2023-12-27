@@ -91,7 +91,7 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 }
 
 void Menu::loadPicture(const char *prefix) {
-//	debug(DBG_MENU, "Menu::loadPicture('%s')", prefix);
+	emu_printf( "Menu::loadPicture('%s')\n", prefix);
 	static const int kPictureW = 256;
 	static const int kPictureH = 224;
 	_res->load_MAP_menu(prefix, _res->_scratchBuffer);

@@ -20,6 +20,7 @@ extern "C" {
 #include "gfs_wrap.h"
 }
 #include "file.h"
+#include "saturn_print.h"
 
 struct File_impl {
 	bool _ioErr;
@@ -59,6 +60,7 @@ struct stdFile : File_impl {
 		}
 	}
 	void read(void *ptr, uint32_t len) {
+		
 		if (_fp) {
 			uint32_t r = sat_fread(ptr, 1, len, _fp);
 			if (r != len) {
@@ -122,6 +124,7 @@ void File::seek(int32_t off) {
 }
 
 void File::read(void *ptr, uint32_t len) {
+//emu_printf("File::read\n");		
 	_impl->read(ptr, len);
 }
 

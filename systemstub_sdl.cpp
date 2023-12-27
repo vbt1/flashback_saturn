@@ -405,13 +405,13 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 }
 
 void *SystemStub_SDL::createMutex() {
-	SatMutex *mtx = (SatMutex*)sat_malloc(sizeof(SatMutex));
+	SatMutex *mtx = (SatMutex*)std_malloc(sizeof(SatMutex));
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
 	return mtx;
 }
 
 void SystemStub_SDL::destroyMutex(void *mutex) {
-	sat_free(mutex);
+	std_free(mutex);
 	return;
 }
 
@@ -537,7 +537,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 	drv_size = sat_ftell(drv_file);
 	sat_fseek(drv_file, 0, SEEK_SET);
 
-#define	SDDRV_ADDR	0x6080000
+#define	SDDRV_ADDR	0x60A0000
 
 //	sddrvstsk = (uint8*)sat_malloc(drv_size);
 	sddrvstsk = (uint8*)SDDRV_ADDR;

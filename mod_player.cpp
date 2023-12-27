@@ -84,6 +84,7 @@ void ModPlayer::load(File *f) {
 	}
 	//debug(DBG_MOD, "numPatterns=%d",n + 1);
 	n = (n + 1) * 64 * 4 * 4; // 64 lines of 4 notes per channel
+emu_printf("sat_malloc in ModPlayer::load %d ",n);	
 	_modInfo.patternsTable = (uint8 *)sat_malloc(n);
 	assert(_modInfo.patternsTable);
 	f->read(_modInfo.patternsTable, n);

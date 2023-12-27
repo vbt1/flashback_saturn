@@ -41,7 +41,7 @@ int sat_ferror(GFS_FILE *stream);
 
 long sat_fsize(GFS_FILE *stream);
 
-char *sat_match(const char *path);
+//char *sat_match(const char *path);
 
 #endif
 

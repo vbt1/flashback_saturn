@@ -208,13 +208,16 @@ GFS_FILE *sat_fopen(const char *path) {
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 		
 		// Encapsulate the file data
-emu_printf("sat_malloc in sat_fopen %s ",path_token);			
+//emu_printf("sat_malloc in sat_fopen %s ",path_token);			
 		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
-emu_printf("%p ***\n",fp);		
-		if (fp == NULL) {return NULL;}
+//emu_printf("%p ***\n",fp);		
+		if (fp == NULL) {
+//			emu_printf("fp == NULL\n");
+			return NULL;}
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
-//slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));			
+//slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));	
+//					emu_printf("GFS_GetFileInfo\n");
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 //slPrint((char *)"            ",slLocate(10,13));					
 //slPrintHex(fsize,slLocate(10,13));					
@@ -223,7 +226,7 @@ emu_printf("%p ***\n",fp);
 
 		if((current_cached != fp->file_hash) && (fp->f_size < CACHE_SIZE)) {
 			current_cached = fp->file_hash;
-			
+//					emu_printf("GFS_Seek1\n");			
 			Sint32 tot_sectors;
 			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 			tot_sectors = GFS_ByteToSct(fp->fid, fp->f_size);
@@ -231,13 +234,11 @@ emu_printf("%p ***\n",fp);
 
 			fully_cached = 1;
 			cache_offset = 0;
-//slPrint((char *)"GFS_Fread1     ",slLocate(10,12));			
-
+//					emu_printf("GFS_Fread1\n");
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
-//slPrint((char *)"GFS_Fread1 done    ",slLocate(10,12));						
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
-			
+//					emu_printf("GFS_Seek2\n");			
 			Sint32 tot_sectors;
 			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 			tot_sectors = GFS_ByteToSct(fp->fid, CACHE_SIZE);
@@ -245,18 +246,16 @@ emu_printf("%p ***\n",fp);
 
 			fully_cached = 0;
 			cache_offset = 0;
-//slPrint((char *)"GFS_Fread2     ",slLocate(10,12));	
+//					emu_printf("GFS_Fread2\n");	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
-//slPrint((char *)"GFS_Fread2 done    ",slLocate(10,12));					
 		}
 	}
 
 	// Now... get back to the roots!
 	//back_to_root();
-//slPrint((char *)"return fp     ",slLocate(10,12));
 	return fp;
 }
-#if 0
+/*
 #define MATCH_SIZE 32
 char *sat_match(const char *path) {
 	memset(satpath, 0, 25);
@@ -298,7 +297,7 @@ char *sat_match(const char *path) {
 	for (idx = 0; idx < strlen(satpath); idx++)
 		satpath[idx] = toupper(satpath[idx]);
 
-	/* We now have the number of entries: N-1 are dirs, the last is the file */
+	// We now have the number of entries: N-1 are dirs, the last is the file 
 
 	// Now, crawl through the dir path
 	Sint32 ret = 0;
@@ -340,10 +339,10 @@ char *sat_match(const char *path) {
 		return NULL;
 	}
 }
-#endif
+*/
 
 int sat_fclose(GFS_FILE* fp) {
-emu_printf("sat_free in sat_fclose\n");	
+//emu_printf("sat_free in sat_fclose\n");	
 	GFS_Close(fp->fid);
 	sat_free(fp);
 
@@ -441,11 +440,12 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-		read_buffer = (Uint8*)sat_malloc(tot_bytes);
 		
+		read_buffer = (Uint8*)sat_malloc(tot_bytes);
+//emu_printf("sat_malloc in sat_fread %p %d\n",read_buffer,tot_bytes);		
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
-
+//emu_printf("sat_free in sat_fread %p\n",read_buffer);
 		sat_free(read_buffer);
 	} else {
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
@@ -455,7 +455,7 @@ partial_cache:
 
 	return (readBytes - skip_bytes);
 }
-
+/*
 char *sat_fgets(char *s, int size, GFS_FILE *stream) {
 	if(s == NULL || stream == NULL) return NULL;
 
@@ -486,7 +486,7 @@ char *sat_fgets(char *s, int size, GFS_FILE *stream) {
 
 	return s;
 }
-
+*/
 int sat_feof(GFS_FILE *stream) {
 	if((stream->f_size - 1) <= stream->f_seek_pos) return 1;
 	else return 0;

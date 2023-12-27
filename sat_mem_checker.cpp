@@ -10,9 +10,19 @@ extern "C" {
 #include <sega_sys.h>
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
+typedef double MemAlign;                        /* 64ビットのアライメント    */
+union mem_head {                                /* セルのヘッダ              */
+    struct {
+        union mem_head *next;                   /* 次のセルポインタ          */
+        unsigned size;                          /* セルのサイズ              */
+    }s;
+    MemAlign damy;
+};
 
+typedef union mem_head MemHead;                 /* セルヘッダデータ型        */
 void	*malloc(size_t);
 void	free (void *) ;
+extern MemHead *MEM_empty_top;
 }
 #include "saturn_print.h"
 
@@ -32,7 +42,7 @@ void *sat_calloc(size_t nmemb, size_t size) {
 //		while(1) slSynch();
 	}
 //	int *val = (int *)mem;	
-//		emu_printf("CALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
+	emu_printf("CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 }
 
@@ -46,11 +56,24 @@ void *sat_malloc(size_t size) {
 	if (mem == NULL) {
 		emu_printf("MEM_MALLOC: size: %u - FAILED\n", size);
 		
-		mem = (void*)malloc(size);
+
+
+		mem = (uint8_t *)0x25C04000;
+//		mem = (void*)malloc(size);;
+//		if (!dst) {
+			
+//			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
+//			dst = (uint8_t *)0x25C04000;
+
+//		}
+	
+		
+/*		
+		mem = (void*)std_malloc(size);
 		
 		if (mem == NULL) {
 			emu_printf("STD_MALLOC: size: %u - FAILED\n", size);		
-		}
+		}*/
 	}
 //	else
 //emu_printf("MALLOC success\n");			
@@ -64,10 +87,11 @@ void *sat_malloc(size_t size) {
 }
 
 void sat_free(void *ptr) {
-
+	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);
+	
 	if(ptr == NULL) return;
 
-	emu_printf("FREE: addr: %p\n", ptr);		
+		
 #define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)		
 	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
@@ -80,7 +104,7 @@ void sat_free(void *ptr) {
 	
 	ptr = NULL;
 //	free(ptr);
-	
+//	emu_printf("AFTER FREE: addr: %p %p\n", ptr,MEM_empty_top);	
 	return;
 }
 
@@ -97,11 +121,59 @@ void *sat_realloc(void *ptr, size_t size) {
 	if (mem == NULL) {
 		emu_printf("REALLOC: ptr: %.8X, size: %u - FAILED\n", ptr, size);
 	}
-	int *val = (int *)mem;	
-		emu_printf("REALLOC: addr: %08x, size: %u - end %08x\n", (int)val, size,((int)val)+size);
+//	int *val = (int *)mem;	
+		emu_printf("REALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 
 }
+
+void *std_malloc(size_t size) {
+	void *mem = NULL;
+	mem = (void*)malloc(size);
+
+	//fprintf_saturn(stdout, "MALLOC: all: %u bytes - 0x%.8X\n", size, mem);
+
+	if (mem == NULL) {
+		emu_printf("STD_MALLOC: size: %u - FAILED\n", size);
+	}
+//	else
+//emu_printf("MALLOC success\n");			
+
+//	int *val = (int *)mem;	
+	emu_printf("STD_MALLOC: addr: %p, size: %u \n", mem, size);
+	
+//slPrintHex((int)val,slLocate(10,15));
+
+	return (void*)mem;
+}
+
+void std_free(void *ptr) {
+	emu_printf("STD_FREE: addr: %p\n", ptr);
+	if(ptr == NULL) return;
+
+	free(ptr);
+	
+	ptr = NULL;
+	
+	return;
+}
+
+void *std_calloc(size_t nmemb, size_t size) {
+	void *mem = NULL;
+
+	mem = (void*)calloc(nmemb, size);
+
+	//fprintf_saturn(stdout, "CALLOC: all: %u bytes - 0x%.8X", nmemb * size, mem);
+
+	if (mem == NULL) {
+		emu_printf("STD_CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
+//		while(1) slSynch();
+	}
+//	int *val = (int *)mem;	
+//	emu_printf("STD_CALLOC: addr: %p, size: %u\n", mem, size);
+	return (void*)mem;
+}
+
 /*
 char *sat_strdup(const char *s) {
 	char *mem = NULL;

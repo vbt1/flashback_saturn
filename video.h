@@ -53,7 +53,7 @@ struct Video {
 	int _w, _h;
 //	int _layerSize;
 	int _layerScale; // 1 for Amiga/PC, 2 for Macintosh
-	uint8_t _frontLayer[GAMESCREEN_W * GAMESCREEN_H*4];
+	uint8_t *_frontLayer;//[GAMESCREEN_W * GAMESCREEN_H*4];
 //	uint8_t _backLayer[GAMESCREEN_W * GAMESCREEN_H*2];
 	uint8_t *_backLayer, *_txt1Layer, *_txt2Layer;
 //	uint8_t _tempLayer[GAMESCREEN_W * GAMESCREEN_H];
@@ -63,7 +63,7 @@ struct Video {
 	uint8_t _charFrontColor;
 	uint8_t _charTransparentColor;
 	uint8_t _charShadowColor;
-	uint8_t _screenBlocks[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
+	uint8_t *_screenBlocks; //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
 	bool _fullRefresh;
 //	uint8_t _shakeOffset;
 	drawCharFunc _drawChar;

@@ -28,7 +28,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
-	//_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
+	_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H*4);
 		emu_printf("Video::Video %d %d %p\n",_w,_h,_frontLayer);	
 	memset(_frontLayer, 0, _w * _h);
 	//_backLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
@@ -42,6 +42,7 @@ Video::Video(Resource *res, SystemStub *stub)
 //	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 //	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
+	_screenBlocks = (uint8 *)std_malloc((_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H)); //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	
 	_fullRefresh = true;
@@ -56,8 +57,6 @@ Video::Video(Resource *res, SystemStub *stub)
 		break;
 	case kResourceTypeMac:
 		_drawChar = &Video::MAC_drawStringChar;
-		
-//	emu_printf("VBT VBT MAC_drawStringChar init \n");		
 		break;
 	}
 
@@ -466,7 +465,9 @@ void Video::drawChar(uint8 c, int16 y, int16 x) {
 
 void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
 	dst += y * pitch + x;
-	assert(chr >= 32);
+//	assert(chr >= 32);
+	if(chr < 32)
+		return;
 	src += (chr - 32) * 8 * 4;
 	for (int y = 0; y < 8; ++y) {
 		for (int x = 0; x < 4; ++x) {
