@@ -1393,7 +1393,7 @@ emu_printf("decodeLzss %d\n",_resourceMacDataSize);
 		}
 	} else {
 		
-		if(strcmp("Flashback colors", entry->name) == 0)
+		if(strcmp("Flashback colors", entry->name) == 0 || strncmp("Title", entry->name, 5) == 0)
 		{
 			emu_printf("gros con2 %s in HWRAM\n", entry->name);
 			data = (uint8_t *)std_malloc(_resourceMacDataSize);
@@ -1406,6 +1406,7 @@ emu_printf("decodeLzss %d\n",_resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
+//			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
@@ -1471,14 +1472,14 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 }
 
 void Resource::MAC_loadClutData() {
-emu_printf("MAC_loadClutData\n");		
+//emu_printf("MAC_loadClutData\n");		
 	uint8_t *ptr = decodeResourceMacData("Flashback colors", false);
 	MAC_decodeDataCLUT(ptr);
 	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
-emu_printf("MAC_loadFontData\n");	
+//emu_printf("MAC_loadFontData\n");	
 	_fnt = decodeResourceMacData("Font", true);
 }
 

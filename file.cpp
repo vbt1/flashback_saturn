@@ -60,7 +60,6 @@ struct stdFile : File_impl {
 		}
 	}
 	void read(void *ptr, uint32_t len) {
-		
 		if (_fp) {
 			uint32_t r = sat_fread(ptr, 1, len, _fp);
 			if (r != len) {

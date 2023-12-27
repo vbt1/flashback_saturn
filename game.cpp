@@ -90,6 +90,7 @@ void Game::run() {
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 
 	_randSeed = time(0);
+	_mix.init();  // vbt : evite de fragmenter la ram	
 	_res.init();   // vbt : ajout pour la partie mac
 	_res.load_TEXT();
 
@@ -111,7 +112,6 @@ emu_printf("handleProtectionScreen\n");
 		return;
 	}
 #endif
-	_mix.init();
 
 	if (_res.isMac()) {
 emu_printf("displayTitleScreenMac 1\n");		
@@ -247,7 +247,7 @@ void Game::displayTitleScreenMac(int num) {
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
-emu_printf("Video::MAC_setPixel\n");
+
 	buf.setPixel = Video::MAC_setPixel;
 	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 	
