@@ -10,47 +10,20 @@ extern "C" {
 #include "sat_mem_checker.h"
 }
 
-uint8_t *decodeLzss(File &f,const char *name, const uint8_t *dataPtr, uint32_t &decodedSize) {
+uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
-// icon à passer en hwram	
+
 	if(strcmp("Person", name) == 0)
 	{
 		dst = (uint8_t *)sat_malloc(decodedSize);
 	}
-	else if(strcmp("Font", name) == 0 || strncmp("Level", name, 5) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("debut", name, 5) == 0 || strcmp("Icons", name) == 0  || strcmp("Objects 1", name) == 0)
+	else /*if(strcmp("Font", name) == 0 || strncmp("Level", name, 5) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("over", name, 4) == 0 || strncmp("score", name, 5) == 0 || strncmp("debut", name, 5) == 0 || strncmp("chute", name, 5) == 0 || strcmp("Icons", name) == 0  || strncmp("Objects", name,7) == 0)*/
 	{
 		dst = (uint8_t *)std_malloc(decodedSize);
+	}
 
-		
-	}
-	else
-	{
-emu_printf("_scratchBuffer lzss %d + 0x12C00\n", decodedSize);		
-		dst = (uint8_t *)dataPtr;
-	}
-		/*
-	if(strcmp("Font", name) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("Level", name, 5) == 0 || strncmp("debut", name, 5) == 0)
-	{
-		dst = (uint8_t *)std_malloc(decodedSize);
-	}
-	else
-	{
-		dst = (uint8_t *)sat_malloc(decodedSize);
-	}
-	if (!dst) {
-		emu_printf("Failed to allocate %d bytes for LZSS in LWRAM\n", decodedSize);
-		dst = (uint8_t *)0x25C08000;
-//		if (!dst) {
-			
-//			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
-//			dst = (uint8_t *)0x25C04000;
-			return 0;
-//		}
-		
-	}
-*/
 	uint32_t count = 0;
 	while (count < decodedSize) {
 		const int code = f.readByte();

@@ -1386,7 +1386,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	uint8_t *data = 0;
 	if (decompressLzss) {
 emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);		
-		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
+		data = decodeLzss(_mac->_f, entry->name, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}
@@ -1394,7 +1394,6 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 
 		if(strcmp("Flashback strings", entry->name) == 0)
 		{
-emu_printf("vbt Flashback strings!!!!\n");			
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 //			data = (uint8_t *)_scratchBuffer+0x12C00;
 		}
@@ -1402,7 +1401,7 @@ emu_printf("vbt Flashback strings!!!!\n");
 //		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
-emu_printf("_scratchBuffer %d\n", _resourceMacDataSize);	
+emu_printf("_scratchBuffer %d %s\n", _resourceMacDataSize, entry->name);	
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
 		else
@@ -1417,7 +1416,7 @@ emu_printf("_scratchBuffer %d\n", _resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
-emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
+//emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
 	return data;
 }
 

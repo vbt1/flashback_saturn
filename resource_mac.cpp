@@ -115,7 +115,7 @@ emu_printf("ResourceMac::loadResourceFork\n");
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {
-emu_printf("ResourceMacEntry *ResourceMac::findEntry\n");	
+//emu_printf("ResourceMacEntry *ResourceMac::findEntry\n");	
 	for (int type = 0; type < _map.typesCount; ++type) {
 		for (int i = 0; i < _types[type].count; ++i) {
 			if (strcmp(name, _entries[type][i].name) == 0) {

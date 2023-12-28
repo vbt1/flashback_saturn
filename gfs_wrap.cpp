@@ -442,7 +442,7 @@ partial_cache:
 	if(skip_bytes) {
 		read_buffer = (Uint8*)0x25C08000; //sat_malloc(tot_bytes);
 
-emu_printf("sat_malloc in sat_fread %p %d\n",read_buffer,tot_bytes);		
+//emu_printf("sat_malloc in sat_fread %p %d\n",read_buffer,tot_bytes);		
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 //		sat_free(read_buffer);
