@@ -32,13 +32,13 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
-//emu_printf("sat_malloc kScratchBufferSize: %d\n",kScratchBufferSize);	
+emu_printf("sat_malloc kScratchBufferSize: %d\n",kScratchBufferSize);	
 	_scratchBuffer = (uint8_t *)std_malloc(kScratchBufferSize);
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
 	static const int kBankDataSize = 0x7000;
-//emu_printf("sat_malloc _bankData: %d\n",kBankDataSize);	
+emu_printf("sat_malloc _bankData: %d\n",kBankDataSize);	
 	_bankData = (uint8_t *)std_malloc(kBankDataSize);
 	if (!_bankData) {
 		error("Unable to allocate bank data buffer");
@@ -62,9 +62,9 @@ Resource::~Resource() {
 	sat_free(_cine_off);
 	sat_free(_cine_txt);
 	for (int i = 0; i < _numSfx; ++i) {
-		sat_free(_sfxList[i].data);
+		std_free(_sfxList[i].data);
 	}
-	sat_free(_sfxList);
+	std_free(_sfxList);
 	sat_free(_bankData);
 	delete _aba;
 	delete _mac;
@@ -164,7 +164,7 @@ void Resource::load_FIB(const char *fileName) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
 		_numSfx = f.readUint16LE();
-		_sfxList = (SoundFx *)sat_malloc(_numSfx * sizeof(SoundFx));
+		_sfxList = (SoundFx *)std_malloc(_numSfx * sizeof(SoundFx));
 		if (!_sfxList) {
 			error("Unable to allocate SoundFx table");
 		}
@@ -213,7 +213,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 	static const int kMenuMapSize = 0x3800 * 4;
 	snprintf(_entryName, sizeof(_entryName), "%s.MAP", fileName);
 	File f;
-			emu_printf("%s\n",_entryName);		
+//			emu_printf("%s\n",_entryName);		
 	if (f.open(_entryName, _dataPath, "rb")) {
 		f.read(dstPtr, kMenuMapSize);
 //		if (f.read(dstPtr, kMenuMapSize) != kMenuMapSize) {
@@ -1156,9 +1156,9 @@ static void normalizeSPL(SoundFx *sfx) {
 
 void Resource::load_SPL(File *f) {
 	for (int i = 0; i < _numSfx; ++i) {
-		sat_free(_sfxList[i].data);
+		std_free(_sfxList[i].data);
 	}
-	sat_free(_sfxList);
+	std_free(_sfxList);
 	_numSfx = NUM_SFXS;
 	_sfxList = (SoundFx *)std_calloc(_numSfx, sizeof(SoundFx));
 	if (!_sfxList) {
@@ -1366,7 +1366,6 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
 		emu_printf("decodeResourceMacData 1       \n");	
-		emu_printf("findEntry 1       \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
 		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
@@ -1386,17 +1385,25 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 	uint8_t *data = 0;
 	if (decompressLzss) {
-emu_printf("decodeLzss %d\n",_resourceMacDataSize);		
-		data = decodeLzss(_mac->_f, entry->name, _resourceMacDataSize);
+emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);		
+		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}
 	} else {
-		
-		if(strcmp("Flashback colors", entry->name) == 0 || strncmp("Title", entry->name, 5) == 0)
+
+		if(strcmp("Flashback strings", entry->name) == 0)
 		{
-			emu_printf("gros con2 %s in HWRAM\n", entry->name);
-			data = (uint8_t *)std_malloc(_resourceMacDataSize);
+emu_printf("vbt Flashback strings!!!!\n");			
+			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+//			data = (uint8_t *)_scratchBuffer+0x12C00;
+		}
+		else if(strcmp("Flashback colors", entry->name) == 0 || strcmp("Flashback colors", entry->name) == 0 || strncmp("Title", entry->name, 5) == 0  || strncmp("intro", entry->name, 5) == 0 || strncmp("Movie", entry->name, 5) == 0 || strncmp("logo", entry->name, 4)
+//		|| strcmp("Flashback strings", entry->name) == 0
+		)
+		{
+emu_printf("_scratchBuffer %d\n", _resourceMacDataSize);	
+			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
 		else
 		{
@@ -1410,7 +1417,7 @@ emu_printf("decodeLzss %d\n",_resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
-emu_printf("end Resource::decodeResourceMacData\n");	
+emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
 	return data;
 }
 
@@ -1475,7 +1482,7 @@ void Resource::MAC_loadClutData() {
 //emu_printf("MAC_loadClutData\n");		
 	uint8_t *ptr = decodeResourceMacData("Flashback colors", false);
 	MAC_decodeDataCLUT(ptr);
-	sat_free(ptr);
+//	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
@@ -1484,12 +1491,12 @@ void Resource::MAC_loadFontData() {
 }
 
 void Resource::MAC_loadIconData() {
-emu_printf("MAC_loadIconData\n");			
+//emu_printf("MAC_loadIconData\n");			
 	_icn = decodeResourceMacData("Icons", true);
 }
 
 void Resource::MAC_loadPersoData() {
-emu_printf("MAC_loadPersoData\n");				
+//emu_printf("MAC_loadPersoData\n");				
 	_perso = decodeResourceMacData("Person", true);
 }
 
@@ -1519,15 +1526,12 @@ emu_printf("MAC_loadMonsterData\n");
 }
 
 void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
-emu_printf("MAC_loadTitleImage\n");	
+//emu_printf("MAC_loadTitleImage\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Title %d", i);
 	
-		emu_printf("%s\n",name);
-		emu_printf("decodeResourceMacData 0       \n");			
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
-		emu_printf("MAC_decodeImageData        \n");		
 		MAC_decodeImageData(ptr, 0, buf);
 		sat_free(ptr);
 	}
@@ -1672,7 +1676,7 @@ static void stringLowerCase(char *p) {
 }
 
 void Resource::MAC_unloadCutscene() {
-	emu_printf("MAC_unloadCutscene\n");	
+//	emu_printf("MAC_unloadCutscene\n");	
 	sat_free(_cmd);
 	_cmd = 0;
 	sat_free(_pol);
@@ -1680,7 +1684,7 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-	emu_printf("MAC_loadCutscene\n");
+//	emu_printf("MAC_loadCutscene\n");
 	MAC_unloadCutscene();
 	char name[32];
 

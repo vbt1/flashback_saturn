@@ -69,7 +69,7 @@ void ResourceMac::load() {
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
-//emu_printf("ResourceMac::loadResourceFork\n");	
+emu_printf("ResourceMac::loadResourceFork\n");	
 	_f.seek(resourceOffset);
 	_dataOffset = resourceOffset + _f.readUint32BE();
 	uint32_t mapOffset = resourceOffset + _f.readUint32BE();

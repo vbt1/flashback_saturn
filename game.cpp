@@ -114,10 +114,8 @@ emu_printf("handleProtectionScreen\n");
 #endif
 
 	if (_res.isMac()) {
-emu_printf("displayTitleScreenMac 1\n");		
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
-emu_printf("displayTitleScreenMac 2\n");			
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
@@ -139,8 +137,11 @@ emu_printf("displayTitleScreenMac 2\n");
 		_res.load_FIB("GLOBAL");
 		break;
 	case kResourceTypeMac:
+emu_printf("MAC_loadIconData\n");
 		_res.MAC_loadIconData();
+emu_printf("MAC_loadPersoData\n");
 		_res.MAC_loadPersoData();
+emu_printf("MAC_loadSounds\n");
 		_res.MAC_loadSounds();
 		break;
 	}
@@ -173,6 +174,7 @@ emu_printf("displayTitleScreenMac 2\n");
 				}
 				break;
 			case kResourceTypeMac:
+emu_printf("displayTitleScreenMac\n");			
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -197,12 +199,15 @@ emu_printf("_currentLevel %d\n",_currentLevel);
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 //			clearStateRewind();
+emu_printf("loadLevelData\n");
 			loadLevelData();
+emu_printf("resetGameState\n");
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
+//emu_printf("mainLoop\n");				
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					// exit level

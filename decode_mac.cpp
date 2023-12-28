@@ -10,13 +10,29 @@ extern "C" {
 #include "sat_mem_checker.h"
 }
 
-uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
+uint8_t *decodeLzss(File &f,const char *name, const uint8_t *dataPtr, uint32_t &decodedSize) {
 
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
-	if(strcmp("Font", name) == 0)
+// icon à passer en hwram	
+	if(strcmp("Person", name) == 0)
 	{
-		emu_printf("gros con1 %s in HWRAM\n", name);
+		dst = (uint8_t *)sat_malloc(decodedSize);
+	}
+	else if(strcmp("Font", name) == 0 || strncmp("Level", name, 5) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("debut", name, 5) == 0 || strcmp("Icons", name) == 0  || strcmp("Objects 1", name) == 0)
+	{
+		dst = (uint8_t *)std_malloc(decodedSize);
+
+		
+	}
+	else
+	{
+emu_printf("_scratchBuffer lzss %d + 0x12C00\n", decodedSize);		
+		dst = (uint8_t *)dataPtr;
+	}
+		/*
+	if(strcmp("Font", name) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("Level", name, 5) == 0 || strncmp("debut", name, 5) == 0)
+	{
 		dst = (uint8_t *)std_malloc(decodedSize);
 	}
 	else
@@ -34,7 +50,7 @@ uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 //		}
 		
 	}
-
+*/
 	uint32_t count = 0;
 	while (count < decodedSize) {
 		const int code = f.readByte();
@@ -57,7 +73,6 @@ uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);
 		return dst;		
 	}
-	emu_printf("end decodeLzss\n");	
 	return dst;
 }
 
