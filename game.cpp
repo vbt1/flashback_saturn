@@ -207,7 +207,7 @@ emu_printf("handleProtectionScreen\n");
 		break;
 	case kResourceTypeMac:
 emu_printf("MAC_loadIconData\n");
-		_res.MAC_loadIconData();
+		_res.MAC_loadIconData(); // vbt à faire bien avant
 emu_printf("MAC_loadPersoData\n");
 		_res.MAC_loadPersoData();
 emu_printf("MAC_loadSounds\n");
@@ -1717,7 +1717,7 @@ emu_printf("--------------------------------------\n");
 	_res.MAC_unloadLevelData();
 //	delete &_res;
 
-	sat_free(_res._icn);
+//	sat_free(_res._icn);// icones du menu à ne pas vider
 //	sat_free(_res._tab);
 	sat_free(_res._spc);
 	sat_free(_res._spr1);
