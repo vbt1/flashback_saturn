@@ -321,10 +321,10 @@ void Game::displayTitleScreenMac(int num) {
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
-
+emu_printf("MAC_setPixel\n");	
 	buf.setPixel = Video::MAC_setPixel;
 	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-	
+emu_printf("MAC_loadTitleImage\n");	
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
@@ -348,9 +348,11 @@ void Game::displayTitleScreenMac(int num) {
 		c.r = c.g = c.b = 0;
 		_stub->setPaletteEntry(0, &c);
 	} else if (num == Menu::kMacTitleScreen_Flashback) {
+emu_printf("setTextPalette\n");		
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
 	}
+emu_printf("copyRect\n");	
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	_stub->updateScreen(0);
 	while (1) {
@@ -433,10 +435,56 @@ void Game::mainLoop() {
 				playCutscene(0x41);
 				_endLoop = true;
 emu_printf("handleContinueAbort\n");				
+/*
 heapWalk();	
 emu_printf("--------------------------------------\n");
-_res.MAC_unloadLevelData();
+
+	sat_free(_res._spc);
+	sat_free(_res._ani);
+
+	_res.clearLevelRes();
+	_res.MAC_unloadLevelData();
+//	delete &_res;
+
+//	sat_free(_res._fnt);
+	sat_free(_res._icn);
+//	sat_free(_res._tab);
+//	sat_free(_res._spc);
+	sat_free(_res._spr1);
+//	sat_free(_res._scratchBuffer);	
+	sat_free(_res._cmd);
+	sat_free(_res._pol);
+	sat_free(_res._cine_off);
+	sat_free(_res._cine_txt);
+	for (int i = 0; i < _res._numSfx; ++i) {
+		std_free(_res._sfxList[i].data);
+	}
+	std_free(_res._sfxList);
+	sat_free(_res._bankData);
+	delete _res._aba;
+	delete _res._mac;
 heapWalk();	
+	_res.init();
+	*/
+/*
+decodePGE
+
+ .ANI
+
+decodeLzss 9772 Level 1 sequences
+
+ .OBJ
+
+decodeLzss 11653 Level 1 conditions
+
+ .CT
+
+decodeLzss 1014 Level 1 map
+
+ .SPC
+
+decodeLzss 71138 Objects 1
+*/
 emu_printf("--------------------------------------\n");	
 			} else {
 			/*	if (_autoSave && _rewindLen != 0 && loadGameState(kAutoSaveSlot)) {
@@ -1655,11 +1703,11 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 	case kResourceTypeMac:
-emu_printf("MAC_unloadLevelData\n");
-heapWalk();		
+//emu_printf("MAC_unloadLevelData\n");
+//heapWalk();		
 		_res.MAC_unloadLevelData();
-emu_printf("MAC_unloadLevelData\n");
-heapWalk();		
+emu_printf("MAC_loadLevelData\n");
+//heapWalk();		
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
 	}

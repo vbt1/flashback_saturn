@@ -120,7 +120,7 @@ struct Resource {
 	uint8_t *_mbk;
 	uint8_t *_icn;
 	int _icnLen;
-	uint8_t *_tab;
+//	uint8_t *_tab;
 	uint8_t *_spc;
 	uint16_t _numSpc;
 	uint8_t _rp[74];

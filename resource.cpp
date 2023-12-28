@@ -53,7 +53,7 @@ Resource::~Resource() {
 	MAC_unloadLevelData();
 	sat_free(_fnt);
 	sat_free(_icn);
-	sat_free(_tab);
+//	sat_free(_tab);
 	sat_free(_spc);
 	sat_free(_spr1);
 	sat_free(_scratchBuffer);
@@ -1011,7 +1011,7 @@ void Resource::decodePGE(const uint8_t *p, int size) {
 void Resource::load_ANI(File *f) {
 //	debug(DBG_RES, "Resource::load_ANI()");
 	const int size = f->size();
-	_ani = (uint8_t *)sat_malloc(size);
+	_ani = (uint8_t *)std_malloc(size);
 	if (!_ani) {
 		error("Unable to allocate ANI buffer");
 	} else {
@@ -1406,6 +1406,11 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 //emu_printf("_scratchBuffer %d %s\n", _resourceMacDataSize, entry->name);	
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
+		else if(strncmp("Level", entry->name,5) == 0)
+		{
+			data = (uint8_t *)(0x25C80000-40000);
+//			data = (uint8_t *)_scratchBuffer+0x12C00;
+		}		
 		else
 		{
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
@@ -1530,10 +1535,12 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 //emu_printf("MAC_loadTitleImage\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Title %d", i);
-	
+emu_printf("decodeResourceMacData %s\n",name);	
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
+emu_printf("MAC_decodeImageData\n");		
 		MAC_decodeImageData(ptr, 0, buf);
+emu_printf("end MAC_decodeImageData\n");
 //		sat_free(ptr);  // pas de vidage car on utilise scratchbuffer
 	}
 }
@@ -1545,6 +1552,7 @@ void Resource::MAC_unloadLevelData() {
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevNode != _objectNodesMap[i]) {
+	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
 			sat_free(_objectNodesMap[i]);
 			prevNode = _objectNodesMap[i];
 		}
@@ -1554,6 +1562,9 @@ void Resource::MAC_unloadLevelData() {
 	_tbn = 0;
 	sat_free(_str);
 	_str = 0;
+// vbt ajout	
+//	sat_free(_spc);
+//	_spc = 0;	
 }
 
 static const int _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red palette: 32
@@ -1565,37 +1576,37 @@ void Resource::MAC_loadLevelData(int level) {
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-//emu_printf("decodePGE\n");		
+emu_printf("decodePGE\n");		
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
-
+emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
-
+emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	decodeOBJ(ptr, _resourceMacDataSize);
 	sat_free(ptr);
-
+emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
-
+emu_printf(" .SPC\n");
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 	_spc = decodeResourceMacData(name, true);
-
+emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
 	_tbn = decodeResourceMacText(name, "names");
-
+emu_printf(" .Flashback strings\n");
 	_str = decodeResourceMacText("Flashback", "strings");
 }
 
