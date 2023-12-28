@@ -1705,8 +1705,39 @@ void Game::loadLevelData() {
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
 //heapWalk();		
-		_res.MAC_unloadLevelData();
+//		_res.MAC_unloadLevelData();
 emu_printf("MAC_loadLevelData\n");
+
+
+heapWalk();	
+emu_printf("--------------------------------------\n");
+
+	sat_free(_res._ani);
+//	_res.clearLevelRes();
+	_res.MAC_unloadLevelData();
+//	delete &_res;
+
+	sat_free(_res._icn);
+//	sat_free(_res._tab);
+	sat_free(_res._spc);
+	sat_free(_res._spr1);
+	sat_free(_res._cmd);
+	sat_free(_res._pol);
+	sat_free(_res._cine_off);
+	sat_free(_res._cine_txt);
+	for (int i = 0; i < _res._numSfx; ++i) {
+		std_free(_res._sfxList[i].data);
+	}
+	std_free(_res._sfxList);
+//	sat_free(_res._bankData);
+//	delete _res._aba;
+//	delete _res._mac;
+heapWalk();	
+//	_res.init();
+
+
+
+
 //heapWalk();		
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
