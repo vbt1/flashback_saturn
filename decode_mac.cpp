@@ -10,18 +10,29 @@ extern "C" {
 #include "sat_mem_checker.h"
 }
 
-uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
+uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
 
-	if(strcmp("Person", name) == 0)
+	if(strcmp("Person", name) == 0 || strncmp("Level", name, 5) == 0)
 	{
 		dst = (uint8_t *)sat_malloc(decodedSize);
 	}
+	else if(strstr(name,"polygons") != NULL)
+	{
+//emu_printf("_scratchBuffer %d %s\n", decodedSize, name);	
+		dst = (uint8_t *)(0x25C80000-60000);//std_malloc(_resourceMacDataSize);
+	}
+	else if(strstr(name," movie") != NULL)
+	{
+//emu_printf("_scratchBuffer %d %s\n", decodedSize, name);	
+		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
+	}		
 	else /*if(strcmp("Font", name) == 0 || strncmp("Level", name, 5) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("over", name, 4) == 0 || strncmp("score", name, 5) == 0 || strncmp("debut", name, 5) == 0 || strncmp("chute", name, 5) == 0 || strcmp("Icons", name) == 0  || strncmp("Objects", name,7) == 0)*/
 	{
 		dst = (uint8_t *)std_malloc(decodedSize);
+		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
 	}
 
 	uint32_t count = 0;

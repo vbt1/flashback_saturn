@@ -81,7 +81,9 @@ emu_printf("ResourceMac::loadResourceFork\n");
 	_map.typesCount = _f.readUint16BE() + 1;
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
-	_types = (ResourceMacType *)std_calloc(_map.typesCount, sizeof(ResourceMacType));
+int xx = 0;	
+emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));	
+	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
 		_types[i].count = _f.readUint16BE() + 1;
@@ -91,9 +93,11 @@ emu_printf("ResourceMac::loadResourceFork\n");
 		}
 	}
 	_entries = (ResourceMacEntry **)std_calloc(_map.typesCount, sizeof(ResourceMacEntry *));
+	xx+=sizeof(ResourceMacEntry *);
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
 		_entries[i] = (ResourceMacEntry *)std_calloc(_types[i].count, sizeof(ResourceMacEntry));
+		xx+=sizeof(ResourceMacEntry);
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();
 			_entries[i][j].nameOffset = _f.readUint16BE();
@@ -105,13 +109,16 @@ emu_printf("ResourceMac::loadResourceFork\n");
 			if (_entries[i][j].nameOffset != 0xFFFF) {
 				_f.seek(mapOffset + _map.namesOffset + _entries[i][j].nameOffset);
 				const int len = _f.readByte();
-				assert(len < kResourceMacEntryNameLength - 1);
+//				assert(len < kResourceMacEntryNameLength - 1);
+				if(len >= kResourceMacEntryNameLength - 1)
+					break;
 				_f.read(_entries[i][j].name, len);
 				_entries[i][j].name[len] = '\0';
 //					slPrint((char *)_entries[i][j].name,slLocate(10,16));
 			}
 		}
 	}
+emu_printf("SAT_CALLOC: _entries: %d\n", xx);	
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {

@@ -42,7 +42,7 @@ void *sat_calloc(size_t nmemb, size_t size) {
 //		while(1) slSynch();
 	}
 //	int *val = (int *)mem;	
-	emu_printf("CALLOC: addr: %p, size: %u\n", mem, size);
+//	emu_printf("CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 }
 
@@ -66,23 +66,8 @@ void *sat_malloc(size_t size) {
 //			dst = (uint8_t *)0x25C04000;
 
 //		}
-	
-		
-/*		
-		mem = (void*)std_malloc(size);
-		
-		if (mem == NULL) {
-			emu_printf("STD_MALLOC: size: %u - FAILED\n", size);		
-		}*/
 	}
-//	else
-//emu_printf("MALLOC success\n");			
-
-//	int *val = (int *)mem;	
-	emu_printf("MALLOC: addr: %p, size: %u \n", mem, size);
-	
-//slPrintHex((int)val,slLocate(10,15));
-
+//	emu_printf("MALLOC: addr: %p, size: %u \n", mem, size);
 	return (void*)mem;
 }
 
@@ -90,7 +75,7 @@ void sat_free(void *ptr) {
 	
 	if(ptr == NULL) return;
 
-	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
+//	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 #define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)		
 	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
@@ -99,8 +84,10 @@ void sat_free(void *ptr) {
 		MEM_Free(ptr);
 	}
 	else
+	{
+		emu_printf("FREE: addr: %p\n", ptr);
 		free(ptr);
-	
+	}
 	ptr = NULL;
 //	free(ptr);
 //	emu_printf("AFTER FREE: addr: %p %p\n", ptr,MEM_empty_top);	
@@ -139,7 +126,7 @@ void *std_malloc(size_t size) {
 //emu_printf("MALLOC success\n");			
 
 //	int *val = (int *)mem;	
-	emu_printf("STD_MALLOC: addr: %p, size: %u \n", mem, size);
+//	emu_printf("STD_MALLOC: addr: %p, size: %u \n", mem, size);
 	
 //slPrintHex((int)val,slLocate(10,15));
 
@@ -168,7 +155,6 @@ void *std_calloc(size_t nmemb, size_t size) {
 		emu_printf("STD_CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
 //		while(1) slSynch();
 	}
-//	int *val = (int *)mem;	
 //	emu_printf("STD_CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 }

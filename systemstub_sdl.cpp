@@ -537,7 +537,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 	drv_size = sat_ftell(drv_file);
 	sat_fseek(drv_file, 0, SEEK_SET);
 
-#define	SDDRV_ADDR	0x60A0000
+#define	SDDRV_ADDR	0x60B0000
 
 //	sddrvstsk = (uint8*)sat_malloc(drv_size);
 	sddrvstsk = (uint8*)SDDRV_ADDR;

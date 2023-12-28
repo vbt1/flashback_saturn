@@ -3,7 +3,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
- 
+ #define HEAP_WALK 1
  
 extern "C" {
 	#include 	<string.h>
@@ -42,6 +42,75 @@ extern TEXTURE tex_spr[4];
 #include "sys.h"
 
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
+
+#ifdef HEAP_WALK
+extern Uint32  end;
+extern Uint32  __malloc_free_list;
+
+extern "C" {
+extern Uint32  _sbrk(int size);
+}
+
+void heapWalk(void)
+{
+    Uint32 chunkNumber = 1;
+    // The __end__ linker symbol points to the beginning of the heap.
+    Uint32 chunkCurr = (Uint32)&end;
+    // __malloc_free_list is the head pointer to newlib-nano's link list of free chunks.
+    Uint32 freeCurr = __malloc_free_list;
+    // Calling _sbrk() with 0 reserves no more memory but it returns the current top of heap.
+    Uint32 heapEnd = _sbrk(0);
+    
+//    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
+    char msg[100];
+	sprintf (msg,"Heap Size: %d  e%08x s%08x\n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
+	emu_printf(msg);
+	
+    // Walk through the chunks until we hit the end of the heap.
+    while (chunkCurr < heapEnd)
+    {
+        // Assume the chunk is in use.  Will update later.
+        int      isChunkFree = 0;
+        // The first 32-bit word in a chunk is the size of the allocation.  newlib-nano over allocates by 8 bytes.
+        // 4 bytes for this 32-bit chunk size and another 4 bytes to allow for 8 byte-alignment of returned pointer.
+        Uint32 chunkSize = *(Uint32*)chunkCurr;
+        // The start of the next chunk is right after the end of this one.
+        Uint32 chunkNext = chunkCurr + chunkSize;
+        
+        // The free list is sorted by address.
+        // Check to see if we have found the next free chunk in the heap.
+        if (chunkCurr == freeCurr)
+        {
+            // Chunk is free so flag it as such.
+            isChunkFree = 1;
+            // The second 32-bit word in a free chunk is a pointer to the next free chunk (again sorted by address).
+            freeCurr = *(Uint32*)(freeCurr + 4);
+        }
+        
+        // Skip past the 32-bit size field in the chunk header.
+        chunkCurr += 4;
+        // 8-byte align the data pointer.
+        chunkCurr = (chunkCurr + 7) & ~7;
+        // newlib-nano over allocates by 8 bytes, 4 bytes for the 32-bit chunk size and another 4 bytes to allow for 8
+        // byte-alignment of the returned pointer.
+        chunkSize -= 8;
+//        	emu_printf("Chunk: %lu  Address: %x  Size: %d  %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "");
+        
+	sprintf (msg,"%d A%04x  S%04d %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "") ;
+//	if(chunkNumber<20)	
+	emu_printf(msg);
+//	if(chunkNumber>=200)
+//	slPrint((char *)msg,slLocate(0,chunkNumber-200));
+//	if(chunkNumber>=230)
+//	slPrint((char *)msg,slLocate(20,chunkNumber-230));
+
+		chunkCurr = chunkNext;
+        chunkNumber++;
+    }
+}
+#endif
+
 
 //static SAVE_BUFFER sbuf;
 //static Uint8 rle_buf[SAV_BUFSIZE];
@@ -363,6 +432,12 @@ void Game::mainLoop() {
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
 				_endLoop = true;
+emu_printf("handleContinueAbort\n");				
+heapWalk();	
+emu_printf("--------------------------------------\n");
+_res.MAC_unloadLevelData();
+heapWalk();	
+emu_printf("--------------------------------------\n");	
 			} else {
 			/*	if (_autoSave && _rewindLen != 0 && loadGameState(kAutoSaveSlot)) {
 					// autosave
@@ -1580,7 +1655,11 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 	case kResourceTypeMac:
+emu_printf("MAC_unloadLevelData\n");
+heapWalk();		
 		_res.MAC_unloadLevelData();
+emu_printf("MAC_unloadLevelData\n");
+heapWalk();		
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
 	}
