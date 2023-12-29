@@ -719,7 +719,8 @@ void Resource::load_ICN(File *f) {
 //	debug(DBG_RES, "Resource::load_ICN()");
 	int len = f->size();
 	if (_icnLen == 0) {
-		_icn = (uint8_t *)sat_malloc(len);
+		if(_icn==NULL)
+			_icn = (uint8_t *)sat_malloc(len);
 	} else {
 		_icn = (uint8_t *)sat_realloc(_icn, _icnLen + len);
 	}
@@ -1020,7 +1021,7 @@ void Resource::load_ANI(File *f) {
 }
 
 void Resource::load_TBN(File *f) {
-//	debug(DBG_RES, "Resource::load_TBN()");
+	emu_printf("Resource::load_TBN()\n");
 	int len = f->size();
 	_tbn = (uint8_t *)sat_malloc(len);
 	if (!_tbn) {
@@ -1382,7 +1383,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
 //	emu_printf("Resource::decodeResourceMacData '%d'\n",entry->dataOffset);	
 //	assert(entry);
-//emu_printf("_mac->_f.seek\n");
+emu_printf("entry->name %s %d\n",entry->name, decompressLzss);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 	uint8_t *data = 0;
@@ -1396,21 +1397,28 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 
 		if(strcmp("Flashback strings", entry->name) == 0)
 		{
+emu_printf("vbt Flashback strings!!!!\n");
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 //			data = (uint8_t *)_scratchBuffer+0x12C00;
 		}
-		else if(strcmp("Flashback colors", entry->name) == 0 || strcmp("Flashback colors", entry->name) == 0 || strncmp("Title", entry->name, 5) == 0  || strncmp("intro", entry->name, 5) == 0 || strncmp("Movie", entry->name, 5) == 0 || strncmp("logo", entry->name, 4)
+		else if(strstr(entry->name,"names") !=NULL)
+		{
+emu_printf("vbt aaaaaaaaa Flashback strings std_malloc!!!!\n");				
+			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+		}		
+		else if(strcmp("Flashback colors", entry->name) == 0 
+		|| strcmp("Flashback colors", entry->name) == 0 
+		|| strncmp("Title", entry->name, 5) == 0  
+		|| strncmp("intro", entry->name, 5) == 0 
+		|| strncmp("Movie", entry->name, 5) == 0 
+		|| strncmp("logo", entry->name, 4)
 //		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
-//emu_printf("_scratchBuffer %d %s\n", _resourceMacDataSize, entry->name);	
+emu_printf("ducon _scratchBuffer %d\n", _resourceMacDataSize);	
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
-		else if(strncmp("Level", entry->name,5) == 0)
-		{
-			data = (uint8_t *)(0x25C80000-40000);
-//			data = (uint8_t *)_scratchBuffer+0x12C00;
-		}		
+				
 		else
 		{
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
@@ -1423,7 +1431,7 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
-//emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
+emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
 	return data;
 }
 
@@ -1606,8 +1614,9 @@ emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
 	_tbn = decodeResourceMacText(name, "names");
-emu_printf(" .Flashback strings\n");
+emu_printf(" .Flashback text _tbn %p\n",_tbn);
 	_str = decodeResourceMacText("Flashback", "strings");
+emu_printf(" .Flashback strings _str %p\n",_str);	
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
