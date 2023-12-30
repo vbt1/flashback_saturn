@@ -37,9 +37,10 @@ volatile Uint8 slaveProceed;
 ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 	: _playing(false), _mix(mixer), _dataPath(dataPath) {
 	memset(&_modInfo, 0, sizeof(_modInfo));
-
+#ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+#endif
 }
 
 uint16 ModPlayer::findPeriod(uint16 period, uint8 fineTune) const {
@@ -103,11 +104,12 @@ emu_printf("sat_malloc in ModPlayer::load %d ",n);
 
 void ModPlayer::unload() {
 	//fprintf_saturn(stdout, "unload!");
+#ifdef SLAVE_SOUND	
 	// Avoid slave continuing
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 0;
 	// Waiting for slave to finish
 	while(*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing));
-
+#endif
 	if (_modInfo.songName[0]) {
 		sat_free(_modInfo.patternsTable);
 		for (int s = 0; s < NUM_SAMPLES; ++s) {
@@ -115,9 +117,10 @@ void ModPlayer::unload() {
 		}
 		memset(&_modInfo, 0, sizeof(_modInfo));
 	}
-
+#ifdef SLAVE_SOUND
 	// Ok, slave can go on
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+#endif
 }
 
 void ModPlayer::play(uint8 num) {
@@ -528,10 +531,10 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 }
 
 bool ModPlayer::mix(int8 *buf, int len) {
-
+#ifdef SLAVE_SOUND
 	while(!(*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed))); // Wait that we are safe and able to proceed
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 1; // Proceed...
-
+#endif
 	if (_playing) {
 		//memset(buf, 0, len);
 		const int samplesPerTick = _mix->getSampleRate() / (50 * _songTempo / 125);
@@ -550,9 +553,9 @@ bool ModPlayer::mix(int8 *buf, int len) {
 			buf += count;
 		}
 	}
-
+#ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
-
+#endif
 	return _playing;
 }
 

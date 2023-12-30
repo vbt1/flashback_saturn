@@ -591,8 +591,9 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
+#ifdef SLAVE_SOUND	// vbt : pas de video si on utilise le slave pour l'audio
 	return;
-	
+#endif
 	if (id != -1) {
 		_cut._id = id;
 	}

@@ -195,10 +195,10 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	audioEnabled = 0;
 	curBuf = 0;
 	curSlot = 0;
-
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 0;
-
+#endif
 	if(isNTSC())
 		tickPerVblank = 17;
 	else
@@ -395,7 +395,9 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 
 void *SystemStub_SDL::createMutex() {
 	SatMutex *mtx = (SatMutex*)std_malloc(sizeof(SatMutex));
+#ifdef SLAVE_SOUND	
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
+#endif
 	return mtx;
 }
 
@@ -406,17 +408,18 @@ void SystemStub_SDL::destroyMutex(void *mutex) {
 
 void SystemStub_SDL::lockMutex(void *mutex) {
 	SatMutex *mtx = (SatMutex*)mutex;
+#ifdef SLAVE_SOUND	
 	while(*(Uint8*)OPEN_CSH_VAR(mtx->access) > 0) asm("nop");
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))++;
-
+#endif
 	return;
 }
 
 void SystemStub_SDL::unlockMutex(void *mutex) {
 	SatMutex *mtx = (SatMutex*)mutex;
-
+#ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
-
+#endif
 	return;
 }
 
@@ -586,8 +589,11 @@ void fill_play_audio(void) {
 		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
 		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 		//CSH_AllClr();
+#ifdef SLAVE_SOUND		
 		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  // vbt à remettre
-//		fill_buffer_slot();
+#else		
+		fill_buffer_slot();
+#endif
 		firstSoundRun = 0;
 		//slSlaveFunc(fill_buffer_slot, NULL);
 	}
@@ -654,19 +660,20 @@ void sat_restart_audio(void) {
 	// Prepare new handles
 	pcm[0] = createHandle(0);
 	pcm[1] = createHandle(1);
-
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 1;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 1;
-
+#endif
 	// Restart playback
 	PCM_Start(pcm[0]); 
 	PCM_EntryNext(pcm[1]); 
-
+#ifdef SLAVE_SOUND
 	SPR_InitSlaveSH();
+#endif	
 	firstSoundRun = 1;
-
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(curBuf) = 0;
-
+#endif
 	return;
 }
 
@@ -675,24 +682,30 @@ void fill_buffer_slot(void) {
 	//slCashPurge();
 
 	// Prepare the indexes of next slot/buffers.
+#ifdef SLAVE_SOUND	
 	Uint8 nextBuf = (*(Uint8*)OPEN_CSH_VAR(curBuf) + 1) % 2;
 	Uint8 nextSlot = (*(Uint8*)OPEN_CSH_VAR(curSlot) + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 	Uint8 workingSlot = *(Uint8*)OPEN_CSH_VAR(curSlot);
-
+#endif
 	// Avoid running if other parts of the program are in the critical section...
 	SatMutex* mtx = (SatMutex*)(mix->_mutex);
+#ifdef SLAVE_SOUND	
 	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) { 
+#endif
 		//fprintf_saturn(stdout, "  -> slave mixing");
 		memset(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE), 0, SND_BUFFER_SIZE);
 		mix->mix((int8*)(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE)), SND_BUFFER_SIZE);
 
-		if(nextSlot == 0) { // We have filled this buffer 
+		if(nextSlot == 0) { // We have filled this buffer
+#ifdef SLAVE_SOUND		
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) = 1; // Mark it as full...
 			*(Uint8*)OPEN_CSH_VAR(curBuf) = nextBuf; // ...and use the next buffer
+#endif
 		}
-
+#ifdef SLAVE_SOUND
 		*(Uint8*)OPEN_CSH_VAR(curSlot) = nextSlot;
+#endif
 	}
 
 	return;
@@ -701,24 +714,26 @@ void fill_buffer_slot(void) {
 void play_manage_buffers(void) {
 	static int curPlyBuf = 0;
 	static Uint16 counter = 0;
-
+#ifdef SLAVE_SOUND
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 
 	if(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) == 0) return;
-
+#endif
 	if ((PCM_CheckChange() == PCM_CHANGE_NO_ENTRY)) {
 		if(counter < 9000) {
 			PCM_DestroyMemHandle(pcm[curPlyBuf]);  // Destroy old memory handle
 			pcm[curBuf] = createHandle(curPlyBuf); // and prepare a new one
 
 			PCM_EntryNext(pcm[curPlyBuf]); 
-	
+#ifdef SLAVE_SOUND	
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[curPlyBuf]) = 0;
-
+#endif
 			curPlyBuf ^= 1;
 			counter++;
 		} else {
+#ifdef SLAVE_SOUND			
 			SPR_WaitEndSlaveSH(); // vbt à remettre
+#endif			
 			sat_restart_audio();
 			counter = 0;
 			curPlyBuf = 0;

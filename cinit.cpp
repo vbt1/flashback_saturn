@@ -74,9 +74,10 @@ int	main( void )
 	cdUnlock(); // Unlock the cd drive
 #endif
 
+#ifdef SLAVE_SOUND
 	DMA_ScuInit(); // Init for SCU DMA
 	SPR_InitSlaveSH();
-
+#endif
 	/* Application Call */
 	ss_main();
 
