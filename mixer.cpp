@@ -22,7 +22,7 @@ extern "C" {
 }
 #include "mixer.h"
 #include "systemstub.h"
-//#include "saturn_print.h"
+#include "saturn_print.h"
 
 
 Mixer::Mixer(SystemStub *stub)
@@ -56,7 +56,7 @@ void Mixer::setPremixHook(PremixHook premixHook, void *userData) {
 }
 
 void Mixer::play(const MixerChunk *mc, uint16 freq, uint8 volume) {
-	debug(DBG_SND, "Mixer::play(%d, %d)", freq, volume);
+	//emu_printf("Mixer::play(%d, %d)\n", freq, volume);
 	MutexStack(_stub, _mutex);
 	MixerChannel *ch = 0;
 	for (int i = 0; i < NUM_CHANNELS; ++i) {
@@ -93,6 +93,7 @@ void Mixer::stopAll() {
 }
 
 void Mixer::mix(int8 *buf, int len) {
+//emu_printf(" Mixer::mix\n");
 	//MutexStack(_stub, _mutex);
 	memset(buf, 0, len);
 	if (_premixHook) {

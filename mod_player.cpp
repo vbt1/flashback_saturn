@@ -37,6 +37,7 @@ volatile Uint8 slaveProceed;
 ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 	: _playing(false), _mix(mixer), _dataPath(dataPath) {
 	memset(&_modInfo, 0, sizeof(_modInfo));
+//emu_printf("ModPlayer::ModPlayer\n");	
 #ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
@@ -89,7 +90,7 @@ void ModPlayer::load(File *f) {
 	}
 	//debug(DBG_MOD, "numPatterns=%d",n + 1);
 	n = (n + 1) * 64 * 4 * 4; // 64 lines of 4 notes per channel
-emu_printf("sat_malloc in ModPlayer::load %d ",n);	
+//emu_printf("sat_malloc in ModPlayer::load %d ",n);	
 	_modInfo.patternsTable = (uint8 *)sat_malloc(n);
 	assert(_modInfo.patternsTable);
 	f->read(_modInfo.patternsTable, n);
@@ -106,6 +107,7 @@ emu_printf("sat_malloc in ModPlayer::load %d ",n);
 }
 
 void ModPlayer::unload() {
+//emu_printf("ModPlayer::unload\n");	
 	//fprintf_saturn(stdout, "unload!");
 #ifdef SLAVE_SOUND	
 	// Avoid slave continuing
@@ -538,6 +540,7 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 }
 
 bool ModPlayer::mix(int8 *buf, int len) {
+//emu_printf("ModPlayer::mix %p %d\n",buf, len);		
 #ifdef SLAVE_SOUND
 	while(!(*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed))); // Wait that we are safe and able to proceed
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 1; // Proceed...

@@ -185,7 +185,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	prepareGfxMode(); // Prepare graphic output
-//		emu_printf("prepareGfxMode\n");	
+//		//emu_printf("prepareGfxMode\n");	
 	
 //slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
@@ -195,6 +195,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	audioEnabled = 0;
 	curBuf = 0;
 	curSlot = 0;
+//emu_printf("SystemStub_SDL::init\n");	
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 0;
@@ -397,6 +398,7 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 }
 
 void *SystemStub_SDL::createMutex() {
+//emu_printf("SystemStub_SDL::createMutex\n");	
 	SatMutex *mtx = (SatMutex*)std_malloc(sizeof(SatMutex));
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
@@ -412,6 +414,7 @@ void SystemStub_SDL::destroyMutex(void *mutex) {
 }
 
 void SystemStub_SDL::lockMutex(void *mutex) {
+//emu_printf("SystemStub_SDL::lockMutex\n");	
 	SatMutex *mtx = (SatMutex*)mutex;
 #ifdef SLAVE_SOUND	
 	while(*(Uint8*)OPEN_CSH_VAR(mtx->access) > 0) asm("nop");
@@ -424,6 +427,7 @@ void SystemStub_SDL::lockMutex(void *mutex) {
 }
 
 void SystemStub_SDL::unlockMutex(void *mutex) {
+//emu_printf("SystemStub_SDL::unlockMutex\n");	
 	SatMutex *mtx = (SatMutex*)mutex;
 #ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
@@ -595,13 +599,17 @@ uint8 isNTSC (void) {
 }
 
 void fill_play_audio(void) {
+//emu_printf("SystemStub_SDL::fill_play_audio\n");
+#ifdef SLAVE_SOUND
 	if ((*(volatile Uint8 *)0xfffffe11 & 0x80) == 0x80 || firstSoundRun) {
 		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
 		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 		//CSH_AllClr();
-#ifdef SLAVE_SOUND		
+
 		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  // vbt à remettre
-#else		
+#else
+	if (firstSoundRun || buffer_filled[0] == 1 || buffer_filled[1] == 1) 
+	{
 		fill_buffer_slot();
 #endif
 		firstSoundRun = 0;
@@ -656,7 +664,7 @@ static PcmHn createHandle(int bufNo) {
 void sat_restart_audio(void) {
 	//fprintf_saturn(stdout, "restart audio");
 	int idx;
-
+//emu_printf("restart audio\n");
 	// Stop pcm playing and clean up handles.
 	PCM_Stop(pcm[0]);
 	PCM_Stop(pcm[1]);
@@ -670,6 +678,7 @@ void sat_restart_audio(void) {
 	// Prepare new handles
 	pcm[0] = createHandle(0);
 	pcm[1] = createHandle(1);
+
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 1;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 1;
@@ -693,11 +702,11 @@ void sat_restart_audio(void) {
 }
 
 void fill_buffer_slot(void) {
-	CSH_AllClr();
 	//slCashPurge();
-
+//emu_printf("fill_buffer_slot\n");
 	// Prepare the indexes of next slot/buffers.
-#ifdef SLAVE_SOUND	
+#ifdef SLAVE_SOUND
+	CSH_AllClr();	
 	Uint8 nextBuf = (*(Uint8*)OPEN_CSH_VAR(curBuf) + 1) % 2;
 	Uint8 nextSlot = (*(Uint8*)OPEN_CSH_VAR(curSlot) + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
@@ -710,23 +719,26 @@ void fill_buffer_slot(void) {
 #endif
 	// Avoid running if other parts of the program are in the critical section...
 	SatMutex* mtx = (SatMutex*)(mix->_mutex);
+//emu_printf("buff %d access %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));	
 #ifdef SLAVE_SOUND	
 	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) {
 #else
-//	if(!(buffer_filled[workingBuffer]) && !(mtx->access)) 
+	if(!(buffer_filled[workingBuffer]) && !(mtx->access)) 
 	{
 #endif
+//emu_printf("  -> slave mixing %d %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));
 		//fprintf_saturn(stdout, "  -> slave mixing");
 		memset(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE), 0, SND_BUFFER_SIZE);
 		mix->mix((int8*)(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE)), SND_BUFFER_SIZE);
 
 		if(nextSlot == 0) { // We have filled this buffer
+//emu_printf("  -> We have filled this buffer buffer_filled[%d]) = 1\n",workingBuffer);
 #ifdef SLAVE_SOUND		
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) = 1; // Mark it as full...
 			*(Uint8*)OPEN_CSH_VAR(curBuf) = nextBuf; // ...and use the next buffer
 #else
-	buffer_filled[workingBuffer] = 1; // Mark it as full...
-	curBuf = nextBuf; // ...and use the next buffer	
+			buffer_filled[workingBuffer] = 1; // Mark it as full...
+			curBuf = nextBuf; // ...and use the next buffer	
 #endif
 		}
 #ifdef SLAVE_SOUND
@@ -757,9 +769,11 @@ void play_manage_buffers(void) {
 			pcm[curBuf] = createHandle(curPlyBuf); // and prepare a new one
 
 			PCM_EntryNext(pcm[curPlyBuf]); 
-#ifdef SLAVE_SOUND	
+#ifdef SLAVE_SOUND
+//emu_printf("OPEN_CSH_VAR(buffer_filled[%d]) = 0\n",curPlyBuf);
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[curPlyBuf]) = 0;
 #else
+//emu_printf("(buffer_filled[%d]) = 0\n",curPlyBuf);	
 			buffer_filled[curPlyBuf] = 0;
 #endif
 			curPlyBuf ^= 1;
@@ -790,7 +804,7 @@ void SCU_DMAWait(void) {
 	while((res = DMA_ScuResult()) == 2);
 	
 	if(res == 1) {
-		emu_printf("SCU DMA COPY FAILED!\n");
+		//emu_printf("SCU DMA COPY FAILED!\n");
 	}
 }
 
