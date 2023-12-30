@@ -25,7 +25,7 @@
 
 #undef sleep 
 
-#define SLAVE_SOUND 1
+//#define SLAVE_SOUND 1
 #define PCM_ADDR ((void*)0x25a20000)
 #define PCM_SIZE (4096L*8)
 

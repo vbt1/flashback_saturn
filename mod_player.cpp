@@ -40,6 +40,9 @@ ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 #ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+#else
+	slaveMixing = 0;
+	slaveProceed = 1;
 #endif
 }
 
@@ -109,6 +112,8 @@ void ModPlayer::unload() {
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 0;
 	// Waiting for slave to finish
 	while(*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing));
+#else
+
 #endif
 	if (_modInfo.songName[0]) {
 		sat_free(_modInfo.patternsTable);
@@ -120,6 +125,8 @@ void ModPlayer::unload() {
 #ifdef SLAVE_SOUND
 	// Ok, slave can go on
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+#else
+	slaveProceed = 1;
 #endif
 }
 
@@ -534,6 +541,8 @@ bool ModPlayer::mix(int8 *buf, int len) {
 #ifdef SLAVE_SOUND
 	while(!(*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed))); // Wait that we are safe and able to proceed
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 1; // Proceed...
+#else
+	slaveMixing = 1;
 #endif
 	if (_playing) {
 		//memset(buf, 0, len);
@@ -555,6 +564,8 @@ bool ModPlayer::mix(int8 *buf, int len) {
 	}
 #ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
+#else
+	slaveMixing = 0;
 #endif
 	return _playing;
 }

@@ -198,6 +198,9 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 0;
+#else
+	buffer_filled[0] = 0;
+	buffer_filled[1] = 0;
 #endif
 	if(isNTSC())
 		tickPerVblank = 17;
@@ -395,8 +398,10 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 
 void *SystemStub_SDL::createMutex() {
 	SatMutex *mtx = (SatMutex*)std_malloc(sizeof(SatMutex));
-#ifdef SLAVE_SOUND	
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
+#else
+	mtx->access = 0;
 #endif
 	return mtx;
 }
@@ -411,6 +416,9 @@ void SystemStub_SDL::lockMutex(void *mutex) {
 #ifdef SLAVE_SOUND	
 	while(*(Uint8*)OPEN_CSH_VAR(mtx->access) > 0) asm("nop");
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))++;
+#else
+	while(mtx->access > 0) asm("nop");
+	mtx->access++;
 #endif
 	return;
 }
@@ -419,6 +427,8 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 	SatMutex *mtx = (SatMutex*)mutex;
 #ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
+#else
+	mtx->access--;
 #endif
 	return;
 }
@@ -663,6 +673,9 @@ void sat_restart_audio(void) {
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 1;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 1;
+#else
+	buffer_filled[0] = 1;
+	buffer_filled[1] = 1;	
 #endif
 	// Restart playback
 	PCM_Start(pcm[0]); 
@@ -673,6 +686,8 @@ void sat_restart_audio(void) {
 	firstSoundRun = 1;
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(curBuf) = 0;
+#else
+	curBuf = 0;
 #endif
 	return;
 }
@@ -687,11 +702,19 @@ void fill_buffer_slot(void) {
 	Uint8 nextSlot = (*(Uint8*)OPEN_CSH_VAR(curSlot) + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 	Uint8 workingSlot = *(Uint8*)OPEN_CSH_VAR(curSlot);
+#else
+	Uint8 nextBuf = (curBuf + 1) % 2;
+	Uint8 nextSlot = (curSlot + 1) % SND_BUF_SLOTS;
+	Uint8 workingBuffer = curBuf;
+	Uint8 workingSlot = curSlot;
 #endif
 	// Avoid running if other parts of the program are in the critical section...
 	SatMutex* mtx = (SatMutex*)(mix->_mutex);
 #ifdef SLAVE_SOUND	
-	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) { 
+	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) {
+#else
+//	if(!(buffer_filled[workingBuffer]) && !(mtx->access)) 
+	{
 #endif
 		//fprintf_saturn(stdout, "  -> slave mixing");
 		memset(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE), 0, SND_BUFFER_SIZE);
@@ -701,10 +724,15 @@ void fill_buffer_slot(void) {
 #ifdef SLAVE_SOUND		
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) = 1; // Mark it as full...
 			*(Uint8*)OPEN_CSH_VAR(curBuf) = nextBuf; // ...and use the next buffer
+#else
+	buffer_filled[workingBuffer] = 1; // Mark it as full...
+	curBuf = nextBuf; // ...and use the next buffer	
 #endif
 		}
 #ifdef SLAVE_SOUND
 		*(Uint8*)OPEN_CSH_VAR(curSlot) = nextSlot;
+#else
+		curSlot = nextSlot;
 #endif
 	}
 
@@ -718,6 +746,10 @@ void play_manage_buffers(void) {
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 
 	if(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) == 0) return;
+#else
+	Uint8 workingBuffer = curBuf;
+
+	if(buffer_filled[workingBuffer] == 0) return;
 #endif
 	if ((PCM_CheckChange() == PCM_CHANGE_NO_ENTRY)) {
 		if(counter < 9000) {
@@ -727,6 +759,8 @@ void play_manage_buffers(void) {
 			PCM_EntryNext(pcm[curPlyBuf]); 
 #ifdef SLAVE_SOUND	
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[curPlyBuf]) = 0;
+#else
+			buffer_filled[curPlyBuf] = 0;
 #endif
 			curPlyBuf ^= 1;
 			counter++;
