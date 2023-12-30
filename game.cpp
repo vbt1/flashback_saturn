@@ -591,6 +591,8 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
+	return;
+	
 	if (id != -1) {
 		_cut._id = id;
 	}

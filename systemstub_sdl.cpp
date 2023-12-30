@@ -586,8 +586,8 @@ void fill_play_audio(void) {
 		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
 		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 		//CSH_AllClr();
-//		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  /: vbt à remettre
-		fill_buffer_slot();
+		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  // vbt à remettre
+//		fill_buffer_slot();
 		firstSoundRun = 0;
 		//slSlaveFunc(fill_buffer_slot, NULL);
 	}
@@ -662,7 +662,7 @@ void sat_restart_audio(void) {
 	PCM_Start(pcm[0]); 
 	PCM_EntryNext(pcm[1]); 
 
-	//SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 	firstSoundRun = 1;
 
 	*(Uint8*)OPEN_CSH_VAR(curBuf) = 0;
@@ -718,7 +718,7 @@ void play_manage_buffers(void) {
 			curPlyBuf ^= 1;
 			counter++;
 		} else {
-//			SPR_WaitEndSlaveSH(); // vbt à remettre
+			SPR_WaitEndSlaveSH(); // vbt à remettre
 			sat_restart_audio();
 			counter = 0;
 			curPlyBuf = 0;

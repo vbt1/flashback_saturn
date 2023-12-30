@@ -74,8 +74,8 @@ int	main( void )
 	cdUnlock(); // Unlock the cd drive
 #endif
 
-//	DMA_ScuInit(); // Init for SCU DMA
-//	SPR_InitSlaveSH();
+	DMA_ScuInit(); // Init for SCU DMA
+	SPR_InitSlaveSH();
 
 	/* Application Call */
 	ss_main();
