@@ -3,7 +3,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
- #define HEAP_WALK 1
+ //#define HEAP_WALK 1
  
 extern "C" {
 	#include 	<string.h>
@@ -246,7 +246,6 @@ emu_printf("handleProtectionScreen\n");
 				}
 				break;
 			case kResourceTypeMac:
-//emu_printf("displayTitleScreenMac\n");			
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -271,15 +270,12 @@ emu_printf("handleProtectionScreen\n");
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 //			clearStateRewind();
-emu_printf("loadLevelData\n");
 			loadLevelData();
-//emu_printf("resetGameState\n");
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-//emu_printf("mainLoop\n");				
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					// exit level
@@ -324,10 +320,10 @@ void Game::displayTitleScreenMac(int num) {
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
-//emu_printf("MAC_setPixel\n");	
+
 	buf.setPixel = Video::MAC_setPixel;
 	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-//emu_printf("MAC_loadTitleImage\n");	
+
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
@@ -1706,16 +1702,12 @@ void Game::loadLevelData() {
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
 //heapWalk();		
-//		_res.MAC_unloadLevelData();
 emu_printf("MAC_loadLevelData\n");
 
 	sat_free(_res._monster);
 	sat_free(_res._ani);
-//	_res.clearLevelRes();
 	_res.MAC_unloadLevelData();
-//	delete &_res;
 //	sat_free(_res._icn);// icones du menu à ne pas vider
-//	sat_free(_res._tab);
 	sat_free(_res._spc);
 	sat_free(_res._spr1);
 	sat_free(_res._cmd);
@@ -1732,13 +1724,10 @@ emu_printf("MAC_loadLevelData\n");
 //	sat_free(_res._bankData);
 //	delete _res._aba;
 //	delete _res._mac;
-heapWalk();	
-//	_res.init();
 
-
-
-
-//heapWalk();		
+#ifdef HEAP_WALK
+heapWalk();
+#endif
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
 	}

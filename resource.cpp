@@ -1517,7 +1517,7 @@ void Resource::MAC_loadPersoData() {
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
-emu_printf("MAC_loadMonsterData\n");						
+//emu_printf("MAC_loadMonsterData\n");
 	static const struct {
 		const char *id;
 		const char *name;
@@ -1536,10 +1536,10 @@ emu_printf("MAC_loadMonsterData\n");
 			_monster = decodeResourceMacData(data[i].name, true);
 			if(_monster==NULL)
 			{
-emu_printf("%s not loaded\n",data[i].name);				
+emu_printf("%s not loaded\n",data[i].name);
 				return;
 			}
-			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
+//			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
 			MAC_copyClut16(clut, 5, data[i].index);
 			break;
 		}

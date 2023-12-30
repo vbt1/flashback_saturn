@@ -105,9 +105,6 @@ static PcmWork pcm_work[2];
 static PcmHn pcm[2];
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
-
-//Uint8 curZoom = 0;
-//Uint8 newZoom = 0;
 static Mixer *mix = NULL;
 static volatile Uint8 audioEnabled = 0;
 
@@ -206,6 +203,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 		tickPerVblank = 17;
 	else
 		tickPerVblank = 20;
+
 	slIntFunction(vblIn); // Function to call at each vblank-in
 
 	return;
@@ -249,16 +247,7 @@ void SystemStub_SDL::getPaletteEntry(uint8 i, Color *c) {
 
 void SystemStub_SDL::setOverscanColor(uint8 i) {
 	_overscanColor = i;
-//emu_printf("setOverscanColor\n");	
-
 	memset((void*)VDP2_VRAM_A0, i, 512*448);
-/*
-	for(Uint8 line = 0; line < 224; line++) {
-		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
-	}
-	for(Uint8 line = 224; line < 448; line++) {
-		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
-	}*/
 }
 
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
@@ -371,7 +360,7 @@ void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 
 	PCM_Init(); // Initialize PCM playback
 
-//	audioEnabled = 1; // Enable audio // vbt à remettre
+	audioEnabled = 1; // Enable audio
 
 	// Prepare handles
 	pcm[0] = createHandle(0);
@@ -440,14 +429,11 @@ void SystemStub_SDL::prepareGfxMode() {
 	slBMPaletteNbg1(0); // NBG1 (game screen) uses palette 0 in CRAM
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
-//	slZoomNbg1(toFIXED(0.9), toFIXED(1.0));
 #endif
 	
-	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.
+	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks.
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 	slPriorityNbg1(5); // Game screen
-//	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen)
-
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
@@ -528,10 +514,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 
 
 	if(drv_file == NULL) 
-	{
 		error("Unable to load sound driver");
-	}
-//slPrint((char *)"sat_fseek     ",slLocate(10,12));	
 
 	sat_fseek(drv_file, 0, SEEK_END);
 	drv_size = sat_ftell(drv_file);
@@ -551,7 +534,6 @@ void SystemStub_SDL::load_audio_driver(void) {
 	SND_INI_ARA_SZ(snd_init) 	= sizeof(sound_map);
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
-//	sat_free(sddrvstsk);
 
 	return;
 }
@@ -570,20 +552,6 @@ void vblIn (void) {
 
 	// Process input
 	sys->processEvents();
-/*
-if(newZoom!=curZoom)
-{
-
-	if(newZoom==1) // video
-		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
-	if(newZoom==2) // ingame
-		slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
-	
-	curZoom=newZoom;
-}
-*/
-
-
 
 	// Pcm elaboration...
 	PCM_VblIn();	

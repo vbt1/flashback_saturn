@@ -17,8 +17,8 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 
 	if(strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
 	{
-emu_printf("0x25C20000 %d %s\n", decodedSize, name);	
-		dst = (uint8_t *)0x25C20000;//std_malloc(_resourceMacDataSize);
+emu_printf("(0x25C80000-60000); %d %s\n", decodedSize, name);	
+		dst = (uint8_t *)(0x25C80000-60000);;//std_malloc(_resourceMacDataSize);
 	}
 	else if(strstr(name," movie") != NULL || strstr(name,"conditions") != NULL)
 	{
