@@ -1592,22 +1592,22 @@ void Resource::MAC_loadLevelData(int level) {
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-emu_printf("decodePGE\n");		
+//emu_printf("decodePGE\n");		
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
-emu_printf(" .ANI\n");	
+//emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
-emu_printf(" .OBJ\n");
+//emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	decodeOBJ(ptr, _resourceMacDataSize);
 	sat_free(ptr);
-emu_printf(" .CT\n");
+//emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 	ptr = decodeResourceMacData(name, true);

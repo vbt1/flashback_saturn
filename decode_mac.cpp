@@ -17,19 +17,19 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 
 	if(strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
 	{
-emu_printf("0x25C80000-60000 %d %s\n", decodedSize, name);	
-		dst = (uint8_t *)(0x25C80000-60000);//std_malloc(_resourceMacDataSize);
+emu_printf("0x25C20000 %d %s\n", decodedSize, name);	
+		dst = (uint8_t *)0x25C20000;//std_malloc(_resourceMacDataSize);
 	}
 	else if(strstr(name," movie") != NULL || strstr(name,"conditions") != NULL)
 	{
 emu_printf("0x25C60000 %d %s\n", decodedSize, name);	
 		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
 	}
-	else if(strcmp("Person", name) == 0 || strncmp("Level", name, 5) == 0)
+	else if(strcmp("Person", name) == 0 || strcmp("Replicant", name) == 0 || strncmp("Level", name, 5) == 0)
 	{
 		dst = (uint8_t *)sat_malloc(decodedSize);
 	}	
-	else /*if(strcmp("Font", name) == 0 || strncmp("Level", name, 5) == 0 || strncmp("logo", name, 4) == 0 || strncmp("intro", name, 5) == 0 || strncmp("over", name, 4) == 0 || strncmp("score", name, 5) == 0 || strncmp("debut", name, 5) == 0 || strncmp("chute", name, 5) == 0 || strcmp("Icons", name) == 0  || strncmp("Objects", name,7) == 0)*/
+	else
 	{
 		dst = (uint8_t *)std_malloc(decodedSize);
 		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
