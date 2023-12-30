@@ -46,7 +46,7 @@ static int detectVersion(const char *dataPath) {
 
 		if (f.open(table[i].filename, dataPath, "rb")) {
 //			debug(DBG_INFO, "Detected %s version", table[i].name);
-			emu_printf("Detected %s version\n", table[i].name);
+//			emu_printf("Detected %s version\n", table[i].name);
 			f.close();
 			return table[i].type;
 		}

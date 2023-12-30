@@ -170,6 +170,9 @@ void Game::run() {
 	case kResourceTypeMac:
 		_res.MAC_loadClutData();
 		_res.MAC_loadFontData();
+		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM déplacé
+		_res.MAC_loadPersoData(); // taille 213124 lwr déplacé
+		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé	
 		break;
 	}
 
@@ -195,7 +198,7 @@ emu_printf("handleProtectionScreen\n");
 	
 	playCutscene(0x40);
 	playCutscene(0x0D);
-
+/*
 	// global resources
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -206,15 +209,15 @@ emu_printf("handleProtectionScreen\n");
 		_res.load_FIB("GLOBAL");
 		break;
 	case kResourceTypeMac:
-emu_printf("MAC_loadIconData\n");
-		_res.MAC_loadIconData(); // vbt à faire bien avant
-emu_printf("MAC_loadPersoData\n");
-		_res.MAC_loadPersoData();
-emu_printf("MAC_loadSounds\n");
-		_res.MAC_loadSounds();
+//emu_printf("MAC_loadIconData\n");
+		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM
+//emu_printf("MAC_loadPersoData\n");
+		_res.MAC_loadPersoData(); // taille 213124 lwr
+//emu_printf("MAC_loadSounds\n");
+		_res.MAC_loadSounds(); //à vbt à faire bien avant 
 		break;
 	}
-
+*/
 	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
 		if (presentMenu) {
@@ -243,7 +246,7 @@ emu_printf("MAC_loadSounds\n");
 				}
 				break;
 			case kResourceTypeMac:
-emu_printf("displayTitleScreenMac\n");			
+//emu_printf("displayTitleScreenMac\n");			
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
@@ -255,7 +258,7 @@ emu_printf("displayTitleScreenMac\n");
 //		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
 //			_stub->clearWidescreen();
 //		}
-emu_printf("_currentLevel %d\n",_currentLevel);	
+//emu_printf("_currentLevel %d\n",_currentLevel);	
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
 			_vid.setTextPalette();
@@ -270,7 +273,7 @@ emu_printf("_currentLevel %d\n",_currentLevel);
 //			clearStateRewind();
 emu_printf("loadLevelData\n");
 			loadLevelData();
-emu_printf("resetGameState\n");
+//emu_printf("resetGameState\n");
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -321,10 +324,10 @@ void Game::displayTitleScreenMac(int num) {
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
-emu_printf("MAC_setPixel\n");	
+//emu_printf("MAC_setPixel\n");	
 	buf.setPixel = Video::MAC_setPixel;
 	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-emu_printf("MAC_loadTitleImage\n");	
+//emu_printf("MAC_loadTitleImage\n");	
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
@@ -348,11 +351,9 @@ emu_printf("MAC_loadTitleImage\n");
 		c.r = c.g = c.b = 0;
 		_stub->setPaletteEntry(0, &c);
 	} else if (num == Menu::kMacTitleScreen_Flashback) {
-emu_printf("setTextPalette\n");		
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
 	}
-emu_printf("copyRect\n");	
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	_stub->updateScreen(0);
 	while (1) {
@@ -1708,15 +1709,11 @@ void Game::loadLevelData() {
 //		_res.MAC_unloadLevelData();
 emu_printf("MAC_loadLevelData\n");
 
-
-heapWalk();	
-emu_printf("--------------------------------------\n");
-
+	sat_free(_res._monster);
 	sat_free(_res._ani);
 //	_res.clearLevelRes();
 	_res.MAC_unloadLevelData();
 //	delete &_res;
-
 //	sat_free(_res._icn);// icones du menu à ne pas vider
 //	sat_free(_res._tab);
 	sat_free(_res._spc);
@@ -1724,11 +1721,14 @@ emu_printf("--------------------------------------\n");
 	sat_free(_res._cmd);
 	sat_free(_res._pol);
 	sat_free(_res._cine_off);
-	sat_free(_res._cine_txt);
+//	sat_free(_res._cine_txt);  // vbt est dans scratchbuff
+
+/*
 	for (int i = 0; i < _res._numSfx; ++i) {
-		std_free(_res._sfxList[i].data);
+		sat_free(_res._sfxList[i].data);
 	}
-	std_free(_res._sfxList);
+	sat_free(_res._sfxList);
+*/	
 //	sat_free(_res._bankData);
 //	delete _res._aba;
 //	delete _res._mac;

@@ -9,7 +9,6 @@ void *sat_malloc(size_t size);
 void sat_free(void *ptr);
 void *std_calloc(size_t nmemb, size_t size);
 void *std_malloc(size_t size);
-void std_free(void *ptr);
 
 void *sat_realloc(void *ptr, size_t size);
 char *sat_strdup(const char *s);

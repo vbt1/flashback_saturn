@@ -75,7 +75,7 @@ void sat_free(void *ptr) {
 	
 	if(ptr == NULL) return;
 
-//	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
+	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 #define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)		
 	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
@@ -133,17 +133,6 @@ void *std_malloc(size_t size) {
 	return (void*)mem;
 }
 
-void std_free(void *ptr) {
-
-	if(ptr == NULL) return;
-	emu_printf("STD_FREE: addr: %p\n", ptr);
-	free(ptr);
-	
-	ptr = NULL;
-	
-	return;
-}
-
 void *std_calloc(size_t nmemb, size_t size) {
 	void *mem = NULL;
 
@@ -155,7 +144,7 @@ void *std_calloc(size_t nmemb, size_t size) {
 		emu_printf("STD_CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
 //		while(1) slSynch();
 	}
-//	emu_printf("STD_CALLOC: addr: %p, size: %u\n", mem, size);
+	emu_printf("STD_CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 }
 

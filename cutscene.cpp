@@ -440,7 +440,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-	emu_printf("Cutscene::op_drawCaptionText()\n");		
+//	emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 

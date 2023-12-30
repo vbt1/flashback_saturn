@@ -411,7 +411,7 @@ void *SystemStub_SDL::createMutex() {
 }
 
 void SystemStub_SDL::destroyMutex(void *mutex) {
-	std_free(mutex);
+	sat_free(mutex);
 	return;
 }
 
@@ -446,7 +446,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 	slPriorityNbg1(5); // Game screen
-	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen)
+//	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen)
 
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 

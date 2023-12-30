@@ -69,7 +69,7 @@ void ResourceMac::load() {
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
-emu_printf("ResourceMac::loadResourceFork\n");	
+//emu_printf("ResourceMac::loadResourceFork\n");	
 	_f.seek(resourceOffset);
 	_dataOffset = resourceOffset + _f.readUint32BE();
 	uint32_t mapOffset = resourceOffset + _f.readUint32BE();
@@ -81,9 +81,9 @@ emu_printf("ResourceMac::loadResourceFork\n");
 	_map.typesCount = _f.readUint16BE() + 1;
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
-int xx = 0;	
-emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));	
-	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));
+//int xx = 0;	
+//emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));	
+	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
 		_types[i].count = _f.readUint16BE() + 1;
@@ -92,12 +92,12 @@ emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));
 			_sndIndex = i;
 		}
 	}
-	_entries = (ResourceMacEntry **)std_calloc(_map.typesCount, sizeof(ResourceMacEntry *));
-	xx+=sizeof(ResourceMacEntry *);
+	_entries = (ResourceMacEntry **)std_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+//	xx+=sizeof(ResourceMacEntry *);
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
 		_entries[i] = (ResourceMacEntry *)std_calloc(_types[i].count, sizeof(ResourceMacEntry));
-		xx+=sizeof(ResourceMacEntry);
+//		xx+=sizeof(ResourceMacEntry);
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();
 			_entries[i][j].nameOffset = _f.readUint16BE();
@@ -118,7 +118,7 @@ emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));
 			}
 		}
 	}
-emu_printf("SAT_CALLOC: _entries: %d\n", xx);	
+//emu_printf("SAT_CALLOC: _entries: %d\n", xx);	
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {

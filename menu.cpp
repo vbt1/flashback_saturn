@@ -133,7 +133,7 @@ void Menu::handleInfoScreen() {
 		}
 	} while (!_stub->_pi.quit);
 }
-
+/*
 void Menu::handleSkillScreen() {
 //	debug(DBG_MENU, "Menu::handleSkillScreen()");
 	static const uint8_t colors[3][3] = {
@@ -190,6 +190,7 @@ void Menu::handleSkillScreen() {
 	} while (!_stub->_pi.quit);
 	_skill = 1;
 }
+*/
 /*
 bool Menu::handlePasswordScreen() {
 //	emu_printf("Menu::handlePasswordScreen()\n");
@@ -455,7 +456,7 @@ void Menu::handleTitleScreen() {
 			case MENU_OPTION_ITEM_START:
 				return;
 			case MENU_OPTION_ITEM_SKILL:
-				handleSkillScreen();
+				//handleSkillScreen();
 				break;
 			case MENU_OPTION_ITEM_PASSWORD:
 //				if (handlePasswordScreen()) {
@@ -464,7 +465,7 @@ void Menu::handleTitleScreen() {
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
-					emu_printf("handleLevelScreen level selected    \n");	
+//					emu_printf("handleLevelScreen level selected    \n");	
 					
 					return;
 				}

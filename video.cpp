@@ -43,7 +43,7 @@ Video::Video(Resource *res, SystemStub *stub)
 //	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
 	_screenBlocks = (uint8 *)std_malloc((_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H)); //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
-		emu_printf("_screenBlocks %d %p\n", (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H), _screenBlocks);
+//		emu_printf("_screenBlocks %d %p\n", (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H), _screenBlocks);
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	
 	_fullRefresh = true;
@@ -144,13 +144,13 @@ void Video::updateScreen() {
 }
 
 void Video::fullRefresh() {
-	emu_printf("Video::fullRefresh()\n");	
+//	emu_printf("Video::fullRefresh()\n");	
 	_fullRefresh = true;
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 }
 
 void Video::fadeOut() {
-	emu_printf("Video::fadeOut()\n");	
+//	emu_printf("Video::fadeOut()\n");	
 	if (1) {
 		fadeOutPalette();
 	} else {
