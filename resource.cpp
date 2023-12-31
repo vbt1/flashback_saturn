@@ -33,7 +33,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
 	_scratchBuffer = (uint8_t *)std_malloc(kScratchBufferSize);
-emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
+//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
@@ -166,7 +166,7 @@ void Resource::load_FIB(const char *fileName) {
 	if (f.open(_entryName, _dataPath, "rb")) {
 		_numSfx = f.readUint16LE();
 		_sfxList = (SoundFx *)std_malloc(_numSfx * sizeof(SoundFx));
-emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);			
+//emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);			
 		if (!_sfxList) {
 			error("Unable to allocate SoundFx table");
 		}
@@ -1387,10 +1387,10 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+//emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 	uint8_t *data = 0;
 	if (decompressLzss) {
-emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);		
+//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);		
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
@@ -1561,14 +1561,14 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 }
 
 void Resource::MAC_unloadLevelData() {
-	emu_printf("unload _ani %p\n",_ani);	
+//	emu_printf("unload _ani %p\n",_ani);	
 	sat_free(_ani); // vbt est dans scratchbuff
-	emu_printf("unload _ani %p\n",_ani);	
+//	emu_printf("unload _ani %p\n",_ani);	
 	_ani = 0;
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevNode != _objectNodesMap[i]) {
-	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
+//	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
 			sat_free(_objectNodesMap[i]);
 			prevNode = _objectNodesMap[i];
 		}

@@ -66,7 +66,7 @@ void sat_free(void *ptr) {
 
 	if(ptr == NULL || ptr>=ADR_WORKRAM_L_END) return;
 
-	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
+//	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 
 	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
 	{
@@ -74,7 +74,7 @@ void sat_free(void *ptr) {
 	}
 	else
 	{
-		emu_printf("FREE: addr: %p\n", ptr);
+//		emu_printf("FREE: addr: %p\n", ptr);
 		free(ptr);
 	}
 	ptr = NULL;
@@ -91,7 +91,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	if (mem == NULL) {
 		emu_printf("REALLOC: ptr: %.8X, size: %u - FAILED\n", ptr, size);
 	}
-	emu_printf("REALLOC: addr: %p, size: %u\n", mem, size);
+//	emu_printf("REALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 
 }

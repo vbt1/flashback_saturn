@@ -22,25 +22,25 @@
 #include "intern.h"
 
 struct MixerChunk {
-	uint8 *data;
-	uint32 len;
+	const uint8_t *data;
+	uint32_t len;
 
-	int8 getPCM(int offset) const {
+	int8_t getPCM(int offset) const {
 		if (offset < 0) {
 			offset = 0;
 		} else if (offset >= (int)len) {
 			offset = len - 1;
 		}
-		return (int8)data[offset];
+		return (int8_t)data[offset];
 	}
 };
 
 struct MixerChannel {
-	uint8 active;
-	uint8 volume;
+	uint8_t active;
+	uint8_t volume;
 	MixerChunk chunk;
-	uint32 chunkPos;
-	uint32 chunkInc;
+	uint32_t chunkPos;
+	uint32_t chunkInc;
 };
 
 struct SystemStub;
@@ -48,7 +48,17 @@ struct SystemStub;
 struct Mixer {
 	typedef bool (*PremixHook)(void *userData, int8 *buf, int len);
 
+	enum MusicType {
+		MT_NONE,
+		MT_MOD,
+		MT_OGG,
+		MT_PRF,
+		MT_SFX,
+		MT_CPC,
+	};
+
 	enum {
+		MUSIC_TRACK = 1000,
 		NUM_CHANNELS = 4,
 		FRAC_BITS = 12,
 		MAX_VOLUME = 64
@@ -59,6 +69,9 @@ struct Mixer {
 	MixerChannel _channels[NUM_CHANNELS];
 	PremixHook _premixHook;
 	void *_premixHookData;
+	MusicType _backgroundMusicType;
+	MusicType _musicType;
+	int _musicTrack;
 
 	Mixer(SystemStub *stub);
 	void init();
@@ -66,6 +79,8 @@ struct Mixer {
 	void setPremixHook(PremixHook premixHook, void *userData);
 	void play(const MixerChunk *mc, uint16 freq, uint8 volume);
 	void stopAll();
+	void playMusic(int num, int tempo = 0);
+	void stopMusic();
 	uint32 getSampleRate() const;
 	void mix(int8 *buf, int len);
 

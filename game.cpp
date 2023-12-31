@@ -221,7 +221,7 @@ emu_printf("handleProtectionScreen\n");
 	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
 		if (presentMenu) {
-//			_mix.playMusic(1); // vbt : à remplacer
+			_mix.playMusic(1); // vbt : à remplacer
 			switch (_res._type) {
 			case kResourceTypeDOS:
 				_menu.handleTitleScreen();
@@ -249,7 +249,7 @@ emu_printf("handleProtectionScreen\n");
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
-//			_mix.stopMusic(); // vbt à remettre
+			_mix.stopMusic(); // vbt à remettre
 		}
 		if (_stub->_pi.quit) {
 			break;
@@ -598,10 +598,8 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
-//			_vid._layerScale=1;
-
 //		ToggleWidescreenStack tws(_stub, false);
-//		_mix.stopMusic();
+		_mix.stopMusic();
 /*		if (_res._hasSeqData) {
 			int num = 0;
 			switch (_cut._id) {
@@ -663,13 +661,12 @@ void Game::playCutscene(int id) {
 				_mix.playMusic(num, bpm);
 			}
 		} else*/ {
-/*			const int num = Cutscene::_musicTableDOS[_cut._id];
+			const int num = Cutscene::_musicTableDOS[_cut._id];
 			if (num != 0xFF) {
 				_mix.playMusic(num);
-			}*/
+			}
 		}
 		_cut.play();
-		  // vbt à remettre		
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
@@ -677,8 +674,6 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
-
- // vbt à remettre		
 		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
 			Color palette[32];
@@ -688,12 +683,11 @@ void Game::playCutscene(int id) {
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
-
 		if (_cut._id == 0x3D) {
-//			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
+			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
 		}
-//		_mix.stopMusic();
+		_mix.stopMusic();
 	}
 }
 
@@ -775,7 +769,7 @@ void Game::drawCurrentInventoryItem() {
 }
 
 void Game::showFinalScore() {
-//	if (_stub->hasWidescreen()) {   // vbt à boir si on remet
+//	if (_stub->hasWidescreen()) {   // vbt à voir si on remet
 //		_stub->clearWidescreen();
 //	}
 	playCutscene(0x49);
@@ -911,8 +905,6 @@ bool Game::handleConfigPanel() {
 */
 bool Game::handleContinueAbort() {
 		
-//	playCutscene(0x48); // vbt à remettre
-
 	playCutscene(0x48);
 	
 	char textBuf[50];

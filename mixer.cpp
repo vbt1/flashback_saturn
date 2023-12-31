@@ -1,19 +1,7 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 extern "C" {
 	#include 	<string.h>
@@ -92,6 +80,93 @@ void Mixer::stopAll() {
 	}
 }
 
+void Mixer::playMusic(int num, int tempo) {
+	emu_printf("Mixer::playMusic(%d, %d)\n", num, tempo);
+	int trackNum = -1;
+	if (num == 1) { // menu screen
+		trackNum = 2;
+	} else if (num > MUSIC_TRACK) {
+		trackNum = num - MUSIC_TRACK;
+	}
+/*	
+	if (trackNum != -1 && trackNum != _musicTrack) {
+		if (_ogg.playTrack(trackNum)) {
+			_backgroundMusicType = _musicType = MT_OGG;
+			_musicTrack = trackNum;
+			return;
+		}
+		if (_cpc.playTrack(trackNum)) {
+			_backgroundMusicType = _musicType = MT_CPC;
+			_musicTrack = trackNum;
+			return;
+		}
+	}
+	if ((_musicType == MT_OGG || _musicType == MT_CPC) && isMusicSfx(num)) { // do not play level action music with background music
+		return;
+	}
+	if (isMusicSfx(num)) { // level action sequence
+		_sfx.play(num);
+		if (_sfx._playing) {
+			_musicType = MT_SFX;
+		}
+	} else { // cutscene
+		_mod.play(num, tempo);
+		if (_mod._playing) {
+			_musicType = MT_MOD;
+			return;
+		}
+		if (g_options.use_prf_music) {
+			_prf.play(num);
+			if (_prf._playing) {
+				_musicType = MT_PRF;
+				return;
+			}
+		}
+	}
+*/	
+}
+
+void Mixer::stopMusic() {
+	emu_printf( "Mixer::stopMusic()\n");
+/*	
+	switch (_musicType) {
+	case MT_NONE:
+		break;
+	case MT_MOD:
+		_mod.stop();
+		break;
+	case MT_OGG:
+		_ogg.pauseTrack();
+		break;
+	case MT_PRF:
+		_prf.stop();
+		break;
+	case MT_SFX:
+		_sfx.stop();
+		break;
+	case MT_CPC:
+		_cpc.pauseTrack();
+		break;
+	}
+	_musicType = MT_NONE;
+	if (_musicTrack > 2) { // do not resume menu music
+		switch (_backgroundMusicType) {
+		case MT_OGG:
+			_ogg.resumeTrack();
+			_musicType = MT_OGG;
+			break;
+		case MT_CPC:
+			_cpc.resumeTrack();
+			_musicType = MT_CPC;
+			break;
+		default:
+			break;
+		}
+	} else {
+		_musicTrack = -1;
+	}
+*/	
+}
 void Mixer::mix(int8 *buf, int len) {
 //emu_printf(" Mixer::mix\n");
 	//MutexStack(_stub, _mutex);

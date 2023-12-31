@@ -380,8 +380,8 @@ void Menu::handleTitleScreen() {
 		Language lang;
 		const uint8_t *bitmap16x12;
 	} languages[] = {
-		{ LANG_EN, NULL },
-		{ LANG_FR, NULL },
+		{ LANG_EN, NULL /*_flagEn16x12*/ },
+		{ LANG_FR, NULL /*_flagFr16x12*/ },
 		{ LANG_DE, NULL },
 		{ LANG_SP, NULL },
 		{ LANG_IT, NULL },
@@ -402,7 +402,7 @@ void Menu::handleTitleScreen() {
 
 		if (_nextScreen == SCREEN_TITLE) {
 			_vid->fadeOut();
-			loadPicture("MENU1");
+			loadPicture("menu1");
 			_vid->fullRefresh();
 			_charVar3 = 1;
 			_charVar4 = 2;
@@ -495,8 +495,9 @@ void Menu::handleTitleScreen() {
 		}
 
 		// draw the language flag in the top right corner
-		if (previousLanguage != currentLanguage) {
-			_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
+//		if (previousLanguage != currentLanguage) 
+		{
+//			_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
 			static const int flagW = 16;
 			static const int flagH = 12;
 			static const int flagX = Video::GAMESCREEN_W - flagW - 8;

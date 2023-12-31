@@ -84,6 +84,7 @@ struct SystemStub {
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
 //	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
 	virtual void updateScreen(uint8 shakeOffset) = 0;
+//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb) = 0;
 
 	virtual void processEvents() = 0;
 	virtual void sleep(uint32 duration) = 0;

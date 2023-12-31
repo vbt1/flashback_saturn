@@ -29,6 +29,7 @@ extern "C" {
 #include "gfs_wrap.h"
 #include "saturn_print.h"
 #include "sat_mem_checker.h"
+extern TEXTURE tex_spr[4];
 }
 
 extern void emu_printf(const char *format, ...);
@@ -150,6 +151,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
+//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
 	virtual uint32 getTimeStamp();
@@ -264,7 +266,45 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 		SCU_DMAWait();
 	}
 }
+#if 0
+void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb) {
+/*
+	assert(x >= 0 && x + w <= _screenW && y >= 0 && y + h <= _screenH);
+	uint32_t *p = _screenBuffer + y * _screenW + x;
 
+	for (int j = 0; j < h; ++j) {
+		for (int i = 0; i < w; ++i) {
+			p[i] = SDL_MapRGB(_fmt, rgb[0], rgb[1], rgb[2]); rgb += 3;
+		}
+		p += _screenW;
+	}
+
+	if (_pi.dbgMask & PlayerInput::DF_DBLOCKS) {
+		drawRect(x, y, w, h, 0xE7);
+	}
+	*/
+	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
+	SCU_DMAWait();	
+	
+	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+	*txptr = TEXDEF(w, (16>>6), 0);
+//SWAP(_txt1Layer, _txt2Layer);
+	SPRITE user_sprite;
+	user_sprite.CTRL= 0;
+	user_sprite.PMOD= CL32KRGB| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.SRCA= (cgaddress) / 8;
+	user_sprite.COLR= 0;
+
+	user_sprite.SIZE=(w/8)<<8|h;
+	user_sprite.XA=x;
+	user_sprite.YA=y;
+	user_sprite.GRDA=0;	
+ #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
+	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets	
+	slSynch();
+	
+}
+#endif
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
 }

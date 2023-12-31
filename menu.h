@@ -9,7 +9,7 @@
 
 #include "intern.h"
 
-struct ModPlayer;
+//struct ModPlayer;
 struct Resource;
 struct SystemStub;
 struct Video;
@@ -54,8 +54,8 @@ struct Menu {
 //	static const char *_passwords[8][3];
 //	static const char *_passwordsMac[];
 	
-//	static const uint8_t _flagEn16x12[];
-//	static const uint8_t _flagFr16x12[];
+static const uint8_t _flagEn16x12[];
+static const uint8_t _flagFr16x12[];
 //	static const uint8_t _flagDe16x12[];
 //	static const uint8_t _flagIt16x12[];
 //	static const uint8_t _flagJp16x12[];
