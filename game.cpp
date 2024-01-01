@@ -13,6 +13,7 @@ extern "C" {
 #include <sgl.h>
 #include <sega_bup.h>
 #include <sega_per.h>
+#include <sega_gfs.h> 
 //#include <sega_spr.h>
 #include "sat_mem_checker.h"
 
@@ -322,7 +323,7 @@ void Game::displayTitleScreenMac(int num) {
 	buf.y = (_vid._h - h) / 2;
 
 	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+	memset(_vid._frontLayer, 0, w * h);
 
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
@@ -350,7 +351,7 @@ void Game::displayTitleScreenMac(int num) {
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
 	}
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 	_stub->updateScreen(0);
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
@@ -373,8 +374,8 @@ void Game::displayTitleScreenMac(int num) {
 				}
 			}
 //			_vid.updateScreen();
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 		}
 //		_stub->processEvents();
 		if (_stub->_pi.quit) {
@@ -498,9 +499,9 @@ emu_printf("--------------------------------------\n");
 			return;
 		}
 	}
-//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-		SCU_DMAWait();
+	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//		SCU_DMAWait();
 
 
 	pge_getInput();
@@ -938,23 +939,43 @@ _vid._w=512;
 		slSynch();
 		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
 		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
+
+		if (_res.isMac()) {
+
+			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+				if (current_color > 0) {
+					SWAP(colors[current_color], colors[current_color - 1]);
+					--current_color;
+				}
+			}
+			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+				if (current_color < 1) {
+					SWAP(colors[current_color], colors[current_color + 1]);
+					++current_color;
+				}
+			}
+		}
+		else
+		{
+			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+				if (current_color > 0) {
+					SWAP(colors[current_color], colors[current_color - 1]);
+					--current_color;
+				}
+			}
+			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+				if (current_color < 1) {
+					SWAP(colors[current_color], colors[current_color + 1]);
+					++current_color;
+				}
+			}
+		}
 		
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-			if (current_color > 0) {
-				SWAP(colors[current_color], colors[current_color - 1]);
-				--current_color;
-			}
-		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-			if (current_color < 1) {
-				SWAP(colors[current_color], colors[current_color + 1]);
-				++current_color;
-			}
-		}
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter3\n");			
 			_stub->_pi.enter = false;
 			return (current_color == 0);
 		}

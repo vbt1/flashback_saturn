@@ -10,7 +10,7 @@
 //#define   DIR_MAX   (Sint32)170
 
 #define   OPEN_MAX  (Sint32)6
-#define   DIR_MAX   (Sint32)8
+#define   DIR_MAX   (Sint32)16
 
 
 #define SECTOR_SIZE 2048 // Bytes for each sector

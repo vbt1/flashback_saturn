@@ -59,9 +59,10 @@ void ss_main(void) {
 //	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
 	int levelNum = 0;
 	const Language language = (Language)LANG_EN;
+	
 
 	SystemStub *stub = SystemStub_SDL_create();
-	
+
 	Game *g = new Game(stub, ".", ".", levelNum, (ResourceType)version,language);
 
 	g->run();

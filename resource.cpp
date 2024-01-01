@@ -5,10 +5,11 @@
  */
 extern "C"
 {
+#include <sl_def.h>
 	#include 	<stdio.h>	
 	#include 	<string.h>	
 #include <sega_mem.h>
-#include <sl_def.h>
+
 
 #include "sat_mem_checker.h"
 }
@@ -33,6 +34,8 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
 	_scratchBuffer = (uint8_t *)std_malloc(kScratchBufferSize);
+
+	
 //emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");

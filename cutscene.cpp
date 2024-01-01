@@ -89,8 +89,9 @@ void Cutscene::updateScreen() {
 //		_vid->fullRefresh();
 //	SWAP(_frontPage, _backPage);
 
-	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
-	SCU_DMAWait();
+//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+//	SCU_DMAWait();
 	
 	_vid->SAT_displayCutscene(0, 0, 128, 240);
 	slSynch();
@@ -1100,7 +1101,7 @@ void Cutscene::mainLoop(uint16_t num) {
 		if (op >= NUM_OPCODES) {
 		}
 		(this->*_opcodeTable[op])();
-		//_stub->processEvents();
+		_stub->processEvents();
 		if (_stub->_pi.backspace) {
 			_stub->_pi.backspace = false;
 			_interrupted = true;

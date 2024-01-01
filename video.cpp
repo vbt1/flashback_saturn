@@ -36,7 +36,8 @@ Video::Video(Resource *res, SystemStub *stub)
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);
 	_txt2Layer = (uint8_t *)(SpriteVRAM + TEXT2_RAM_VDP2);	
-	memset(_backLayer, 0, _w * _h);
+	memset(_backLayer, 0, _w * _h); // vbt à remettre
+	
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 //	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
 //	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
@@ -60,7 +61,6 @@ Video::Video(Resource *res, SystemStub *stub)
 		_drawChar = &Video::MAC_drawStringChar;
 		break;
 	}
-
 }
 
 Video::~Video() {
@@ -644,10 +644,10 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 	*txptr = TEXDEF(w, (h>>6), 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
-	user_sprite.CTRL= 0;
+	user_sprite.CTRL=0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= (((int)_txt1Layer)-SpriteVRAM) / 8;
-	user_sprite.COLR= 0;
+	user_sprite.COLR=256;
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -667,7 +667,7 @@ void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w
 	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA=txptr->CGadr;
-	user_sprite.COLR=0;
+	user_sprite.COLR=256;
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;

@@ -180,15 +180,18 @@ SystemStub *SystemStub_SDL_create() {
 }
 
 void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
-	
+		
+
 //slPrint((char *)"memset     ",slLocate(10,12));	
 	memset(&_pi, 0, sizeof(_pi)); // Clean inout
 //slPrint((char *)"load_audio_driver     ",slLocate(10,12));
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
+
+
 	prepareGfxMode(); // Prepare graphic output
 //		//emu_printf("prepareGfxMode\n");	
-	
+
 //slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
 
@@ -210,7 +213,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	else
 		tickPerVblank = 20;
 
-	slIntFunction(vblIn); // Function to call at each vblank-in
+	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 
 	return;
 }
@@ -262,8 +265,9 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	int idx;
 
 	for (idx = 0; idx < h; idx++) {
-		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
-		SCU_DMAWait();
+		memcpy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+//		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+//		SCU_DMAWait();
 	}
 }
 #if 0
@@ -291,9 +295,9 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL= 0;
-	user_sprite.PMOD= CL32KRGB| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= (cgaddress) / 8;
-	user_sprite.COLR= 0;
+	user_sprite.COLR= 256;
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -306,7 +310,8 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 }
 #endif
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
+//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
+	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {
@@ -483,22 +488,24 @@ void SystemStub_SDL::prepareGfxMode() {
 	slColRAMMode(CRM16_1024); // Color mode: 1024 colors, choosed between 16 bit
 
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
-	slBMPaletteNbg1(0); // NBG1 (game screen) uses palette 0 in CRAM
+	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
+	slColRAMOffsetSpr(1) ;
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
 #endif
 	
-	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks.
+	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks. // à remettre
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
+//	slPriorityNbg0(6); // Game screen
 	slPriorityNbg1(5); // Game screen
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
+//	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
 
 	slBack1ColSet((void *)BACK_COL_ADR, 0x0); // Black color background
 
 	slTVOn(); // Initialization completed... tv back on
-
 	return;
 }
 

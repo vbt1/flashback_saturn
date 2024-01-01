@@ -49,8 +49,8 @@ int	main( void )
 	slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
-    slPriorityNbg0(4);
-    slPriorityNbg1(5);	
+//    slPriorityNbg0(4);
+//    slPriorityNbg1(5);	
 
 	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
@@ -58,7 +58,7 @@ int	main( void )
 	
 	slTVOff();
 	slScrAutoDisp(NBG1ON|SPRON);
-    slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
+//    slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 	slPrioritySpr0(6);
 
@@ -73,9 +73,9 @@ int	main( void )
 #ifdef _PAR_UPLOAD_
 	cdUnlock(); // Unlock the cd drive
 #endif
-
-#ifdef SLAVE_SOUND
 	DMA_ScuInit(); // Init for SCU DMA
+#ifdef SLAVE_SOUND
+
 	SPR_InitSlaveSH();
 #endif
 	/* Application Call */
