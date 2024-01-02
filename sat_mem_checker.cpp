@@ -64,9 +64,9 @@ void sat_free(void *ptr) {
 #define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 
-	if(ptr == NULL || ptr>=ADR_WORKRAM_L_END) return;
+	if(ptr == NULL /*|| ptr>=ADR_WORKRAM_L_END*/) return;
 
-//	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
+	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 
 	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
 	{

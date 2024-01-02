@@ -890,7 +890,7 @@ void Cutscene::op_drawShapeScaleRotate() {
 		++_shape_count;
 	}
 }
-
+/*
 static const uint16_t memoSetPos[] = {
 	2, 0xffca, 0x0010, 2, 0xffcb, 0x000f, 2, 0xffcd, 0x000e, 2, 0xffd0, 0x000d, 2, 0xffd3, 0x000c, 2, 0xffd7, 0x000b,
 	2, 0xffd9, 0x000a, 2, 0xffdb, 0x0009, 2, 0xffdd, 0x0008, 2, 0xffdd, 0x0008, 2, 0xffdd, 0x0008, 2, 0xffdd, 0x0008,
@@ -908,7 +908,7 @@ static const uint16_t memoSetPos[] = {
 
 static bool _drawMemoSetShapes;
 static uint32_t _memoSetOffset;
-
+*/
 static void readSetPalette(const uint8_t *p, uint16_t offset, uint16_t *palette);
 
 static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuffer) {
@@ -1090,8 +1090,8 @@ void Cutscene::mainLoop(uint16_t num) {
 	_polPtr = getPolygonData();
 
 	_paletteNum = -1;
-	_drawMemoSetShapes = (_id == kCineMemo);
-	_memoSetOffset = 0;
+//	_drawMemoSetShapes = (_id == kCineMemo);
+//	_memoSetOffset = 0;
 	while (!_stub->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
 		if (op & 0x80) {

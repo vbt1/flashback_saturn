@@ -3,7 +3,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
- //#define HEAP_WALK 1
+#define HEAP_WALK 1
  
 extern "C" {
 	#include 	<string.h>
@@ -429,61 +429,13 @@ void Game::mainLoop() {
 			_stub->updateScreen(0);
 	
 			playCutscene(_cut._deathCutsceneId);
+			_res.clearLevelRes(); // vbt : ajout, on a perdu on libère tout
+#ifdef HEAP_WALK
+heapWalk();
+#endif
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
 				_endLoop = true;
-emu_printf("handleContinueAbort\n");				
-/*
-heapWalk();	
-emu_printf("--------------------------------------\n");
-
-	sat_free(_res._spc);
-	sat_free(_res._ani);
-
-	_res.clearLevelRes();
-	_res.MAC_unloadLevelData();
-//	delete &_res;
-
-//	sat_free(_res._fnt);
-	sat_free(_res._icn);
-//	sat_free(_res._tab);
-//	sat_free(_res._spc);
-	sat_free(_res._spr1);
-//	sat_free(_res._scratchBuffer);	
-	sat_free(_res._cmd);
-	sat_free(_res._pol);
-	sat_free(_res._cine_off);
-	sat_free(_res._cine_txt);
-	for (int i = 0; i < _res._numSfx; ++i) {
-		std_free(_res._sfxList[i].data);
-	}
-	std_free(_res._sfxList);
-	sat_free(_res._bankData);
-	delete _res._aba;
-	delete _res._mac;
-heapWalk();	
-	_res.init();
-	*/
-/*
-decodePGE
-
- .ANI
-
-decodeLzss 9772 Level 1 sequences
-
- .OBJ
-
-decodeLzss 11653 Level 1 conditions
-
- .CT
-
-decodeLzss 1014 Level 1 map
-
- .SPC
-
-decodeLzss 71138 Objects 1
-*/
-emu_printf("--------------------------------------\n");	
 			} else {
 			/*	if (_autoSave && _rewindLen != 0 && loadGameState(kAutoSaveSlot)) {
 					// autosave
@@ -1309,6 +1261,7 @@ void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
 		} else {
 			_animBuffers.addState(0, xpos, ypos, dataPtr, pge);
 		}
+		dataPtr = NULL; // vbt : ajout
 	}
 }
 
@@ -1718,19 +1671,22 @@ void Game::loadLevelData() {
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
 //heapWalk();		
-emu_printf("MAC_loadLevelData\n");
-
-	sat_free(_res._monster);
+/*
+emu_printf("MAC_unloadLevelData\n");
+emu_printf("_res._monster %p\n",_res._monster);
+	sat_free(_res._spc);
+emu_printf("_res._monster %p\n",_res._spc);	
+	sat_free(_res._spc);	
 	sat_free(_res._ani);
 	_res.MAC_unloadLevelData();
 //	sat_free(_res._icn);// icones du menu à ne pas vider
-	sat_free(_res._spc);
+
 	sat_free(_res._spr1);
 	sat_free(_res._cmd);
 	sat_free(_res._pol);
 	sat_free(_res._cine_off);
 //	sat_free(_res._cine_txt);  // vbt est dans scratchbuff
-
+*/
 /*
 	for (int i = 0; i < _res._numSfx; ++i) {
 		sat_free(_res._sfxList[i].data);
@@ -1740,10 +1696,6 @@ emu_printf("MAC_loadLevelData\n");
 //	sat_free(_res._bankData);
 //	delete _res._aba;
 //	delete _res._mac;
-
-#ifdef HEAP_WALK
-heapWalk();
-#endif
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
 	}
@@ -1791,7 +1743,7 @@ heapWalk();
 	pge_resetMessages();
 	_validSaveState = false;
 
-//	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre
+	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {

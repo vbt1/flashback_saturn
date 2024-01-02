@@ -483,11 +483,11 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 }
 
 void SystemStub_SDL::prepareGfxMode() {
-	slTVOff(); // Turn off display for initialization
+//	slTVOff(); // Turn off display for initialization
 
 	slColRAMMode(CRM16_1024); // Color mode: 1024 colors, choosed between 16 bit
 
-	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
+//	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
 	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
 	slColRAMOffsetSpr(1) ;
 #ifdef _352_CLOCK_
@@ -498,14 +498,19 @@ void SystemStub_SDL::prepareGfxMode() {
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 //	slPriorityNbg0(6); // Game screen
 	slPriorityNbg1(5); // Game screen
+	slPrioritySpr0(6);
+	
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
-//	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
+	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 
+
+	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	slBack1ColSet((void *)BACK_COL_ADR, 0x0); // Black color background
-
+	slScrAutoDisp(NBG1ON|SPRON); // à faire toujours en dernier
 	slTVOn(); // Initialization completed... tv back on
+	slSynch();  // faire un slsynch à la fin de la config
 	return;
 }
 

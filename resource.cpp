@@ -125,7 +125,7 @@ bool Resource::fileExists(const char *filename) {
 }
 
 void Resource::clearLevelRes() {
-//emu_printf("vbt clearLevelRes\n");		
+emu_printf("vbt clearLevelRes\n");		
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_mbk); _mbk = 0;
 	sat_free(_pal); _pal = 0;
@@ -136,6 +136,24 @@ void Resource::clearLevelRes() {
 	sat_free(_bnq); _bnq = 0;
 	sat_free(_ani); _ani = 0;
 	free_OBJ();
+	
+	if(_type==kResourceTypeMac)
+	{
+	emu_printf("MAC_unloadLevelData\n");
+	emu_printf("_res._monster %p\n",_monster);
+		sat_free(_monster);
+	emu_printf("_res._monster %p\n",_spc);	
+		sat_free(_spc);	
+		sat_free(_ani);
+		MAC_unloadLevelData();
+	//	sat_free(_res._icn);// icones du menu à ne pas vider
+
+		sat_free(_spr1);
+		sat_free(_cmd);
+		sat_free(_pol);
+		sat_free(_cine_off);
+	//	sat_free(_cine_txt);  // vbt est dans scratchbuff
+	}
 }
 
 void Resource::load_DEM(const char *filename) {
