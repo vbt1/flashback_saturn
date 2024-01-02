@@ -51,18 +51,18 @@ int	main( void )
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
 //    slPriorityNbg0(4);
 //    slPriorityNbg1(5);	
-
+	slTVOff();
 	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
 	
-	slTVOff();
-	slScrAutoDisp(NBG1ON|SPRON);
 //    slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
+	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
 	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 	slPrioritySpr0(6);
 
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
+	slScrAutoDisp(NBG1ON|SPRON);
 	
 	slTVOn();
 	slSynch();
