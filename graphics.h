@@ -9,6 +9,11 @@
 
 #include "intern.h"
 
+#include "saturn_print.h"
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+
 struct Graphics {
 	static const int AREA_POINTS_SIZE = 256 * 2; // maxY * sizeof(Point) / sizeof(int16_t)
 	uint8_t *_layer;

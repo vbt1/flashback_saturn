@@ -25,7 +25,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 //emu_printf("0x25C60000 %d %s\n", decodedSize, name);	
 		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
 	}
-	else if(strcmp("Person", name) == 0 || strcmp("Replicant", name) == 0 || strncmp("Level", name, 5) == 0)
+	else if(strcmp("Person", name) == 0 || strcmp("Mercenary", name) == 0 || strcmp("Replicant", name) == 0 || strncmp("Level", name, 5) == 0)
 	{
 		dst = (uint8_t *)sat_malloc(decodedSize);
 	}	

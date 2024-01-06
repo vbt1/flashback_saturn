@@ -10,10 +10,14 @@
 #include "intern.h"
 #include "resource_aba.h"
 #include "resource_mac.h"
+#include "saturn_print.h"
 
 struct DecodeBuffer;
 struct File;
 //struct FileSystem;
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
 
 struct LocaleData {
 	enum Id {

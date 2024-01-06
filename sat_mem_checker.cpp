@@ -74,7 +74,7 @@ void sat_free(void *ptr) {
 	}
 	else
 	{
-//		emu_printf("FREE: addr: %p\n", ptr);
+		emu_printf("FREE: addr: %p\n", ptr);
 		free(ptr);
 	}
 	ptr = NULL;

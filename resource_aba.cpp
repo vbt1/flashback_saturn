@@ -8,6 +8,9 @@ extern "C" {
 #include "util.h"
 #include "saturn_print.h"
 
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+
 int	 strcasecmp(const char *, const char *) __pure;
 char *_dataPath = "";	
 	
@@ -81,7 +84,7 @@ uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);			
 
 		if (!tmp) {
-			error("Failed to allocate %d bytes", e->compressedSize);
+			emu_printf("Failed to allocate %d bytes\n", e->compressedSize);
 			return 0;
 		}
 		_f[e->fileIndex].seek(e->offset);
@@ -91,13 +94,13 @@ emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);
 		} else {
 			dst = (uint8_t *)sat_malloc(e->size);
 			if (!dst) {
-				error("Failed to allocate %d bytes", e->size);
+				emu_printf("Failed to allocate %d bytes\n", e->size);
 				sat_free(tmp);
 				return 0;
 			}
 			const bool ret = bytekiller_unpack(dst, e->size, tmp, e->compressedSize);
 			if (!ret) {
-				error("Bad CRC for '%s'", name);
+				emu_printf("Bad CRC for '%s'\n", name);
 			}
 emu_printf("ResourceAba::loadEntry: sat_free  %p\n",tmp);			
 			sat_free(tmp);

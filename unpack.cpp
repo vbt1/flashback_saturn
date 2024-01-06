@@ -7,6 +7,11 @@
 #include "unpack.h"
 #include "util.h"
 
+#include "saturn_print.h"
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+
 struct BytekillerCtx {
 	int size;
 	uint32_t crc;

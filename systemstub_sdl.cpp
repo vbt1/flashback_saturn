@@ -27,16 +27,23 @@ extern "C" {
 #include "sega_spr.h"
 #include <sega_sys.h>
 #include "gfs_wrap.h"
-#include "saturn_print.h"
 #include "sat_mem_checker.h"
+
 extern TEXTURE tex_spr[4];
 }
 
-extern void emu_printf(const char *format, ...);
+//extern void emu_printf(const char *format, ...);
 
 #include "sys.h"
 #include "mixer.h"
 #include "systemstub.h"
+
+ #include "saturn_print.h"
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+ 
+
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 /* Needed to unlock cd drive */
 #define SYS_CDINIT1(i) ((**(void(**)(int))0x60002dc)(i)) // Init functions for Saturn CD drive

@@ -31,6 +31,10 @@ extern "C"
 #include "mod_player.h"
 #include "util.h"
 
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+
+
 volatile Uint8 slaveMixing;
 volatile Uint8 slaveProceed;
 
