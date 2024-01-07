@@ -86,9 +86,9 @@ void Mixer::stopAll() {
 
 void Mixer::pauseMusic(void)
 {
-//	CDC_POS_PTYPE(&posdata)=CDC_PTYPE_NOCHG;
+	CDC_POS_PTYPE(&posdata)=CDC_PTYPE_DFL;
 	CDC_CdSeek(&posdata);
-//	CDC_GetCurStat(&statdata);
+	CDC_GetCurStat(&statdata);
 }
 
 void Mixer::unpauseMusic(void)
@@ -120,12 +120,12 @@ void Mixer::unpauseMusic(void)
 */
 
 void Mixer::playMusic(int num, int tempo) {
-	emu_printf("Mixer::playMusic(%d, %d)\n", num, tempo);
+	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
 	int trackNum = -1;
 	if (num == 1) { // menu screen
 		trackNum = 2;
 	} else if (num >= MUSIC_TRACK) {
-		trackNum = 3+ num - MUSIC_TRACK;
+		trackNum = 0+ num - MUSIC_TRACK;
 	}
 	emu_printf("Mixer::trackNum(%d)\n", trackNum);
 
@@ -175,7 +175,8 @@ void Mixer::playMusic(int num, int tempo) {
 }
 
 void Mixer::stopMusic() {
-	emu_printf( "Mixer::stopMusic() %d\n",_musicType);
+	emu_printf( "Mixer::stopMusic() %d _musicTrack %d\n",_musicType,_musicTrack);
+	CDC_CdSeek(&posdata);
 //	CDC_POS_PTYPE( &posdata ) = CDC_PTYPE_DFL;	/* Stop Music. */
 /*	
 	switch (_musicType) {

@@ -499,14 +499,15 @@ emu_printf("vbt playmusic chg lvl\n");
 			_deathCutsceneCounter = 1;
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
+			_mix.pauseMusic();
 			loadLevelMap();
 			_loadMap = false;
 //			_vid.fullRefresh();
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 //	_vid.updateScreen();
-//			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
-			_mix.unpauseMusic();
+			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+//			_mix.unpauseMusic();
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
@@ -540,8 +541,8 @@ emu_printf("vbt playmusic chg lvl\n");
 	if(_cut._stop)
 	{
 		emu_printf("vbt playmusic  after cutscene\n");
-//		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
-		_mix.unpauseMusic(); // vbt : on reprend où la musique était
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+//		_mix.unpauseMusic(); // vbt : on reprend où la musique était
 		_cut._stop = false;
 	}
 	
@@ -1657,7 +1658,7 @@ bool Game::hasLevelMap(int level, int room) const {
 	return false;
 }
 void Game::loadLevelMap() {
-//	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
 	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
 	switch (_res._type) {

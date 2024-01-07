@@ -1411,7 +1411,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 	uint8_t *data = 0;
 	if (decompressLzss) {
-//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);		
+//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
@@ -1427,7 +1427,6 @@ emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _reso
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 		}		
 		else if(strcmp("Flashback colors", entry->name) == 0 
-		|| strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
 		|| strncmp("Movie", entry->name, 5) == 0 
@@ -1605,7 +1604,7 @@ static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5
 
 void Resource::MAC_loadLevelData(int level) {
 	char name[64];
-//emu_printf("MAC_loadLevelData\n");	
+emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
