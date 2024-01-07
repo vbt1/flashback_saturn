@@ -1408,7 +1408,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-//emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 	uint8_t *data = 0;
 	if (decompressLzss) {
 //emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);		
@@ -1420,13 +1420,10 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 		if(strcmp("Flashback strings", entry->name) == 0)
 		{
-//emu_printf("vbt Flashback strings!!!!\n");
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-//			data = (uint8_t *)_scratchBuffer+0x12C00;
 		}
 		else if(strstr(entry->name,"names") !=NULL)
 		{
-//emu_printf("vbt aaaaaaaaa Flashback strings std_malloc!!!!\n");				
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 		}		
 		else if(strcmp("Flashback colors", entry->name) == 0 
@@ -1438,14 +1435,13 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
-//emu_printf("ducon _scratchBuffer %d\n", _resourceMacDataSize);	
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
 				
 		else
 		{
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-		}		
+		}
 		
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);

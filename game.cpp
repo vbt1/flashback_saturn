@@ -50,6 +50,8 @@ extern Uint32  __malloc_free_list;
 
 extern "C" {
 extern Uint32  _sbrk(int size);
+extern CdcPly	playdata;
+extern CdcPos	posdata;
 }
 
 void heapWalk(void)
@@ -177,7 +179,6 @@ void Game::run() {
 		break;
 	}
 
-
 #ifndef BYPASS_PROTECTION
 emu_printf("handleProtectionScreen\n");
 	while (!handleProtectionScreen());
@@ -199,6 +200,7 @@ emu_printf("handleProtectionScreen\n");
 	
 	playCutscene(0x40);
 	playCutscene(0x0D);
+	
 /*
 	// global resources
 	switch (_res._type) {
@@ -222,7 +224,8 @@ emu_printf("handleProtectionScreen\n");
 	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
 		if (presentMenu) {
-			_mix.playMusic(1); // vbt : à remplacer
+//			_mix.playMusic(1); // vbt : à remplacer
+			
 			switch (_res._type) {
 			case kResourceTypeDOS:
 				_menu.handleTitleScreen();
@@ -334,6 +337,7 @@ void Game::displayTitleScreenMac(int num) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
 		}
 	}
+	
 	if (num == Menu::kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		_res.MAC_copyClut16(palette, 0, 56);
@@ -350,17 +354,23 @@ void Game::displayTitleScreenMac(int num) {
 	} else if (num == Menu::kMacTitleScreen_Flashback) {
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
+		_mix.playMusic(1); // vbt : déplacé
 	}
+	
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 	_stub->updateScreen(0);
+
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
+			
+		
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
 			for (int i = 0; i < 7; ++i) {
 				const char *str = Menu::_levelNames[i];
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
+			
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (_currentLevel > 0) {
@@ -414,12 +424,14 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
+			
 	playCutscene();
 	if (_cut._id == 0x3D) {
 		showFinalScore();
 		_endLoop = true;
 		return;
 	}
+	
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
@@ -474,6 +486,8 @@ heapWalk();
 		}*/
 		changeLevel();
 		_pge_opGunVar = 0;
+emu_printf("vbt playmusic chg lvl\n");
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
 		return;
 	}
 	if (_currentLevel == 3 && _cut._id == 50) {
@@ -489,10 +503,10 @@ heapWalk();
 			loadLevelMap();
 			_loadMap = false;
 //			_vid.fullRefresh();
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 //	_vid.updateScreen();
-
+			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
@@ -522,6 +536,14 @@ heapWalk();
 			return;
 		}
 	}
+	
+	if(_cut._stop)
+	{
+		emu_printf("vbt playmusic  after cutscene\n");
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+		_cut._stop = false;
+	}
+	
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to

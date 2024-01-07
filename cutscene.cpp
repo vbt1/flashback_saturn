@@ -1107,6 +1107,7 @@ void Cutscene::mainLoop(uint16_t num) {
 			_interrupted = true;
 		}
 	}
+	_stop=true;
 }
 
 bool Cutscene::load(uint16_t cutName) {
@@ -1138,7 +1139,6 @@ void Cutscene::unload() {
 		_res->MAC_unloadCutscene();
 		break;
 	}
-	
 	
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{

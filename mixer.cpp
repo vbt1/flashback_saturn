@@ -6,11 +6,15 @@
 extern "C" {
 	#include 	<string.h>
 #include <sl_def.h>
+#include <sega_cdc.h>
 
 }
 #include "mixer.h"
 #include "systemstub.h"
 #include "saturn_print.h"
+/* CDDA */
+extern CdcPly	playdata;
+extern CdcPos	posdata;
 
 
 Mixer::Mixer(SystemStub *stub)
@@ -85,8 +89,18 @@ void Mixer::playMusic(int num, int tempo) {
 	int trackNum = -1;
 	if (num == 1) { // menu screen
 		trackNum = 2;
-	} else if (num > MUSIC_TRACK) {
-		trackNum = num - MUSIC_TRACK;
+	} else if (num >= MUSIC_TRACK) {
+		trackNum = 3+ num - MUSIC_TRACK;
+	}
+	emu_printf("Mixer::trackNum(%d)\n", trackNum);
+
+	if(trackNum>1 && trackNum<5)
+	{
+	
+		CDC_POS_PTYPE( &posdata ) = CDC_PTYPE_TNO;
+		CDC_PLY_STNO( &playdata ) = (Uint8) (trackNum);
+		CDC_PLY_ETNO( &playdata ) = (Uint8) (trackNum);
+		CDC_CdPlay(&playdata);	
 	}
 /*	
 	if (trackNum != -1 && trackNum != _musicTrack) {
@@ -127,7 +141,8 @@ void Mixer::playMusic(int num, int tempo) {
 }
 
 void Mixer::stopMusic() {
-	emu_printf( "Mixer::stopMusic()\n");
+	emu_printf( "Mixer::stopMusic() %d\n",_musicType);
+//	CDC_POS_PTYPE( &posdata ) = CDC_PTYPE_DFL;	/* Stop Music. */
 /*	
 	switch (_musicType) {
 	case MT_NONE:

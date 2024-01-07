@@ -116,6 +116,11 @@ Uint8 curSlot = 0;
 static Mixer *mix = NULL;
 static volatile Uint8 audioEnabled = 0;
 
+/* CDDA */
+
+CdcPly	playdata;
+CdcPos	posdata;
+
 static uint8 tickPerVblank = 0;
 
 /* Required for timing */
@@ -179,6 +184,8 @@ struct SystemStub_SDL : SystemStub {
 	void drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch);
 
 	void load_audio_driver(void);
+	void init_cdda(void);
+	void sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r);
 };
 
 SystemStub *SystemStub_SDL_create() {
@@ -194,8 +201,8 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 //slPrint((char *)"load_audio_driver     ",slLocate(10,12));
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
-
-
+	init_cdda();
+	sound_external_audio_enable(5, 5);
 	prepareGfxMode(); // Prepare graphic output
 //		//emu_printf("prepareGfxMode\n");	
 
@@ -612,6 +619,69 @@ void SystemStub_SDL::load_audio_driver(void) {
 	SND_ChgMap(0);
 
 	return;
+}
+
+void SystemStub_SDL::init_cdda(void)
+{
+    CDC_PLY_STYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
+    CDC_PLY_STNO( &playdata) = 2;		/* start track number. */
+    CDC_PLY_SIDX( &playdata) = 1;		/* start index number. */
+    CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
+    CDC_PLY_ETNO( &playdata) = 10;		/* start track number. */
+    CDC_PLY_EIDX( &playdata) = 99;		/* start index number. */
+    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL + 30;	/* Play Mode. */ // lecture en boucle
+//    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL+30;//CDC_PM_DFL ;	/* Play Mode. */ // lecture unique	
+}
+
+ void SystemStub_SDL::sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r) {
+    volatile uint16_t *slot_ptr;
+
+    //max sound volume is 7
+    if (vol_l > 7) {
+        vol_l = 7;
+    }
+    if (vol_r > 7) {
+        vol_r = 7;
+    }
+
+    // Setup SCSP Slot 16 and Slot 17 for playing
+    slot_ptr = (volatile Uint16 *)(0x25B00000 + (0x20 * 16));
+    slot_ptr[0] = 0x1000;
+    slot_ptr[1] = 0x0000; 
+    slot_ptr[2] = 0x0000; 
+    slot_ptr[3] = 0x0000; 
+    slot_ptr[4] = 0x0000; 
+    slot_ptr[5] = 0x0000; 
+    slot_ptr[6] = 0x00FF; 
+    slot_ptr[7] = 0x0000; 
+    slot_ptr[8] = 0x0000; 
+    slot_ptr[9] = 0x0000; 
+    slot_ptr[10] = 0x0000; 
+    slot_ptr[11] = 0x001F | (vol_l << 5);
+    slot_ptr[12] = 0x0000; 
+    slot_ptr[13] = 0x0000; 
+    slot_ptr[14] = 0x0000; 
+    slot_ptr[15] = 0x0000; 
+
+    slot_ptr = (volatile Uint16 *)(0x25B00000 + (0x20 * 17));
+    slot_ptr[0] = 0x1000;
+    slot_ptr[1] = 0x0000; 
+    slot_ptr[2] = 0x0000; 
+    slot_ptr[3] = 0x0000; 
+    slot_ptr[4] = 0x0000; 
+    slot_ptr[5] = 0x0000; 
+    slot_ptr[6] = 0x00FF; 
+    slot_ptr[7] = 0x0000; 
+    slot_ptr[8] = 0x0000; 
+    slot_ptr[9] = 0x0000; 
+    slot_ptr[10] = 0x0000; 
+    slot_ptr[11] = 0x000F | (vol_r << 5);
+    slot_ptr[12] = 0x0000; 
+    slot_ptr[13] = 0x0000; 
+    slot_ptr[14] = 0x0000; 
+    slot_ptr[15] = 0x0000;
+
+    *((volatile Uint16 *)(0x25B00400)) = 0x020F;
 }
 
 inline void timeTick() {
