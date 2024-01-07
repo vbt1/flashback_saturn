@@ -15,7 +15,7 @@ extern "C" {
 /* CDDA */
 extern CdcPly	playdata;
 extern CdcPos	posdata;
-
+extern CdcStat  statdata;
 
 Mixer::Mixer(SystemStub *stub)
 	: _stub(stub) {
@@ -84,6 +84,41 @@ void Mixer::stopAll() {
 	}
 }
 
+void Mixer::pauseMusic(void)
+{
+//	CDC_POS_PTYPE(&posdata)=CDC_PTYPE_NOCHG;
+	CDC_CdSeek(&posdata);
+//	CDC_GetCurStat(&statdata);
+}
+
+void Mixer::unpauseMusic(void)
+{
+/*
+	CDC_PLY_STYPE(&playdata) = CDC_PTYPE_NOCHG;
+	CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_NOCHG;
+	CDC_PLY_PMODE(&playdata) = CDC_PM_NOCHG;
+*/
+//	memcpy(&playdata.start,&posdata,sizeof(CdcPos));
+
+/*
+    CDC_PLY_STYPE(&playdata) = CDC_PTYPE_FAD;
+    CDC_PLY_SFAD(&playdata) = statdata.report.fad;
+    CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_FAD;
+//    CDC_PLY_EFAS(&playdata) = efad - sfad + 1;
+    CDC_PLY_PMODE(&playdata) = CDC_PM_DFL;
+*/
+	CDC_POS_PTYPE(&posdata)=CDC_PTYPE_FAD;
+	CDC_CdSeek(&posdata);	
+	CDC_CdPlay(&playdata);
+}
+/*
+        CDC_PLY_STYPE(&ply) = CDC_PTYPE_FAD;
+        CDC_PLY_SFAD(&ply) = sfad;
+        CDC_PLY_ETYPE(&ply) = CDC_PTYPE_FAD;
+        CDC_PLY_EFAS(&ply) = efad - sfad + 1;
+        CDC_PLY_PMODE(&ply) = CDC_PM_DFL;
+*/
+
 void Mixer::playMusic(int num, int tempo) {
 	emu_printf("Mixer::playMusic(%d, %d)\n", num, tempo);
 	int trackNum = -1;
@@ -94,9 +129,8 @@ void Mixer::playMusic(int num, int tempo) {
 	}
 	emu_printf("Mixer::trackNum(%d)\n", trackNum);
 
-	if(trackNum>1 && trackNum<5)
+	if(trackNum>1 && trackNum<10)
 	{
-	
 		CDC_POS_PTYPE( &posdata ) = CDC_PTYPE_TNO;
 		CDC_PLY_STNO( &playdata ) = (Uint8) (trackNum);
 		CDC_PLY_ETNO( &playdata ) = (Uint8) (trackNum);

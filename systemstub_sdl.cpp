@@ -120,6 +120,7 @@ static volatile Uint8 audioEnabled = 0;
 
 CdcPly	playdata;
 CdcPos	posdata;
+CdcStat statdata;
 
 static uint8 tickPerVblank = 0;
 

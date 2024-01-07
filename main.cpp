@@ -28,8 +28,6 @@ extern "C" {
 
 //#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
 //#define LOW_WORK_RAM_SIZE 0x100000
-extern CdcPly	playdata;
-extern CdcPos	posdata;
 void *__dso_handle = 0;
 
 static int detectVersion(const char *dataPath) {

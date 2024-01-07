@@ -50,8 +50,6 @@ extern Uint32  __malloc_free_list;
 
 extern "C" {
 extern Uint32  _sbrk(int size);
-extern CdcPly	playdata;
-extern CdcPos	posdata;
 }
 
 void heapWalk(void)
@@ -354,7 +352,7 @@ void Game::displayTitleScreenMac(int num) {
 	} else if (num == Menu::kMacTitleScreen_Flashback) {
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
-		_mix.playMusic(1); // vbt : déplacé
+		_mix.playMusic(1); // vbt : déplacé, musique du menu
 	}
 	
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
@@ -487,7 +485,7 @@ heapWalk();
 		changeLevel();
 		_pge_opGunVar = 0;
 emu_printf("vbt playmusic chg lvl\n");
-		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
 	}
 	if (_currentLevel == 3 && _cut._id == 50) {
@@ -495,6 +493,7 @@ emu_printf("vbt playmusic chg lvl\n");
 		return;
 	}
 	if (_loadMap) {
+		_mix.pauseMusic();
 		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
@@ -506,7 +505,8 @@ emu_printf("vbt playmusic chg lvl\n");
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 //	_vid.updateScreen();
-			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+//			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+			_mix.unpauseMusic();
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
@@ -540,7 +540,8 @@ emu_printf("vbt playmusic chg lvl\n");
 	if(_cut._stop)
 	{
 		emu_printf("vbt playmusic  after cutscene\n");
-		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+//		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+		_mix.unpauseMusic(); // vbt : on reprend où la musique était
 		_cut._stop = false;
 	}
 	
@@ -575,6 +576,7 @@ void Game::playCutscene(int id) {
 	if (_cut._id != 0xFFFF) {
 //		ToggleWidescreenStack tws(_stub, false);
 		_mix.stopMusic();
+		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
 /*		if (_res._hasSeqData) {
 			int num = 0;
 			switch (_cut._id) {
@@ -1627,6 +1629,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 		case kResourceTypeMac: {
 				Color palette[256];
 				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
 					const int color = kMonsterPalette * 16 + i;
@@ -1765,7 +1768,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 	pge_resetMessages();
 	_validSaveState = false;
 
-	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre
+	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre, le seul à garder
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
