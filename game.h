@@ -27,8 +27,12 @@
 #include "resource.h"
 #include "sfx_player.h"
 #include "video.h"
+#include "saturn_print.h"
 
 #define SAV_BUFSIZE (1024 * 10)
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
 
 typedef struct {
 	Uint8 buffer[SAV_BUFSIZE]; // 10 Kilobytes of save buffer
@@ -69,7 +73,7 @@ struct Game {
 	static const uint8_t _monsterListLevel5_2[];
 	static const uint8_t *_monsterListLevels[];
 	static const uint8_t _monsterPals[4][32];
-	static const char *_monsterNames[2][4];
+	static const char *_monsterNames[1][4];
 	static const pge_OpcodeProc _pge_opcodeTable[];
 	static const uint8 _pge_modKeysTable[];
 //	static const uint8 _protectionCodeData[];

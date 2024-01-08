@@ -27,15 +27,23 @@ extern "C" {
 #include "sega_spr.h"
 #include <sega_sys.h>
 #include "gfs_wrap.h"
-#include "saturn_print.h"
 #include "sat_mem_checker.h"
+
+extern TEXTURE tex_spr[4];
 }
 
-extern void emu_printf(const char *format, ...);
+//extern void emu_printf(const char *format, ...);
 
 #include "sys.h"
 #include "mixer.h"
 #include "systemstub.h"
+
+ #include "saturn_print.h"
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+ 
+
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 /* Needed to unlock cd drive */
 #define SYS_CDINIT1(i) ((**(void(**)(int))0x60002dc)(i)) // Init functions for Saturn CD drive
@@ -105,11 +113,14 @@ static PcmWork pcm_work[2];
 static PcmHn pcm[2];
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
-
-//Uint8 curZoom = 0;
-//Uint8 newZoom = 0;
 static Mixer *mix = NULL;
 static volatile Uint8 audioEnabled = 0;
+
+/* CDDA */
+
+CdcPly	playdata;
+CdcPos	posdata;
+CdcStat statdata;
 
 static uint8 tickPerVblank = 0;
 
@@ -152,8 +163,8 @@ struct SystemStub_SDL : SystemStub {
 	virtual void getPaletteEntry(uint8 i, Color *c);
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
-	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
+//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
 	virtual uint32 getTimeStamp();
@@ -174,6 +185,8 @@ struct SystemStub_SDL : SystemStub {
 	void drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch);
 
 	void load_audio_driver(void);
+	void init_cdda(void);
+	void sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r);
 };
 
 SystemStub *SystemStub_SDL_create() {
@@ -182,15 +195,18 @@ SystemStub *SystemStub_SDL_create() {
 }
 
 void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
-	
+		
+
 //slPrint((char *)"memset     ",slLocate(10,12));	
 	memset(&_pi, 0, sizeof(_pi)); // Clean inout
 //slPrint((char *)"load_audio_driver     ",slLocate(10,12));
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
+	init_cdda();
+	sound_external_audio_enable(5, 5);
 	prepareGfxMode(); // Prepare graphic output
-//		emu_printf("prepareGfxMode\n");	
-	
+//		//emu_printf("prepareGfxMode\n");	
+
 //slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
 
@@ -199,15 +215,20 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	audioEnabled = 0;
 	curBuf = 0;
 	curSlot = 0;
-
+//emu_printf("SystemStub_SDL::init\n");	
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 0;
-
+#else
+	buffer_filled[0] = 0;
+	buffer_filled[1] = 0;
+#endif
 	if(isNTSC())
 		tickPerVblank = 17;
 	else
 		tickPerVblank = 20;
-	slIntFunction(vblIn); // Function to call at each vblank-in
+
+	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 
 	return;
 }
@@ -250,28 +271,7 @@ void SystemStub_SDL::getPaletteEntry(uint8 i, Color *c) {
 
 void SystemStub_SDL::setOverscanColor(uint8 i) {
 	_overscanColor = i;
-//emu_printf("setOverscanColor\n");	
-
-memset((void*)VDP2_VRAM_A0, i, 512*448);
-/*
-	for(Uint8 line = 0; line < 224; line++) {
-		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
-	}
-	for(Uint8 line = 224; line < 448; line++) {
-		memset((uint8*)(VDP2_VRAM_A0 + (line * 512)), i, 512);
-	}*/
-}
-
-void SystemStub_SDL::copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
-	buf += y * pitch + x; // Get to data...
-emu_printf("copyRect2\n");
-	int idx;
-
-	for (idx = 0; idx < h; idx++) {
-		memset((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x),0x00,w);
-//		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
-//		SCU_DMAWait();
-	}
+	memset((void*)VDP2_VRAM_A0, i, 512*448);
 }
 
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
@@ -280,26 +280,53 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	int idx;
 
 	for (idx = 0; idx < h; idx++) {
-		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
-		SCU_DMAWait();
+		memcpy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+//		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+//		SCU_DMAWait();
 	}
 }
+#if 0
+void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb) {
+/*
+	assert(x >= 0 && x + w <= _screenW && y >= 0 && y + h <= _screenH);
+	uint32_t *p = _screenBuffer + y * _screenW + x;
 
+	for (int j = 0; j < h; ++j) {
+		for (int i = 0; i < w; ++i) {
+			p[i] = SDL_MapRGB(_fmt, rgb[0], rgb[1], rgb[2]); rgb += 3;
+		}
+		p += _screenW;
+	}
 
+	if (_pi.dbgMask & PlayerInput::DF_DBLOCKS) {
+		drawRect(x, y, w, h, 0xE7);
+	}
+	*/
+	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
+	SCU_DMAWait();	
+	
+	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+	*txptr = TEXDEF(w, (16>>6), 0);
+//SWAP(_txt1Layer, _txt2Layer);
+	SPRITE user_sprite;
+	user_sprite.CTRL= 0;
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.SRCA= (cgaddress) / 8;
+	user_sprite.COLR= 256;
+
+	user_sprite.SIZE=(w/8)<<8|h;
+	user_sprite.XA=x;
+	user_sprite.YA=y;
+	user_sprite.GRDA=0;	
+ #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
+	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets	
+	slSynch();
+	
+}
+#endif
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2);
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK), 256 * 2); // vbt : à enlever
-	//memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);
-
-	// Move scroll to shake screen
-//	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
-//	slScrPosNbg0(toFIXED(HOR_OFFSET), toFIXED(shakeOffset/2));
-
-	//slSynch();
-	//SPR_WaitEndSlaveSH();
-	return;
+//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
+	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {
@@ -397,7 +424,7 @@ void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 
 	PCM_Init(); // Initialize PCM playback
 
-//	audioEnabled = 1; // Enable audio // vbt à remettre
+	audioEnabled = 1; // Enable audio
 
 	// Prepare handles
 	pcm[0] = createHandle(0);
@@ -431,8 +458,13 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 }
 
 void *SystemStub_SDL::createMutex() {
-	SatMutex *mtx = (SatMutex*)sat_malloc(sizeof(SatMutex));
+//emu_printf("SystemStub_SDL::createMutex\n");	
+	SatMutex *mtx = (SatMutex*)std_malloc(sizeof(SatMutex));
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
+#else
+	mtx->access = 0;
+#endif
 	return mtx;
 }
 
@@ -442,52 +474,58 @@ void SystemStub_SDL::destroyMutex(void *mutex) {
 }
 
 void SystemStub_SDL::lockMutex(void *mutex) {
+//emu_printf("SystemStub_SDL::lockMutex\n");	
 	SatMutex *mtx = (SatMutex*)mutex;
+#ifdef SLAVE_SOUND	
 	while(*(Uint8*)OPEN_CSH_VAR(mtx->access) > 0) asm("nop");
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))++;
-
+#else
+	while(mtx->access > 0) asm("nop");
+	mtx->access++;
+#endif
 	return;
 }
 
 void SystemStub_SDL::unlockMutex(void *mutex) {
+//emu_printf("SystemStub_SDL::unlockMutex\n");	
 	SatMutex *mtx = (SatMutex*)mutex;
-
+#ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
-
+#else
+	mtx->access--;
+#endif
 	return;
 }
 
 void SystemStub_SDL::prepareGfxMode() {
-	slTVOff(); // Turn off display for initialization
+//	slTVOff(); // Turn off display for initialization
 
 	slColRAMMode(CRM16_1024); // Color mode: 1024 colors, choosed between 16 bit
 
-	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
-	
+//	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
+	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
+	slColRAMOffsetSpr(1) ;
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
-//	slZoomNbg1(toFIXED(0.9), toFIXED(1.0));
 #endif
 	
-	memset((void*)VDP2_VRAM_A0, 0x00, 512*512); // Clean the VRAM banks.
-
+	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks. // à remettre
+	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
+//	slPriorityNbg0(6); // Game screen
 	slPriorityNbg1(5); // Game screen
-
-	slScrAutoDisp(NBG1ON); // Enable display for NBG1 (game screen), NBG0 (debug messages/keypad)
-	//slScrAutoDisp(NBG1ON); // Enable display only for game screen: NBG1
-
-	//slScrPosNbg0((FIXED)0, (FIXED)0); // Position NBG0
+	slPrioritySpr0(6);
+	
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
-	//slLookR(toFIXED(0.0) , toFIXED(0.0));
-
-	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
+	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 
+
+	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	slBack1ColSet((void *)BACK_COL_ADR, 0x0); // Black color background
-
+	slScrAutoDisp(NBG1ON|SPRON); // à faire toujours en dernier
 	slTVOn(); // Initialization completed... tv back on
-
+	slSynch();  // faire un slsynch à la fin de la config
 	return;
 }
 
@@ -560,16 +598,13 @@ void SystemStub_SDL::load_audio_driver(void) {
 
 
 	if(drv_file == NULL) 
-	{
 		error("Unable to load sound driver");
-	}
-//slPrint((char *)"sat_fseek     ",slLocate(10,12));	
 
 	sat_fseek(drv_file, 0, SEEK_END);
 	drv_size = sat_ftell(drv_file);
 	sat_fseek(drv_file, 0, SEEK_SET);
 
-#define	SDDRV_ADDR	0x6080000
+#define	SDDRV_ADDR	0x60B0000
 
 //	sddrvstsk = (uint8*)sat_malloc(drv_size);
 	sddrvstsk = (uint8*)SDDRV_ADDR;
@@ -583,9 +618,71 @@ void SystemStub_SDL::load_audio_driver(void) {
 	SND_INI_ARA_SZ(snd_init) 	= sizeof(sound_map);
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
-//	sat_free(sddrvstsk);
 
 	return;
+}
+
+void SystemStub_SDL::init_cdda(void)
+{
+    CDC_PLY_STYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
+    CDC_PLY_STNO( &playdata) = 2;		/* start track number. */
+    CDC_PLY_SIDX( &playdata) = 1;		/* start index number. */
+    CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
+    CDC_PLY_ETNO( &playdata) = 10;		/* start track number. */
+    CDC_PLY_EIDX( &playdata) = 99;		/* start index number. */
+    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL + 30;	/* Play Mode. */ // lecture en boucle
+//    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL+30;//CDC_PM_DFL ;	/* Play Mode. */ // lecture unique	
+}
+
+ void SystemStub_SDL::sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r) {
+    volatile uint16_t *slot_ptr;
+
+    //max sound volume is 7
+    if (vol_l > 7) {
+        vol_l = 7;
+    }
+    if (vol_r > 7) {
+        vol_r = 7;
+    }
+
+    // Setup SCSP Slot 16 and Slot 17 for playing
+    slot_ptr = (volatile Uint16 *)(0x25B00000 + (0x20 * 16));
+    slot_ptr[0] = 0x1000;
+    slot_ptr[1] = 0x0000; 
+    slot_ptr[2] = 0x0000; 
+    slot_ptr[3] = 0x0000; 
+    slot_ptr[4] = 0x0000; 
+    slot_ptr[5] = 0x0000; 
+    slot_ptr[6] = 0x00FF; 
+    slot_ptr[7] = 0x0000; 
+    slot_ptr[8] = 0x0000; 
+    slot_ptr[9] = 0x0000; 
+    slot_ptr[10] = 0x0000; 
+    slot_ptr[11] = 0x001F | (vol_l << 5);
+    slot_ptr[12] = 0x0000; 
+    slot_ptr[13] = 0x0000; 
+    slot_ptr[14] = 0x0000; 
+    slot_ptr[15] = 0x0000; 
+
+    slot_ptr = (volatile Uint16 *)(0x25B00000 + (0x20 * 17));
+    slot_ptr[0] = 0x1000;
+    slot_ptr[1] = 0x0000; 
+    slot_ptr[2] = 0x0000; 
+    slot_ptr[3] = 0x0000; 
+    slot_ptr[4] = 0x0000; 
+    slot_ptr[5] = 0x0000; 
+    slot_ptr[6] = 0x00FF; 
+    slot_ptr[7] = 0x0000; 
+    slot_ptr[8] = 0x0000; 
+    slot_ptr[9] = 0x0000; 
+    slot_ptr[10] = 0x0000; 
+    slot_ptr[11] = 0x000F | (vol_r << 5);
+    slot_ptr[12] = 0x0000; 
+    slot_ptr[13] = 0x0000; 
+    slot_ptr[14] = 0x0000; 
+    slot_ptr[15] = 0x0000;
+
+    *((volatile Uint16 *)(0x25B00400)) = 0x020F;
 }
 
 inline void timeTick() {
@@ -602,20 +699,6 @@ void vblIn (void) {
 
 	// Process input
 	sys->processEvents();
-/*
-if(newZoom!=curZoom)
-{
-
-	if(newZoom==1) // video
-		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
-	if(newZoom==2) // ingame
-		slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));
-	
-	curZoom=newZoom;
-}
-*/
-
-
 
 	// Pcm elaboration...
 	PCM_VblIn();	
@@ -646,12 +729,19 @@ uint8 isNTSC (void) {
 }
 
 void fill_play_audio(void) {
+//emu_printf("SystemStub_SDL::fill_play_audio\n");
+#ifdef SLAVE_SOUND
 	if ((*(volatile Uint8 *)0xfffffe11 & 0x80) == 0x80 || firstSoundRun) {
 		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
 		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 		//CSH_AllClr();
-//		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  /: vbt à remettre
+
+		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  // vbt à remettre
+#else
+	if (firstSoundRun || buffer_filled[0] == 1 || buffer_filled[1] == 1) 
+	{
 		fill_buffer_slot();
+#endif
 		firstSoundRun = 0;
 		//slSlaveFunc(fill_buffer_slot, NULL);
 	}
@@ -704,7 +794,7 @@ static PcmHn createHandle(int bufNo) {
 void sat_restart_audio(void) {
 	//fprintf_saturn(stdout, "restart audio");
 	int idx;
-
+//emu_printf("restart audio\n");
 	// Stop pcm playing and clean up handles.
 	PCM_Stop(pcm[0]);
 	PCM_Stop(pcm[1]);
@@ -719,44 +809,73 @@ void sat_restart_audio(void) {
 	pcm[0] = createHandle(0);
 	pcm[1] = createHandle(1);
 
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 1;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 1;
-
+#else
+	buffer_filled[0] = 1;
+	buffer_filled[1] = 1;	
+#endif
 	// Restart playback
 	PCM_Start(pcm[0]); 
 	PCM_EntryNext(pcm[1]); 
-
-	//SPR_InitSlaveSH();
+#ifdef SLAVE_SOUND
+	SPR_InitSlaveSH();
+#endif	
 	firstSoundRun = 1;
-
+#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(curBuf) = 0;
-
+#else
+	curBuf = 0;
+#endif
 	return;
 }
 
 void fill_buffer_slot(void) {
-	CSH_AllClr();
 	//slCashPurge();
-
+//emu_printf("fill_buffer_slot\n");
 	// Prepare the indexes of next slot/buffers.
+#ifdef SLAVE_SOUND
+	CSH_AllClr();	
 	Uint8 nextBuf = (*(Uint8*)OPEN_CSH_VAR(curBuf) + 1) % 2;
 	Uint8 nextSlot = (*(Uint8*)OPEN_CSH_VAR(curSlot) + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 	Uint8 workingSlot = *(Uint8*)OPEN_CSH_VAR(curSlot);
-
+#else
+	Uint8 nextBuf = (curBuf + 1) % 2;
+	Uint8 nextSlot = (curSlot + 1) % SND_BUF_SLOTS;
+	Uint8 workingBuffer = curBuf;
+	Uint8 workingSlot = curSlot;
+#endif
 	// Avoid running if other parts of the program are in the critical section...
 	SatMutex* mtx = (SatMutex*)(mix->_mutex);
-	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) { 
+//emu_printf("buff %d access %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));	
+#ifdef SLAVE_SOUND	
+	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) {
+#else
+	if(!(buffer_filled[workingBuffer]) && !(mtx->access)) 
+	{
+#endif
+//emu_printf("  -> slave mixing %d %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));
 		//fprintf_saturn(stdout, "  -> slave mixing");
 		memset(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE), 0, SND_BUFFER_SIZE);
 		mix->mix((int8*)(ring_bufs[workingBuffer] + (workingSlot * SND_BUFFER_SIZE)), SND_BUFFER_SIZE);
 
-		if(nextSlot == 0) { // We have filled this buffer 
+		if(nextSlot == 0) { // We have filled this buffer
+//emu_printf("  -> We have filled this buffer buffer_filled[%d]) = 1\n",workingBuffer);
+#ifdef SLAVE_SOUND		
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) = 1; // Mark it as full...
 			*(Uint8*)OPEN_CSH_VAR(curBuf) = nextBuf; // ...and use the next buffer
+#else
+			buffer_filled[workingBuffer] = 1; // Mark it as full...
+			curBuf = nextBuf; // ...and use the next buffer	
+#endif
 		}
-
+#ifdef SLAVE_SOUND
 		*(Uint8*)OPEN_CSH_VAR(curSlot) = nextSlot;
+#else
+		curSlot = nextSlot;
+#endif
 	}
 
 	return;
@@ -765,24 +884,34 @@ void fill_buffer_slot(void) {
 void play_manage_buffers(void) {
 	static int curPlyBuf = 0;
 	static Uint16 counter = 0;
-
+#ifdef SLAVE_SOUND
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 
 	if(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]) == 0) return;
+#else
+	Uint8 workingBuffer = curBuf;
 
+	if(buffer_filled[workingBuffer] == 0) return;
+#endif
 	if ((PCM_CheckChange() == PCM_CHANGE_NO_ENTRY)) {
 		if(counter < 9000) {
 			PCM_DestroyMemHandle(pcm[curPlyBuf]);  // Destroy old memory handle
 			pcm[curBuf] = createHandle(curPlyBuf); // and prepare a new one
 
 			PCM_EntryNext(pcm[curPlyBuf]); 
-	
+#ifdef SLAVE_SOUND
+//emu_printf("OPEN_CSH_VAR(buffer_filled[%d]) = 0\n",curPlyBuf);
 			*(Uint8*)OPEN_CSH_VAR(buffer_filled[curPlyBuf]) = 0;
-
+#else
+//emu_printf("(buffer_filled[%d]) = 0\n",curPlyBuf);	
+			buffer_filled[curPlyBuf] = 0;
+#endif
 			curPlyBuf ^= 1;
 			counter++;
 		} else {
-//			SPR_WaitEndSlaveSH(); // vbt à remettre
+#ifdef SLAVE_SOUND			
+			SPR_WaitEndSlaveSH(); // vbt à remettre
+#endif			
 			sat_restart_audio();
 			counter = 0;
 			curPlyBuf = 0;
@@ -805,7 +934,7 @@ void SCU_DMAWait(void) {
 	while((res = DMA_ScuResult()) == 2);
 	
 	if(res == 1) {
-		emu_printf("SCU DMA COPY FAILED!\n");
+		//emu_printf("SCU DMA COPY FAILED!\n");
 	}
 }
 

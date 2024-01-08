@@ -25,6 +25,7 @@
 
 #undef sleep 
 
+//#define SLAVE_SOUND 1
 #define PCM_ADDR ((void*)0x25a20000)
 #define PCM_SIZE (4096L*8)
 
@@ -81,8 +82,9 @@ struct SystemStub {
 	virtual void getPaletteEntry(uint8 i, Color *c) = 0;
 	virtual void setOverscanColor(uint8 i) = 0;
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
-	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
+//	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
 	virtual void updateScreen(uint8 shakeOffset) = 0;
+//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb) = 0;
 
 	virtual void processEvents() = 0;
 	virtual void sleep(uint32 duration) = 0;

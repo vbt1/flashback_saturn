@@ -1,31 +1,23 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 
-#ifndef __RESOURCE_H__
-#define __RESOURCE_H__
+#ifndef RESOURCE_H__
+#define RESOURCE_H__
 
 #include "intern.h"
 #include "resource_aba.h"
 #include "resource_mac.h"
+#include "saturn_print.h"
 
 struct DecodeBuffer;
 struct File;
 //struct FileSystem;
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
 
 struct LocaleData {
 	enum Id {
@@ -110,7 +102,7 @@ struct Resource {
 	enum {
 		kPaulaFreq = 3546897,
 		kClutSize = 1024,
-		kScratchBufferSize = 320 * 224 + 1024
+		kScratchBufferSize = 0x181EC //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
 	static const uint16_t _voicesOffsetsTable[];
@@ -132,7 +124,7 @@ struct Resource {
 	uint8_t *_mbk;
 	uint8_t *_icn;
 	int _icnLen;
-	uint8_t *_tab;
+//	uint8_t *_tab;
 	uint8_t *_spc;
 	uint16_t _numSpc;
 	uint8_t _rp[74];
@@ -162,7 +154,7 @@ struct Resource {
 	uint8_t *_cineStrings[NUM_CUTSCENE_TEXTS];
 	uint8_t *_cine_off;
 	uint8_t *_cine_txt;
-	uint8_t *_voiceBuf;
+//	uint8_t *_voiceBuf;
 	char **_extTextsTable;
 	const char **_textsTable;
 	uint8_t *_extStringsTable;
@@ -357,4 +349,4 @@ struct Resource {
 	}
 };
 
-#endif // __RESOURCE_H__
+#endif // RESOURCE_H__

@@ -30,8 +30,8 @@ extern "C" {
 
 #undef sleep 
 
-Menu::Menu(ModPlayer *ply, Resource *res, SystemStub *stub, Video *vid)
-	: _ply(ply), _res(res), _stub(stub), _vid(vid) {
+Menu::Menu(Resource *res, SystemStub *stub, Video *vid)
+	: _res(res), _stub(stub), _vid(vid) {
 }
 
 void Menu::drawString(const char *str, int16 y, int16 x, uint8 color) {
@@ -91,12 +91,14 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 }
 
 void Menu::loadPicture(const char *prefix) {
-//	debug(DBG_MENU, "Menu::loadPicture('%s')", prefix);
+	emu_printf( "Menu::loadPicture('%s')\n", prefix);
+	static const int kPictureW = 256;
+	static const int kPictureH = 224;
 	_res->load_MAP_menu(prefix, _res->_scratchBuffer);
 	for (int i = 0; i < 4; ++i) {
-		for (int y = 0; y < 224; ++y) {
+		for (int y = 0; y < kPictureH; ++y) {
 			for (int x = 0; x < 64; ++x) {
-				_vid->_frontLayer[i + x * 4 + 256 * y] = _res->_scratchBuffer[0x3800 * i + x + 64 * y];
+				_vid->_frontLayer[i + x * 4 + kPictureW * y] = _res->_scratchBuffer[0x3800 * i + x + 64 * y];
 			}
 		}
 	}
@@ -131,7 +133,7 @@ void Menu::handleInfoScreen() {
 		}
 	} while (!_stub->_pi.quit);
 }
-
+/*
 void Menu::handleSkillScreen() {
 //	debug(DBG_MENU, "Menu::handleSkillScreen()");
 	static const uint8_t colors[3][3] = {
@@ -188,6 +190,7 @@ void Menu::handleSkillScreen() {
 	} while (!_stub->_pi.quit);
 	_skill = 1;
 }
+*/
 /*
 bool Menu::handlePasswordScreen() {
 //	emu_printf("Menu::handlePasswordScreen()\n");
@@ -377,8 +380,8 @@ void Menu::handleTitleScreen() {
 		Language lang;
 		const uint8_t *bitmap16x12;
 	} languages[] = {
-		{ LANG_EN, NULL },
-		{ LANG_FR, NULL },
+		{ LANG_EN, NULL /*_flagEn16x12*/ },
+		{ LANG_FR, NULL /*_flagFr16x12*/ },
 		{ LANG_DE, NULL },
 		{ LANG_SP, NULL },
 		{ LANG_IT, NULL },
@@ -399,7 +402,7 @@ void Menu::handleTitleScreen() {
 
 		if (_nextScreen == SCREEN_TITLE) {
 			_vid->fadeOut();
-			loadPicture("MENU1");
+			loadPicture("menu1");
 			_vid->fullRefresh();
 			_charVar3 = 1;
 			_charVar4 = 2;
@@ -453,7 +456,7 @@ void Menu::handleTitleScreen() {
 			case MENU_OPTION_ITEM_START:
 				return;
 			case MENU_OPTION_ITEM_SKILL:
-				handleSkillScreen();
+				//handleSkillScreen();
 				break;
 			case MENU_OPTION_ITEM_PASSWORD:
 //				if (handlePasswordScreen()) {
@@ -462,7 +465,7 @@ void Menu::handleTitleScreen() {
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
-					emu_printf("handleLevelScreen level selected    \n");	
+//					emu_printf("handleLevelScreen level selected    \n");	
 					
 					return;
 				}
@@ -492,8 +495,9 @@ void Menu::handleTitleScreen() {
 		}
 
 		// draw the language flag in the top right corner
-		if (previousLanguage != currentLanguage) {
-			_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
+//		if (previousLanguage != currentLanguage) 
+		{
+//			_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
 			static const int flagW = 16;
 			static const int flagH = 12;
 			static const int flagX = Video::GAMESCREEN_W - flagW - 8;

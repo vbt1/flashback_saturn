@@ -29,6 +29,11 @@ extern "C"
 #include "file.h"
 #include "mixer.h"
 #include "mod_player.h"
+#include "util.h"
+
+#undef assert
+#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+
 
 volatile Uint8 slaveMixing;
 volatile Uint8 slaveProceed;
@@ -36,8 +41,14 @@ volatile Uint8 slaveProceed;
 ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 	: _playing(false), _mix(mixer), _dataPath(dataPath) {
 	memset(&_modInfo, 0, sizeof(_modInfo));
-//	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
-//	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+//emu_printf("ModPlayer::ModPlayer\n");	
+#ifdef SLAVE_SOUND
+	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
+	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+#else
+	slaveMixing = 0;
+	slaveProceed = 1;
+#endif
 }
 
 uint16 ModPlayer::findPeriod(uint16 period, uint8 fineTune) const {
@@ -73,8 +84,9 @@ void ModPlayer::load(File *f) {
 	f->readByte(); // 0x7F
 	f->read(_modInfo.patternOrderTable, NUM_PATTERNS);
 	f->readUint32BE(); // 'M.K.', Protracker, 4 channels
+#define MIN(x,y) ((x)<(y)?(x):(y))
 
-	uint16 n = 0;
+	uint8_t n = 0;
 	for (int i = 0; i < NUM_PATTERNS; ++i) {
 		if (_modInfo.patternOrderTable[i] != 0) {
 			n = MAX(n, _modInfo.patternOrderTable[i]);
@@ -82,6 +94,7 @@ void ModPlayer::load(File *f) {
 	}
 	//debug(DBG_MOD, "numPatterns=%d",n + 1);
 	n = (n + 1) * 64 * 4 * 4; // 64 lines of 4 notes per channel
+//emu_printf("sat_malloc in ModPlayer::load %d ",n);	
 	_modInfo.patternsTable = (uint8 *)sat_malloc(n);
 	assert(_modInfo.patternsTable);
 	f->read(_modInfo.patternsTable, n);
@@ -98,12 +111,16 @@ void ModPlayer::load(File *f) {
 }
 
 void ModPlayer::unload() {
+//emu_printf("ModPlayer::unload\n");	
 	//fprintf_saturn(stdout, "unload!");
+#ifdef SLAVE_SOUND	
 	// Avoid slave continuing
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 0;
 	// Waiting for slave to finish
 	while(*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing));
+#else
 
+#endif
 	if (_modInfo.songName[0]) {
 		sat_free(_modInfo.patternsTable);
 		for (int s = 0; s < NUM_SAMPLES; ++s) {
@@ -111,9 +128,12 @@ void ModPlayer::unload() {
 		}
 		memset(&_modInfo, 0, sizeof(_modInfo));
 	}
-
+#ifdef SLAVE_SOUND
 	// Ok, slave can go on
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
+#else
+	slaveProceed = 1;
+#endif
 }
 
 void ModPlayer::play(uint8 num) {
@@ -524,10 +544,13 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 }
 
 bool ModPlayer::mix(int8 *buf, int len) {
-
+//emu_printf("ModPlayer::mix %p %d\n",buf, len);		
+#ifdef SLAVE_SOUND
 	while(!(*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed))); // Wait that we are safe and able to proceed
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 1; // Proceed...
-
+#else
+	slaveMixing = 1;
+#endif
 	if (_playing) {
 		//memset(buf, 0, len);
 		const int samplesPerTick = _mix->getSampleRate() / (50 * _songTempo / 125);
@@ -546,9 +569,11 @@ bool ModPlayer::mix(int8 *buf, int len) {
 			buf += count;
 		}
 	}
-
+#ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
-
+#else
+	slaveMixing = 0;
+#endif
 	return _playing;
 }
 

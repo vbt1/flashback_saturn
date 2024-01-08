@@ -28,7 +28,6 @@ extern "C" {
 
 //#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
 //#define LOW_WORK_RAM_SIZE 0x100000
-
 void *__dso_handle = 0;
 
 static int detectVersion(const char *dataPath) {
@@ -46,7 +45,8 @@ static int detectVersion(const char *dataPath) {
 
 		if (f.open(table[i].filename, dataPath, "rb")) {
 //			debug(DBG_INFO, "Detected %s version", table[i].name);
-			emu_printf("Detected %s version\n", table[i].name);
+//			emu_printf("Detected %s version\n", table[i].name);
+			f.close();
 			return table[i].type;
 		}
 	}
@@ -58,9 +58,9 @@ void ss_main(void) {
 //	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
 	int levelNum = 0;
 	const Language language = (Language)LANG_EN;
-
-	SystemStub *stub = SystemStub_SDL_create();
 	
+	SystemStub *stub = SystemStub_SDL_create();
+
 	Game *g = new Game(stub, ".", ".", levelNum, (ResourceType)version,language);
 
 	g->run();

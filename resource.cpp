@@ -1,26 +1,15 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 extern "C"
 {
+#include <sl_def.h>
 	#include 	<stdio.h>	
 	#include 	<string.h>	
 #include <sega_mem.h>
-#include <sl_def.h>
+
 
 #include "sat_mem_checker.h"
 }
@@ -44,12 +33,16 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
-	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize);
+	_scratchBuffer = (uint8_t *)std_malloc(kScratchBufferSize);
+
+	
+//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
 	static const int kBankDataSize = 0x7000;
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
+//emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);	
 	if (!_bankData) {
 		error("Unable to allocate bank data buffer");
 	}
@@ -58,11 +51,13 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 }
 
 Resource::~Resource() {
+//			emu_printf("vbt Resource::~Resource free all resources !!!!!\n");	
 	clearLevelRes();
-	MAC_unloadLevelData();	
+	MAC_unloadLevelData();
 	sat_free(_fnt);
 	sat_free(_icn);
-	sat_free(_tab);
+//	sat_free(_tab);
+	sat_free(_spc);
 	sat_free(_spr1);
 	sat_free(_scratchBuffer);
 	sat_free(_cmd);
@@ -73,7 +68,7 @@ Resource::~Resource() {
 		sat_free(_sfxList[i].data);
 	}
 	sat_free(_sfxList);
-	sat_free(_voiceBuf);
+	sat_free(_bankData);
 	delete _aba;
 	delete _mac;
 }
@@ -93,11 +88,13 @@ void Resource::init() {
 //		if (_fs->exists(ResourceMac::FILENAME1)) 
 		if (f.open(ResourceMac::FILENAME1, _dataPath, "rb"))
 		{
+			f.close();
 			_mac = new ResourceMac(ResourceMac::FILENAME1, _dataPath);
 		} 
 //		else if (_fs->exists(ResourceMac::FILENAME2)) 
 		else if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
 		{
+			f.close();
 			_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 		}
 		_mac->load();
@@ -119,6 +116,7 @@ void Resource::setLanguage(Language lang) {
 bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
+		f.close();
 		return true;
 	} else if (_aba) {
 		return _aba->findEntry(filename) != 0;
@@ -127,6 +125,7 @@ bool Resource::fileExists(const char *filename) {
 }
 
 void Resource::clearLevelRes() {
+emu_printf("vbt clearLevelRes\n");		
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_mbk); _mbk = 0;
 	sat_free(_pal); _pal = 0;
@@ -134,10 +133,27 @@ void Resource::clearLevelRes() {
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
 	sat_free(_sgd); _sgd = 0;
-	sat_free(_bnq); _bnq = 0;	
-	sat_free(_spc); _spc = 0;
+	sat_free(_bnq); _bnq = 0;
 	sat_free(_ani); _ani = 0;
 	free_OBJ();
+	
+	if(_type==kResourceTypeMac)
+	{
+	emu_printf("MAC_unloadLevelData\n");
+	emu_printf("_res._monster %p\n",_monster);
+		sat_free(_monster);
+	emu_printf("_res._monster %p\n",_spc);	
+		sat_free(_spc);	
+		sat_free(_ani);
+		MAC_unloadLevelData();
+	//	sat_free(_res._icn);// icones du menu à ne pas vider
+
+		sat_free(_spr1);
+		sat_free(_cmd);
+		sat_free(_pol);
+		sat_free(_cine_off);
+	//	sat_free(_cine_txt);  // vbt est dans scratchbuff
+	}
 }
 
 void Resource::load_DEM(const char *filename) {
@@ -150,6 +166,7 @@ void Resource::load_DEM(const char *filename) {
 		if (_dem) {
 			f.read(_dem, _demLen);
 		}
+		f.close();
 	} else if (_aba) {
 		uint32_t size;
 		_dem = _aba->loadEntry(filename, &size);
@@ -169,7 +186,8 @@ void Resource::load_FIB(const char *fileName) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
 		_numSfx = f.readUint16LE();
-		_sfxList = (SoundFx *)sat_malloc(_numSfx * sizeof(SoundFx));
+		_sfxList = (SoundFx *)std_malloc(_numSfx * sizeof(SoundFx));
+//emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);			
 		if (!_sfxList) {
 			error("Unable to allocate SoundFx table");
 		}
@@ -207,6 +225,7 @@ void Resource::load_FIB(const char *fileName) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else {
 		error("Can't open '%s'", _entryName);
 	}
@@ -217,7 +236,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 	static const int kMenuMapSize = 0x3800 * 4;
 	snprintf(_entryName, sizeof(_entryName), "%s.MAP", fileName);
 	File f;
-			emu_printf("%s\n",_entryName);		
+//			emu_printf("%s\n",_entryName);		
 	if (f.open(_entryName, _dataPath, "rb")) {
 		f.read(dstPtr, kMenuMapSize);
 //		if (f.read(dstPtr, kMenuMapSize) != kMenuMapSize) {
@@ -226,6 +245,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 //		if (f.ioErr()) {
 //			error("I/O error when reading '%s'", _entryName);
 //		}
+		f.close();
 		return;
 	} else if (_aba) {
 		uint32_t size = 0;
@@ -243,7 +263,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 }
 
 void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
-//	debug(DBG_RES, "Resource::load_PAL_menu('%s')", fileName);
+//	emu_printf("Resource::load_PAL_menu('%s')\n", fileName);
 	sprintf(_entryName, "%s.PAL", fileName);
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
@@ -254,6 +274,7 @@ void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else {
 		error("Can't open '%s'", _entryName);
 	}
@@ -274,6 +295,7 @@ void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else if (_aba) {
 		offData = _aba->loadEntry(_entryName);
 	}
@@ -334,6 +356,7 @@ void Resource::load_CINE() {
 				if (f.ioErr()) {
 					error("I/O error when reading '%s'", _entryName);
 				}
+				f.close();
 			} else if (_aba) {
 				_cine_off = _aba->loadEntry(_entryName);
 			}
@@ -357,6 +380,7 @@ void Resource::load_CINE() {
 				if (f.ioErr()) {
 					error("I/O error when reading '%s'", _entryName);
 				}
+				f.close();
 			} else if (_aba) {
 				_cine_txt = _aba->loadEntry(_entryName);
 			}
@@ -374,7 +398,7 @@ void Resource::load_CINE() {
 void Resource::free_CINE() {
 	sat_free(_cine_off);
 	_cine_off = 0;
-	sat_free(_cine_txt);
+//	sat_free(_cine_txt); // vbt est dans scratchbuff
 	_cine_txt = 0;
 }
 
@@ -480,7 +504,7 @@ void Resource::unload(int objType) {
 }
 
 void Resource::load(const char *objName, int objType, const char *ext) {
-//	emu_printf("Resource::load('%s', %d)\n", objName, objType);
+	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
 	File f;
 		
@@ -602,6 +626,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		if (f.ioErr()) {
 			error("I/O error when reading '%s'", _entryName);
 		}
+		f.close();
 	} else {
 		if (_aba) {
 			uint32_t size;
@@ -672,6 +697,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		}
 		error("Cannot open '%s'", _entryName);
 	}
+	f.close();
 }
 void Resource::load_CT(File *pf) {
 //	debug(DBG_RES, "Resource::load_CT()");
@@ -714,7 +740,8 @@ void Resource::load_ICN(File *f) {
 //	debug(DBG_RES, "Resource::load_ICN()");
 	int len = f->size();
 	if (_icnLen == 0) {
-		_icn = (uint8_t *)sat_malloc(len);
+		if(_icn==NULL)
+			_icn = (uint8_t *)sat_malloc(len);
 	} else {
 		_icn = (uint8_t *)sat_realloc(_icn, _icnLen + len);
 	}
@@ -847,7 +874,7 @@ void Resource::load_OBJ(File *f) {
 }
 
 void Resource::free_OBJ() {
-//	debug(DBG_RES, "Resource::free_OBJ()");
+	emu_printf("Resource::free_OBJ()\n");
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (_objectNodesMap[i] != prevNode) {
@@ -863,6 +890,7 @@ void Resource::free_OBJ() {
 void Resource::load_OBC(File *f) {
 	const int packedSize = f->readUint32BE();
 	uint8_t *packedData = (uint8_t *)sat_malloc(packedSize);
+emu_printf("load_OBC %p %d\n", packedData,packedSize);	
 	if (!packedData) {
 		error("Unable to allocate OBC temporary buffer 1");
 	}
@@ -877,6 +905,7 @@ void Resource::load_OBC(File *f) {
 	if (!bytekiller_unpack(tmp, unpackedSize, packedData, packedSize)) {
 		error("Bad CRC for compressed object data");
 	}
+	
 	sat_free(packedData);
 	decodeOBJ(tmp, unpackedSize);
 	sat_free(tmp);
@@ -1006,7 +1035,7 @@ void Resource::decodePGE(const uint8_t *p, int size) {
 void Resource::load_ANI(File *f) {
 //	debug(DBG_RES, "Resource::load_ANI()");
 	const int size = f->size();
-	_ani = (uint8_t *)sat_malloc(size);
+	_ani = (uint8_t *)std_malloc(size);
 	if (!_ani) {
 		error("Unable to allocate ANI buffer");
 	} else {
@@ -1015,7 +1044,7 @@ void Resource::load_ANI(File *f) {
 }
 
 void Resource::load_TBN(File *f) {
-//	debug(DBG_RES, "Resource::load_TBN()");
+	emu_printf("Resource::load_TBN()\n");
 	int len = f->size();
 	_tbn = (uint8_t *)sat_malloc(len);
 	if (!_tbn) {
@@ -1157,7 +1186,7 @@ void Resource::load_SPL(File *f) {
 	}
 	sat_free(_sfxList);
 	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
+	_sfxList = (SoundFx *)std_calloc(_numSfx, sizeof(SoundFx));
 	if (!_sfxList) {
 		error("Unable to allocate SoundFx table");
 	}
@@ -1187,6 +1216,7 @@ void Resource::load_SPL(File *f) {
 }
 
 void Resource::load_LEV(File *f) {
+emu_printf("load_LEV %d\n", f->size());	
 	const int len = f->size();
 	_lev = (uint8_t *)sat_malloc(len);
 	if (!_lev) {
@@ -1236,7 +1266,6 @@ void Resource::load_BNQ(File *f) {
 		f->read(_bnq, len);
 	}
 }
-
 
 void Resource::load_SPM(File *f) {
 	static const int kPersoDatSize = 178647;
@@ -1359,75 +1388,94 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		return decodeResourceMacData(buf, false);
 	}
 }
-	
+
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-//		emu_printf("findEntry        \n");	
+//		emu_printf("decodeResourceMacData 1       \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
-		emu_printf("Resource '%s' found %d\n",name, decompressLzss);		
+//		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
-		
 		emu_printf("Resource '%s' not found\n", name);
 	}
-
 	return data;
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
-	assert(entry);
+//	emu_printf("Resource::decodeResourceMacData '%d'\n",entry->dataOffset);	
+//	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
+emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 	uint8_t *data = 0;
 	if (decompressLzss) {
-		data = decodeLzss(_mac->_f, _resourceMacDataSize);
+//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
+		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}
 	} else {
-		data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+
+		if(strcmp("Flashback strings", entry->name) == 0)
+		{
+			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+		}
+		else if(strstr(entry->name,"names") !=NULL)
+		{
+			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+		}		
+		else if(strcmp("Flashback colors", entry->name) == 0 
+		|| strncmp("Title", entry->name, 5) == 0  
+		|| strncmp("intro", entry->name, 5) == 0 
+		|| strncmp("Movie", entry->name, 5) == 0 
+		|| strncmp("logo", entry->name, 4)
+//		|| strcmp("Flashback strings", entry->name) == 0
+		)
+		{
+			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
+		}
+				
+		else
+		{
+			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+		}
+		
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
+//			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
+//emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
 	return data;
 }
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst) {
 	
-//emu_printf("MAC_decodeImageData %p\n",ptr);	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
-//emu_printf("MAC_decodeImageData %x\n",sig);	
-	assert(sig == 0xC211 || sig == 0xC103);
+//	assert(sig == 0xC211 || sig == 0xC103);
+	if(sig != 0xC211 && sig != 0xC103)
+		return;
 	const int count = READ_BE_UINT16(ptr); ptr += 2;
-//emu_printf("MAC_decodeImageData 2 %d %d\n",i , count);		
 //	assert(i < count);
 	if(i>=count)
 		return;
 	
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
-//emu_printf("MAC_decodeImageData 3 %d\n",offset);	
 	if (offset != 0) {
 		ptr = basePtr + offset;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
-
-//			emu_printf("MAC_decodeImageData %d %d %x\n", w, h,sig);
-			
-			
 		switch (sig) {
 		case 0xC211:
-//emu_printf("decodeC211\n");		
 			decodeC211(ptr + 4, w, h, dst);
 			break;
 		case 0xC103:
-//emu_printf("decodeC103\n");		
 			decodeC103(ptr, w, h, dst);
 			break;
 		}
@@ -1454,7 +1502,7 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 		
 		_clut[i].r = ptr[0]; ptr += 2;
 		_clut[i].g = ptr[0]; ptr += 2;
-		_clut[i].b = ptr[0]; ptr += 2;	
+		_clut[i].b = ptr[0]; ptr += 2;
 			c.r = ((color & 0xF00) >> 6);
 			c.g = ((color & 0x0F0) >> 2) | t;
 			c.b = ((color & 0x00F) << 2) | t;		
@@ -1466,12 +1514,12 @@ void Resource::MAC_loadClutData() {
 //emu_printf("MAC_loadClutData\n");		
 	uint8_t *ptr = decodeResourceMacData("Flashback colors", false);
 	MAC_decodeDataCLUT(ptr);
-	sat_free(ptr);
+//	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
 //emu_printf("MAC_loadFontData\n");	
-	_fnt = decodeResourceMacData("Font", true);
+	_fnt = decodeResourceMacData("Font", true);   // taille 19323 hwr
 }
 
 void Resource::MAC_loadIconData() {
@@ -1481,11 +1529,11 @@ void Resource::MAC_loadIconData() {
 
 void Resource::MAC_loadPersoData() {
 //emu_printf("MAC_loadPersoData\n");				
-	_perso = decodeResourceMacData("Person", true);
+	_perso = decodeResourceMacData("Person", true); // taille 213124 lwr
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
-//emu_printf("MAC_loadMonsterData\n");						
+//emu_printf("MAC_loadMonsterData\n");
 	static const struct {
 		const char *id;
 		const char *name;
@@ -1502,7 +1550,12 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 	for (int i = 0; data[i].id; ++i) {
 		if (strcmp(data[i].id, name) == 0) {
 			_monster = decodeResourceMacData(data[i].name, true);
-			assert(_monster);
+			if(_monster==NULL)
+			{
+emu_printf("%s not loaded\n",data[i].name);
+				return;
+			}
+//			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
 			MAC_copyClut16(clut, 5, data[i].index);
 			break;
 		}
@@ -1513,23 +1566,25 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 //emu_printf("MAC_loadTitleImage\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Title %d", i);
-	
-		emu_printf("%s\n",name);
-//		emu_printf("decodeResourceMacData        \n");			
+//emu_printf("decodeResourceMacData %s\n",name);	
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
-//		emu_printf("MAC_decodeImageData        \n");		
+//emu_printf("MAC_decodeImageData\n");		
 		MAC_decodeImageData(ptr, 0, buf);
-		sat_free(ptr);
+//emu_printf("end MAC_decodeImageData\n");
+//		sat_free(ptr);  // pas de vidage car on utilise scratchbuffer
 	}
 }
 
 void Resource::MAC_unloadLevelData() {
-	sat_free(_ani);
+//	emu_printf("unload _ani %p\n",_ani);	
+	sat_free(_ani); // vbt est dans scratchbuff
+//	emu_printf("unload _ani %p\n",_ani);	
 	_ani = 0;
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevNode != _objectNodesMap[i]) {
+//	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
 			sat_free(_objectNodesMap[i]);
 			prevNode = _objectNodesMap[i];
 		}
@@ -1539,6 +1594,9 @@ void Resource::MAC_unloadLevelData() {
 	_tbn = 0;
 	sat_free(_str);
 	_str = 0;
+// vbt ajout	
+//	sat_free(_spc);
+//	_spc = 0;	
 }
 
 static const int _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red palette: 32
@@ -1546,42 +1604,43 @@ static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5
 
 void Resource::MAC_loadLevelData(int level) {
 	char name[64];
-//emu_printf("MAC_loadLevelData\n");	
+emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 //emu_printf("decodePGE\n");		
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
-
+//emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
-
+//emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	decodeOBJ(ptr, _resourceMacDataSize);
 	sat_free(ptr);
-
+//emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
-
+//emu_printf(" .SPC\n");
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 	_spc = decodeResourceMacData(name, true);
-
+//emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
 	_tbn = decodeResourceMacText(name, "names");
-
+//emu_printf(" .Flashback text _tbn %p\n",_tbn);
 	_str = decodeResourceMacText("Flashback", "strings");
+//emu_printf(" .Flashback strings _str %p\n",_str);	
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
@@ -1663,6 +1722,7 @@ static void stringLowerCase(char *p) {
 }
 
 void Resource::MAC_unloadCutscene() {
+//	emu_printf("MAC_unloadCutscene\n");	
 	sat_free(_cmd);
 	_cmd = 0;
 	sat_free(_pol);
@@ -1670,6 +1730,7 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
+//	emu_printf("MAC_loadCutscene\n");
 	MAC_unloadCutscene();
 	char name[32];
 
@@ -1708,7 +1769,7 @@ void Resource::MAC_loadSounds() {
 		-1, 57
 	};
 	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
+	_sfxList = (SoundFx *)std_calloc(_numSfx, sizeof(SoundFx));
 	if (!_sfxList) {
 		return;
 	}
