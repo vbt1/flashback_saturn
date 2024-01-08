@@ -1,21 +1,9 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
- 
+#define HEAP_WALK 1
  
 extern "C" {
 	#include 	<string.h>
@@ -25,6 +13,7 @@ extern "C" {
 #include <sgl.h>
 #include <sega_bup.h>
 #include <sega_per.h>
+#include <sega_gfs.h> 
 //#include <sega_spr.h>
 #include "sat_mem_checker.h"
 
@@ -40,6 +29,7 @@ extern "C" {
 #define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
 #define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
+extern TEXTURE tex_spr[4];
 }
 #include "saturn_print.h"
 #include "lz.h"
@@ -53,6 +43,75 @@ extern "C" {
 #include "sys.h"
 
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
+
+#ifdef HEAP_WALK
+extern Uint32  end;
+extern Uint32  __malloc_free_list;
+
+extern "C" {
+extern Uint32  _sbrk(int size);
+}
+
+void heapWalk(void)
+{
+    Uint32 chunkNumber = 1;
+    // The __end__ linker symbol points to the beginning of the heap.
+    Uint32 chunkCurr = (Uint32)&end;
+    // __malloc_free_list is the head pointer to newlib-nano's link list of free chunks.
+    Uint32 freeCurr = __malloc_free_list;
+    // Calling _sbrk() with 0 reserves no more memory but it returns the current top of heap.
+    Uint32 heapEnd = _sbrk(0);
+    
+//    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
+    char msg[100];
+	sprintf (msg,"Heap Size: %d  e%08x s%08x\n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
+	emu_printf(msg);
+	
+    // Walk through the chunks until we hit the end of the heap.
+    while (chunkCurr < heapEnd)
+    {
+        // Assume the chunk is in use.  Will update later.
+        int      isChunkFree = 0;
+        // The first 32-bit word in a chunk is the size of the allocation.  newlib-nano over allocates by 8 bytes.
+        // 4 bytes for this 32-bit chunk size and another 4 bytes to allow for 8 byte-alignment of returned pointer.
+        Uint32 chunkSize = *(Uint32*)chunkCurr;
+        // The start of the next chunk is right after the end of this one.
+        Uint32 chunkNext = chunkCurr + chunkSize;
+        
+        // The free list is sorted by address.
+        // Check to see if we have found the next free chunk in the heap.
+        if (chunkCurr == freeCurr)
+        {
+            // Chunk is free so flag it as such.
+            isChunkFree = 1;
+            // The second 32-bit word in a free chunk is a pointer to the next free chunk (again sorted by address).
+            freeCurr = *(Uint32*)(freeCurr + 4);
+        }
+        
+        // Skip past the 32-bit size field in the chunk header.
+        chunkCurr += 4;
+        // 8-byte align the data pointer.
+        chunkCurr = (chunkCurr + 7) & ~7;
+        // newlib-nano over allocates by 8 bytes, 4 bytes for the 32-bit chunk size and another 4 bytes to allow for 8
+        // byte-alignment of the returned pointer.
+        chunkSize -= 8;
+//        	emu_printf("Chunk: %lu  Address: %x  Size: %d  %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "");
+        
+	sprintf (msg,"%d A%04x  S%04d %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "") ;
+//	if(chunkNumber<20)	
+	emu_printf(msg);
+//	if(chunkNumber>=200)
+//	slPrint((char *)msg,slLocate(0,chunkNumber-200));
+//	if(chunkNumber>=230)
+//	slPrint((char *)msg,slLocate(20,chunkNumber-230));
+
+		chunkCurr = chunkNext;
+        chunkNumber++;
+    }
+}
+#endif
+
 
 //static SAVE_BUFFER sbuf;
 //static Uint8 rle_buf[SAV_BUFSIZE];
@@ -81,7 +140,7 @@ static Uint32 getFreeSaveBlocks(void) {
 /* *** */
 
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
-	: _cut(&_res, stub, &_vid), _menu(&_modPly, &_res, stub, &_vid),
+	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
 	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
@@ -101,7 +160,8 @@ void Game::run() {
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 
 	_randSeed = time(0);
-	_res.init();   // vbt : ajout pour la partie mac	
+	_mix.init();  // vbt : evite de fragmenter la ram	
+	_res.init();   // vbt : ajout pour la partie mac
 	_res.load_TEXT();
 
 	switch (_res._type) {
@@ -111,30 +171,36 @@ void Game::run() {
 	case kResourceTypeMac:
 		_res.MAC_loadClutData();
 		_res.MAC_loadFontData();
+		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM déplacé
+		_res.MAC_loadPersoData(); // taille 213124 lwr déplacé
+		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé	
 		break;
 	}
 
-
 #ifndef BYPASS_PROTECTION
+emu_printf("handleProtectionScreen\n");
 	while (!handleProtectionScreen());
 	if (_stub->_pi.quit) {
 		return;
 	}
 #endif
-	_mix.init();
 
 	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
-//		slZoomNbg1(toFIXED(0.363636), toFIXED(0.5));
-
-	}	
+	}
+// vbt : clean front layer	
+	memset(_vid._frontLayer, 0xC0, 512*448);
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_stub->updateScreen(0);
 	
-//	playCutscene(0x40); // vbt à remettre
-//	playCutscene(0x0D);
-
+	playCutscene(0x40);
+	playCutscene(0x0D);
+	
+/*
+	// global resources
 	switch (_res._type) {
 	case kResourceTypeDOS:
 		_res.load("GLOBAL", Resource::OT_ICN);
@@ -144,16 +210,20 @@ void Game::run() {
 		_res.load_FIB("GLOBAL");
 		break;
 	case kResourceTypeMac:
-		_res.MAC_loadIconData();
-		_res.MAC_loadPersoData();
-		_res.MAC_loadSounds();
+//emu_printf("MAC_loadIconData\n");
+		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM
+//emu_printf("MAC_loadPersoData\n");
+		_res.MAC_loadPersoData(); // taille 213124 lwr
+//emu_printf("MAC_loadSounds\n");
+		_res.MAC_loadSounds(); //à vbt à faire bien avant 
 		break;
 	}
-
+*/
 	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
 		if (presentMenu) {
 //			_mix.playMusic(1); // vbt : à remplacer
+			
 			switch (_res._type) {
 			case kResourceTypeDOS:
 				_menu.handleTitleScreen();
@@ -178,12 +248,10 @@ void Game::run() {
 				}
 				break;
 			case kResourceTypeMac:
-//				slZoomNbg1(toFIXED(0.727272), toFIXED(1.0));			
-//				newZoom = 2;
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
-//			_mix.stopMusic(); // vbt à remettre
+			_mix.stopMusic(); // vbt à remettre
 		}
 		if (_stub->_pi.quit) {
 			break;
@@ -191,30 +259,25 @@ void Game::run() {
 //		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
 //			_stub->clearWidescreen();
 //		}
-emu_printf("_currentLevel %d\n",_currentLevel);	
+//emu_printf("_currentLevel %d\n",_currentLevel);	
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
 			_vid.setTextPalette();
 			playCutscene(0x3D);
 		} else {
-emu_printf("setTextPalette\n");			
 			_vid.setTextPalette();
-emu_printf("setPalette0xF\n");			
 			_vid.setPalette0xF();
 			_stub->setOverscanColor(0xE0);
 			_vid._unkPalSlot1 = 0;
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
-			//clearStateRewind();
-emu_printf("loadLevelData\n");			
+//			clearStateRewind();
 			loadLevelData();
-emu_printf("resetGameState\n");			
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-emu_printf("mainLoop\n");				
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					// exit level
@@ -259,9 +322,10 @@ void Game::displayTitleScreenMac(int num) {
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
+
 	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid._frontLayer, 0, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-	
+	memset(_vid._frontLayer, 0, w * h);
+
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
@@ -271,6 +335,7 @@ void Game::displayTitleScreenMac(int num) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
 		}
 	}
+	
 	if (num == Menu::kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		_res.MAC_copyClut16(palette, 0, 56);
@@ -287,20 +352,23 @@ void Game::displayTitleScreenMac(int num) {
 	} else if (num == Menu::kMacTitleScreen_Flashback) {
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
+		_mix.playMusic(1); // vbt : déplacé, musique du menu
 	}
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 	_stub->updateScreen(0);
 
-	
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
+			
+		
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
-
 			for (int i = 0; i < 7; ++i) {
 				const char *str = Menu::_levelNames[i];
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
+			
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (_currentLevel > 0) {
@@ -314,15 +382,14 @@ void Game::displayTitleScreenMac(int num) {
 				}
 			}
 //			_vid.updateScreen();
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 		}
 //		_stub->processEvents();
 		if (_stub->_pi.quit) {
 			break;
 		}
 		if (_stub->_pi.enter) {
-					emu_printf("_pi.enter1\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -355,18 +422,27 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-//emu_printf( "mainLoop playCutscene1\n");		
+			
 	playCutscene();
 	if (_cut._id == 0x3D) {
-//emu_printf( "mainLoop showFinalScore\n");				
 		showFinalScore();
 		_endLoop = true;
 		return;
 	}
+	
 	if (_deathCutsceneCounter) {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
+// vbt : clean front layer	
+			memset(_vid._frontLayer, 0xC0, 512*448);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
+	
 			playCutscene(_cut._deathCutsceneId);
+			_res.clearLevelRes(); // vbt : ajout, on a perdu on libère tout
+#ifdef HEAP_WALK
+heapWalk();
+#endif
 			if (!handleContinueAbort()) {
 				playCutscene(0x41);
 				_endLoop = true;
@@ -385,9 +461,9 @@ void Game::mainLoop() {
 			return;
 		}
 	}
-//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-		SCU_DMAWait();
+	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//		SCU_DMAWait();
 
 
 	pge_getInput();
@@ -408,6 +484,8 @@ void Game::mainLoop() {
 		}*/
 		changeLevel();
 		_pge_opGunVar = 0;
+emu_printf("vbt playmusic chg lvl\n");
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
 	}
 	if (_currentLevel == 3 && _cut._id == 50) {
@@ -415,19 +493,21 @@ void Game::mainLoop() {
 		return;
 	}
 	if (_loadMap) {
+		_mix.pauseMusic();
 		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
-
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
+			_mix.pauseMusic();
 			loadLevelMap();
 			_loadMap = false;
 //			_vid.fullRefresh();
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 //	_vid.updateScreen();
-
+			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+//			_mix.unpauseMusic();
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
@@ -444,10 +524,7 @@ void Game::mainLoop() {
 		--_blinkingConradCounter;
 	}
 	_vid.updateScreen();
-//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//	_stub->updateScreen(0);
 	updateTiming();
-
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
@@ -460,6 +537,15 @@ void Game::mainLoop() {
 			return;
 		}
 	}
+	
+	if(_cut._stop)
+	{
+		emu_printf("vbt playmusic  after cutscene\n");
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+//		_mix.unpauseMusic(); // vbt : on reprend où la musique était
+		_cut._stop = false;
+	}
+	
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -482,19 +568,17 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
-	
-//	return;
+#ifdef SLAVE_SOUND	// vbt : pas de video si on utilise le slave pour l'audio
+	return;
+#endif
 	if (id != -1) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
-//			_vid._layerScale=1;
-			
-//		newZoom = 1;
-/*
-		ToggleWidescreenStack tws(_stub, false);
+//		ToggleWidescreenStack tws(_stub, false);
 		_mix.stopMusic();
-		if (_res._hasSeqData) {
+		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
+/*		if (_res._hasSeqData) {
 			int num = 0;
 			switch (_cut._id) {
 			case 0x02: {
@@ -527,7 +611,6 @@ void Game::playCutscene(int id) {
 			case 0x4A:
 				return;
 			}
-			
 
 			if (SeqPlayer::_namesTable[_cut._id]) {
 			        char name[16];
@@ -556,13 +639,12 @@ void Game::playCutscene(int id) {
 				_mix.playMusic(num, bpm);
 			}
 		} else*/ {
-/*			const int num = Cutscene::_musicTableDOS[_cut._id];
+			const int num = Cutscene::_musicTableDOS[_cut._id];
 			if (num != 0xFF) {
 				_mix.playMusic(num);
-			}*/
+			}
 		}
 		_cut.play();
-		/*  // vbt à remettre		
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
@@ -570,8 +652,6 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
-		*/
-/* // vbt à remettre		
 		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
 			Color palette[32];
@@ -581,18 +661,18 @@ void Game::playCutscene(int id) {
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
-		
-*/
-		
-		/*if (_cut._id == 0x3D) {
+		if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
-		}*/
-//		_mix.stopMusic();
-		
-//		newZoom = 2;
+		}
+		_mix.stopMusic();
 	}
-//	_vid._layerScale=2;
+	else
+	{  // vbt pour les niveaux sans video
+		slScrAutoDisp(NBG1ON|SPRON);
+		slSynch();
+		_vid._layerScale=2;		
+	}	
 }
 
 void Game::inp_handleSpecialKeys() {
@@ -673,7 +753,7 @@ void Game::drawCurrentInventoryItem() {
 }
 
 void Game::showFinalScore() {
-//	if (_stub->hasWidescreen()) {   // vbt à boir si on remet
+//	if (_stub->hasWidescreen()) {   // vbt à voir si on remet
 //		_stub->clearWidescreen();
 //	}
 	playCutscene(0x49);
@@ -808,7 +888,9 @@ bool Game::handleConfigPanel() {
 }
 */
 bool Game::handleContinueAbort() {
+		
 	playCutscene(0x48);
+	
 	char textBuf[50];
 	int timeout = 100;
 	int current_color = 0;
@@ -816,42 +898,77 @@ bool Game::handleContinueAbort() {
 	uint8_t color_inc = 0xFF;
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
-//	memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-	memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+	
 	while (timeout >= 0 && !_stub->_pi.quit) {
+_vid._w=480;
+unsigned int h = 256;
+memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
+		_vid.drawStringSprite(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_02_TIME);
 		sprintf(textBuf, "%s : %d", str, timeout / 10);
-		_vid.drawString(textBuf, 96, 88, 0xE3);
+		_vid.drawStringSprite(textBuf, 90, 160, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_03_CONTINUE);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 104, colors[0]);
+		_vid.drawStringSprite(str, 90, 112, colors[0]);
 		str = _res.getMenuString(LocaleData::LI_04_ABORT);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 112, colors[1]);
+		_vid.drawStringSprite(str, 300, 112, colors[1]);
 		sprintf(textBuf, "SCORE  %08lu", _score);
-		_vid.drawString(textBuf, 64, 154, 0xE3);
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-			if (current_color > 0) {
-				SWAP(colors[current_color], colors[current_color - 1]);
-				--current_color;
+		_vid.drawStringSprite(textBuf, 90, 210, 0xE3);
+
+_vid._w=512;
+		_vid.SAT_displayText(-220, -128, h-1, 480);
+		_vid.SAT_displayCutscene(0, 0, 128, 240);
+		slSynch();
+		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
+		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
+
+		if (_res.isMac()) {
+
+			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+				if (current_color > 0) {
+					SWAP(colors[current_color], colors[current_color - 1]);
+					--current_color;
+				}
+			}
+			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+				if (current_color < 1) {
+					SWAP(colors[current_color], colors[current_color + 1]);
+					++current_color;
+				}
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-			if (current_color < 1) {
-				SWAP(colors[current_color], colors[current_color + 1]);
-				++current_color;
+		else
+		{
+			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+				if (current_color > 0) {
+					SWAP(colors[current_color], colors[current_color - 1]);
+					--current_color;
+				}
+			}
+			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+				if (current_color < 1) {
+					SWAP(colors[current_color], colors[current_color + 1]);
+					++current_color;
+				}
 			}
 		}
+		
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter3\n");			
 			_stub->_pi.enter = false;
 			return (current_color == 0);
 		}
+		
+	
 		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
+
+
+
 		static const int COLOR_STEP = 8;
 		static const int COLOR_MIN = 16;
 		static const int COLOR_MAX = 256 - 16;
@@ -868,11 +985,10 @@ bool Game::handleContinueAbort() {
 			col.g -= COLOR_STEP;
 		}
 		_stub->setPaletteEntry(0xE4, &col);
-		//_stub->processEvents();
+		_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
-//		memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
-		memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+
 	}
 	return false;
 }
@@ -1008,7 +1124,7 @@ void Game::drawStoryTexts() {
 			uint32_t voiceSegmentLen = 0;
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
 			if (voiceSegmentData) {
-//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt � remettre
+//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
 			_vid.updateScreen();
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
@@ -1176,6 +1292,7 @@ void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
 		} else {
 			_animBuffers.addState(0, xpos, ypos, dataPtr, pge);
 		}
+		dataPtr = NULL; // vbt : ajout
 	}
 }
 
@@ -1195,7 +1312,9 @@ void Game::drawAnims() {
 
 void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 //	emu_printf("Game::drawAnimBuffer() state=%d\n", stateNum);
-	assert(stateNum < 4);
+//	assert(stateNum < 4);
+	if(stateNum >= 4)
+		return;
 	_animBuffers._states[stateNum] = state;
 	uint8_t lastPos = _animBuffers._curPos[stateNum];
 	if (lastPos != 0xFF) {
@@ -1517,6 +1636,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 		case kResourceTypeMac: {
 				Color palette[256];
 				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
 					const int color = kMonsterPalette * 16 + i;
@@ -1544,7 +1664,7 @@ bool Game::hasLevelMap(int level, int room) const {
 	return false;
 }
 void Game::loadLevelMap() {
-//	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
 	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
 	switch (_res._type) {
@@ -1581,7 +1701,33 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 	case kResourceTypeMac:
-		_res.MAC_unloadLevelData();
+//emu_printf("MAC_unloadLevelData\n");
+//heapWalk();		
+/*
+emu_printf("MAC_unloadLevelData\n");
+emu_printf("_res._monster %p\n",_res._monster);
+	sat_free(_res._spc);
+emu_printf("_res._monster %p\n",_res._spc);	
+	sat_free(_res._spc);	
+	sat_free(_res._ani);
+	_res.MAC_unloadLevelData();
+//	sat_free(_res._icn);// icones du menu à ne pas vider
+
+	sat_free(_res._spr1);
+	sat_free(_res._cmd);
+	sat_free(_res._pol);
+	sat_free(_res._cine_off);
+//	sat_free(_res._cine_txt);  // vbt est dans scratchbuff
+*/
+/*
+	for (int i = 0; i < _res._numSfx; ++i) {
+		sat_free(_res._sfxList[i].data);
+	}
+	sat_free(_res._sfxList);
+*/	
+//	sat_free(_res._bankData);
+//	delete _res._aba;
+//	delete _res._mac;
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
 	}
@@ -1629,14 +1775,14 @@ void Game::loadLevelData() {
 	pge_resetMessages();
 	_validSaveState = false;
 
-//	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre
+	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre, le seul à garder
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 	uint8_t buf[16 * 16];
 	switch (_res._type) {
 	case kResourceTypeDOS:
-//		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt � remettre
+//		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt ࠲emettre
 		break;
 	case kResourceTypeMac:
 		switch (iconNum) {
@@ -1683,6 +1829,7 @@ uint16_t Game::getRandomNumber() {
 
 void Game::changeLevel() {
 	_vid.fadeOut();
+//	clearStateRewind();
 	loadLevelData();
 	loadLevelMap();
 	_vid.setPalette0xF();
