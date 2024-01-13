@@ -28,6 +28,7 @@ extern "C" {
 #include <sega_sys.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
+#include "cdtoc.h"
 
 extern TEXTURE tex_spr[4];
 }
@@ -118,8 +119,9 @@ static volatile Uint8 audioEnabled = 0;
 
 /* CDDA */
 
-CdcPly	playdata;
-CdcPos	posdata;
+CDTableOfContents toc;
+//CdcPly	playdata;
+//CdcPos	posdata;
 CdcStat statdata;
 
 static uint8 tickPerVblank = 0;
@@ -624,6 +626,9 @@ void SystemStub_SDL::load_audio_driver(void) {
 
 void SystemStub_SDL::init_cdda(void)
 {
+	CdcPly playdata;
+	CDC_TgetToc((Uint32*)&toc);
+	
     CDC_PLY_STYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
     CDC_PLY_STNO( &playdata) = 2;		/* start track number. */
     CDC_PLY_SIDX( &playdata) = 1;		/* start index number. */
@@ -631,7 +636,9 @@ void SystemStub_SDL::init_cdda(void)
     CDC_PLY_ETNO( &playdata) = 10;		/* start track number. */
     CDC_PLY_EIDX( &playdata) = 99;		/* start index number. */
     CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL + 30;	/* Play Mode. */ // lecture en boucle
-//    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL+30;//CDC_PM_DFL ;	/* Play Mode. */ // lecture unique	
+//    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL+30;//CDC_PM_DFL ;	/* Play Mode. */ // lecture unique
+	statdata.report.fad = 0;
+	
 }
 
  void SystemStub_SDL::sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r) {

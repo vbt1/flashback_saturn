@@ -4,21 +4,23 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 extern "C" {
-	#include 	<string.h>
+#include <string.h>
 #include <sl_def.h>
 #include <sega_cdc.h>
+#include "cdtoc.h"
 
 }
 #include "mixer.h"
 #include "systemstub.h"
 #include "saturn_print.h"
 /* CDDA */
-extern CdcPly	playdata;
-extern CdcPos	posdata;
+extern CDTableOfContents toc;
+//extern CdcPly	playdata;
+//extern CdcPos	posdata;
 extern CdcStat  statdata;
 
 Mixer::Mixer(SystemStub *stub)
-	: _stub(stub) {
+	: _stub(stub), _mod(this,"") {
 }
 
 void Mixer::init() {
@@ -35,6 +37,7 @@ void Mixer::init() {
 }
 
 void Mixer::free() {
+	setPremixHook(0, 0);
 	stopAll();
 	_stub->stopAudio();
 	_stub->destroyMutex(_mutex);
@@ -86,55 +89,100 @@ void Mixer::stopAll() {
 
 void Mixer::pauseMusic(void)
 {
-	CDC_POS_PTYPE(&posdata)=CDC_PTYPE_DFL;
-	CDC_CdSeek(&posdata);
+	// Get current address
 	CDC_GetCurStat(&statdata);
+
+//	emu_printf( "Mixer::pauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
+
+	// Restore address
+    CdcPos poswk;
+    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
+    CDC_CdSeek(&poswk);	
 }
 
 void Mixer::unpauseMusic(void)
 {
-/*
-	CDC_PLY_STYPE(&playdata) = CDC_PTYPE_NOCHG;
-	CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_NOCHG;
-	CDC_PLY_PMODE(&playdata) = CDC_PM_NOCHG;
-*/
-//	memcpy(&playdata.start,&posdata,sizeof(CdcPos));
+//	emu_printf( "Mixer::unpauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
 
-/*
-    CDC_PLY_STYPE(&playdata) = CDC_PTYPE_FAD;
-    CDC_PLY_SFAD(&playdata) = statdata.report.fad;
-    CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_FAD;
-//    CDC_PLY_EFAS(&playdata) = efad - sfad + 1;
-    CDC_PLY_PMODE(&playdata) = CDC_PM_DFL;
-*/
-	CDC_POS_PTYPE(&posdata)=CDC_PTYPE_FAD;
-	CDC_CdSeek(&posdata);	
-	CDC_CdPlay(&playdata);
+	CdcPly ply;
+
+    CDC_PLY_STYPE(&ply) = CDC_PTYPE_FAD; // track number
+
+	if (statdata.report.fad == 0)
+	{
+
+		CDC_PLY_SFAD(&ply) = toc.Tracks[_musicTrack].fad;
+	}
+	else
+	{
+		CDC_PLY_SFAD(&ply) = statdata.report.fad;
+	}
+
+	if (_musicTrack + 1 < CD_TRACK_COUNT && CDTrackIsAudio(&toc.Tracks[_musicTrack + 1]))
+	{
+		// End of the playback address
+    	CDC_PLY_ETYPE(&ply) = CDC_PTYPE_FAD;
+		CDC_PLY_EFAS(&ply) = toc.Tracks[_musicTrack + 1].fad - toc.Tracks[_musicTrack].fad;
+	}
+	else
+	{
+		// End of the playback is end of the disk
+    	CDC_PLY_ETYPE(&ply) = CDC_PTYPE_DFL;
+	}
+
+	// Playback mode
+    CDC_PLY_PMODE(&ply) = CDC_PM_DFL | 0xf; // 0xf = infinite repetitions
+
+	// Start playback
+    CDC_CdPlay(&ply);
 }
-/*
-        CDC_PLY_STYPE(&ply) = CDC_PTYPE_FAD;
-        CDC_PLY_SFAD(&ply) = sfad;
-        CDC_PLY_ETYPE(&ply) = CDC_PTYPE_FAD;
-        CDC_PLY_EFAS(&ply) = efad - sfad + 1;
-        CDC_PLY_PMODE(&ply) = CDC_PM_DFL;
-*/
 
 void Mixer::playMusic(int num, int tempo) {
-	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
+//	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
 	int trackNum = -1;
 	if (num == 1) { // menu screen
 		trackNum = 2;
 	} else if (num >= MUSIC_TRACK) {
-		trackNum = 0+ num - MUSIC_TRACK;
+		trackNum = 3+ num - MUSIC_TRACK;
 	}
-	emu_printf("Mixer::trackNum(%d)\n", trackNum);
+//	emu_printf("Mixer::trackNum(%d)\n", trackNum);
 
 	if(trackNum>1 && trackNum<10)
 	{
-		CDC_POS_PTYPE( &posdata ) = CDC_PTYPE_TNO;
-		CDC_PLY_STNO( &playdata ) = (Uint8) (trackNum);
-		CDC_PLY_ETNO( &playdata ) = (Uint8) (trackNum);
-		CDC_CdPlay(&playdata);	
+		CdcPly ply;
+		_musicTrack = trackNum;
+//		statdata.report.fad = 0;
+
+		CDC_PLY_STYPE(&ply) = CDC_PTYPE_FAD; // track number
+		CDC_PLY_SFAD(&ply) = toc.Tracks[trackNum].fad;
+
+		if (trackNum + 1 < CD_TRACK_COUNT && CDTrackIsAudio(&toc.Tracks[trackNum + 1]))
+		{
+			// End of the playback address
+			CDC_PLY_ETYPE(&ply) = CDC_PTYPE_FAD;
+			CDC_PLY_EFAS(&ply) = toc.Tracks[trackNum + 1].fad - toc.Tracks[trackNum].fad;
+		}
+		else
+		{
+			// End of the playback is end of the disk
+			CDC_PLY_ETYPE(&ply) = CDC_PTYPE_DFL;
+		}
+
+		// Playback mode
+		CDC_PLY_PMODE(&ply) = CDC_PM_DFL | 0xf; // 0xf = infinite repetitions
+
+		// Start playback
+		CDC_CdPlay(&ply);
+	} else { // cutscene
+		_mod.play(num, tempo);
+	emu_printf("cutscene MT_MOD %d\n", trackNum);	
+//		if (_mod._playing) 
+		{
+			_musicType = MT_MOD;
+			return;
+		}
+
+
 	}
 /*	
 	if (trackNum != -1 && trackNum != _musicTrack) {
@@ -149,35 +197,21 @@ void Mixer::playMusic(int num, int tempo) {
 			return;
 		}
 	}
-	if ((_musicType == MT_OGG || _musicType == MT_CPC) && isMusicSfx(num)) { // do not play level action music with background music
-		return;
-	}
-	if (isMusicSfx(num)) { // level action sequence
-		_sfx.play(num);
-		if (_sfx._playing) {
-			_musicType = MT_SFX;
-		}
-	} else { // cutscene
-		_mod.play(num, tempo);
-		if (_mod._playing) {
-			_musicType = MT_MOD;
-			return;
-		}
-		if (g_options.use_prf_music) {
-			_prf.play(num);
-			if (_prf._playing) {
-				_musicType = MT_PRF;
-				return;
-			}
-		}
-	}
+
 */	
 }
 
 void Mixer::stopMusic() {
-	emu_printf( "Mixer::stopMusic() %d _musicTrack %d\n",_musicType,_musicTrack);
-	CDC_CdSeek(&posdata);
-//	CDC_POS_PTYPE( &posdata ) = CDC_PTYPE_DFL;	/* Stop Music. */
+//	emu_printf( "Mixer::stopMusic() %d _musicTrack %d\n",_musicType,_musicTrack);
+	// Get current address
+	
+	CdcStat stat;
+	CDC_GetCurStat(&stat);
+
+	// Restore address
+    CdcPos poswk;
+    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
+    CDC_CdSeek(&poswk);
 /*	
 	switch (_musicType) {
 	case MT_NONE:

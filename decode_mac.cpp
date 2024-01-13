@@ -1,14 +1,16 @@
 
-#include <assert.h>
-#include <stdlib.h>
+//#include <assert.h>
+extern "C" {
 #include <string.h>
+#include <strings.h>
+
+#include <ctype.h>
+#include "sat_mem_checker.h"
+}
+
 #include "decode_mac.h"
 #include "util.h"
 #include "saturn_print.h"
-
-extern "C" {
-#include "sat_mem_checker.h"
-}
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 

@@ -50,6 +50,7 @@ extern Uint32  __malloc_free_list;
 
 extern "C" {
 extern Uint32  _sbrk(int size);
+extern CdcStat  statdata;
 }
 
 void heapWalk(void)
@@ -493,7 +494,7 @@ emu_printf("vbt playmusic chg lvl\n");
 		return;
 	}
 	if (_loadMap) {
-		_mix.pauseMusic();
+//		_mix.pauseMusic(); // vbt : on vire
 		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
@@ -506,8 +507,11 @@ emu_printf("vbt playmusic chg lvl\n");
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 //	_vid.updateScreen();
-			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
-//			_mix.unpauseMusic();
+//			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+				_mix.unpauseMusic(); // vbt : on reprend où la musique était
+			else
+				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
@@ -540,9 +544,12 @@ emu_printf("vbt playmusic chg lvl\n");
 	
 	if(_cut._stop)
 	{
-		emu_printf("vbt playmusic  after cutscene\n");
+//		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+	if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+		_mix.unpauseMusic(); // vbt : on reprend où la musique était
+	else
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
-//		_mix.unpauseMusic(); // vbt : on reprend où la musique était
+	
 		_cut._stop = false;
 	}
 	
@@ -576,8 +583,8 @@ void Game::playCutscene(int id) {
 	}
 	if (_cut._id != 0xFFFF) {
 //		ToggleWidescreenStack tws(_stub, false);
-		_mix.stopMusic();
-		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
+//		_mix.stopMusic();
+//		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
 /*		if (_res._hasSeqData) {
 			int num = 0;
 			switch (_cut._id) {
@@ -667,6 +674,12 @@ void Game::playCutscene(int id) {
 		}
 		_mix.stopMusic();
 	}
+	else
+	{  // vbt pour les niveaux sans video
+		slScrAutoDisp(NBG1ON|SPRON);
+		slSynch();
+		_vid._layerScale=2;		
+	}	
 }
 
 void Game::inp_handleSpecialKeys() {
@@ -1768,8 +1781,14 @@ emu_printf("_res._monster %p\n",_res._spc);
 	}
 	pge_resetMessages();
 	_validSaveState = false;
-
-	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre, le seul à garder
+/* // vbt à remettre ???	
+emu_printf("vbt playmusic loadLevelData\n");
+//	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre, le seul à garder
+	if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+		_mix.unpauseMusic(); // vbt : on reprend où la musique était
+	else
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+*/
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {

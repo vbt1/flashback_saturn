@@ -136,46 +136,6 @@ void ModPlayer::unload() {
 #endif
 }
 
-void ModPlayer::play(uint8 num) {
-	if (!_playing && num < _modulesFilesCount) {
-		File f;
-		bool found = false;
-		for (uint8 i = 0; i < ARRAYSIZE(_modulesFiles[num]); ++i) {
-			if (f.open(_modulesFiles[num][i], _dataPath, "rb")) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			//warning("Can't find music file %d", num);
-		} else {
-			load(&f);
-			_currentPatternOrder = 0;
-			_currentPatternPos = 0;
-			_currentTick = 0;
-			_patternDelay = 0;
-			_songSpeed = 6;
-			_songTempo = 125;
-			_patternLoopPos = 0;
-			_patternLoopCount = -1;
-			_samplesLeft = 0;
-			_songNum = num;
-			_introSongHack = false;
-			memset(_tracks, 0, sizeof(_tracks));
-			_mix->setPremixHook(mixCallback, this);
-			_playing = true;
-		}
-	}
-}
-
-void ModPlayer::stop() {
-	if (_playing) {
-		_mix->setPremixHook(0, 0);
-		_playing = false;
-	}
-	unload();
-}
-
 void ModPlayer::handleNote(int trackNum, uint32 noteData) {
 	Track *tk = &_tracks[trackNum];
 	uint16 sampleNum = ((noteData >> 24) & 0xF0) | ((noteData >> 12) & 0xF);
@@ -549,7 +509,7 @@ bool ModPlayer::mix(int8 *buf, int len) {
 	while(!(*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed))); // Wait that we are safe and able to proceed
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 1; // Proceed...
 #else
-	slaveMixing = 1;
+	slaveMixing = 0;	// vbt passagr à 0
 #endif
 	if (_playing) {
 		//memset(buf, 0, len);
@@ -577,6 +537,45 @@ bool ModPlayer::mix(int8 *buf, int len) {
 	return _playing;
 }
 
+void ModPlayer::play(int num, int tempo) {
+	if (!_playing && num < _modulesFilesCount) {
+		File f;
+		bool found = false;
+		for (uint8 i = 0; i < ARRAYSIZE(_modulesFiles[num]); ++i) {
+			if (f.open(_modulesFiles[num][i], _dataPath, "rb")) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			//warning("Can't find music file %d", num);
+		} else {
+			load(&f);
+			_currentPatternOrder = 0;
+			_currentPatternPos = 0;
+			_currentTick = 0;
+			_patternDelay = 0;
+			_songSpeed = 6;
+			_songTempo = 125;
+			_patternLoopPos = 0;
+			_patternLoopCount = -1;
+			_samplesLeft = 0;
+			_songNum = num;
+			_introSongHack = false;
+			memset(_tracks, 0, sizeof(_tracks));
+			_mix->setPremixHook(mixCallback, this);
+			_playing = true;
+		}
+	}
+}
+
+void ModPlayer::stop() {
+	if (_playing) {
+		_mix->setPremixHook(0, 0);
+		_playing = false;
+	}
+	unload();
+}
 bool ModPlayer::mixCallback(void *param, int8 *buf, int len) {
 	return ((ModPlayer *)param)->mix(buf, len);
 }

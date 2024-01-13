@@ -93,7 +93,7 @@ struct ModPlayer {
 	uint16 findPeriod(uint16 period, uint8 fineTune) const;
 	void load(File *f);
 	void unload();
-	void play(uint8 num);
+	void play(int num, int tempo);
 	void stop();
 	void handleNote(int trackNum, uint32 noteData);
 	void handleTick();
