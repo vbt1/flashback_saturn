@@ -11,12 +11,12 @@
 #include "mod_player.h"
 
 struct MixerChunk {
-	const uint8_t *data;
+	uint8_t *data;
 	uint32_t len;
-
+/*
 	MixerChunk()
 		: data(0), len(0) {
-	}
+	}*/
 
 	int8_t getPCM(int offset) const {
 		if (offset < 0) {

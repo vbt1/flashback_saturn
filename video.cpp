@@ -3,6 +3,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
+//#define SLAVE_SOUND 1 
 extern "C"
 {
 #include <sl_def.h>	
@@ -637,7 +638,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
 	}
 }
-
+#ifndef SLAVE_SOUND
 void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
@@ -678,3 +679,4 @@ void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w
 	user_sprite.GRDA=0;	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
+#endif

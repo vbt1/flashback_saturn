@@ -1336,7 +1336,7 @@ int Game::pge_op_compareUnkVar(ObjectOpcodeArgs *args) {
 
 int Game::pge_op_playDeathCutscene(ObjectOpcodeArgs *args) {
 	if (_deathCutsceneCounter == 0) {
-emu_printf("pge_op_playDeathCutscene\n");		
+//emu_printf("pge_op_playDeathCutscene\n");		
 		_deathCutsceneCounter = args->pge->init_PGE->data[3] + 1;
 		_cut._deathCutsceneId = args->a;
 	}

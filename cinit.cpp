@@ -1,3 +1,5 @@
+//#define SLAVE_SOUND 1
+
 extern "C" {
 //#include	<sgl.h>
 #include 	<sl_def.h>
@@ -49,8 +51,6 @@ int	main( void )
 	slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
-//    slPriorityNbg0(4);
-//    slPriorityNbg1(5);	
 
 	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
@@ -61,8 +61,6 @@ int	main( void )
 //    slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
 //	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
-//	slPrioritySpr0(6);
-//	slScrAutoDisp(NBG1ON|SPRON);
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	
 //	slTVOn();

@@ -125,7 +125,7 @@ bool Resource::fileExists(const char *filename) {
 }
 
 void Resource::clearLevelRes() {
-emu_printf("vbt clearLevelRes\n");		
+//emu_printf("vbt clearLevelRes\n");		
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_mbk); _mbk = 0;
 	sat_free(_pal); _pal = 0;
@@ -139,10 +139,10 @@ emu_printf("vbt clearLevelRes\n");
 	
 	if(_type==kResourceTypeMac)
 	{
-	emu_printf("MAC_unloadLevelData\n");
-	emu_printf("_res._monster %p\n",_monster);
+//	emu_printf("MAC_unloadLevelData\n");
+//	emu_printf("_res._monster %p\n",_monster);
 		sat_free(_monster);
-	emu_printf("_res._monster %p\n",_spc);	
+//	emu_printf("_res._spc %p\n",_spc);	
 		sat_free(_spc);	
 		sat_free(_ani);
 		MAC_unloadLevelData();
@@ -874,7 +874,7 @@ void Resource::load_OBJ(File *f) {
 }
 
 void Resource::free_OBJ() {
-	emu_printf("Resource::free_OBJ()\n");
+//	emu_printf("Resource::free_OBJ()\n");
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (_objectNodesMap[i] != prevNode) {
@@ -1044,7 +1044,7 @@ void Resource::load_ANI(File *f) {
 }
 
 void Resource::load_TBN(File *f) {
-	emu_printf("Resource::load_TBN()\n");
+//	emu_printf("Resource::load_TBN()\n");
 	int len = f->size();
 	_tbn = (uint8_t *)sat_malloc(len);
 	if (!_tbn) {
@@ -1216,7 +1216,7 @@ void Resource::load_SPL(File *f) {
 }
 
 void Resource::load_LEV(File *f) {
-emu_printf("load_LEV %d\n", f->size());	
+//emu_printf("load_LEV %d\n", f->size());	
 	const int len = f->size();
 	_lev = (uint8_t *)sat_malloc(len);
 	if (!_lev) {

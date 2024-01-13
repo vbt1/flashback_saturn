@@ -37,7 +37,7 @@ void Mixer::init() {
 }
 
 void Mixer::free() {
-	setPremixHook(0, 0);
+//	setPremixHook(0, 0);
 	stopAll();
 	_stub->stopAudio();
 	_stub->destroyMutex(_mutex);
@@ -174,9 +174,9 @@ void Mixer::playMusic(int num, int tempo) {
 		// Start playback
 		CDC_CdPlay(&ply);
 	} else { // cutscene
-		_mod.play(num, tempo);
-	emu_printf("cutscene MT_MOD %d\n", trackNum);	
-//		if (_mod._playing) 
+//		_mod.play(num, tempo);
+		emu_printf("cutscene MT_MOD %d\n", num);	
+		if (_mod._playing) 
 		{
 			_musicType = MT_MOD;
 			return;
@@ -212,14 +212,14 @@ void Mixer::stopMusic() {
     CdcPos poswk;
     CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
     CDC_CdSeek(&poswk);
-/*	
+	
 	switch (_musicType) {
 	case MT_NONE:
 		break;
 	case MT_MOD:
 		_mod.stop();
 		break;
-	case MT_OGG:
+/*	case MT_OGG:
 		_ogg.pauseTrack();
 		break;
 	case MT_PRF:
@@ -230,8 +230,9 @@ void Mixer::stopMusic() {
 		break;
 	case MT_CPC:
 		_cpc.pauseTrack();
-		break;
+		break;*/
 	}
+/*	
 	_musicType = MT_NONE;
 	if (_musicTrack > 2) { // do not resume menu music
 		switch (_backgroundMusicType) {

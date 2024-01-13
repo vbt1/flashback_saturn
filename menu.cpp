@@ -91,7 +91,7 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 }
 
 void Menu::loadPicture(const char *prefix) {
-	emu_printf( "Menu::loadPicture('%s')\n", prefix);
+//	emu_printf( "Menu::loadPicture('%s')\n", prefix);
 	static const int kPictureW = 256;
 	static const int kPictureH = 224;
 	_res->load_MAP_menu(prefix, _res->_scratchBuffer);
@@ -127,7 +127,7 @@ void Menu::handleInfoScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter5\n");			
+//			emu_printf("_pi.enter5\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -318,7 +318,7 @@ bool Menu::handleLevelScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter8\n");			
+//			emu_printf("_pi.enter8\n");			
 			_stub->_pi.enter = false;
 			_skill = currentSkill;
 			_level = currentLevel;
@@ -446,7 +446,7 @@ void Menu::handleTitleScreen() {
 			}
 		}
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter9\n");			
+//			emu_printf("_pi.enter9\n");			
 			_stub->_pi.enter = false;
 			selectedItem = currentEntry;
 		}

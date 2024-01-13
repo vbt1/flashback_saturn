@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+//#define SLAVE_SOUND 1
 extern "C" {
 #include <string.h>	
 #include <sgl.h>
@@ -407,11 +408,14 @@ void SystemStub_SDL::processEvents() {
 }
 
 void SystemStub_SDL::sleep(uint32 duration) {
-	static Uint8 counter = 0;
+//	static Uint8 counter = 0;
 
 	uint32 wait_tick = ticker + duration;
-	counter++;
-
+//	counter++;
+	
+	do{
+	//		emu_printf("sleeping %d %d\n",wait_tick,ticker);
+	}
 	while(wait_tick >= ticker);
 }
 
@@ -482,8 +486,8 @@ void SystemStub_SDL::lockMutex(void *mutex) {
 	while(*(Uint8*)OPEN_CSH_VAR(mtx->access) > 0) asm("nop");
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))++;
 #else
-	while(mtx->access > 0) asm("nop");
-	mtx->access++;
+//	while(mtx->access > 0) asm("nop");
+//	mtx->access++;
 #endif
 	return;
 }
@@ -494,7 +498,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 #ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
 #else
-	mtx->access--;
+//	mtx->access--;
 #endif
 	return;
 }
@@ -703,7 +707,9 @@ inline void timeTick() {
 
 void vblIn (void) {
 	//static Uint8 counter = 0;
-
+//emu_printf("vblin\n");
+	timeTick();
+//emu_printf("timeTick\n");	
 	// Process input
 	sys->processEvents();
 
@@ -718,7 +724,7 @@ void vblIn (void) {
 	if(audioEnabled)
 		fill_play_audio();
 
-	timeTick();
+//	timeTick();
 
 	/*if(counter == 20) {
 		sys->setup_input();
@@ -860,7 +866,7 @@ void fill_buffer_slot(void) {
 #ifdef SLAVE_SOUND	
 	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) {
 #else
-	if(!(buffer_filled[workingBuffer]) && !(mtx->access)) 
+	if(!(buffer_filled[workingBuffer]) /*&& !(mtx->access)*/) 
 	{
 #endif
 //emu_printf("  -> slave mixing %d %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));

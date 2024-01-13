@@ -33,7 +33,7 @@ extern "C"
 
 #undef assert
 #define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
-
+//#define SLAVE_SOUND 1
 
 volatile Uint8 slaveMixing;
 volatile Uint8 slaveProceed;
@@ -41,7 +41,8 @@ volatile Uint8 slaveProceed;
 ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 	: _playing(false), _mix(mixer), _dataPath(dataPath) {
 	memset(&_modInfo, 0, sizeof(_modInfo));
-//emu_printf("ModPlayer::ModPlayer\n");	
+//emu_printf("ModPlayer::ModPlayer\n");
+
 #ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed) = 1;
@@ -64,7 +65,7 @@ uint16 ModPlayer::findPeriod(uint16 period, uint8 fineTune) const {
 void ModPlayer::load(File *f) {
 	f->read(_modInfo.songName, 20);
 	_modInfo.songName[20] = 0;
-//	debug(DBG_MOD, "songName = '%s'", _modInfo.songName);
+	emu_printf("songName = '%s'\n", _modInfo.songName);
 
 	for (int s = 0; s < NUM_SAMPLES; ++s) {
 		SampleInfo *si = &_modInfo.samples[s];
@@ -86,7 +87,7 @@ void ModPlayer::load(File *f) {
 	f->readUint32BE(); // 'M.K.', Protracker, 4 channels
 #define MIN(x,y) ((x)<(y)?(x):(y))
 
-	uint8_t n = 0;
+	uint16 n = 0;
 	for (int i = 0; i < NUM_PATTERNS; ++i) {
 		if (_modInfo.patternOrderTable[i] != 0) {
 			n = MAX(n, _modInfo.patternOrderTable[i]);
@@ -94,7 +95,7 @@ void ModPlayer::load(File *f) {
 	}
 	//debug(DBG_MOD, "numPatterns=%d",n + 1);
 	n = (n + 1) * 64 * 4 * 4; // 64 lines of 4 notes per channel
-//emu_printf("sat_malloc in ModPlayer::load %d ",n);	
+emu_printf("std_malloc in ModPlayer::load malloc %d\n",n);	
 	_modInfo.patternsTable = (uint8 *)sat_malloc(n);
 	assert(_modInfo.patternsTable);
 	f->read(_modInfo.patternsTable, n);
@@ -119,7 +120,7 @@ void ModPlayer::unload() {
 	// Waiting for slave to finish
 	while(*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing));
 #else
-
+	slaveProceed=0;
 #endif
 	if (_modInfo.songName[0]) {
 		sat_free(_modInfo.patternsTable);
@@ -509,7 +510,7 @@ bool ModPlayer::mix(int8 *buf, int len) {
 	while(!(*(volatile Uint8*)OPEN_CSH_VAR(slaveProceed))); // Wait that we are safe and able to proceed
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 1; // Proceed...
 #else
-	slaveMixing = 0;	// vbt passagr à 0
+	slaveMixing = 1;	// vbt passagr à 0
 #endif
 	if (_playing) {
 		//memset(buf, 0, len);
@@ -538,6 +539,8 @@ bool ModPlayer::mix(int8 *buf, int len) {
 }
 
 void ModPlayer::play(int num, int tempo) {
+emu_printf("ModPlayer::play(%d, %d)\n",num,tempo);
+
 	if (!_playing && num < _modulesFilesCount) {
 		File f;
 		bool found = false;
@@ -548,8 +551,9 @@ void ModPlayer::play(int num, int tempo) {
 			}
 		}
 		if (!found) {
-			//warning("Can't find music file %d", num);
+			emu_printf("Can't find music file %d %s\n", num,_modulesFiles[num][1]);
 		} else {
+			emu_printf("music file found %d %s\n", num,_modulesFiles[num][1]);			
 			load(&f);
 			_currentPatternOrder = 0;
 			_currentPatternPos = 0;
@@ -576,6 +580,7 @@ void ModPlayer::stop() {
 	}
 	unload();
 }
+
 bool ModPlayer::mixCallback(void *param, int8 *buf, int len) {
 	return ((ModPlayer *)param)->mix(buf, len);
 }

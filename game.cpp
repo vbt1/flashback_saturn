@@ -4,7 +4,7 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 #define HEAP_WALK 1
- 
+ //#define SLAVE_SOUND 1
 extern "C" {
 	#include 	<string.h>
 	#include <stdio.h>
@@ -179,7 +179,7 @@ void Game::run() {
 	}
 
 #ifndef BYPASS_PROTECTION
-emu_printf("handleProtectionScreen\n");
+//emu_printf("handleProtectionScreen\n");
 	while (!handleProtectionScreen());
 	if (_stub->_pi.quit) {
 		return;
@@ -485,7 +485,7 @@ heapWalk();
 		}*/
 		changeLevel();
 		_pge_opGunVar = 0;
-emu_printf("vbt playmusic chg lvl\n");
+//emu_printf("vbt playmusic chg lvl\n");
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
 	}
@@ -528,7 +528,7 @@ emu_printf("vbt playmusic chg lvl\n");
 		--_blinkingConradCounter;
 	}
 	_vid.updateScreen();
-	updateTiming();
+//	updateTiming();
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
@@ -569,6 +569,7 @@ void Game::updateTiming() {
 	int32 pause = (_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE) ? 20 : 30;
 	pause -= delay;
 	if (pause > 0) {
+		emu_printf("_stub->sleep(pause2) %d\n",pause);
 		_stub->sleep(pause);
 	}
 	tstamp = _stub->getTimeStamp();
@@ -582,6 +583,7 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
+		_sfxPly.stop(); // vbt à voir		
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
 //		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
@@ -776,7 +778,7 @@ void Game::showFinalScore() {
 		_stub->updateScreen(0);
 		_stub->processEvents();
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter2\n");			
+//			emu_printf("_pi.enter2\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -924,12 +926,13 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 		_vid.drawStringSprite(textBuf, 90, 210, 0xE3);
 
 _vid._w=512;
+#ifndef SLAVE_SOUND
 		_vid.SAT_displayText(-220, -128, h-1, 480);
 		_vid.SAT_displayCutscene(0, 0, 128, 240);
 		slSynch();
 		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
 		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
-
+#endif
 		if (_res.isMac()) {
 
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
@@ -1972,7 +1975,7 @@ void Game::handleInventory() {
 				}
 			}
 			if (_stub->_pi.enter) {
-				emu_printf("_pi.enter4\n");				
+//				emu_printf("_pi.enter4\n");				
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}
