@@ -327,8 +327,8 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 }
 #endif
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
-	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
+	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
+//	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {

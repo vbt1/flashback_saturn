@@ -89,9 +89,9 @@ void Cutscene::updateScreen() {
 //		_vid->fullRefresh();
 //	SWAP(_frontPage, _backPage);
 
-//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
-	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
-//	SCU_DMAWait();
+	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+//	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+	SCU_DMAWait();
 #ifndef SLAVE_SOUND	
 	_vid->SAT_displayCutscene(0, 0, 128, 240);
 	slSynch();

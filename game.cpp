@@ -3,7 +3,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#define HEAP_WALK 1
+//#define HEAP_WALK 1
  //#define SLAVE_SOUND 1
 extern "C" {
 	#include 	<string.h>
@@ -43,14 +43,15 @@ extern TEXTURE tex_spr[4];
 #include "sys.h"
 
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
-
+extern "C" {
+extern CdcStat  statdata;
+}
 #ifdef HEAP_WALK
 extern Uint32  end;
 extern Uint32  __malloc_free_list;
 
 extern "C" {
 extern Uint32  _sbrk(int size);
-extern CdcStat  statdata;
 }
 
 void heapWalk(void)
@@ -462,9 +463,9 @@ heapWalk();
 			return;
 		}
 	}
-	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-//		DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-//		SCU_DMAWait();
+//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+	SCU_DMAWait();
 
 
 	pge_getInput();
