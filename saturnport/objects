@@ -7,7 +7,6 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/main.cpp \
 		$(SRCDIR)/menu.cpp \
 		$(SRCDIR)/mixer.cpp \
-		$(SRCDIR)/mod_player.cpp \
 		$(SRCDIR)/piege.cpp \
 		$(SRCDIR)/unpack.cpp \
 		$(SRCDIR)/resource.cpp \

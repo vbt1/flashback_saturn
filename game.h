@@ -82,7 +82,6 @@ struct Game {
 	Cutscene _cut;
 	Menu _menu;
 	Mixer _mix;
-	ModPlayer _modPly;
 	Resource _res;
 	SfxPlayer _sfxPly;
 	Video _vid;

@@ -142,7 +142,7 @@ static Uint32 getFreeSaveBlocks(void) {
 
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
 	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
-	_mix(stub), _modPly(&_mix, dataPath), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
+	_mix(stub), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
 	_inp_demPos = 0;
@@ -507,7 +507,7 @@ heapWalk();
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 //	_vid.updateScreen();
-//			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique
+
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 				_mix.unpauseMusic(); // vbt : on reprend où la musique était
 			else
@@ -544,11 +544,10 @@ heapWalk();
 	
 	if(_cut._stop)
 	{
-//		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
-	if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
-		_mix.unpauseMusic(); // vbt : on reprend où la musique était
-	else
-		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+		if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+			_mix.unpauseMusic(); // vbt : on reprend où la musique était
+		else
+			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 	
 		_cut._stop = false;
 	}
@@ -583,7 +582,7 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
-		_sfxPly.stop(); // vbt � voir		
+//		_sfxPly.stop(); // vbt � voir		
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
 //		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
@@ -647,17 +646,20 @@ void Game::playCutscene(int id) {
 				const int bpm = Cutscene::_musicTableAmiga[_cut._id * 2 + 1];
 				_mix.playMusic(num, bpm);
 			}
-		} else*/ {
+		} else
+			{
 			const int num = Cutscene::_musicTableDOS[_cut._id];
 			if (num != 0xFF) {
 				_mix.playMusic(num);
 			}
-		}
+		}*/
+		emu_printf("_cut._id %d _musicTableDOS %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
 		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
 				_cut._id = 0x4A; // second part of the introduction cutscene
+				_mix.pauseMusic(); // vbt : on sauvegarde la position cdda			
 				_cut.play();
 			}
 		}
@@ -678,6 +680,8 @@ void Game::playCutscene(int id) {
 	}
 	else
 	{  // vbt pour les niveaux sans video
+		if(_mix._musicTrack==2)
+			_mix.stopMusic();
 		slScrAutoDisp(NBG1ON|SPRON);
 		slSynch();
 		_vid._layerScale=2;		
@@ -1645,8 +1649,9 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 			break;
 		case kResourceTypeMac: {
 				Color palette[256];
-				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 				_cut._stop=true; // vbt bidouille pour relancer la piste audio
+				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
 					const int color = kMonsterPalette * 16 + i;

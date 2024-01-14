@@ -20,7 +20,7 @@ extern CDTableOfContents toc;
 extern CdcStat  statdata;
 
 Mixer::Mixer(SystemStub *stub)
-	: _stub(stub), _mod(this,"") {
+	: _stub(stub) {
 }
 
 void Mixer::init() {
@@ -102,7 +102,7 @@ void Mixer::pauseMusic(void)
 
 void Mixer::unpauseMusic(void)
 {
-//	emu_printf( "Mixer::unpauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
+	emu_printf( "Mixer::unpauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
 
 	CdcPly ply;
 
@@ -138,16 +138,18 @@ void Mixer::unpauseMusic(void)
 }
 
 void Mixer::playMusic(int num, int tempo) {
-//	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
+	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
 	int trackNum = -1;
 	if (num == 1) { // menu screen
 		trackNum = 2;
 	} else if (num >= MUSIC_TRACK) {
 		trackNum = 3+ num - MUSIC_TRACK;
 	}
-//	emu_printf("Mixer::trackNum(%d)\n", trackNum);
+	else
+		trackNum = num;
+	emu_printf("Mixer::trackNum(%d)\n", trackNum);
 
-	if(trackNum>1 && trackNum<10)
+	if(trackNum>1 && trackNum<40)
 	{
 		CdcPly ply;
 		_musicTrack = trackNum;
@@ -176,12 +178,12 @@ void Mixer::playMusic(int num, int tempo) {
 	} else { // cutscene
 //		_mod.play(num, tempo);
 		emu_printf("cutscene MT_MOD %d\n", num);	
-		if (_mod._playing) 
+/*		if (_mod._playing) 
 		{
 			_musicType = MT_MOD;
 			return;
 		}
-
+*/
 
 	}
 /*	
@@ -212,14 +214,14 @@ void Mixer::stopMusic() {
     CdcPos poswk;
     CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
     CDC_CdSeek(&poswk);
-	
+/*	
 	switch (_musicType) {
 	case MT_NONE:
 		break;
 	case MT_MOD:
 		_mod.stop();
 		break;
-/*	case MT_OGG:
+	case MT_OGG:
 		_ogg.pauseTrack();
 		break;
 	case MT_PRF:
@@ -230,8 +232,8 @@ void Mixer::stopMusic() {
 		break;
 	case MT_CPC:
 		_cpc.pauseTrack();
-		break;*/
-	}
+		break;
+	}*/
 /*	
 	_musicType = MT_NONE;
 	if (_musicTrack > 2) { // do not resume menu music

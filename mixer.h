@@ -64,7 +64,6 @@ struct Mixer {
 	void *_premixHookData;
 	MusicType _backgroundMusicType;
 	MusicType _musicType;
-	ModPlayer _mod;
 	int _musicTrack;
 
 	Mixer(SystemStub *stub);

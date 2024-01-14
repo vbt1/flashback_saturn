@@ -1604,7 +1604,7 @@ static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5
 
 void Resource::MAC_loadLevelData(int level) {
 	char name[64];
-emu_printf("MAC_loadLevelData\n");	
+//emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);

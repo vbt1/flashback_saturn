@@ -21,7 +21,9 @@
 
 #include "intern.h"
 #include "graphics.h"
+#include "mixer.h"
 
+//struct ModPlayer;
 struct Resource;
 struct SystemStub;
 struct Video;
@@ -74,6 +76,8 @@ struct Cutscene {
 	static const uint8_t _memoSetShape4Data[];
 
 	Graphics _gfx;
+//	ModPlayer *_ply;
+	Mixer _mix;
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;

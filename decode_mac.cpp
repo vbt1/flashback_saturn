@@ -34,7 +34,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	else
 	{
 		dst = (uint8_t *)std_malloc(decodedSize);
-		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
+//		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
 	}
 
 	uint32_t count = 0;

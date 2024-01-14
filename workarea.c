@@ -20,7 +20,7 @@ extern "C" {
 
 #define		trans_list		0x060fb800			/* DMA Transfer Table      */
 #define		pcmbuf			SoundRAM+0x78000	/* PCM Stream Address      */
-#define		PCM_SIZE		0x80				/* PCM Stream Size         */
+#define		PCM_SIZE		0x8000				/* PCM Stream Size         */
 
 #define		master_stack	SystemWork			/* MasterSH2 StackPointer  */
 #define		slave_stack		0x06001e00			/* SlaveSH2  StackPointer  */

@@ -33,7 +33,7 @@ extern "C"
 
 #undef assert
 #define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
-//#define SLAVE_SOUND 1
+
 
 volatile Uint8 slaveMixing;
 volatile Uint8 slaveProceed;
@@ -41,7 +41,7 @@ volatile Uint8 slaveProceed;
 ModPlayer::ModPlayer(Mixer *mixer, const char *dataPath)
 	: _playing(false), _mix(mixer), _dataPath(dataPath) {
 	memset(&_modInfo, 0, sizeof(_modInfo));
-//emu_printf("ModPlayer::ModPlayer\n");
+emu_printf("ModPlayer::ModPlayer\n");
 
 #ifdef SLAVE_SOUND
 	*(volatile Uint8*)OPEN_CSH_VAR(slaveMixing) = 0;
@@ -65,7 +65,7 @@ uint16 ModPlayer::findPeriod(uint16 period, uint8 fineTune) const {
 void ModPlayer::load(File *f) {
 	f->read(_modInfo.songName, 20);
 	_modInfo.songName[20] = 0;
-	emu_printf("songName = '%s'\n", _modInfo.songName);
+//	debug(DBG_MOD, "songName = '%s'", _modInfo.songName);
 
 	for (int s = 0; s < NUM_SAMPLES; ++s) {
 		SampleInfo *si = &_modInfo.samples[s];
@@ -85,7 +85,7 @@ void ModPlayer::load(File *f) {
 	f->readByte(); // 0x7F
 	f->read(_modInfo.patternOrderTable, NUM_PATTERNS);
 	f->readUint32BE(); // 'M.K.', Protracker, 4 channels
-#define MIN(x,y) ((x)<(y)?(x):(y))
+//#define MIN(x,y) ((x)<(y)?(x):(y))
 
 	uint16 n = 0;
 	for (int i = 0; i < NUM_PATTERNS; ++i) {
@@ -96,7 +96,7 @@ void ModPlayer::load(File *f) {
 	//debug(DBG_MOD, "numPatterns=%d",n + 1);
 	n = (n + 1) * 64 * 4 * 4; // 64 lines of 4 notes per channel
 emu_printf("std_malloc in ModPlayer::load malloc %d\n",n);	
-	_modInfo.patternsTable = (uint8 *)sat_malloc(n);
+	_modInfo.patternsTable = (uint8 *)std_malloc(n);
 	assert(_modInfo.patternsTable);
 	f->read(_modInfo.patternsTable, n);
 

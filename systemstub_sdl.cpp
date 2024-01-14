@@ -181,7 +181,6 @@ struct SystemStub_SDL : SystemStub {
 	virtual void setup_input (void); // Setup input controllers
 
 	virtual void setPalette(uint8 *palette, uint16 colors);
-
 	void prepareGfxMode();
 	void cleanupGfxMode();
 	void forceGfxRedraw();
@@ -637,7 +636,7 @@ void SystemStub_SDL::init_cdda(void)
     CDC_PLY_STNO( &playdata) = 2;		/* start track number. */
     CDC_PLY_SIDX( &playdata) = 1;		/* start index number. */
     CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
-    CDC_PLY_ETNO( &playdata) = 10;		/* start track number. */
+    CDC_PLY_ETNO( &playdata) = 99;		/* end track number. */
     CDC_PLY_EIDX( &playdata) = 99;		/* start index number. */
     CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL + 30;	/* Play Mode. */ // lecture en boucle
 //    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL+30;//CDC_PM_DFL ;	/* Play Mode. */ // lecture unique
@@ -785,7 +784,7 @@ static PcmHn createHandle(int bufNo) {
 	PCM_INFO_FILE_SIZE(&info) = SND_BUFFER_SIZE * SND_BUF_SLOTS;
 	PCM_INFO_CHANNEL(&info) = 1; // Mono
 	PCM_INFO_SAMPLING_BIT(&info) = 8; // 8 bits
-	PCM_INFO_SAMPLING_RATE(&info) = 22050; // 11025hz
+	PCM_INFO_SAMPLING_RATE(&info) = 11025; // 11025hz
 	PCM_INFO_SAMPLE_FILE(&info) = SND_BUFFER_SIZE * SND_BUF_SLOTS; // Number of samples in the file
 
 	pcm = PCM_CreateMemHandle(&para); // Prepare the handle

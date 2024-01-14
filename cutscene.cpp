@@ -29,7 +29,7 @@ static void //scalePoints(Point *pt, int count, int scale) {
 }
 */
 Cutscene::Cutscene(Resource *res, SystemStub *stub, Video *vid)
-	: _res(res), _stub(stub), _vid(vid) {
+	: _mix(stub), _res(res), _stub(stub), _vid(vid) {
 	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
 }
@@ -53,7 +53,6 @@ void Cutscene::sync(int frameDelay) {
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
 	if (pause > 0) {
-		emu_printf("_stub->sleep(pause)\n");
 		_stub->sleep(pause);
 	}
 	_tstamp = _stub->getTimeStamp();
@@ -327,7 +326,7 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = _res->isDOS() ? 20 : 60;
 			}
-//			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 			drawCreditsText();
 			updateScreen();
 		} while (--n);
@@ -1079,6 +1078,12 @@ void Cutscene::mainLoop(uint16_t num) {
 		_stub->setPaletteEntry(0xC0 + i, &c);
 	}
 //emu_printf("VBT cutmainLoop will play %d\n",_musicTableDOS[_id]);	
+	if (_id != 0x4A && !_creditsSequence) {
+//		_ply->play(_musicTableDOS[_id],0);
+		_mix.playMusic(_musicTableDOS[_id]);
+	}
+	if(_id == 0x4A)
+		_mix.unpauseMusic();
 	_newPal = false;
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
@@ -1115,6 +1120,9 @@ void Cutscene::mainLoop(uint16_t num) {
 		}
 	}
 	_stop=true;
+	if (_interrupted || _id != 0x0D) {
+//		_ply->stop();
+	}
 }
 
 bool Cutscene::load(uint16_t cutName) {
