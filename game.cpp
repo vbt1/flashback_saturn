@@ -46,6 +46,7 @@ extern TEXTURE tex_spr[4];
 extern "C" {
 extern CdcStat  statdata;
 }
+Uint8 *objvbt;
 #ifdef HEAP_WALK
 extern Uint32  end;
 extern Uint32  __malloc_free_list;
@@ -53,6 +54,8 @@ extern Uint32  __malloc_free_list;
 extern "C" {
 extern Uint32  _sbrk(int size);
 }
+
+
 
 void heapWalk(void)
 {
@@ -171,6 +174,7 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:
+		objvbt = (Uint8 *)malloc(282343);
 		_res.MAC_loadClutData();
 		_res.MAC_loadFontData();
 		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM déplacé
@@ -233,7 +237,7 @@ void Game::run() {
 					_stub->_pi.quit = true;
 					break;
 				}
-				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
+				/*if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 					_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
 					const char *fn = _demoInputs[_demoBin].name;
 					_res.load_DEM(fn);
@@ -247,7 +251,7 @@ void Game::run() {
 					_demoBin = -1;
 					_skillLevel = _menu._skill;
 					_currentLevel = _menu._level;
-				}
+				}*/
 				break;
 			case kResourceTypeMac:
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
@@ -1135,21 +1139,23 @@ void Game::drawStoryTexts() {
 					yPos += 8;
 				}
 			}
-			uint8_t *voiceSegmentData = 0;
+/*			uint8_t *voiceSegmentData = 0;
 			uint32_t voiceSegmentLen = 0;
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
 			if (voiceSegmentData) {
-//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
+				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
+*/			
 			_vid.updateScreen();
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 //				inp_update();
 				_stub->sleep(80);
 			}
-			if (voiceSegmentData) {
+/*			if (voiceSegmentData) {
 				_mix.stopAll();
 				sat_free(voiceSegmentData);
 			}
+*/			
 			_stub->_pi.backspace = false;
 			if (_res._type == kResourceTypeMac) {
 				if (textSpeechSegment == textSegmentsCount) {
@@ -1680,7 +1686,7 @@ bool Game::hasLevelMap(int level, int room) const {
 	return false;
 }
 void Game::loadLevelMap() {
-	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+//	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
 	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
 	switch (_res._type) {
@@ -1767,7 +1773,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
-
+/*
 	if (_demoBin != -1) {
 		_cut._id = -1;
 		if (_demoInputs[_demoBin].room != 255) {
@@ -1779,7 +1785,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 			_inp_demPos = 1;
 		}
 		_printLevelCodeCounter = 0;
-	}
+	}*/
 
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {

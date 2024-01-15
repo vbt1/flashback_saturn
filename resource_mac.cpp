@@ -42,7 +42,7 @@ ResourceMac::~ResourceMac() {
 
 void ResourceMac::load() {
 
-	emu_printf("ResourceMac::load\n");
+//	emu_printf("ResourceMac::load\n");
 
 	const uint32_t sig = _f.readUint32BE();
 //	slPrintHex(sig,slLocate(10,15));

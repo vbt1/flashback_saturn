@@ -10,6 +10,7 @@ extern "C" {
 #include <sega_sys.h>
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
+extern Uint8 *objvbt;
 typedef double MemAlign;                        /* 64ビットのアライメント    */
 union mem_head {                                /* セルのヘッダ              */
     struct {
@@ -61,10 +62,10 @@ void *sat_malloc(size_t size) {
 }
 
 void sat_free(void *ptr) {
-#define ADR_WORKRAM_L_START    ((volatile void *)0x200000)
+#define ADR_WORKRAM_L_START    ((volatile void *)0x202000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 
-	if(ptr == NULL /*|| ptr>=ADR_WORKRAM_L_END*/) return;
+	if(ptr == NULL || ptr == objvbt) return;
 
 //	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 
@@ -74,7 +75,7 @@ void sat_free(void *ptr) {
 	}
 	else
 	{
-		emu_printf("FREE: addr: %p\n", ptr);
+//		emu_printf("FREE: addr: %p\n", ptr);
 		free(ptr);
 	}
 	ptr = NULL;

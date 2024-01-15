@@ -89,9 +89,9 @@ void Cutscene::updateScreen() {
 //		_vid->fullRefresh();
 //	SWAP(_frontPage, _backPage);
 
-	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
-//	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
-	SCU_DMAWait();
+//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE); // ne fonctionne pas pour les sprites
+	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+//	SCU_DMAWait();
 #ifndef SLAVE_SOUND	
 	_vid->SAT_displayCutscene(0, 0, 128, 240);
 	slSynch();
@@ -106,8 +106,8 @@ void Cutscene::updateScreen() {
 #define SIN(a) (int16_t)(sin(a * M_PI / 180) * 256)
 #define COS(a) (int16_t)(cos(a * M_PI / 180) * 256)
 #else
-#define SIN(a) _sinTable[a]
-#define COS(a) _cosTable[a]
+#define SIN(a) _sinTable[a] //slSin(a)//
+#define COS(a) _cosTable[a] //slCos(a)//
 #endif
 
 /*
@@ -1210,7 +1210,7 @@ void Cutscene::playCredits() {
 		_creditsTextIndex = 0;
 		_creditsTextLen = 0;
 	} else {
-		_textCurPtr = _creditsDataDOS;
+//		_textCurPtr = _creditsDataDOS;
 	}
 	_textBuf[0] = 0xA;
 	_textCurBuf = _textBuf;

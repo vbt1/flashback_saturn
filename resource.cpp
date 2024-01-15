@@ -403,6 +403,16 @@ void Resource::free_CINE() {
 }
 
 void Resource::load_TEXT() {
+#if 1
+
+#ifdef LANGFR
+	_stringsTable = LocaleData::_stringsTableFR;
+	_textsTable = LocaleData::_textsTableFR;
+#else
+	_stringsTable = LocaleData::_stringsTableEN;
+	_textsTable = LocaleData::_textsTableEN;
+#endif
+#else	
 	File f;
 	// Load game strings
 	_stringsTable = 0;
@@ -448,6 +458,7 @@ void Resource::load_TEXT() {
 		_textsTable = LocaleData::_textsTableEN;
 		break;*/
 	}
+#endif
 }
 
 void Resource::free_TEXT() {
@@ -1123,7 +1134,7 @@ void Resource::load_CMP(File *pf) {
 	}
 	sat_free(tmp);
 }
-
+/*
 void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
 	*buf = 0;
 	int offset = _voicesOffsetsTable[num];
@@ -1166,7 +1177,7 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 		}
 	}
 }
-
+*/
 static void normalizeSPL(SoundFx *sfx) {
 	static const int kGain = 2;
 
@@ -1199,8 +1210,8 @@ void Resource::load_SPL(File *f) {
 		debug(DBG_RES, "sfx=%d size=%d", i, size);
 		assert(size != 0 && (size & 1) == 0);
 		if (i == 64) {
-			warning("Skipping sound #%d (%s) size %d", i, _splNames[i], size);
-			f->seek(offset + size);
+	/*		warning("Skipping sound #%d (%s) size %d", i, _splNames[i], size);
+			f->seek(offset + size);*/
 		}  else {
 			_sfxList[i].offset = offset;
 			_sfxList[i].freq = kPaulaFreq / 650;
@@ -1398,7 +1409,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
-		emu_printf("Resource '%s' not found\n", name);
+//		emu_printf("Resource '%s' not found\n", name);
 	}
 	return data;
 }
@@ -1408,7 +1419,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+//emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 	uint8_t *data = 0;
 	if (decompressLzss) {
 //emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);

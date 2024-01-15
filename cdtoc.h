@@ -8,7 +8,7 @@
 
 /** @brief maximal number of tracks on disk
  */
-#define CD_TRACK_COUNT (99)
+#define CD_TRACK_COUNT (48)
 
 // -------------------------------------
 // Macros

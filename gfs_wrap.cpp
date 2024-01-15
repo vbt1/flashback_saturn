@@ -20,14 +20,15 @@ int	 strncasecmp(const char *, const char *, size_t) __pure;
 
 #include "saturn_print.h"
 
-#define CACHE_SIZE (SECTOR_SIZE * 20)
+//#define CACHE_SIZE (SECTOR_SIZE * 20)
+#define CACHE_SIZE (SECTOR_SIZE * 4)
 
 static char satpath[25];
 //static char current_path[15][16];
-static char current_path[3][16];
+//static char current_path[3][16];
 
 static Uint32 current_cached = 0;
-static Uint8 cache[CACHE_SIZE];
+ Uint8 cache[CACHE_SIZE];
 //static Uint8* cache = (((Uint8*)PCM_ADDR) + PCM_SIZE);
 
 static Uint8  fully_cached = 0; // If file is cached from start to finish
@@ -58,7 +59,7 @@ Uint32 hashString(const char *string) {
 
         return n ;
 }
-
+/*
 void back_to_root() {
 	while(dir_depth) {
 		GFS_LoadDir(1, &gfsDirTbl); // to the parent
@@ -96,7 +97,7 @@ Sint32 crawl_dir(char *token) {
 
 	return ret;
 }
-
+*/
 void init_GFS() { //Initialize GFS system
 
 	CDC_CdInit(0x00,0x00,0x05,0x0f);
@@ -105,13 +106,13 @@ void init_GFS() { //Initialize GFS system
     GFS_DIRTBL_DIRNAME(&gfsDirTbl) = gfsDirName;
     GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;
     gfsDirN = GFS_Init(OPEN_MAX, gfsLibWork, &gfsDirTbl);
-
+/*
 	Uint8 idx;
 	for(idx = 0; idx < 15; idx++) {
 		memset(current_path[idx], 0, 16);
 	}
 	current_path[idx][0] = '/';
-	dir_depth = 0;
+*/	dir_depth = 0;
 
 	memset(cache, 0, CACHE_SIZE);
 }
@@ -156,6 +157,7 @@ GFS_FILE *sat_fopen(const char *path) {
 //slSynch();
 
 	char *path_token = (char*)strtok(satpath, "/");
+/*
 	Uint8 sameDir = 1;
 	if((tokens - 1) == dir_depth)
 		for (idx = 0; idx < (tokens - 1) && idx < 14; idx++) {
@@ -171,7 +173,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	if(!sameDir) {
 		back_to_root();
 	}
-
+*/
 	strncpy(satpath, path, path_len + 3);
 	for (idx = 0; idx < strlen(satpath); idx++)
 		satpath[idx] = toupper(satpath[idx]);
@@ -185,9 +187,9 @@ GFS_FILE *sat_fopen(const char *path) {
 	Sint32 ret = 0;
 	path_token = (char*)strtok(satpath, "/");
 	for (idx = 0; idx < (tokens - 1); idx++) {
-		if(!sameDir)
+/*		if(!sameDir)
 			ret = crawl_dir(path_token);
-
+*/
 		if (ret < 0) break; // FIXME: (not sure checking for < 1 is ok) Argh, something is wrong in the path! 
 
 		path_token = (char*)strtok(NULL, "/"); // next entry
@@ -418,7 +420,6 @@ partial_cache:
 		end_offset = cache_offset + CACHE_SIZE;
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
-
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
 
 			stream->f_seek_pos += dataToRead;
@@ -431,7 +432,6 @@ partial_cache:
 			tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
 	
 			GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
-
 			readBytes = GFS_Fread(stream->fid, tot_sectors, (Uint8*)cache, tot_bytes);
 			cache_offset = start_sector * SECTOR_SIZE;//stream->f_seek_pos;
 

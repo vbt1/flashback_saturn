@@ -327,8 +327,8 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 }
 #endif
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
-//	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
+//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
+	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {
@@ -609,7 +609,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 	drv_size = sat_ftell(drv_file);
 	sat_fseek(drv_file, 0, SEEK_SET);
 
-#define	SDDRV_ADDR	0x60B0000
+#define	SDDRV_ADDR	0x60D0000
 
 //	sddrvstsk = (uint8*)sat_malloc(drv_size);
 	sddrvstsk = (uint8*)SDDRV_ADDR;
@@ -623,7 +623,7 @@ void SystemStub_SDL::load_audio_driver(void) {
 	SND_INI_ARA_SZ(snd_init) 	= sizeof(sound_map);
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
-
+memset((void *)SDDRV_ADDR,0x00,drv_size);
 	return;
 }
 
@@ -636,7 +636,7 @@ void SystemStub_SDL::init_cdda(void)
     CDC_PLY_STNO( &playdata) = 2;		/* start track number. */
     CDC_PLY_SIDX( &playdata) = 1;		/* start index number. */
     CDC_PLY_ETYPE(&playdata) = CDC_PTYPE_TNO;	/* set by track number.*/
-    CDC_PLY_ETNO( &playdata) = 99;		/* end track number. */
+    CDC_PLY_ETNO( &playdata) = 48;		/* end track number. */
     CDC_PLY_EIDX( &playdata) = 99;		/* start index number. */
     CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL + 30;	/* Play Mode. */ // lecture en boucle
 //    CDC_PLY_PMODE(&playdata) = CDC_PTYPE_NOCHG;//CDC_PM_DFL+30;//CDC_PM_DFL ;	/* Play Mode. */ // lecture unique

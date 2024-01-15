@@ -102,7 +102,7 @@ void Mixer::pauseMusic(void)
 
 void Mixer::unpauseMusic(void)
 {
-	emu_printf( "Mixer::unpauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
+//	emu_printf( "Mixer::unpauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
 
 	CdcPly ply;
 
@@ -138,7 +138,7 @@ void Mixer::unpauseMusic(void)
 }
 
 void Mixer::playMusic(int num, int tempo) {
-	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
+//	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
 	int trackNum = -1;
 	if (num == 1) { // menu screen
 		trackNum = 2;
@@ -147,7 +147,7 @@ void Mixer::playMusic(int num, int tempo) {
 	}
 	else
 		trackNum = num;
-	emu_printf("Mixer::trackNum(%d)\n", trackNum);
+//	emu_printf("Mixer::trackNum(%d)\n", trackNum);
 
 	if(trackNum>1 && trackNum<40)
 	{

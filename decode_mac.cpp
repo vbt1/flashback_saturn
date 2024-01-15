@@ -6,6 +6,8 @@ extern "C" {
 
 #include <ctype.h>
 #include "sat_mem_checker.h"
+#include <sl_def.h>
+extern Uint8 *objvbt;
 }
 
 #include "decode_mac.h"
@@ -26,11 +28,16 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	{
 //emu_printf("0x25C60000 %d %s\n", decodedSize, name);	
 		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
-	}
+	} ///Objects
 	else if(strcmp("Person", name) == 0 || strcmp("Mercenary", name) == 0 || strcmp("Replicant", name) == 0 || strncmp("Level", name, 5) == 0)
 	{
 		dst = (uint8_t *)sat_malloc(decodedSize);
-	}	
+	}
+	else if(strncmp("Objects", name, 7) == 0)
+	{
+		dst = (uint8_t *)objvbt;
+//		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
+	}
 	else
 	{
 		dst = (uint8_t *)std_malloc(decodedSize);
