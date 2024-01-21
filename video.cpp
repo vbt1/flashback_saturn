@@ -30,9 +30,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
 	_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H*4);
-//		emu_printf("Video::Video %d %d %p\n",_w,_h,_frontLayer);	
 	memset(_frontLayer, 0, _w * _h);
-	//_backLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);

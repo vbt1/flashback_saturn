@@ -87,10 +87,10 @@ void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
 //		_vid->fullRefresh();
-//	SWAP(_frontPage, _backPage);
+	SWAP(_frontPage, _backPage);
 
 //	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE); // ne fonctionne pas pour les sprites
-	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
+//	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
 //	SCU_DMAWait();
 #ifndef SLAVE_SOUND	
 	_vid->SAT_displayCutscene(0, 0, 128, 240);
@@ -1183,6 +1183,7 @@ void Cutscene::unload() {
 void Cutscene::prepare() {
 	_vid->_layerScale=1;
 //	_frontPage = _vid->_frontLayer;
+	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
 	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
 	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
 	_stub->_pi.dirMask = 0;
