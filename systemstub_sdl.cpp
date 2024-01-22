@@ -44,8 +44,12 @@ extern TEXTURE tex_spr[4];
 
 #undef assert
 #define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
- 
-
+/*
+#undef VDP2_VRAM_A0
+#define VDP2_VRAM_A0 NULL 
+#undef VDP2_VRAM_B0
+#define VDP2_VRAM_B0 NULL 
+*/
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 /* Needed to unlock cd drive */
 #define SYS_CDINIT1(i) ((**(void(**)(int))0x60002dc)(i)) // Init functions for Saturn CD drive
@@ -281,10 +285,23 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 
 	int idx;
 
-	for (idx = 0; idx < h; idx++) {
-		memcpy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+	if(buf==(uint8_t *)VDP2_VRAM_B0)
+	{
+		for (idx = 0; idx < h; idx++) {
+			memcpy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+	
 //		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
 //		SCU_DMAWait();
+		}
+	}
+	else
+	{
+		for (idx = 0; idx < h; idx++) {
+//			DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
+//			SCU_DMAWait();
+			slDMACopy((uint8*)(buf + (idx * pitch)), (uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), w);
+			slDMAWait();
+		}
 	}
 }
 #if 0
@@ -304,8 +321,10 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 		drawRect(x, y, w, h, 0xE7);
 	}
 	*/
-	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
-	SCU_DMAWait();	
+//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
+//	SCU_DMAWait();
+	slDMACopy((uint8*)rgb, (uint8*)(SpriteVRAM + cgaddress), 12*16*4);	
+	slDMAWait();
 	
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
 	*txptr = TEXDEF(w, (16>>6), 0);
@@ -516,7 +535,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks. // à remettre
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
-//	slPriorityNbg0(6); // Game screen
+	slPriorityNbg0(6); // Game screen
 	slPriorityNbg1(5); // Game screen
 	slPrioritySpr0(6);
 	

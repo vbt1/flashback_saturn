@@ -83,21 +83,17 @@ void Cutscene::updatePalette() {
 		_newPal = false;
 	}
 }
+
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 	updatePalette();
-//		_vid->fullRefresh();
 	SWAP(_frontPage, _backPage);
 
-//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE); // ne fonctionne pas pour les sprites
-//	memcpy((uint8*)(SpriteVRAM + cgaddress), (uint8*)_backPage, IMG_SIZE);
-//	SCU_DMAWait();
 #ifndef SLAVE_SOUND	
 	_vid->SAT_displayCutscene(0, 0, 128, 240);
-	slSynch();
+	slSynch(); // obligatoire
 	memset((uint8_t *)_vid->_txt2Layer,0, 480*128);	
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer);
-//	SWAP(_backPage, _auxPage);
 #endif
 	_stub->updateScreen(0);
 }
@@ -457,6 +453,7 @@ void Cutscene::op_drawCaptionText() {
 //				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
 _vid->_w=480;
 				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
+				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
 				_vid->SAT_displayText(-220, 129, h, 480);
@@ -1202,7 +1199,7 @@ void Cutscene::prepare() {
 	const int sy = y * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
 
-	slScrAutoDisp(SPRON);
+	slScrAutoDisp(SPRON); // vbt à remettre
 }
 
 void Cutscene::playCredits() {

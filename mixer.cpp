@@ -175,9 +175,11 @@ void Mixer::playMusic(int num, int tempo) {
 
 		// Start playback
 		CDC_CdPlay(&ply);
-	} else { // cutscene
+
+	}
+	else { // cutscene
 //		_mod.play(num, tempo);
-		emu_printf("cutscene MT_MOD %d\n", num);	
+//		emu_printf("cutscene MT_MOD %d\n", num);	
 /*		if (_mod._playing) 
 		{
 			_musicType = MT_MOD;
@@ -186,21 +188,6 @@ void Mixer::playMusic(int num, int tempo) {
 */
 
 	}
-/*	
-	if (trackNum != -1 && trackNum != _musicTrack) {
-		if (_ogg.playTrack(trackNum)) {
-			_backgroundMusicType = _musicType = MT_OGG;
-			_musicTrack = trackNum;
-			return;
-		}
-		if (_cpc.playTrack(trackNum)) {
-			_backgroundMusicType = _musicType = MT_CPC;
-			_musicTrack = trackNum;
-			return;
-		}
-	}
-
-*/	
 }
 
 void Mixer::stopMusic() {

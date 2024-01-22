@@ -18,8 +18,12 @@ extern TEXTURE tex_spr[4];
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
-
-
+/*
+#undef VDP2_VRAM_A0
+#define VDP2_VRAM_A0 NULL 
+#undef VDP2_VRAM_B0
+#define VDP2_VRAM_B0 NULL 
+*/
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
 		

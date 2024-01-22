@@ -16,13 +16,14 @@ extern Uint8 *objvbt;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
+slPrint((char *)name,slLocate(3,22));
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
 
 	if(strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
 	{
 //emu_printf("(0x25C80000-60000); %d %s\n", decodedSize, name);	
-		dst = (uint8_t *)(0x25C80000-60000);;//std_malloc(_resourceMacDataSize);
+		dst = (uint8_t *)(0x25C80000-60000);//std_malloc(_resourceMacDataSize);
 	}
 	else if(strstr(name," movie") != NULL || strstr(name,"conditions") != NULL)
 	{

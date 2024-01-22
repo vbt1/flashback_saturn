@@ -946,17 +946,27 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	uint32_t prevOffset = 0;
 	ObjectNode *prevNode = 0;
 	int iObj = 0;
+//slPrintHex(_numObjectNodes,slLocate(3,12));	
 	for (int i = 0; i < _numObjectNodes; ++i) {
+//slPrintHex(i,slLocate(3,14));		
 		if (prevOffset != offsets[i]) {
+//slPrint("sat_malloc",slLocate(3,15));			
+//slPrintHex(i,slLocate(3,16));
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 			if (!on) {
+//slPrint("Unable to allocate ObjectNode",slLocate(3,17));				
 				error("Unable to allocate ObjectNode num=%d", i);
 			}
 			const uint8_t *objData = tmp + offsets[i];
 			on->num_objects = _readUint16(objData); objData += 2;
 			assert(on->num_objects == objectsCount[iObj]);
+//slPrint("sat_malloc(sizeof(Object) * on->num_objects)",slLocate(3,17));			
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
+//slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
+//if(!on->objects)			
+	//slPrint("sat_malloc(sizeof(Object) * on->num_objects) failed",slLocate(3,17));			
 			for (int j = 0; j < on->num_objects; ++j) {
+	//slPrint("int j = 0; j < on->num_objects; ++j ",slLocate(3,17));				
 				Object *obj = &on->objects[j];
 				obj->type = _readUint16(objData); objData += 2;
 				obj->dx = *objData++;
@@ -978,6 +988,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 		}
 		_objectNodesMap[i] = prevNode;
 	}
+//slPrint("end decodeOBJ",slLocate(3,18));	
 }
 
 void Resource::load_PGE(File *f) {
@@ -1619,38 +1630,52 @@ void Resource::MAC_loadLevelData(int level) {
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-//emu_printf("decodePGE\n");		
+	//slPrint(name,slLocate(3,13));		
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
 //emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
+	//slPrint(name,slLocate(3,13));
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
 //emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
+	//slPrint(name,slLocate(3,13));	
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
+	//slPrint("decodeOBJ",slLocate(3,13));	
 	decodeOBJ(ptr, _resourceMacDataSize);
+	//slPrint("sat_free1",slLocate(3,13));	
+	
+//	char toto[50];
+//	sprintf(toto,"***%p****",ptr);
+	//slPrint(toto,slLocate(3,20));	
 	sat_free(ptr);
 //emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
+	//slPrint(name,slLocate(3,13));
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
+	//slPrint("sat_free2",slLocate(3,13));	
 	sat_free(ptr);
 //emu_printf(" .SPC\n");
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
+	//slPrint(name,slLocate(3,13));		
 	_spc = decodeResourceMacData(name, true);
 //emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
+	//slPrint(name,slLocate(3,13));	
 	_tbn = decodeResourceMacText(name, "names");
 //emu_printf(" .Flashback text _tbn %p\n",_tbn);
+	//slPrint("Flashback strings",slLocate(3,13));
 	_str = decodeResourceMacText("Flashback", "strings");
+	//slPrint("end MAC_loadLevelData",slLocate(3,13));	
 //emu_printf(" .Flashback strings _str %p\n",_str);	
 }
 

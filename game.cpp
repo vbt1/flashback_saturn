@@ -107,9 +107,9 @@ void heapWalk(void)
 //	if(chunkNumber<20)	
 	emu_printf(msg);
 //	if(chunkNumber>=200)
-//	slPrint((char *)msg,slLocate(0,chunkNumber-200));
+//	//slPrint((char *)msg,slLocate(0,chunkNumber-200));
 //	if(chunkNumber>=230)
-//	slPrint((char *)msg,slLocate(20,chunkNumber-230));
+//	//slPrint((char *)msg,slLocate(20,chunkNumber-230));
 
 		chunkCurr = chunkNext;
         chunkNumber++;
@@ -174,7 +174,7 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:
-		objvbt = (Uint8 *)malloc(282343);
+		objvbt = (Uint8 *)malloc(282344);
 		_res.MAC_loadClutData();
 		_res.MAC_loadFontData();
 		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM déplacé
@@ -257,6 +257,7 @@ void Game::run() {
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
+		//slPrint("_mix.stopMusic",slLocate(3,13));			
 			_mix.stopMusic(); // vbt à remettre
 		}
 		if (_stub->_pi.quit) {
@@ -265,6 +266,7 @@ void Game::run() {
 //		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
 //			_stub->clearWidescreen();
 //		}
+		//slPrint("_currentLevel",slLocate(3,13));
 //emu_printf("_currentLevel %d\n",_currentLevel);	
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
@@ -278,12 +280,15 @@ void Game::run() {
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 //			clearStateRewind();
+		//slPrint("loadLevelData1",slLocate(3,13));
 			loadLevelData();
+		//slPrint("resetGameState",slLocate(3,13));			
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
+		//slPrint("mainLoop",slLocate(3,13));				
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					// exit level
@@ -309,8 +314,10 @@ void Game::displayTitleScreenMac(int num) {
 	int clutBaseColor = 0;
 	switch (num) {
 	case Menu::kMacTitleScreen_MacPlay:
+		//slPrint("displayTitleScreenMac kMacTitleScreen_MacPlay",slLocate(3,13));		
 		break;
 	case Menu::kMacTitleScreen_Presage:
+		//slPrint("displayTitleScreenMac kMacTitleScreen_Presage",slLocate(3,13));	
 		clutBaseColor = 12;
 		break;
 	case Menu::kMacTitleScreen_Flashback:
@@ -367,7 +374,7 @@ void Game::displayTitleScreenMac(int num) {
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
 			
-		
+		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback",slLocate(3,13));		
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
 			for (int i = 0; i < 7; ++i) {
@@ -393,12 +400,14 @@ void Game::displayTitleScreenMac(int num) {
 		}
 //		_stub->processEvents();
 		if (_stub->_pi.quit) {
+		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback quit",slLocate(3,13));				
 			break;
 		}
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
 			break;
 		}
+
 		_stub->sleep(30);
 	}
 }
@@ -428,7 +437,7 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-			
+		//slPrint("playCutscene",slLocate(3,13));			
 	playCutscene();
 	if (_cut._id == 0x3D) {
 		showFinalScore();
@@ -468,8 +477,10 @@ heapWalk();
 		}
 	}
 //	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-	SCU_DMAWait();
+//	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//	SCU_DMAWait();
+	slDMACopy(_vid._backLayer, _vid._frontLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+	slDMAWait();
 
 
 	pge_getInput();
@@ -505,26 +516,40 @@ heapWalk();
 			_deathCutsceneCounter = 1;
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
+		//slPrint("_mix.pauseMusic",slLocate(3,13));	
 			_mix.pauseMusic();
+//slPrint("loadLevelMap",slLocate(3,13));				
 			loadLevelMap();
 			_loadMap = false;
 //			_vid.fullRefresh();
+//slPrint("copyRect",slLocate(3,13));
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+//slPrint("updateScreen",slLocate(3,13));			
 			_stub->updateScreen(0);
 //	_vid.updateScreen();
 
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+			{
+//slPrint("unpauseMusic",slLocate(3,13));					
 				_mix.unpauseMusic(); // vbt : on reprend où la musique était
+			}
 			else
+			{
+//slPrint("playMusic",slLocate(3,13));				
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+			}
 		}
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
 	}*/
+//slPrint("prepareAnims",slLocate(3,13));	
 	prepareAnims();
+//slPrint("drawAnims",slLocate(3,13));	
 	drawAnims();
+//slPrint("drawCurrentInventoryItem",slLocate(3,13));	
 	drawCurrentInventoryItem();
+//slPrint("drawLevelTexts",slLocate(3,13));	
 	drawLevelTexts();
 	/*if (g_options.enable_password_menu) {
 		printLevelCode();
@@ -532,8 +557,10 @@ heapWalk();
 	if (_blinkingConradCounter != 0) {
 		--_blinkingConradCounter;
 	}
+//slPrint("updateScreen1",slLocate(3,13));	
 	_vid.updateScreen();
 //	updateTiming();
+//slPrint("drawStoryTexts",slLocate(3,13));
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
@@ -549,6 +576,7 @@ heapWalk();
 	
 	if(_cut._stop)
 	{
+//slPrint("_cut._stop",slLocate(3,13));		
 		if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			_mix.unpauseMusic(); // vbt : on reprend où la musique était
 		else
@@ -556,7 +584,7 @@ heapWalk();
 	
 		_cut._stop = false;
 	}
-	
+//slPrint("inp_handleSpecialKeys",slLocate(3,13));	
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -565,6 +593,7 @@ heapWalk();
 			_saveTimestamp = _stub->getTimeStamp();
 		}
 	}*/
+//slPrint("end mainloop",slLocate(3,13));	
 }
 
 void Game::updateTiming() {
@@ -573,7 +602,7 @@ void Game::updateTiming() {
 	int32 pause = (_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE) ? 20 : 30;
 	pause -= delay;
 	if (pause > 0) {
-		emu_printf("_stub->sleep(pause2) %d\n",pause);
+//		emu_printf("_stub->sleep(pause2) %d\n",pause);
 		_stub->sleep(pause);
 	}
 	tstamp = _stub->getTimeStamp();
@@ -658,7 +687,7 @@ void Game::playCutscene(int id) {
 				_mix.playMusic(num);
 			}
 		}*/
-		emu_printf("_cut._id %d _musicTableDOS %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
+//		emu_printf("_cut._id %d _musicTableDOS %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
 		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
@@ -1750,6 +1779,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 //	sat_free(_res._bankData);
 //	delete _res._aba;
 //	delete _res._mac;
+//slPrint("MAC_loadLevelData",slLocate(3,13));
 		_res.MAC_loadLevelData(_currentLevel);
 		break;
 	}
@@ -1759,6 +1789,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
 
+	//slPrint("clearBankData",slLocate(3,13));
 	_res.clearBankData();
 	_printLevelCodeCounter = 150;
 
@@ -1770,6 +1801,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
+	//slPrint("pge_loadForCurrentLevel",slLocate(3,13));
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
@@ -1794,6 +1826,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
+	//slPrint("pge_resetMessages",slLocate(3,13));	
 	pge_resetMessages();
 	_validSaveState = false;
 /* // vbt à remettre ???	

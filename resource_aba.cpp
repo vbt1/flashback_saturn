@@ -80,6 +80,7 @@ uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 		if (size) {
 			*size = e->size;
 		}
+		
 		uint8_t *tmp = (uint8_t *)sat_malloc(e->compressedSize);
 emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);			
 

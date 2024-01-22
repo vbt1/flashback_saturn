@@ -44,6 +44,8 @@ void *sat_calloc(size_t nmemb, size_t size) {
 
 void *sat_malloc(size_t size) {
 	void *mem = NULL;
+	size = (size + 7) & ~7; // pour alignement
+	
 	mem = (void*)MEM_Malloc(size);
 
 	if (mem == NULL) {
@@ -65,7 +67,18 @@ void sat_free(void *ptr) {
 #define ADR_WORKRAM_L_START    ((volatile void *)0x202000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 
-	if(ptr == NULL || ptr == objvbt) return;
+	if(ptr == NULL || ptr == objvbt)
+		return;
+	if(((int)ptr) == 0x25C60000 || ((int)ptr) == 0x25C04000 || ((int)ptr) == (0x25C80000-60000)) 
+	{
+//		slPrint("((int)ptr) == 0x25C60000 || ((int)ptr) == 0x25C04000",slLocate(3,21));
+//		char toto[50];
+//		sprintf(toto,"address = %p",ptr);
+//		slPrint(toto,slLocate(3,21));
+//		ptr = NULL;
+		return;		
+	}
+
 
 //	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 
@@ -86,7 +99,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	void *mem = NULL;
 
 	if(ptr == NULL) return NULL;
-
+	size = (size + 7) & ~7; // pour alignement
 	mem = (void*)MEM_Realloc(ptr, size);
 
 	if (mem == NULL) {
@@ -99,6 +112,7 @@ void *sat_realloc(void *ptr, size_t size) {
 
 void *std_malloc(size_t size) {
 	void *mem = NULL;
+	size = (size + 7) & ~7; // pour alignement	
 	mem = (void*)malloc(size);
 
 	if (mem == NULL) {
