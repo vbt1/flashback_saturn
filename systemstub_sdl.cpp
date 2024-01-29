@@ -524,7 +524,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 void SystemStub_SDL::prepareGfxMode() {
 //	slTVOff(); // Turn off display for initialization
 
-	slColRAMMode(CRM16_1024); // Color mode: 1024 colors, choosed between 16 bit
+	slColRAMMode(CRM16_2048); // Color mode: 1024 colors, choosed between 16 bit
 
 //	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
 	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
@@ -546,8 +546,14 @@ void SystemStub_SDL::prepareGfxMode() {
 
 
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	slBack1ColSet((void *)BACK_COL_ADR, 0x0); // Black color background
+	slBack1ColSet((void *)BACK_COL_ADR, 0x8000); // Black color background
+	
+	extern Uint16 VDP2_RAMCTL;	
+	VDP2_RAMCTL = VDP2_RAMCTL & 0xFCFF;
+	extern Uint16 VDP2_TVMD;
+	VDP2_TVMD &= 0xFEFF;
 	slScrAutoDisp(NBG1ON|SPRON); // à faire toujours en dernier
+	slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);	
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config
 	return;

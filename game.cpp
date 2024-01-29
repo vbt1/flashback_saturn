@@ -16,7 +16,7 @@ extern "C" {
 #include <sega_gfs.h> 
 //#include <sega_spr.h>
 #include "sat_mem_checker.h"
-
+void	*malloc(size_t);
 #define	BUP_LIB_ADDRESS		(*(volatile Uint32 *)(0x6000350+8))
 #define	BUP_VECTOR_ADDRESS	(*(volatile Uint32 *)(0x6000350+4))
 
@@ -717,6 +717,7 @@ void Game::playCutscene(int id) {
 		if(_mix._musicTrack==2)
 			_mix.stopMusic();
 		slScrAutoDisp(NBG1ON|SPRON);
+		slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);			
 		slSynch();
 		_vid._layerScale=2;		
 	}	

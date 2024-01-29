@@ -21,6 +21,7 @@ union mem_head {                                /* セルのヘッダ           
 };
 
 typedef union mem_head MemHead;                 /* セルヘッダデータ型        */
+void *calloc (size_t, size_t);
 void	*malloc(size_t);
 void	free (void *) ;
 extern MemHead *MEM_empty_top;

@@ -1170,6 +1170,7 @@ void Cutscene::unload() {
 		
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 		slScrAutoDisp(NBG1ON|SPRON);
+		slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);	
 		slSynch();
 		_vid->_layerScale=2;		
 	}

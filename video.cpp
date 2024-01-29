@@ -667,17 +667,17 @@ void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w
 	*txptr = TEXDEF(w, (h>>6), 0);
 
 	SPRITE user_sprite;
-	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
+	user_sprite.CTRL=0;
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA=txptr->CGadr;
-	user_sprite.COLR=256;
+	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.XA=x;
-	user_sprite.YA=y;
+	user_sprite.XA=-119;
+	user_sprite.YA=-63;
 
-	user_sprite.XB=user_sprite.XA+(w<<1);
-	user_sprite.YB=user_sprite.YA+(h<<1);
+//	user_sprite.XB=user_sprite.XA+(w*1);
+//	user_sprite.YB=user_sprite.YA+(h*1);
 	user_sprite.GRDA=0;	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
