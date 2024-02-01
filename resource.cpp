@@ -12,6 +12,11 @@ extern "C"
 
 
 #include "sat_mem_checker.h"
+
+extern Uint8 *hwram;
+extern Uint8 *hwram_ptr;
+extern unsigned int end1;
+void	*malloc(size_t);
 }
 #include "saturn_print.h"
 
@@ -78,23 +83,22 @@ void Resource::init() {
 	
 //	_type = kResourceTypeMac; // vbt ajout
 	
-//	emu_printf("Resource::init\n");
-	
 	switch (_type) {
 	case kResourceTypeDOS:
 		break;
 	case kResourceTypeMac:
-		File f;
+//		File f;
 //		if (_fs->exists(ResourceMac::FILENAME1)) 
-		if (f.open(ResourceMac::FILENAME1, _dataPath, "rb"))
+/*		if (f.open(ResourceMac::FILENAME1, _dataPath, "rb"))
 		{
 			f.close();
 			_mac = new ResourceMac(ResourceMac::FILENAME1, _dataPath);
 		} 
 //		else if (_fs->exists(ResourceMac::FILENAME2)) 
-		else if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
+		else*/ 
+	//if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
 		{
-			f.close();
+	//		f.close();
 			_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 		}
 		_mac->load();
@@ -515,7 +519,7 @@ void Resource::unload(int objType) {
 }
 
 void Resource::load(const char *objName, int objType, const char *ext) {
-	emu_printf("Resource::load('%s', %d)\n", objName, objType);
+//	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
 	File f;
 		
@@ -901,7 +905,7 @@ void Resource::free_OBJ() {
 void Resource::load_OBC(File *f) {
 	const int packedSize = f->readUint32BE();
 	uint8_t *packedData = (uint8_t *)sat_malloc(packedSize);
-emu_printf("load_OBC %p %d\n", packedData,packedSize);	
+//emu_printf("load_OBC %p %d\n", packedData,packedSize);	
 	if (!packedData) {
 		error("Unable to allocate OBC temporary buffer 1");
 	}
@@ -1430,7 +1434,19 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-//emu_printf("entry->name %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+
+	if(hwram==NULL)
+	{
+		hwram = (Uint8 *)malloc(end1);//(282344);
+		end1  += (int)hwram;
+		emu_printf("hwram ****%p****\n",hwram);	
+		hwram_ptr = (unsigned char *)hwram;
+	}
+//	else
+//	emu_printf("hwram2 %d %s\n", decodedSize, name);
+
+
 	uint8_t *data = 0;
 	if (decompressLzss) {
 //emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
@@ -1461,9 +1477,18 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 				
 		else
 		{
-			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+//			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
+			{
+				data = (uint8_t *)hwram_ptr;
+				hwram_ptr+=_resourceMacDataSize;
+			}
+			else
+			{
+				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+			}
 		}
-		
+
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
@@ -1472,6 +1497,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
+		emu_printf("data %p\n",data);
 	return data;
 }
 
@@ -1574,7 +1600,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 			_monster = decodeResourceMacData(data[i].name, true);
 			if(_monster==NULL)
 			{
-emu_printf("%s not loaded\n",data[i].name);
+//emu_printf("%s not loaded\n",data[i].name);
 				return;
 			}
 //			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);

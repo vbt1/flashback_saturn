@@ -7,12 +7,15 @@ extern "C" {
 #include <ctype.h>
 #include "sat_mem_checker.h"
 #include <sl_def.h>
-extern Uint8 *objvbt;
 }
 
 #include "decode_mac.h"
 #include "util.h"
 #include "saturn_print.h"
+
+extern Uint8 *hwram;
+extern Uint8 *hwram_ptr;
+extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
@@ -29,14 +32,32 @@ slPrint((char *)name,slLocate(3,22));
 	{
 //emu_printf("0x25C60000 %d %s\n", decodedSize, name);	
 		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
-	} ///Objects
+	}
+	else
+	{
+		if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
+		{
+emu_printf("hwram %d %s\n", decodedSize, name);			
+			dst = (uint8_t *)hwram_ptr;
+			hwram_ptr+=decodedSize;
+		}
+		else
+		{
+	emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
+			dst = (uint8_t *)sat_malloc(decodedSize);
+		}
+	}
+	
+/*
+	///Objects
 	else if(strcmp("Person", name) == 0 || strcmp("Mercenary", name) == 0 || strcmp("Replicant", name) == 0 || strncmp("Level", name, 5) == 0)
 	{
 		dst = (uint8_t *)sat_malloc(decodedSize);
 	}
 	else if(strncmp("Objects", name, 7) == 0)
 	{
-		dst = (uint8_t *)objvbt;
+		dst = (uint8_t *)hwram_ptr;
+		hwram_ptr+=_resourceMacDataSize;
 //		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
 	}
 	else
@@ -44,7 +65,7 @@ slPrint((char *)name,slLocate(3,22));
 		dst = (uint8_t *)std_malloc(decodedSize);
 //		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
 	}
-
+*/
 	uint32_t count = 0;
 	while (count < decodedSize) {
 		const int code = f.readByte();
@@ -62,9 +83,10 @@ slPrint((char *)name,slLocate(3,22));
 			}
 		}
 	}
+//			emu_printf("dst %p\n",dst);
 	if(count != decodedSize)  // vbt ne pas toucher
 	{
-		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);
+//		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);
 		return dst;		
 	}
 	return dst;

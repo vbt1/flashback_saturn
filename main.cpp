@@ -19,6 +19,7 @@ extern "C" {
 #include 	<sl_def.h>
 #include "sega_mem.h"
 #include "gfs_wrap.h"
+void	*malloc(size_t);
 }
 #include "saturn_print.h"
 
@@ -52,6 +53,10 @@ static int detectVersion(const char *dataPath) {
 	}
 	return -1;
 }
+
+Uint8 *hwram = NULL;
+Uint8 *hwram_ptr;
+unsigned int end1 = 476000;//538624;
 
 void ss_main(void) {
 	const int version = detectVersion("/");

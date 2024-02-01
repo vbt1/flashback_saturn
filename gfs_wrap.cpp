@@ -118,7 +118,6 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path) {
-//slPrint((char *)"memset     ",slLocate(10,12));
 //slSynch();
 	memset(satpath, 0, 25);
 

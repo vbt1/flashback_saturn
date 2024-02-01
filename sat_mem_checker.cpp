@@ -10,7 +10,7 @@ extern "C" {
 #include <sega_sys.h>
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
-extern Uint8 *objvbt;
+extern Uint8 *hwram;
 typedef double MemAlign;                        /* 64ビットのアライメント    */
 union mem_head {                                /* セルのヘッダ              */
     struct {
@@ -37,7 +37,7 @@ void *sat_calloc(size_t nmemb, size_t size) {
 	mem = (void*)MEM_Calloc(nmemb, size);
 
 	if (mem == NULL) {
-		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
+//		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
 	}
 //	emu_printf("CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
@@ -68,7 +68,7 @@ void sat_free(void *ptr) {
 #define ADR_WORKRAM_L_START    ((volatile void *)0x202000)
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 
-	if(ptr == NULL || ptr == objvbt)
+	if(ptr == NULL || ptr == hwram)
 		return;
 	if(((int)ptr) == 0x25C60000 || ((int)ptr) == 0x25C04000 || ((int)ptr) == (0x25C80000-60000)) 
 	{

@@ -212,7 +212,6 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	sound_external_audio_enable(5, 5);
 	prepareGfxMode(); // Prepare graphic output
 //		//emu_printf("prepareGfxMode\n");	
-
 //slPrint((char *)"setup_input     ",slLocate(10,12));
 	setup_input(); // Setup controller inputs
 

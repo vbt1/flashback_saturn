@@ -26,6 +26,7 @@ ResourceMac::ResourceMac(const char *filePath, const char *dataPath)
 	: _dataOffset(0), _types(0), _entries(0), _sndIndex(-1) {
 	memset(&_map, 0, sizeof(_map));
 //	_f.open(filePath, "rb", fs);
+//emu_printf("_f.open\n");
 	_f.open(filePath, dataPath, "rb");
 }
 
@@ -95,11 +96,11 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 			_sndIndex = i;
 		}
 	}
-	_entries = (ResourceMacEntry **)std_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
 //	xx+=sizeof(ResourceMacEntry *);
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
-		_entries[i] = (ResourceMacEntry *)std_calloc(_types[i].count, sizeof(ResourceMacEntry));
+		_entries[i] = (ResourceMacEntry *)sat_calloc(_types[i].count, sizeof(ResourceMacEntry));
 //		xx+=sizeof(ResourceMacEntry);
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();

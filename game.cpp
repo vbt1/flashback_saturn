@@ -46,7 +46,11 @@ extern TEXTURE tex_spr[4];
 extern "C" {
 extern CdcStat  statdata;
 }
-Uint8 *objvbt;
+
+extern Uint8 *hwram;
+extern Uint8 *hwram_ptr;
+extern unsigned int end1;
+
 #ifdef HEAP_WALK
 extern Uint32  end;
 extern Uint32  __malloc_free_list;
@@ -167,6 +171,7 @@ void Game::run() {
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram	
 	_res.init();   // vbt : ajout pour la partie mac
+
 	_res.load_TEXT();
 
 	switch (_res._type) {
@@ -174,14 +179,15 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:
-		objvbt = (Uint8 *)malloc(282344);
-		_res.MAC_loadClutData();
-		_res.MAC_loadFontData();
-		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM déplacé
-		_res.MAC_loadPersoData(); // taille 213124 lwr déplacé
+		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
+		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
+		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
+		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé	
 		break;
 	}
+
+hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION
 //emu_printf("handleProtectionScreen\n");
@@ -1754,6 +1760,7 @@ void Game::loadLevelData() {
 		break;
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
+	hwram_ptr = hwram;
 //heapWalk();		
 /*
 emu_printf("MAC_unloadLevelData\n");
