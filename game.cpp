@@ -49,6 +49,7 @@ extern CdcStat  statdata;
 
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
+extern Uint8 *hwram_screen;
 extern unsigned int end1;
 
 #ifdef HEAP_WALK
@@ -1761,6 +1762,7 @@ void Game::loadLevelData() {
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram;
+	hwram_screen = NULL;
 //heapWalk();		
 /*
 emu_printf("MAC_unloadLevelData\n");

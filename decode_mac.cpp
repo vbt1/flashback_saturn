@@ -15,6 +15,7 @@ extern "C" {
 
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
+extern Uint8 *hwram_screen;
 extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
@@ -26,25 +27,40 @@ slPrint((char *)name,slLocate(3,22));
 	if(strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
 	{
 //emu_printf("(0x25C80000-60000); %d %s\n", decodedSize, name);	
-		dst = (uint8_t *)(0x25C80000-60000);//std_malloc(_resourceMacDataSize);
+//		dst = (uint8_t *)(0x25C80000-60000);//std_malloc(_resourceMacDataSize);
+		dst = (uint8_t *)sat_malloc(decodedSize);
 	}
 	else if(strstr(name," movie") != NULL || strstr(name,"conditions") != NULL)
 	{
 //emu_printf("0x25C60000 %d %s\n", decodedSize, name);	
-		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
+//		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
+		dst = (uint8_t *)sat_malloc(decodedSize);
 	}
 	else
 	{
-		if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
+		if(strstr(name,"Room") != NULL)
 		{
-emu_printf("hwram %d %s\n", decodedSize, name);			
-			dst = (uint8_t *)hwram_ptr;
-			hwram_ptr+=decodedSize;
+			if(hwram_screen==NULL)
+			{
+				hwram_screen=hwram_ptr;
+				hwram_ptr+=44000;
+			}
+//			emu_printf("hwram %d %s\n", decodedSize, name);			
+			dst = (uint8_t *)hwram_screen;
 		}
 		else
 		{
-	emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
-			dst = (uint8_t *)sat_malloc(decodedSize);
+			if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
+			{
+//				emu_printf("hwram %d %s\n", decodedSize, name);
+				dst = (uint8_t *)hwram_ptr;
+				hwram_ptr+=decodedSize;
+			}
+			else
+			{
+//				emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
+				dst = (uint8_t *)sat_malloc(decodedSize);
+			}
 		}
 	}
 	
