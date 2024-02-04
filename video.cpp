@@ -148,6 +148,9 @@ void Video::updateScreen() {
 //		_shakeOffset = 0;
 //		_fullRefresh = true;
 	}
+	
+	
+///	xxxxxxxxxxxxxx
 }
 
 void Video::fullRefresh() {
@@ -356,7 +359,7 @@ void Video::setLevelPalettes() {
 }
 
 void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
-	//	debug(DBG_VIDEO, "Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	emu_printf("Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i] != 0) {
@@ -369,7 +372,7 @@ void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w
 }
 
 void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	//	debug(DBG_VIDEO, "Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	emu_printf("Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i] != 0) {
@@ -382,7 +385,7 @@ void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	//	debug(DBG_VIDEO, "Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	emu_printf("Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i] != 0 && !(dst[i] & 0x80)) {
@@ -395,7 +398,7 @@ void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	//	debug(DBG_VIDEO, "Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	emu_printf("Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i] != 0 && !(dst[i] & 0x80)) {
@@ -408,7 +411,7 @@ void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	//	debug(DBG_VIDEO, "Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	emu_printf("Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i * pitch] != 0 && !(dst[i] & 0x80)) {
@@ -421,7 +424,7 @@ void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	//	debug(DBG_VIDEO, "Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)", pitch, w, h, colMask);
+	emu_printf("Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i * pitch] != 0 && !(dst[i] & 0x80)) {
@@ -641,6 +644,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.y = y * _layerScale;
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
+//emu_printf("MAC_decodeImageData done\n");		
 		_res->MAC_decodeImageData(data, frame, &buf);
 		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
 	}

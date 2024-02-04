@@ -201,9 +201,6 @@ SystemStub *SystemStub_SDL_create() {
 }
 
 void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
-		
-
-//slPrint((char *)"memset     ",slLocate(10,12));	
 	memset(&_pi, 0, sizeof(_pi)); // Clean inout
 //slPrint((char *)"load_audio_driver     ",slLocate(10,12));
 	load_audio_driver(); // Load M68K audio driver
@@ -431,14 +428,11 @@ void SystemStub_SDL::processEvents() {
 }
 
 void SystemStub_SDL::sleep(uint32 duration) {
-//	static Uint8 counter = 0;
+	static Uint8 counter = 0;
 
 	uint32 wait_tick = ticker + duration;
-//	counter++;
-	
-	do{
-	//		emu_printf("sleeping %d %d\n",wait_tick,ticker);
-	}
+	counter++;
+
 	while(wait_tick >= ticker);
 }
 
@@ -503,7 +497,6 @@ void SystemStub_SDL::destroyMutex(void *mutex) {
 }
 
 void SystemStub_SDL::lockMutex(void *mutex) {
-//emu_printf("SystemStub_SDL::lockMutex\n");	
 	SatMutex *mtx = (SatMutex*)mutex;
 #ifdef SLAVE_SOUND	
 	while(*(Uint8*)OPEN_CSH_VAR(mtx->access) > 0) asm("nop");
@@ -527,7 +520,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 }
 
 void SystemStub_SDL::prepareGfxMode() {
-//	slTVOff(); // Turn off display for initialization
+	slTVOff(); // Turn off display for initialization
 
 	slColRAMMode(CRM16_2048); // Color mode: 1024 colors, choosed between 16 bit
 
@@ -547,7 +540,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
-	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
+	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
 	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
 	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 
@@ -738,9 +731,7 @@ inline void timeTick() {
 
 void vblIn (void) {
 	//static Uint8 counter = 0;
-//emu_printf("vblin\n");
-	timeTick();
-//emu_printf("timeTick\n");	
+
 	// Process input
 	sys->processEvents();
 
@@ -755,7 +746,7 @@ void vblIn (void) {
 	if(audioEnabled)
 		fill_play_audio();
 
-//	timeTick();
+	timeTick();
 
 	/*if(counter == 20) {
 		sys->setup_input();

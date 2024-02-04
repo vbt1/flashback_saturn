@@ -205,7 +205,7 @@ hwram = (uint8_t *)hwram_ptr;
 	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
-			slScrTransparent(!NBG1ON);
+//			slScrTransparent(!NBG1ON);
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
@@ -342,14 +342,14 @@ void Game::displayTitleScreenMac(int num) {
 	}
 	DecodeBuffer buf;
 	memset(&buf, 0, sizeof(buf));
-	buf.ptr = _vid._frontLayer;
+	buf.ptr = _vid._backLayer;
 	buf.pitch = buf.w = _vid._w;
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
 
 	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid._frontLayer, 0, w * h);
+	memset(_vid._backLayer, 0, w * h);
 
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
@@ -379,7 +379,7 @@ void Game::displayTitleScreenMac(int num) {
 		_vid._charShadowColor = 0xE0;
 		_mix.playMusic(1); // vbt : déplacé, musique du menu
 	}
-	
+	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 	_stub->updateScreen(0);
 
@@ -393,7 +393,6 @@ void Game::displayTitleScreenMac(int num) {
 				const char *str = Menu::_levelNames[i];
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
-			
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (_currentLevel > 0) {
@@ -406,11 +405,9 @@ void Game::displayTitleScreenMac(int num) {
 					++_currentLevel;
 				}
 			}
-//			_vid.updateScreen();
-			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-			_stub->updateScreen(0);
+			_vid.updateScreen();
 		}
-//		_stub->processEvents();
+		_stub->processEvents();
 		if (_stub->_pi.quit) {
 		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback quit",slLocate(3,13));				
 			break;
@@ -488,6 +485,7 @@ heapWalk();
 			return;
 		}
 	}
+//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
 	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
 //	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 //	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
@@ -1424,6 +1422,7 @@ void Game::drawPiege(AnimBufferState *state) {
 		break;
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
+emu_printf("MAC_drawSprite1\n");			
 			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {

@@ -1509,6 +1509,9 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 	if(sig != 0xC211 && sig != 0xC103)
 		return;
 	const int count = READ_BE_UINT16(ptr); ptr += 2;
+	
+emu_printf("nb frame %d\n",count);	
+	
 //	assert(i < count);
 	if(i>=count)
 		return;
