@@ -1169,8 +1169,8 @@ void Cutscene::unload() {
 		user_sprite.GRDA=0;	
 		
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-		slScrAutoDisp(NBG1ON|SPRON);
-		slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);	
+		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);	
 		slSynch();
 		_vid->_layerScale=2;		
 	}
@@ -1254,7 +1254,7 @@ void Cutscene::playText(const char *str) {
 	const int y = (128 - lines * 8) / 2;
 	memset(_backPage, 0xC0, _vid->_w * _vid->_h);
 	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ?
+//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ? // vbt à revoir sinon ca écrit dans vdp2
 	_stub->updateScreen(0);
 
 	while (!_stub->_pi.quit) {

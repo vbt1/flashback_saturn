@@ -4,8 +4,8 @@ extern "C" {
 //#include	<sgl.h>
 #include 	<sl_def.h>
 #include 	<sega_mem.h>
-#include 	<sega_spr.h>
-#include	<sega_csh.h>
+//#include 	<sega_spr.h>
+//#include	<sega_csh.h>
 #include	<sega_sys.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
@@ -59,7 +59,7 @@ int	main( void )
 	
 	slTVOff();
 //	
- //   slBitMapNbg0(COL_TYPE_256, BM_512x256, (void *)VDP2_VRAM_B0);
+	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
 //	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
@@ -73,7 +73,7 @@ int	main( void )
 #ifdef _PAR_UPLOAD_
 	cdUnlock(); // Unlock the cd drive
 #endif
-//	DMA_ScuInit(); // Init for SCU DMA
+	DMA_ScuInit(); // Init for SCU DMA
 #ifdef SLAVE_SOUND
 
 	SPR_InitSlaveSH();

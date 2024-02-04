@@ -8,7 +8,7 @@ extern "C"
 #include <sl_def.h>
 	#include 	<stdio.h>	
 	#include 	<string.h>	
-#include <sega_mem.h>
+//#include <sega_mem.h>
 
 
 #include "sat_mem_checker.h"
@@ -1711,7 +1711,9 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 	MAC_decodeImageData(ptr, 0, dst);
-	sat_free(ptr);
+	
+//	emu_printf("sat_free(%p)\n",ptr); // vbt : free sur l'image de fond, à ne pas remettre
+//	sat_free(ptr);
 }
 
 void Resource::MAC_clearClut16(Color *clut, uint8_t dest) {

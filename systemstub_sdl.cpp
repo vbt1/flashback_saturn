@@ -20,12 +20,12 @@ extern "C" {
 #include <string.h>	
 #include <sgl.h>
 #include <sl_def.h>
-#include <sega_mem.h>
+//#include <sega_mem.h>
 #include <sega_int.h>
 #include <sega_pcm.h>
 #include <sega_snd.h>
-#include "sega_csh.h"
-#include "sega_spr.h"
+//#include "sega_csh.h"
+//#include "sega_spr.h"
 #include <sega_sys.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
@@ -283,7 +283,7 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	buf += y * pitch + x; // Get to data...
 	uint8 *ptr = NULL;
 	int idx;
-
+/*
 	if(buf==(uint8_t *)VDP2_VRAM_B0)
 	{
 		ptr = (uint8*)(VDP2_VRAM_A0 + (y * 512) + x);
@@ -296,18 +296,17 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 //		SCU_DMAWait();
 		}
 	}
-	else
-	{
-		ptr = (uint8*)(VDP2_VRAM_A0 + (y * 512) + x);
+	else*/
+	ptr = (uint8*)(VDP2_VRAM_A0 + (y * pitch) + x);
 		
-		for (idx = 0; idx < h; idx++) {
-//			DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
-//			SCU_DMAWait();
-			slDMACopy((uint8*)buf, (uint8*)ptr, w);
-			buf+=pitch;
-			ptr+=512;			
-			slDMAWait();
-		}
+	for (idx = 0; idx < h; idx++) {
+		DMA_ScuMemCopy((uint8*)ptr, (uint8*)buf, w);
+
+//			slDMACopy((uint8*)buf, (uint8*)ptr, w);
+		buf+=pitch;
+		ptr+=pitch;			
+//			slDMAWait();
+		SCU_DMAWait();
 	}
 }
 #if 0
@@ -327,10 +326,9 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 		drawRect(x, y, w, h, 0xE7);
 	}
 	*/
-//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
-//	SCU_DMAWait();
-	slDMACopy((uint8*)rgb, (uint8*)(SpriteVRAM + cgaddress), 12*16*4);	
-	slDMAWait();
+	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
+//	slDMACopy((uint8*)rgb, (uint8*)(SpriteVRAM + cgaddress), 12*16*4);	
+//	slDMAWait();
 	
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
 	*txptr = TEXDEF(w, (16>>6), 0);
@@ -346,8 +344,9 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 	user_sprite.YA=y;
 	user_sprite.GRDA=0;	
  #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))	
+	SCU_DMAWait();
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets	
-	slSynch();
+	//slSynch();
 	
 }
 #endif
@@ -533,6 +532,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	slColRAMMode(CRM16_2048); // Color mode: 1024 colors, choosed between 16 bit
 
 //	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
+	slBMPaletteNbg0(1); // NBG1 (game screen) uses palette 1 in CRAM
 	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
 	slColRAMOffsetSpr(1) ;
 #ifdef _352_CLOCK_
@@ -541,13 +541,14 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks. // à remettre
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
-	slPriorityNbg0(6); // Game screen
+	slPriorityNbg0(4); // Game screen
 	slPriorityNbg1(5); // Game screen
 	slPrioritySpr0(6);
 	
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
+	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
 	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 
 
@@ -558,7 +559,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	VDP2_RAMCTL = VDP2_RAMCTL & 0xFCFF;
 	extern Uint16 VDP2_TVMD;
 	VDP2_TVMD &= 0xFEFF;
-	slScrAutoDisp(NBG1ON|SPRON); // à faire toujours en dernier
+	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // à faire toujours en dernier
 	slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);	
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config

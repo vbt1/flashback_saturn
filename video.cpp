@@ -7,7 +7,7 @@
 extern "C"
 {
 #include <sl_def.h>	
-#include "sega_mem.h"
+//#include "sega_mem.h"
 #include "sat_mem_checker.h"
 #include "saturn_print.h"
 #include <string.h>
@@ -24,6 +24,8 @@ extern TEXTURE tex_spr[4];
 #undef VDP2_VRAM_B0
 #define VDP2_VRAM_B0 NULL 
 */
+#define LOW_WORK_RAM 0x00200000
+
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
 		
@@ -37,6 +39,8 @@ Video::Video(Resource *res, SystemStub *stub)
 	memset(_frontLayer, 0, _w * _h);
 
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
+//	_backLayer = (uint8_t *)LOW_WORK_RAM;
+
 	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);
 	_txt2Layer = (uint8_t *)(SpriteVRAM + TEXT2_RAM_VDP2);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
@@ -103,37 +107,37 @@ void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
 //	_stub->updateScreen(0);
-	
+//	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
 //		memset(_screenBlocks, 1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 //	_fullRefresh = false;
 //_shakeOffset=0;
 	if (_fullRefresh) {
-		_stub->copyRect(0, 0, Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2, _frontLayer, 512); // vbt 512 au lieu de 256
+		_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 		_stub->updateScreen(0);
 		_fullRefresh = false;
 	} else {
 		int i, j;
 		int count = 0;
 		uint8_t *p = _screenBlocks;
-		for (j = 0; j < GAMESCREEN_H*2 / SCREENBLOCK_H; ++j) {
-			uint16 nh = 0;
-			for (i = 0; i < GAMESCREEN_W*2 / SCREENBLOCK_W; ++i) {
+		for (j = 0; j < _h / SCREENBLOCK_H; ++j) {
+			uint16_t nh = 0;
+			for (i = 0; i < _w / SCREENBLOCK_W; ++i) {
 				if (p[i] != 0) {
 					--p[i];
 					++nh;
 				} else if (nh != 0) {
 					int16_t x = (i - nh) * SCREENBLOCK_W;
-					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
+					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, _w);
 					nh = 0;
 					++count;
 				}
 			}
 			if (nh != 0) {
 				int16_t x = (i - nh) * SCREENBLOCK_W;
-				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, 512);
+				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, _w);
 				++count;
 			}
-			p += GAMESCREEN_W*2 / SCREENBLOCK_W;
+			p += _w / SCREENBLOCK_W;
 		}
 		if (count != 0) {
 			_stub->updateScreen(0);
@@ -147,7 +151,7 @@ void Video::updateScreen() {
 }
 
 void Video::fullRefresh() {
-//	emu_printf("Video::fullRefresh()\n");	
+	emu_printf("Video::fullRefresh()\n");	
 	_fullRefresh = true;
 	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 }
@@ -559,12 +563,13 @@ void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color)
 void Video::MAC_decodeMap(int level, int room) {
 	DecodeBuffer buf;
 	memset(&buf, 0, sizeof(buf));
-	buf.ptr = _frontLayer;
+	buf.ptr = _backLayer;
 	buf.w = buf.pitch = _w;
 	buf.h = _h;
 	buf.setPixel = Video::MAC_setPixel;
 	_res->MAC_loadLevelRoom(level, room, &buf);
-	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
+//	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
+	memset(_frontLayer,0x00,GAMESCREEN_W * GAMESCREEN_H * 4);
 	Color roomPalette[256];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {

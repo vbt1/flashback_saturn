@@ -24,15 +24,11 @@ slPrint((char *)name,slLocate(3,22));
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
 
-	if(strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
+	if(strstr(name," movie")   != NULL || strstr(name,"conditions") != NULL 
+	|| strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
 	{
-//emu_printf("(0x25C80000-60000); %d %s\n", decodedSize, name);	
-//		dst = (uint8_t *)(0x25C80000-60000);//std_malloc(_resourceMacDataSize);
-		dst = (uint8_t *)sat_malloc(decodedSize);
-	}
-	else if(strstr(name," movie") != NULL || strstr(name,"conditions") != NULL)
-	{
-//emu_printf("0x25C60000 %d %s\n", decodedSize, name);	
+//emu_printf("0x25C60000 %d %s\n", decodedSize, name);
+		emu_printf("lwram %d %s\n", decodedSize, name);	
 //		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
 		dst = (uint8_t *)sat_malloc(decodedSize);
 	}
@@ -43,22 +39,22 @@ slPrint((char *)name,slLocate(3,22));
 			if(hwram_screen==NULL)
 			{
 				hwram_screen=hwram_ptr;
-				hwram_ptr+=44000;
+				hwram_ptr+=46000;
 			}
-//			emu_printf("hwram %d %s\n", decodedSize, name);			
+			emu_printf("hwram %d %s\n", decodedSize, name);			
 			dst = (uint8_t *)hwram_screen;
 		}
 		else
 		{
 			if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
 			{
-//				emu_printf("hwram %d %s\n", decodedSize, name);
+				emu_printf("hwram %d %s\n", decodedSize, name);
 				dst = (uint8_t *)hwram_ptr;
 				hwram_ptr+=decodedSize;
 			}
 			else
 			{
-//				emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
+				emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
 				dst = (uint8_t *)sat_malloc(decodedSize);
 			}
 		}

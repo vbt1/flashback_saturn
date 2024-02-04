@@ -122,10 +122,14 @@ void heapWalk(void)
 }
 #endif
 
+#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
+#define LOW_WORK_RAM_SIZE 0x100000
 
 //static SAVE_BUFFER sbuf;
 //static Uint8 rle_buf[SAV_BUFSIZE];
-
+extern "C" {
+#include "sega_mem.h"
+}
 Uint8 vceEnabled = 1;
 extern Uint8 newZoom;
 /* *** */
@@ -201,6 +205,7 @@ hwram = (uint8_t *)hwram_ptr;
 	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
+			slScrTransparent(!NBG1ON);
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
@@ -483,13 +488,18 @@ heapWalk();
 			return;
 		}
 	}
-//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
 //	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 //	SCU_DMAWait();
-	slDMACopy(_vid._backLayer, _vid._frontLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-	slDMAWait();
-
-
+//	slDMACopy(_vid._backLayer, _vid._frontLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
+//	slDMAWait();
+/*
+	if(_vid._backLayer==(uint8*)(VDP2_VRAM_B0))
+		slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0);
+	else
+		slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_B0);
+*/	
 	pge_getInput();
 	pge_prepare();
 	col_prepareRoomState();
@@ -723,8 +733,8 @@ void Game::playCutscene(int id) {
 	{  // vbt pour les niveaux sans video
 		if(_mix._musicTrack==2)
 			_mix.stopMusic();
-		slScrAutoDisp(NBG1ON|SPRON);
-		slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);			
+		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);			
 		slSynch();
 		_vid._layerScale=2;		
 	}	
@@ -1763,6 +1773,9 @@ void Game::loadLevelData() {
 //emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram;
 	hwram_screen = NULL;
+//	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
+//	CSH_Init(CSH_4WAY);
+//	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library	
 //heapWalk();		
 /*
 emu_printf("MAC_unloadLevelData\n");
