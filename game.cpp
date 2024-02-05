@@ -50,6 +50,7 @@ extern CdcStat  statdata;
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
+extern Uint32 position_vram;
 extern unsigned int end1;
 
 #ifdef HEAP_WALK
@@ -498,6 +499,8 @@ heapWalk();
 	else
 		slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_B0);
 */	
+	position_vram = 0;
+
 	pge_getInput();
 	pge_prepare();
 	col_prepareRoomState();
@@ -1423,7 +1426,7 @@ void Game::drawPiege(AnimBufferState *state) {
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
 //emu_printf("MAC_drawSprite1\n");			
-//			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
+			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
 				break;
@@ -1432,7 +1435,7 @@ void Game::drawPiege(AnimBufferState *state) {
 			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
 		} else {
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
-//			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
+			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
 		}
 		break;
 	}
@@ -1561,7 +1564,7 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
+//	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
@@ -1772,6 +1775,7 @@ void Game::loadLevelData() {
 //emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram;
 	hwram_screen = NULL;
+	position_vram = 0;
 //	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 //	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library	
@@ -1879,7 +1883,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 			iconNum = 34;
 			break;
 		}
-//		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
+		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
 		return;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);

@@ -541,8 +541,8 @@ void SystemStub_SDL::prepareGfxMode() {
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
 	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
-	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
-	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
+//	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
+//	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 
 
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
