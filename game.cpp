@@ -486,7 +486,7 @@ heapWalk();
 		}
 	}
 //	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
-	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
+//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
 //	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 //	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 //	SCU_DMAWait();
@@ -1422,8 +1422,8 @@ void Game::drawPiege(AnimBufferState *state) {
 		break;
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
-emu_printf("MAC_drawSprite1\n");			
-			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
+//emu_printf("MAC_drawSprite1\n");			
+//			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
 				break;
@@ -1432,7 +1432,7 @@ emu_printf("MAC_drawSprite1\n");
 			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
 		} else {
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
-			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
+//			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
 		}
 		break;
 	}
@@ -1879,7 +1879,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 			iconNum = 34;
 			break;
 		}
-		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
+//		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
 		return;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);

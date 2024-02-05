@@ -139,9 +139,9 @@ void Video::updateScreen() {
 			}
 			p += _w / SCREENBLOCK_W;
 		}
-		if (count != 0) {
-			_stub->updateScreen(0);
-		}
+//		if (count != 0) {
+//			_stub->updateScreen(0);  // vbt : évite une copie
+//		}
 	}
 //	if (_shakeOffset != 0) 
 	{
@@ -150,7 +150,7 @@ void Video::updateScreen() {
 	}
 	
 	
-///	xxxxxxxxxxxxxx
+//	xxxxxxxxxxxxxx
 }
 
 void Video::fullRefresh() {
@@ -593,9 +593,15 @@ void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 
 void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
-	if ((buf->ptr[offset] & 0x80) == 0) {
-		buf->ptr[offset] = color;
+	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);
+	if ((buf->ptrbg[offset] & 0x80) == 0) {
+		
+//		if(buf->w2==78)
+			buf->ptrsp[offset2] = color;
+//		buf->ptr[offset] = color;
 	}
+//	else
+//		buf->ptr[offset] = 0;
 }
 
 void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
@@ -638,15 +644,42 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		memset(&buf, 0, sizeof(buf));
 		buf.xflip = xflip;
 		buf.ptr = _frontLayer;
+		buf.ptrsp = _txt1Layer;
+		buf.ptrbg = _backLayer;
 		buf.w = buf.pitch = _w;
+		buf.w2 = READ_BE_UINT16(dataPtr + 2);
 		buf.h = _h;
+		buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 		buf.x = x * _layerScale;
 		buf.y = y * _layerScale;
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
-//emu_printf("MAC_decodeImageData done\n");		
+
+
+
+
+/*
+// nettoyage 
+		const int offset = buf.y * buf.pitch + buf.x;
+		uint8_t *cleanPtr = buf.ptr+offset;
+		
+		for(int height=0;height<READ_BE_UINT16(dataPtr + 2);height++)
+		{
+			memset(cleanPtr,0,READ_BE_UINT16(dataPtr));
+			cleanPtr+=buf.pitch;
+		}
+*/
+
+//((9+7) & ~7)
+//		if(buf.w2==78)
+		memset(buf.ptrsp,0,buf.w2*buf.h2);
 		_res->MAC_decodeImageData(data, frame, &buf);
-		markBlockAsDirty(buf.x, buf.y, READ_BE_UINT16(dataPtr), READ_BE_UINT16(dataPtr + 2), 1);
+//emu_printf("MAC_getImageData w %d h %d\n",buf.w2, buf.h2);
+//-----------------------
+		SAT_displayText((buf.x*1.25)-312, buf.y-224, buf.w2, buf.h2);
+//-----------------------
+
+		markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
 	}
 }
 #ifndef SLAVE_SOUND

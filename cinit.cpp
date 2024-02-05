@@ -51,7 +51,7 @@ int	main( void )
 	slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
-	slSetSprTVMode(TV_320x224); // Init SGL
+//	slSetSprTVMode(TV_320x224); // Init SGL
 
 	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);

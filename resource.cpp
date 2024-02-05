@@ -1509,9 +1509,6 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 	if(sig != 0xC211 && sig != 0xC103)
 		return;
 	const int count = READ_BE_UINT16(ptr); ptr += 2;
-	
-emu_printf("nb frame %d\n",count);	
-	
 //	assert(i < count);
 	if(i>=count)
 		return;
@@ -1522,6 +1519,18 @@ emu_printf("nb frame %d\n",count);
 		ptr = basePtr + offset;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
+//---------------------------------------------------------
+// nettoyage 
+/*		const int offset = dst->y * dst->pitch + dst->x;
+		uint8_t *cleanPtr = dst->ptr+offset;
+		
+		for(int height=0;height<h;height++)
+		{
+			memset(cleanPtr,0,w);
+			cleanPtr+=dst->pitch;
+		}*/
+//---------------------------------------------------------		
+		
 		switch (sig) {
 		case 0xC211:
 			decodeC211(ptr + 4, w, h, dst);
