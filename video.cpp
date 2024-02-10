@@ -636,34 +636,42 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
 //emu_printf("MAC_drawSprite\n");	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
-//emu_printf("MAC_getImageData done\n");	
-	uint8_t buffer[80*80];
 
 	if (dataPtr) {
 		DecodeBuffer buf;
 		memset(&buf, 0, sizeof(buf));
 		buf.xflip = xflip;
-		buf.ptr = _frontLayer;
-		buf.ptrsp = buffer;//(uint8_t *)(SpriteVRAM + cgaddress + position_vram);
-		buf.ptrbg = _backLayer;
 		buf.w = buf.pitch = _w;
 		buf.w2 = READ_BE_UINT16(dataPtr + 2);
 		buf.h = _h;
 		buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 		buf.x = x * _layerScale;
 		buf.y = y * _layerScale;
-		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
-		TEXTURE *txptr = &tex_spr[0];
-		*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);
-		memset(buf.ptrsp,0,buf.w2*buf.h2);
-		_res->MAC_decodeImageData(data, frame, &buf);
-		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-		position_vram+=buf.w2*buf.h2;
+		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
+		buf.ptr = _frontLayer;
+		buf.ptrbg = _backLayer;
 
-		SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), (buf.x)-320, buf.y-224, buf.w2, buf.h2);
-//		markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
+		if(buf.w2==160)
+		{
+			buf.ptrsp = _frontLayer;
+			_res->MAC_decodeImageData(data, frame, &buf);
+			markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
+		}
+		else
+		{
+			uint8_t buffer[80*80];  // max 160x288 pour le menu
+			buf.ptrsp = buffer;
+			TEXTURE *txptr = &tex_spr[0];
+			*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);
+			memset(buf.ptrsp,0,buf.w2*buf.h2);
+			_res->MAC_decodeImageData(data, frame, &buf);
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+			position_vram+=buf.w2*buf.h2;
+
+			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), (buf.x)-320, buf.y-224, buf.w2, buf.h2);
+		}
 	}
 }
 
