@@ -637,14 +637,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 //emu_printf("MAC_drawSprite\n");	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
 //emu_printf("MAC_getImageData done\n");	
-
+	uint8_t buffer[80*80];
 
 	if (dataPtr) {
 		DecodeBuffer buf;
 		memset(&buf, 0, sizeof(buf));
 		buf.xflip = xflip;
 		buf.ptr = _frontLayer;
-		buf.ptrsp = (uint8_t *)(SpriteVRAM + cgaddress + position_vram);
+		buf.ptrsp = buffer;//(uint8_t *)(SpriteVRAM + cgaddress + position_vram);
 		buf.ptrbg = _backLayer;
 		buf.w = buf.pitch = _w;
 		buf.w2 = READ_BE_UINT16(dataPtr + 2);
@@ -655,19 +655,19 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
+		TEXTURE *txptr = &tex_spr[0];
+		*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);
 		memset(buf.ptrsp,0,buf.w2*buf.h2);
 		_res->MAC_decodeImageData(data, frame, &buf);
-//emu_printf("MAC_getImageData w %d h %d\n",buf.w2, buf.h2);
-//-----------------------
-//		SAT_displayText((buf.x*1.25)-312, buf.y-224, buf.w2, buf.h2);
-		SAT_displaySprite((buf.x)-320, buf.y-224, buf.w2, buf.h2);
-//-----------------------
+		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+		position_vram+=buf.w2*buf.h2;
 
+		SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), (buf.x)-320, buf.y-224, buf.w2, buf.h2);
 //		markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
 	}
 }
 
-void Video::SAT_displaySprite(int x, int y, unsigned short h, unsigned short w)
+void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
 	*txptr = TEXDEF(w, (h>>6), 0);
@@ -675,8 +675,8 @@ void Video::SAT_displaySprite(int x, int y, unsigned short h, unsigned short w)
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA= cgaddress8 + position_vram/8;
-	user_sprite.COLR=256;
+	user_sprite.SRCA= ((int)ptrsp)/8;
+	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -684,10 +684,6 @@ void Video::SAT_displaySprite(int x, int y, unsigned short h, unsigned short w)
 	user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
-	
-	position_vram+=(w*h);
-	
-//	memset((uint8_t *)_txt2Layer,0, w*h);
 }
 
 #ifndef SLAVE_SOUND

@@ -499,6 +499,7 @@ heapWalk();
 	else
 		slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_B0);
 */	
+	if(position_vram>0x74000)
 	position_vram = 0;
 
 	pge_getInput();
