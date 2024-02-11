@@ -673,7 +673,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 			position_vram+=buf.w2*buf.h2;
 
-			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), (buf.x)-320, buf.y-224, buf.w2, buf.h2);
+			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
 		}
 	}
 }

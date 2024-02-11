@@ -19,7 +19,7 @@
 #define	cgaddress8	cgaddress/8
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
-#define IMG_SIZE (240*128)
+#define IMG_SIZE (240*160*4)
 #define BACK_RAM_VDP2 (cgaddress + IMG_SIZE)
 #define AUX_RAM_VDP2  (cgaddress + IMG_SIZE*2)
 #define TEXT1_RAM_VDP2 (cgaddress + IMG_SIZE*3)

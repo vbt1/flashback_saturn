@@ -553,7 +553,8 @@ void SystemStub_SDL::prepareGfxMode() {
 	extern Uint16 VDP2_TVMD;
 	VDP2_TVMD &= 0xFEFF;
 	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // à faire toujours en dernier
-	slScrCycleSet(0x55EEEEEE , NULL , 0x044EEEEE , NULL);	
+	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
+//	slWindow(0 , 0 , 60 , 60 , 150 ,120 , 120);	
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config
 	return;

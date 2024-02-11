@@ -343,14 +343,16 @@ void Game::displayTitleScreenMac(int num) {
 	}
 	DecodeBuffer buf;
 	memset(&buf, 0, sizeof(buf));
-	buf.ptr = _vid._backLayer;
+	buf.ptr = _vid._frontLayer;
+//	buf.ptrsp = _vid._frontLayer;
+//	buf.ptrbg = _vid._backLayer;
 	buf.pitch = buf.w = _vid._w;
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
 	buf.y = (_vid._h - h) / 2;
 
 	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid._backLayer, 0, w * h);
+	memset(_vid._frontLayer, 0, w * h);
 
 	_res.MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
@@ -380,7 +382,7 @@ void Game::displayTitleScreenMac(int num) {
 		_vid._charShadowColor = 0xE0;
 		_mix.playMusic(1); // vbt : déplacé, musique du menu
 	}
-	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
+//	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 //	_stub->updateScreen(0);
 
@@ -412,10 +414,13 @@ void Game::displayTitleScreenMac(int num) {
 		}
 		_stub->processEvents();
 		if (_stub->_pi.quit) {
+		//	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
 		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback quit",slLocate(3,13));				
 			break;
 		}
 		if (_stub->_pi.enter) {
+			memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -737,10 +742,11 @@ void Game::playCutscene(int id) {
 	{  // vbt pour les niveaux sans video
 		if(_mix._musicTrack==2)
 			_mix.stopMusic();
-		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);			
-		slSynch();
-		_vid._layerScale=2;		
+//		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+//		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
+//		slWindow(0 , 0 , 60 , 60 , 150 ,120 , 120);		
+		slSynch();  // vbt : permet l'affichage de sprites
+//		_vid._layerScale=2;		
 	}	
 }
 
