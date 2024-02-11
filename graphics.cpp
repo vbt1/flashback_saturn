@@ -8,7 +8,7 @@ extern "C" {
 }
 #include "graphics.h"
 
-
+#define VIDEO_PITCH 480
 
 void Graphics::setLayer(uint8_t *layer, int pitch) {
 	_layer = layer;
@@ -26,7 +26,7 @@ void Graphics::setClippingRect(int16 rx, int16 ry, int16 rw, int16 rh) {
 void Graphics::drawPoint(uint8 color, const Point *pt) {
 //	debug(DBG_VIDEO, "Graphics::drawPoint() col=0x%X x=%d, y=%d", color, pt->x, pt->y);
 	if (pt->x >= 0 && pt->x < _crw && pt->y >= 0 && pt->y < _crh) {
-		*(_layer + (pt->y + _cry) * 512 + pt->x + _crx) = color;
+		*(_layer + (pt->y + _cry) * VIDEO_PITCH + pt->x + _crx) = color;
 	}
 }
 
@@ -209,7 +209,7 @@ void Graphics::drawEllipse(uint8 color, bool hasAlpha, const Point *pt, int16 rx
 void Graphics::fillArea(uint8 color, bool hasAlpha) {
 //	debug(DBG_VIDEO, "Graphics::fillArea()");
 	int16 *pts = _areaPoints;
-	uint8 *dst = _layer + (_cry + *pts++) * 512 + _crx;
+	uint8 *dst = _layer + (_cry + *pts++) * VIDEO_PITCH + _crx;
 	int16 x1 = *pts++;
 	if (x1 >= 0) {
 		if (hasAlpha && color > 0xC7) {
@@ -221,7 +221,7 @@ void Graphics::fillArea(uint8 color, bool hasAlpha) {
 						*(dst + x1 + i) |= color & 8; // XXX 0x88
 					}
 				}
-				dst += 512;
+				dst += VIDEO_PITCH;
 				x1 = *pts++;
 			} while (x1 >= 0);
 		} else {
@@ -231,7 +231,7 @@ void Graphics::fillArea(uint8 color, bool hasAlpha) {
 					int len = x2 - x1 + 1;
 					memset(dst + x1, color, len);
 				}
-				dst += 512;
+				dst += VIDEO_PITCH;
 				x1 = *pts++;
 			} while (x1 >= 0);
 		}

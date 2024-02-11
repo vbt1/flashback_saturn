@@ -392,9 +392,9 @@ void Game::displayTitleScreenMac(int num) {
 		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback",slLocate(3,13));		
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
-//			for (int i = 0; i < 7; ++i) {
-			int i = 0;
-			{
+			for (int i = 0; i < 7; ++i) {
+//			int i = 0;
+//			{
 				const char *str = Menu::_levelNames[i];
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
@@ -994,7 +994,7 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 _vid._w=512;
 #ifndef SLAVE_SOUND
 		_vid.SAT_displayText(-220, -128, h-1, 480);
-		_vid.SAT_displayCutscene(0, 0, 128, 240);
+		_vid.SAT_displayCutscene(0, 0, 255, 480);
 		slSynch();
 		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
 		SWAP(_vid._txt1Layer, _vid._txt2Layer);		

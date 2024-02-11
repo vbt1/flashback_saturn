@@ -90,9 +90,9 @@ void Cutscene::updateScreen() {
 	SWAP(_frontPage, _backPage);
 
 #ifndef SLAVE_SOUND	
-	_vid->SAT_displayCutscene(0, 0, 128, 240);
+	_vid->SAT_displayCutscene(0, 0, 255, 480);
 	slSynch(); // obligatoire
-	memset((uint8_t *)_vid->_txt2Layer,0, 480*128);	
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer);
 #endif
 //	_stub->updateScreen(0);

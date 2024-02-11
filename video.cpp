@@ -591,11 +591,37 @@ void Video::MAC_decodeMap(int level, int room) {
 	}
 }
 
+void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	const int offset = y * buf->pitch + x;
+	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
+	buf->ptr[offset] = color;
+	if(x&1)
+		buf->ptrsp[offset2] |= (color&0x0f);
+	else
+	{
+		buf->ptrsp[offset2] |= ((color&0x0f)<<4);
+	}
+}
+
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);	
 	buf->ptr[offset] = color;
 	buf->ptrsp[offset2] = color;
+}
+
+void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	const int offset = y * buf->pitch + x;
+	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
+	if ((buf->ptrbg[offset] & 0x80) == 0) {
+		if(x&1)
+			buf->ptrsp[offset2] |= (color&0x0f);
+		else
+		{
+			buf->ptrsp[offset2] |= ((color&0x0f)<<4);
+		}
+//		buf->ptr[offset] = color;
+	}
 }
 
 void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
@@ -644,19 +670,19 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		DecodeBuffer buf;
 		memset(&buf, 0, sizeof(buf));
 		buf.xflip = xflip;
-		buf.w = buf.pitch = _w;
+		buf.w  = buf.pitch = _w;
 		buf.w2 = READ_BE_UINT16(dataPtr + 2);
-		buf.h = _h;
+		buf.h  = _h;
 		buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
-		buf.x = x * _layerScale;
-		buf.y = y * _layerScale;
+		buf.x  = x * _layerScale;
+		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
-		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
-		buf.ptr = _frontLayer;
-		buf.ptrbg = _backLayer;
+		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+		buf.ptr      = _frontLayer;
+		buf.ptrbg    = _backLayer;
 
-		if(buf.w2==160)
+		if(buf.w2 == 160)
 		{
 //			buf.ptrsp = _frontLayer;
 			_res->MAC_decodeImageData(data, frame, &buf);
@@ -664,14 +690,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		}
 		else
 		{
-			uint8_t buffer[92*92];  // max 160x288 pour le menu
+			uint8_t buffer[96*96];  // max 160x288 pour le menu
 			buf.ptrsp = buffer;
 			TEXTURE *txptr = &tex_spr[0];
 			*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);
 			memset(buf.ptrsp,0,buf.w2*buf.h2);
 			_res->MAC_decodeImageData(data, frame, &buf);
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-			position_vram+=buf.w2*buf.h2;
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
+			position_vram+=(buf.w2*buf.h2)/2;
 
 			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
 		}
@@ -681,13 +707,13 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-	*txptr = TEXDEF(w, (h>>6), 0);
+	*txptr = TEXDEF(w, h, 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= ((int)ptrsp)/8;
-	user_sprite.COLR=0;
+	user_sprite.COLR=0x40;
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -701,7 +727,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-	*txptr = TEXDEF(w, (h>>6), 0);
+	*txptr = TEXDEF(w, h, 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
@@ -721,7 +747,7 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)tex_spr;
-	*txptr = TEXDEF(w, (h>>6), 0);
+	*txptr = TEXDEF(w, h, 0);
 
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
@@ -730,8 +756,8 @@ void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.XA=-119;
-	user_sprite.YA=-63;
+	user_sprite.XA=-(120*2)-1;
+	user_sprite.YA=-(64*2)-1;
 
 //	user_sprite.XB=user_sprite.XA+(w*1);
 //	user_sprite.YB=user_sprite.YA+(h*1);

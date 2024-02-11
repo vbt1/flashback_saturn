@@ -19,7 +19,7 @@
 #define	cgaddress8	cgaddress/8
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
-#define IMG_SIZE (240*160*4)
+#define IMG_SIZE (240*128*4)
 #define BACK_RAM_VDP2 (cgaddress + IMG_SIZE)
 #define AUX_RAM_VDP2  (cgaddress + IMG_SIZE*2)
 #define TEXT1_RAM_VDP2 (cgaddress + IMG_SIZE*3)
@@ -97,7 +97,9 @@ struct Video {
 	void drawStringLen(const char *str, int len, int x, int y, uint8_t color);
 	void MAC_decodeMap(int level, int room);
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
