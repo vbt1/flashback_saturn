@@ -51,9 +51,9 @@ Video::Video(Resource *res, SystemStub *stub)
 //	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
 //	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
 	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
-	_screenBlocks = (uint8 *)std_malloc((_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H)); //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
+//	_screenBlocks = (uint8 *)std_malloc((_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H)); //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
 //		emu_printf("_screenBlocks %d %p\n", (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H), _screenBlocks);
-	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
+//	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	
 	_fullRefresh = true;
 //	_shakeOffset = 0;
@@ -78,7 +78,7 @@ Video::~Video() {
 //	sat_free(_tempLayer2);
 //	sat_free(_screenBlocks);
 }
-
+/*
 void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
 //	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)\n", x, y, w, h);
 	int bx1 = scale * x / SCREENBLOCK_W;
@@ -104,7 +104,7 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 	}
 	
 }
-
+*/
 void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
@@ -117,7 +117,9 @@ void Video::updateScreen() {
 		_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 		_stub->updateScreen(0);
 		_fullRefresh = false;
-	} else {
+	} 
+/*	
+	else {
 		int i, j;
 		int count = 0;
 		uint8_t *p = _screenBlocks;
@@ -145,6 +147,7 @@ void Video::updateScreen() {
 //			_stub->updateScreen(0);  // vbt : évite une copie
 //		}
 	}
+*/	
 //	if (_shakeOffset != 0) 
 	{
 //		_shakeOffset = 0;
@@ -156,9 +159,9 @@ void Video::updateScreen() {
 }
 
 void Video::fullRefresh() {
-	emu_printf("Video::fullRefresh()\n");	
+//	emu_printf("Video::fullRefresh()\n");	
 	_fullRefresh = true;
-	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
+//	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 }
 
 void Video::fadeOut() {
@@ -361,7 +364,7 @@ void Video::setLevelPalettes() {
 }
 
 void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
-	emu_printf("Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
+//	emu_printf("Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i] != 0) {
@@ -374,7 +377,7 @@ void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w
 }
 
 void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	emu_printf("Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
+//	emu_printf("Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i] != 0) {
@@ -387,7 +390,7 @@ void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	emu_printf("Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
+//	emu_printf("Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i] != 0 && !(dst[i] & 0x80)) {
@@ -400,7 +403,7 @@ void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	emu_printf("Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
+//	emu_printf("Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i] != 0 && !(dst[i] & 0x80)) {
@@ -413,7 +416,7 @@ void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	emu_printf("Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
+//	emu_printf("Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[i * pitch] != 0 && !(dst[i] & 0x80)) {
@@ -426,7 +429,7 @@ void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 }
 
 void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-	emu_printf("Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
+//	emu_printf("Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
 		for (int i = 0; i < w; ++i) {
 			if (src[-i * pitch] != 0 && !(dst[i] & 0x80)) {
@@ -537,7 +540,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
 		++len;
 	}
-	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
+//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 
@@ -562,7 +565,7 @@ void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color)
 	for (int i = 0; i < len; ++i) {
 		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
 	}
-	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H , GAMESCREEN_W * GAMESCREEN_H * 4);
+//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H , GAMESCREEN_W * GAMESCREEN_H * 4);
 }
 
 void Video::MAC_decodeMap(int level, int room) {
@@ -655,13 +658,13 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 
 		if(buf.w2==160)
 		{
-			buf.ptrsp = _frontLayer;
+//			buf.ptrsp = _frontLayer;
 			_res->MAC_decodeImageData(data, frame, &buf);
-			markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
+//			markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
 		}
 		else
 		{
-			uint8_t buffer[80*80];  // max 160x288 pour le menu
+			uint8_t buffer[92*92];  // max 160x288 pour le menu
 			buf.ptrsp = buffer;
 			TEXTURE *txptr = &tex_spr[0];
 			*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);

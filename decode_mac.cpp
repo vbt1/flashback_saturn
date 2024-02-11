@@ -39,7 +39,7 @@ slPrint((char *)name,slLocate(3,22));
 			if(hwram_screen==NULL)
 			{
 				hwram_screen=hwram_ptr;
-				hwram_ptr+=46000;
+				hwram_ptr+=45000;
 			}
 			emu_printf("hwram %d %s\n", decodedSize, name);			
 			dst = (uint8_t *)hwram_screen;

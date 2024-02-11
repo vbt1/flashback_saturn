@@ -95,7 +95,7 @@ void Cutscene::updateScreen() {
 	memset((uint8_t *)_vid->_txt2Layer,0, 480*128);	
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer);
 #endif
-	_stub->updateScreen(0);
+//	_stub->updateScreen(0);
 }
 
 #if 0
@@ -988,7 +988,7 @@ _vid->_w=512;
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
 				if ((_cmdPtr - _cmdPtrBak) == 0xA) {
 					_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
-					_stub->updateScreen(0);
+//					_stub->updateScreen(0);
 				} else {
 					_stub->sleep(15);
 				}
@@ -1255,7 +1255,7 @@ void Cutscene::playText(const char *str) {
 	memset(_backPage, 0xC0, _vid->_w * _vid->_h);
 	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ? // vbt à revoir sinon ca écrit dans vdp2
-	_stub->updateScreen(0);
+//	_stub->updateScreen(0);
 
 	while (!_stub->_pi.quit) {
 		_stub->processEvents();

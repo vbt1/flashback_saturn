@@ -1440,7 +1440,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 	{
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1  += (int)hwram;
-		emu_printf("hwram ****%p****\n",hwram);	
+//		emu_printf("hwram ****%p****\n",hwram);	
 		hwram_ptr = (unsigned char *)hwram;
 	}
 //	else
@@ -1456,11 +1456,8 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		}
 	} else {
 
-		if(strcmp("Flashback strings", entry->name) == 0)
-		{
-			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-		}
-		else if(strstr(entry->name,"names") !=NULL)
+		if(strstr(entry->name,"names") !=NULL
+		|| strcmp("Flashback strings", entry->name) == 0)
 		{
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 		}		
@@ -1497,7 +1494,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-		emu_printf("data %p\n",data);
+//		emu_printf("data %p\n",data);
 	return data;
 }
 

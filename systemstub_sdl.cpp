@@ -535,8 +535,8 @@ void SystemStub_SDL::prepareGfxMode() {
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks. // à remettre
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 	slPriorityNbg0(4); // Game screen
-	slPriorityNbg1(5); // Game screen
-	slPrioritySpr0(6);
+	slPriorityNbg1(6); // Game screen
+	slPrioritySpr0(5);
 	
 	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
@@ -734,7 +734,7 @@ void vblIn (void) {
 
 	// Process input
 	sys->processEvents();
-
+	sys->updateScreen(0);
 	// Pcm elaboration...
 	PCM_VblIn();	
 

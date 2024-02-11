@@ -211,9 +211,9 @@ hwram = (uint8_t *)hwram_ptr;
 		}
 	}
 // vbt : clean front layer	
-	memset(_vid._frontLayer, 0xC0, 512*448);
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+//	memset(_vid._frontLayer, 0xC0, 512*448);
+//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+//	_stub->updateScreen(0);
 	
 	playCutscene(0x40);
 	playCutscene(0x0D);
@@ -382,7 +382,7 @@ void Game::displayTitleScreenMac(int num) {
 	}
 	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
-	_stub->updateScreen(0);
+//	_stub->updateScreen(0);
 
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
@@ -390,7 +390,9 @@ void Game::displayTitleScreenMac(int num) {
 		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback",slLocate(3,13));		
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
-			for (int i = 0; i < 7; ++i) {
+//			for (int i = 0; i < 7; ++i) {
+			int i = 0;
+			{
 				const char *str = Menu::_levelNames[i];
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
@@ -461,7 +463,7 @@ void Game::mainLoop() {
 // vbt : clean front layer	
 			memset(_vid._frontLayer, 0xC0, 512*448);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-			_stub->updateScreen(0);
+//			_stub->updateScreen(0);
 	
 			playCutscene(_cut._deathCutsceneId);
 			_res.clearLevelRes(); // vbt : ajout, on a perdu on libère tout
@@ -544,7 +546,7 @@ heapWalk();
 //slPrint("copyRect",slLocate(3,13));
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //slPrint("updateScreen",slLocate(3,13));			
-			_stub->updateScreen(0);
+//			_stub->updateScreen(0);
 //	_vid.updateScreen();
 
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -833,7 +835,7 @@ void Game::showFinalScore() {
 */	
 	while (!_stub->_pi.quit) {
 		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-		_stub->updateScreen(0);
+//		_stub->updateScreen(0);
 		_stub->processEvents();
 		if (_stub->_pi.enter) {
 //			emu_printf("_pi.enter2\n");			
@@ -1033,7 +1035,7 @@ _vid._w=512;
 		
 	
 		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-		_stub->updateScreen(0);
+//		_stub->updateScreen(0);
 
 
 
@@ -1670,7 +1672,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 			_vid.drawSpriteSub4(src, _vid._frontLayer + dst_offset, sprite_w, sprite_clipped_h, sprite_clipped_w, sprite_col_mask);
 		}
 	}
-	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
+//	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
 int Game::loadMonsterSprites(LivePGE *pge) {
@@ -1888,7 +1890,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 		return;
 	}
 	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
-	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
+//	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
 void Game::playSound(uint8 sfxId, uint8 softVol) {
@@ -1945,6 +1947,7 @@ void Game::handleInventory() {
 		int num_lines = (num_items - 1) / 4 + 1;
 		int current_line = 0;
 		bool display_score = false;
+
 		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
@@ -2009,7 +2012,7 @@ void Game::handleInventory() {
 					_vid.drawString(buf, 65, 193, 0xE4);
 				}
 			}
-
+			_vid._fullRefresh = true; // vbt ajout
 			_vid.updateScreen();
 			_stub->sleep(80);
 //			inp_update();
@@ -2047,11 +2050,11 @@ void Game::handleInventory() {
 				}
 			}
 			if (_stub->_pi.enter) {
-//				emu_printf("_pi.enter4\n");				
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}
 		}
+		memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
 		_vid.fullRefresh();
 		_stub->_pi.backspace = false;
 		if (selected_pge) {

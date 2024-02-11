@@ -87,7 +87,7 @@ void Menu::drawString2(const char *str, int16 y, int16 x) {
 		++str;
 		++len;
 	}
-	_vid->markBlockAsDirty(x * 8, y * 8, len * 8, 8, _vid->_layerScale);
+//	_vid->markBlockAsDirty(x * 8, y * 8, len * 8, 8, _vid->_layerScale);
 }
 
 void Menu::loadPicture(const char *prefix) {
@@ -182,7 +182,7 @@ void Menu::handleSkillScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
-			emu_printf("_pi.enter6\n");			
+//			emu_printf("_pi.enter6\n");			
 			_stub->_pi.enter = false;
 			_skill = currentSkill;
 			return;
@@ -264,13 +264,13 @@ bool Menu::handleLevelScreen() {
 		for (int i = 0; i < 7; ++i) {
 			drawString(_levelNames[i], 7 + i * 2, 4, (currentLevel == i) ? 2 : 3);
 		}
-		_vid->markBlockAsDirty(4 * Video::CHAR_W, 7 * Video::CHAR_H, 192, 7 * Video::CHAR_H, _vid->_layerScale);
+//		_vid->markBlockAsDirty(4 * Video::CHAR_W, 7 * Video::CHAR_H, 192, 7 * Video::CHAR_H, _vid->_layerScale);
 
 		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  4, (currentSkill == 0) ? 2 : 3);
 		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 14, (currentSkill == 1) ? 2 : 3);
 		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 24, (currentSkill == 2) ? 2 : 3);
-		_vid->markBlockAsDirty(4 * Video::CHAR_W, 23 * Video::CHAR_H, 192, Video::CHAR_H, _vid->_layerScale);
-
+//		_vid->markBlockAsDirty(4 * Video::CHAR_W, 23 * Video::CHAR_H, 192, Video::CHAR_H, _vid->_layerScale);
+		_vid->_fullRefresh = true;
 		_vid->updateScreen();
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
