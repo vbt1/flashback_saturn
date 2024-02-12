@@ -328,7 +328,7 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 //	slDMAWait();
 	
 	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-	*txptr = TEXDEF(w, (16>>6), 0);
+	*txptr = TEXDEF(w, 16, 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL= 0;

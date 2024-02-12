@@ -25,6 +25,7 @@ extern Uint32 position_vram;
 #undef VDP2_VRAM_B0
 #define VDP2_VRAM_B0 NULL 
 */
+//#define COLOR_4BPP 1
 #define LOW_WORK_RAM 0x00200000
 
 Video::Video(Resource *res, SystemStub *stub)
@@ -36,7 +37,8 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
-	_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H*4);
+	_frontLayer = (uint8 *)sat_malloc(_w * _h);
+//	_frontLayer = (uint8 *)sat_malloc(480*256*2); // à la place de 512x448 pour stocker 2 images de cutscene
 	memset(_frontLayer, 0, _w * _h);
 
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -590,7 +592,7 @@ void Video::MAC_decodeMap(int level, int room) {
 		}
 	}
 }
-
+#ifdef COLOR_4BPP
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
@@ -602,14 +604,14 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 		buf->ptrsp[offset2] |= ((color&0x0f)<<4);
 	}
 }
-
+#endif
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);	
 	buf->ptr[offset] = color;
 	buf->ptrsp[offset2] = color;
 }
-
+#ifdef COLOR_4BPP
 void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
@@ -623,7 +625,7 @@ void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color)
 //		buf->ptr[offset] = color;
 	}
 }
-
+#endif
 void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);
@@ -677,8 +679,12 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.x  = x * _layerScale;
 		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
-
+#ifdef COLOR_4BPP
 		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+#else
+		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
+#endif
+	
 		buf.ptr      = _frontLayer;
 		buf.ptrbg    = _backLayer;
 
@@ -693,12 +699,16 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 			uint8_t buffer[96*96];  // max 160x288 pour le menu
 			buf.ptrsp = buffer;
 			TEXTURE *txptr = &tex_spr[0];
-			*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);
+			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 			memset(buf.ptrsp,0,buf.w2*buf.h2);
 			_res->MAC_decodeImageData(data, frame, &buf);
+#ifdef COLOR_4BPP			
 			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
 			position_vram+=(buf.w2*buf.h2)/2;
-
+#else
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+			position_vram+=(buf.w2*buf.h2);
+#endif
 			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
 		}
 	}
@@ -711,9 +721,15 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
+#ifdef COLOR_4BPP	
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.COLR=  0; //0x40; //perso  // 0x20 // icones
+#else
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.COLR=  0;
+#endif	
 	user_sprite.SRCA= ((int)ptrsp)/8;
-	user_sprite.COLR=0x40;
+
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -744,15 +760,26 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 //	memset((uint8_t *)_txt2Layer,0, w*h);
 }
 
-void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w)
+void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w, unsigned char front)
 {
-	TEXTURE *txptr = (TEXTURE *)tex_spr;
-	*txptr = TEXDEF(w, h, 0);
+//	TEXTURE *txptr = (TEXTURE *)tex_spr;
+//	*txptr = TEXDEF(w, h, 0);
 
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA=txptr->CGadr;
+
+	if(front)
+	{
+		user_sprite.SRCA=BACK_RAM_VDP2 / 8;
+	}
+	else
+	{
+		user_sprite.SRCA=(cgaddress) / 8; //memcpy((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2),_frontPage,480*255);
+	}
+
+
+//	user_sprite.SRCA=txptr->CGadr;
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
