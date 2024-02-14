@@ -105,7 +105,7 @@ struct Video {
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
 	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);
-	void SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w);	
+	void SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsigned short w);	
 };
 
 #endif // VIDEO_H__

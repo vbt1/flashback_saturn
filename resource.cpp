@@ -38,7 +38,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
-	_scratchBuffer = (uint8_t *)std_malloc(kScratchBufferSize);
+	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 
 	
 //emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
@@ -1494,7 +1494,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-//		emu_printf("data %p\n",data);
+		emu_printf("data %p\n",data);
 	return data;
 }
 

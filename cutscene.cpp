@@ -19,6 +19,7 @@ extern TEXTURE tex_spr[4];
 #include "video.h"
 
 static void scalePoints(Point *pt, int count, int scale) {
+//	scale = 1; //vbt force la valeur
 	if (scale != 1) {
 		while (count-- > 0) {
 			pt->x *= scale;
@@ -86,13 +87,15 @@ void Cutscene::updatePalette() {
 
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
+
+#ifndef SLAVE_SOUND	
+	_vid->SAT_displayCutscene((int)_frontPage==(SpriteVRAM + cgaddress),0, 0, 255, 480);
+	slSynch(); // obligatoire
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 
-#ifndef SLAVE_SOUND	
-	_vid->SAT_displayCutscene(0, 0, 255, 480);
-	slSynch(); // obligatoire
-	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	
+//	memset(_backPage,0x00,IMG_SIZE);
+//	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	// au mauvais endroit à corriger ou adresse de texte pas bonne
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer);
 #endif
 //	_stub->updateScreen(0);
@@ -212,6 +215,7 @@ void Cutscene::clearBackPage() {
 //emu_printf("clearBackPage\n");		
 	if (_clearScreen == 0) {
 		memcpy(_backPage, _auxPage, IMG_SIZE);
+//		memset(_backPage, 0x00, IMG_SIZE);
 	} else {
 		memset(_backPage, 0xC0, IMG_SIZE);
 	}
@@ -313,7 +317,7 @@ void Cutscene::op_refreshScreen() {
 }
 
 void Cutscene::op_waitForSync() {
-//	debug(DBG_CUT, "Cutscene::op_waitForSync()");
+	debug(DBG_CUT, "Cutscene::op_waitForSync()");
 	if (_creditsSequence) {
 		uint16_t n = fetchNextCmdByte() * 2;
 		do {
@@ -456,7 +460,7 @@ _vid->_w=480;
 				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-				_vid->SAT_displayText(-220, 129, h, 480);
+//				_vid->SAT_displayText(-220, 129, h, 480);
 #endif
 			}
 		} else if (_id == kCineEspions) {
@@ -936,7 +940,7 @@ void Cutscene::op_copyScreen() {
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
 	}
-//	memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H * 4);
+	memcpy(_backPage, _frontPage, IMG_SIZE);
 	_frameDelay = 10;
 /*
 	const bool drawMemoShapes = _drawMemoSetShapes && (_paletteNum == 19 || _paletteNum == 23) && (_memoSetOffset + 3) <= sizeof(memoSetPos);
@@ -981,7 +985,7 @@ _vid->_w=480;
 				drawText(0, 0, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-				_vid->SAT_displayText(-240+x, -129+y, 128, 480);
+//				_vid->SAT_displayText(-240+x, -129+y, 128, 480);
 #endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
@@ -1142,6 +1146,12 @@ bool Cutscene::load(uint16_t cutName) {
 }
 
 void Cutscene::unload() {
+/*
+	memset(_auxPage, 0x00, IMG_SIZE);
+	memset(_backPage, 0x00, IMG_SIZE);
+	memset(_frontPage, 0x00, IMG_SIZE);
+*/	
+	
 	switch (_res->_type) {
 	case kResourceTypeDOS:
 		_res->unload(Resource::OT_CMD);
@@ -1154,7 +1164,7 @@ void Cutscene::unload() {
 #ifndef SLAVE_SOUND	
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
-/*		SPRITE user_sprite;
+		SPRITE user_sprite;
 		user_sprite.CTRL= FUNC_End;
 		user_sprite.PMOD=0;
 		user_sprite.SRCA=0;
@@ -1169,7 +1179,8 @@ void Cutscene::unload() {
 		user_sprite.GRDA=0;	
 		
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-*/		
+		slSynch();
+		
 		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
 			
@@ -1188,6 +1199,11 @@ void Cutscene::prepare() {
 	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
 	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
 	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
+	
+	memset(_auxPage, 0x00, IMG_SIZE);
+	memset(_backPage, 0x00, IMG_SIZE);
+	memset(_frontPage, 0x00, IMG_SIZE);
+	
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
@@ -1257,7 +1273,7 @@ void Cutscene::playText(const char *str) {
 	}
 	const int y = (128 - lines * 8) / 2;
 	memset(_backPage, 0xC0, _vid->_w * _vid->_h);
-	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
+//	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ? // vbt à revoir sinon ca écrit dans vdp2
 //	_stub->updateScreen(0);
 

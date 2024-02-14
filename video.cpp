@@ -13,6 +13,7 @@ extern "C"
 #include <string.h>
 extern TEXTURE tex_spr[4];
 extern Uint32 position_vram;
+void	*malloc(size_t);
 }
 #include "file.h"
 #include "decode_mac.h"
@@ -36,7 +37,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
-	_frontLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H*4);
+	_frontLayer = (uint8 *)malloc(_w * _h);
 	memset(_frontLayer, 0, _w * _h);
 
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -678,7 +679,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
-		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 		buf.ptr      = _frontLayer;
 		buf.ptrbg    = _backLayer;
 
@@ -690,14 +691,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		}
 		else
 		{
-			uint8_t buffer[96*96];  // max 160x288 pour le menu
+			uint8_t buffer[110*110];  // max 160x288 pour le menu
 			buf.ptrsp = buffer;
 			TEXTURE *txptr = &tex_spr[0];
-			*txptr = TEXDEF(buf.h2, (buf.w2>>6), position_vram);
+			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 			memset(buf.ptrsp,0,buf.w2*buf.h2);
 			_res->MAC_decodeImageData(data, frame, &buf);
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-			position_vram+=(buf.w2*buf.h2)/2;
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+			position_vram+=(buf.w2*buf.h2);
 
 			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
 		}
@@ -706,14 +707,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-	*txptr = TEXDEF(w, h, 0);
+//	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
+//	*txptr = TEXDEF(w, h, 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= ((int)ptrsp)/8;
-	user_sprite.COLR=0x40;
+	user_sprite.COLR=0;  // 0X40
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -744,15 +745,16 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 //	memset((uint8_t *)_txt2Layer,0, w*h);
 }
 
-void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w)
+void Video::SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsigned short w)
 {
 	TEXTURE *txptr = (TEXTURE *)tex_spr;
 	*txptr = TEXDEF(w, h, 0);
 
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA=txptr->CGadr;
+	user_sprite.PMOD=CL256Bnk| ECdis | /*SPdis |*/ 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+//	user_sprite.SRCA=txptr->CGadr;
+//	user_sprite.SRCA=AUX_RAM_VDP2/8;
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
@@ -762,6 +764,21 @@ void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w
 //	user_sprite.XB=user_sprite.XA+(w*1);
 //	user_sprite.YB=user_sprite.YA+(h*1);
 	user_sprite.GRDA=0;	
+//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+
+	if(layer)	
+		user_sprite.SRCA=BACK_RAM_VDP2/8;
+	//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	else
+		user_sprite.SRCA=txptr->CGadr;
+
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+
+/*
+	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
+	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
+	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
+*/	
+	
 }
 #endif
