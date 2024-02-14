@@ -58,7 +58,7 @@ Uint8 *hwram = NULL;
 Uint8 *hwram_ptr = NULL;
 Uint8 *hwram_screen = NULL;
 Uint32 position_vram = 0;
-unsigned int end1 = 300000;//476000;//538624;
+unsigned int end1 = 310000;//476000;//538624;
 
 void ss_main(void) {
 	const int version = detectVersion("/");

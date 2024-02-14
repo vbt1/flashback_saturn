@@ -19,7 +19,7 @@ extern TEXTURE tex_spr[4];
 #include "video.h"
 
 static void scalePoints(Point *pt, int count, int scale) {
-//	scale = 1; //vbt force la valeur
+	scale = 1; //vbt force la valeur
 	if (scale != 1) {
 		while (count-- > 0) {
 			pt->x *= scale;
@@ -89,7 +89,7 @@ void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 
 #ifndef SLAVE_SOUND	
-	_vid->SAT_displayCutscene((int)_frontPage==(SpriteVRAM + cgaddress),0, 0, 255, 480);
+	_vid->SAT_displayCutscene((int)_frontPage==(SpriteVRAM + cgaddress),0, 0, 128, 240);
 	slSynch(); // obligatoire
 	updatePalette();
 	SWAP(_frontPage, _backPage);
@@ -1181,8 +1181,8 @@ void Cutscene::unload() {
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 		slSynch();
 		
-		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
-		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
+		memset(_vid->_frontLayer,0x00,IMG_SIZE);
+//		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
 			
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);	
@@ -1272,7 +1272,7 @@ void Cutscene::playText(const char *str) {
 		}
 	}
 	const int y = (128 - lines * 8) / 2;
-	memset(_backPage, 0xC0, _vid->_w * _vid->_h);
+	memset(_backPage, 0xC0, IMG_SIZE);
 //	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ? // vbt à revoir sinon ca écrit dans vdp2
 //	_stub->updateScreen(0);
