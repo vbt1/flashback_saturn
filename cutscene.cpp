@@ -1184,10 +1184,10 @@ void Cutscene::unload() {
 		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
 			
-//		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-//		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);	
+		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);	
 //		slWindow(0 , 0 , 60 , 60 , 150 ,120 , 120);
-//		slSynch();
+		slSynch();
 //		_vid->_layerScale=2;		
 	}
 #endif
@@ -1220,7 +1220,7 @@ void Cutscene::prepare() {
 	const int sy = y * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
 
-//	slScrAutoDisp(SPRON); // vbt à remettre
+	slScrAutoDisp(SPRON); // vbt à remettre
 }
 
 void Cutscene::playCredits() {
