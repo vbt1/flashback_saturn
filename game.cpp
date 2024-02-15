@@ -410,7 +410,9 @@ void Game::displayTitleScreenMac(int num) {
 					++_currentLevel;
 				}
 			}
-			_vid.updateScreen();
+//			_vid.updateScreen();
+			_stub->copyRect(24, 24, 440, 10*24, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 		}
 		_stub->processEvents();
 		if (_stub->_pi.quit) {
