@@ -460,7 +460,7 @@ _vid->_w=480;
 				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-//				_vid->SAT_displayText(-220, 129, h, 480);
+				_vid->SAT_displayText(-220, 129, h, 480);
 #endif
 			}
 		} else if (_id == kCineEspions) {
@@ -1181,7 +1181,7 @@ void Cutscene::unload() {
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 		slSynch();
 		
-		memset(_vid->_frontLayer,0x00,IMG_SIZE);
+//		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
 //		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
 			
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
@@ -1272,8 +1272,8 @@ void Cutscene::playText(const char *str) {
 		}
 	}
 	const int y = (128 - lines * 8) / 2;
-	memset(_backPage, 0xC0, IMG_SIZE);
-//	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
+	memset(_backPage, 0xC0, _vid->_w* _vid->_h);
+	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ? // vbt à revoir sinon ca écrit dans vdp2
 //	_stub->updateScreen(0);
 

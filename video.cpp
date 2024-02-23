@@ -37,7 +37,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
-	_frontLayer = (uint8 *)malloc(_w * _h);
+	_frontLayer = (uint8 *)sat_malloc(_w * _h);
 	memset(_frontLayer, 0, _w * _h);
 
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -554,7 +554,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W*2, y, fnt, col, c);
+		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W, y, fnt, col, c);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
@@ -751,7 +751,7 @@ void Video::SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsi
 	*txptr = TEXDEF(w, h, 0);
 
 	SPRITE user_sprite;
-	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
+	user_sprite.CTRL=0; //FUNC_Sprite | _ZmCC;
 	user_sprite.PMOD=CL256Bnk| ECdis | /*SPdis |*/ 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 //	user_sprite.SRCA=txptr->CGadr;
 //	user_sprite.SRCA=AUX_RAM_VDP2/8;
@@ -765,8 +765,8 @@ void Video::SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsi
 	user_sprite.XA=x;
 	user_sprite.YA=y;
 
-	user_sprite.XB=user_sprite.XA+(w<<1);
-	user_sprite.YB=user_sprite.YA+(h<<1);
+//	user_sprite.XB=user_sprite.XA+(w<<1);
+//	user_sprite.YB=user_sprite.YA+(h<<1);
 
 
 //	user_sprite.XB=user_sprite.XA+(w*1);
