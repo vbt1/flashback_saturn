@@ -38,10 +38,10 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
-	_scratchBuffer = (uint8_t *)std_malloc(kScratchBufferSize);
+	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 
 	
-//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
+emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
@@ -1459,6 +1459,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		if(strstr(entry->name,"names") !=NULL
 		|| strcmp("Flashback strings", entry->name) == 0)
 		{
+				emu_printf("sat_malloc1 ");
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 		}		
 		else if(strcmp("Flashback colors", entry->name) == 0 
@@ -1469,6 +1470,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 //		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
+			emu_printf("_scratchBuffer ");			
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
 				
@@ -1477,11 +1479,13 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
 			{
+				emu_printf("hwram_ptr ");				
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr+=_resourceMacDataSize;
 			}
 			else
 			{
+				emu_printf("sat_malloc2 ");
 				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			}
 		}
@@ -1494,7 +1498,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-//		emu_printf("data %p\n",data);
+		emu_printf("data %p size %d\n",data,_resourceMacDataSize);
 	return data;
 }
 

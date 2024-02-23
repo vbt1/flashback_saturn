@@ -19,7 +19,7 @@
 #define	cgaddress8	cgaddress/8
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
-#define IMG_SIZE (240*128*4)
+#define IMG_SIZE (240*128)
 #define BACK_RAM_VDP2 (cgaddress + IMG_SIZE)
 #define AUX_RAM_VDP2  (cgaddress + IMG_SIZE*2)
 #define TEXT1_RAM_VDP2 (cgaddress + IMG_SIZE*3)
@@ -105,7 +105,11 @@ struct Video {
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
 	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);
+<<<<<<< HEAD
 	void SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w, unsigned char front);	
+=======
+	void SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsigned short w);	
+>>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
 };
 
 #endif // VIDEO_H__

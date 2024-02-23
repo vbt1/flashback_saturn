@@ -20,7 +20,7 @@ extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-slPrint((char *)name,slLocate(3,22));
+//slPrint((char *)name,slLocate(3,22));
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
 

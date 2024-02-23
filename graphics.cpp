@@ -8,7 +8,7 @@ extern "C" {
 }
 #include "graphics.h"
 
-#define VIDEO_PITCH 480
+#define VIDEO_PITCH 240
 
 void Graphics::setLayer(uint8_t *layer, int pitch) {
 	_layer = layer;

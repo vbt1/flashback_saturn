@@ -202,21 +202,21 @@ hwram = (uint8_t *)hwram_ptr;
 		return;
 	}
 #endif
-
+/*
 	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
 //			slScrTransparent(!NBG1ON);
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
-	}
+	}*/
 // vbt : clean front layer	
-//	memset(_vid._frontLayer, 0xC0, 512*448);
+//	memset(_vid._frontLayer, 0x00, 512*448);
 //	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //	_stub->updateScreen(0);
 	
-	playCutscene(0x40);
-	playCutscene(0x0D);
+//	playCutscene(0x40);
+//	playCutscene(0x0D);
 	
 /*
 	// global resources
@@ -410,7 +410,9 @@ void Game::displayTitleScreenMac(int num) {
 					++_currentLevel;
 				}
 			}
-			_vid.updateScreen();
+//			_vid.updateScreen();
+			_stub->copyRect(24, 24, 440, 10*24, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 		}
 		_stub->processEvents();
 		if (_stub->_pi.quit) {
@@ -466,7 +468,7 @@ void Game::mainLoop() {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
 // vbt : clean front layer	
-			memset(_vid._frontLayer, 0xC0, 512*448);
+			memset(_vid._frontLayer, 0x00, 512*448);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //			_stub->updateScreen(0);
 	
@@ -486,10 +488,14 @@ heapWalk();
 				} else*/
 				{
 //					clearStateRewind();
+					slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+					slSynch();
 					loadLevelData();
 					resetGameState();
 				}
 			}
+					slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+					slSynch();
 			return;
 		}
 	}
@@ -742,8 +748,8 @@ void Game::playCutscene(int id) {
 	{  // vbt pour les niveaux sans video
 		if(_mix._musicTrack==2)
 			_mix.stopMusic();
-//		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-//		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
+		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
 //		slWindow(0 , 0 , 60 , 60 , 150 ,120 , 120);		
 		slSynch();  // vbt : permet l'affichage de sprites
 //		_vid._layerScale=2;		
@@ -993,11 +999,12 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 
 _vid._w=512;
 #ifndef SLAVE_SOUND
-		_vid.SAT_displayText(-220, -128, h-1, 480);
-		_vid.SAT_displayCutscene(0, 0, 255, 480);
+		_vid.SAT_displayText(-260, -224, h-1, 480);
+//		_vid.SAT_displayCutscene(0, 0, 255, 480);
+		_vid.SAT_displayCutscene((int)1,0, 0, 128, 240);
 		slSynch();
-		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
-		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
+//		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
+//		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
 #endif
 		if (_res.isMac()) {
 
@@ -1781,7 +1788,7 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 	case kResourceTypeMac:
-//emu_printf("MAC_unloadLevelData\n");
+emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram;
 	hwram_screen = NULL;
 	position_vram = 0;
@@ -1789,12 +1796,12 @@ void Game::loadLevelData() {
 //	CSH_Init(CSH_4WAY);
 //	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library	
 //heapWalk();		
-/*
+
 emu_printf("MAC_unloadLevelData\n");
 emu_printf("_res._monster %p\n",_res._monster);
+//	sat_free(_res._monster);
+emu_printf("_res._spc %p\n",_res._spc);	
 	sat_free(_res._spc);
-emu_printf("_res._monster %p\n",_res._spc);	
-	sat_free(_res._spc);	
 	sat_free(_res._ani);
 	_res.MAC_unloadLevelData();
 //	sat_free(_res._icn);// icones du menu à ne pas vider
@@ -1804,7 +1811,7 @@ emu_printf("_res._monster %p\n",_res._spc);
 	sat_free(_res._pol);
 	sat_free(_res._cine_off);
 //	sat_free(_res._cine_txt);  // vbt est dans scratchbuff
-*/
+
 /*
 	for (int i = 0; i < _res._numSfx; ++i) {
 		sat_free(_res._sfxList[i].data);
