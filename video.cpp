@@ -39,10 +39,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
 	_frontLayer = (uint8 *)sat_malloc(_w * _h);
-<<<<<<< HEAD
-//	_frontLayer = (uint8 *)sat_malloc(480*256*2); // à la place de 512x448 pour stocker 2 images de cutscene
-=======
->>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
+
 	memset(_frontLayer, 0, _w * _h);
 
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -559,7 +556,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W, y, fnt, col, c);
+		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W*2, y, fnt, col, c);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
@@ -683,17 +680,12 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.x  = x * _layerScale;
 		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
-<<<<<<< HEAD
+
 #ifdef COLOR_4BPP
 		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 #else
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 #endif
-	
-=======
-
-		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
->>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
 		buf.ptr      = _frontLayer;
 		buf.ptrbg    = _backLayer;
 
@@ -711,7 +703,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 			memset(buf.ptrsp,0,buf.w2*buf.h2);
 			_res->MAC_decodeImageData(data, frame, &buf);
-<<<<<<< HEAD
+
 #ifdef COLOR_4BPP			
 			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
 			position_vram+=(buf.w2*buf.h2)/2;
@@ -719,11 +711,6 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 			position_vram+=(buf.w2*buf.h2);
 #endif
-=======
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-			position_vram+=(buf.w2*buf.h2);
-
->>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
 			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
 		}
 	}
@@ -736,7 +723,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-<<<<<<< HEAD
+
 #ifdef COLOR_4BPP	
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.COLR=  0; //0x40; //perso  // 0x20 // icones
@@ -745,13 +732,6 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	user_sprite.COLR=  0;
 #endif	
 	user_sprite.SRCA= ((int)ptrsp)/8;
-
-=======
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA= ((int)ptrsp)/8;
-	user_sprite.COLR=0;  // 0X40
->>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
-
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
 	user_sprite.YA=y;
@@ -781,18 +761,13 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 //	memset((uint8_t *)_txt2Layer,0, w*h);
 }
 
-<<<<<<< HEAD
-void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w, unsigned char front)
-=======
-void Video::SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsigned short w)
->>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
+void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
 //	TEXTURE *txptr = (TEXTURE *)tex_spr;
 //	*txptr = TEXDEF(w, h, 0);
 
 	SPRITE user_sprite;
-<<<<<<< HEAD
-	user_sprite.CTRL=0;
+
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 
 	if(front)
@@ -806,12 +781,10 @@ void Video::SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsi
 
 
 //	user_sprite.SRCA=txptr->CGadr;
-=======
-	user_sprite.CTRL=0; //FUNC_Sprite | _ZmCC;
-	user_sprite.PMOD=CL256Bnk| ECdis | /*SPdis |*/ 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
 //	user_sprite.SRCA=txptr->CGadr;
 //	user_sprite.SRCA=AUX_RAM_VDP2/8;
->>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
+
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
@@ -822,20 +795,14 @@ void Video::SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsi
 	user_sprite.XA=x;
 	user_sprite.YA=y;
 
-//	user_sprite.XB=user_sprite.XA+(w<<1);
-//	user_sprite.YB=user_sprite.YA+(h<<1);
+	user_sprite.XB=user_sprite.XA+(w<<1);
+	user_sprite.YB=user_sprite.YA+(h<<1);
 
 
 //	user_sprite.XB=user_sprite.XA+(w*1);
 //	user_sprite.YB=user_sprite.YA+(h*1);
 	user_sprite.GRDA=0;	
 //	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
-	if(layer)	
-		user_sprite.SRCA=BACK_RAM_VDP2/8;
-	//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-	else
-		user_sprite.SRCA=txptr->CGadr;
 
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 

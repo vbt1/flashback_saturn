@@ -979,11 +979,12 @@ bool Game::handleContinueAbort() {
 	uint8_t color_inc = 0xFF;
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
-	
-	while (timeout >= 0 && !_stub->_pi.quit) {
 _vid._w=480;
 unsigned int h = 256;
 memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
+_vid._layerScale=1;	
+	while (timeout >= 0 && !_stub->_pi.quit) {
+_vid._w=480;
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawStringSprite(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
@@ -999,12 +1000,12 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 
 _vid._w=512;
 #ifndef SLAVE_SOUND
-		_vid.SAT_displayText(-260, -224, h-1, 480);
+		_vid.SAT_displayText(-220, -128, h-1, 480);
 //		_vid.SAT_displayCutscene(0, 0, 255, 480);
 		_vid.SAT_displayCutscene((int)1,0, 0, 128, 240);
 		slSynch();
-//		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
-//		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
+		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
+		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
 #endif
 		if (_res.isMac()) {
 
@@ -1073,6 +1074,7 @@ _vid._w=512;
 		--timeout;
 
 	}
+_vid._layerScale=2;	
 	return false;
 }
 /*

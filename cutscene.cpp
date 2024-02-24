@@ -20,6 +20,7 @@ extern TEXTURE tex_spr[4];
 
 static void scalePoints(Point *pt, int count, int scale) {
 	scale = 1; //vbt force la valeur
+	return;
 	if (scale != 1) {
 		while (count-- > 0) {
 			pt->x *= scale;
