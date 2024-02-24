@@ -89,8 +89,8 @@ void Cutscene::updatePalette() {
 
 void Cutscene::updateScreen() {
 
-//	sync(_frameDelay - 1);
-	_vid->SAT_displayCutscene((int)_frontPage==(SpriteVRAM + cgaddress),0, 0, 128, 240);
+	sync(_frameDelay - 1);
+	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 #ifndef SLAVE_SOUND	
 
 // vbt : déplacement de la synchro ici
@@ -98,10 +98,9 @@ void Cutscene::updateScreen() {
 	
 	updatePalette();
 	SWAP(_frontPage, _backPage);
-
 //	memset(_backPage,0x00,IMG_SIZE);
-//	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	// au mauvais endroit à corriger ou adresse de texte pas bonne
-	SWAP(_vid->_txt1Layer, _vid->_txt2Layer);
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
+	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
 #endif
 //	_stub->updateScreen(0);
 }
@@ -1201,13 +1200,24 @@ void Cutscene::unload() {
 
 void Cutscene::prepare() {
 //	_frontPage = _vid->_frontLayer;
+#if 0
 	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
 	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
 	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
+#else
+	_frontPage = (uint8_t *)_res->_scratchBuffer;
+	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
+	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
+
+	memset((uint8_t *)(SpriteVRAM + cgaddress), 0x00, IMG_SIZE);
+	memset((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2), 0x00, IMG_SIZE);
+	memset((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2), 0x00, IMG_SIZE);	
+#endif
 	
 	memset(_auxPage, 0x00, IMG_SIZE);
 	memset(_backPage, 0x00, IMG_SIZE);
 	memset(_frontPage, 0x00, IMG_SIZE);
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);
 	
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;

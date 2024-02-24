@@ -593,7 +593,7 @@ heapWalk();
 	_vid.updateScreen();
 //	updateTiming();
 //slPrint("drawStoryTexts",slLocate(3,13));
-	drawStoryTexts();
+//	drawStoryTexts();  // vbt à remettre ??
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
 		handleInventory();
@@ -1812,8 +1812,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 	sat_free(_res._cmd);
 	sat_free(_res._pol);
 	sat_free(_res._cine_off);
-//	sat_free(_res._cine_txt);  // vbt est dans scratchbuff
-
+//	sat_free(_res._cine_txt);
 /*
 	for (int i = 0; i < _res._numSfx; ++i) {
 		sat_free(_res._sfxList[i].data);

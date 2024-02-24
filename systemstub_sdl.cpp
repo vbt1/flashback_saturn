@@ -323,7 +323,7 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 		drawRect(x, y, w, h, 0xE7);
 	}
 	*/
-	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
+//	DMA_ScuMemCopy((uint8*)(SpriteVRAM + cgaddress), (uint8*)rgb, 12*16*4);
 //	slDMACopy((uint8*)rgb, (uint8*)(SpriteVRAM + cgaddress), 12*16*4);	
 //	slDMAWait();
 	
@@ -348,8 +348,8 @@ void SystemStub_SDL::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rg
 }
 #endif
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
-	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
+	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
+//	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {

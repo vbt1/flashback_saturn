@@ -68,7 +68,7 @@ Resource::~Resource() {
 	sat_free(_cmd);
 	sat_free(_pol);
 	sat_free(_cine_off);
-	sat_free(_cine_txt);
+//	sat_free(_cine_txt);
 	for (int i = 0; i < _numSfx; ++i) {
 		sat_free(_sfxList[i].data);
 	}
@@ -156,7 +156,7 @@ void Resource::clearLevelRes() {
 		sat_free(_cmd);
 		sat_free(_pol);
 		sat_free(_cine_off);
-	//	sat_free(_cine_txt);  // vbt est dans scratchbuff
+//		sat_free(_cine_txt);  // vbt est dans scratchbuff
 	}
 }
 
@@ -1466,14 +1466,14 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
 		|| strncmp("Movie", entry->name, 5) == 0 
-		|| strncmp("logo", entry->name, 4)
+//		|| strncmp("logo", entry->name, 4)
 //		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
 			emu_printf("_scratchBuffer ");			
+//			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
-				
 		else
 		{
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);

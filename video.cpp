@@ -770,15 +770,28 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 
-	if(front)
+	if(!front)
 	{
-		user_sprite.SRCA=BACK_RAM_VDP2 / 8;
+/*
+	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
+	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
+	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
+	
+	Line 1209: 	_frontPage = (uint8_t *)_res->_scratchBuffer;
+	Line 1210: 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
+	Line 1211: 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);	
+*/
+		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
+		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer, h*w);
+//		memset((void *)(SpriteVRAM + cgaddress),0x0c,h*w);
 	}
 	else
 	{
 		user_sprite.SRCA=(cgaddress) / 8; //memcpy((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2),_frontPage,480*255);
+//		memset((void *)(SpriteVRAM + BACK_RAM_VDP2),0x0c,h*w);	
+		memcpy((void *)(SpriteVRAM + BACK_RAM_VDP2),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);		
 	}
-
+//	memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
 
 //	user_sprite.SRCA=txptr->CGadr;
 //	user_sprite.CTRL=0; //FUNC_Sprite | _ZmCC;
