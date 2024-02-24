@@ -45,6 +45,7 @@ const uint8_t *Cutscene::getPolygonData() const {
 }
 
 void Cutscene::sync(int frameDelay) {
+
 	if (_stub->_pi.quit) {
 		return;
 	}
@@ -87,11 +88,14 @@ void Cutscene::updatePalette() {
 }
 
 void Cutscene::updateScreen() {
-	sync(_frameDelay - 1);
 
-#ifndef SLAVE_SOUND	
+//	sync(_frameDelay - 1);
 	_vid->SAT_displayCutscene((int)_frontPage==(SpriteVRAM + cgaddress),0, 0, 128, 240);
+#ifndef SLAVE_SOUND	
+
+// vbt : déplacement de la synchro ici
 	slSynch(); // obligatoire
+	
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 
@@ -1215,10 +1219,10 @@ void Cutscene::prepare() {
 	const int h = 128;
 	const int x = 0;//(Video::GAMESCREEN_W - w) / 2;
 	const int y = 0;//50;
-	const int sw = w * _vid->_layerScale;
-	const int sh = h * _vid->_layerScale;
-	const int sx = x * _vid->_layerScale;
-	const int sy = y * _vid->_layerScale;
+	const int sw = w;// * _vid->_layerScale;
+	const int sh = h;// * _vid->_layerScale;
+	const int sx = x; //* _vid->_layerScale;
+	const int sy = y;// * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
 
 	slScrAutoDisp(SPRON); // vbt à remettre
@@ -1256,7 +1260,7 @@ void Cutscene::playCredits() {
 	}
 	_creditsSequence = false;
 }
-
+/*
 void Cutscene::playText(const char *str) {
 	Color c;
 	// background
@@ -1287,7 +1291,7 @@ void Cutscene::playText(const char *str) {
 		_stub->sleep(30);
 	}
 }
-
+*/
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;

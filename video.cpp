@@ -750,7 +750,7 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 	user_sprite.CTRL=0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= (((int)_txt1Layer)-SpriteVRAM) / 8;
-	user_sprite.COLR=256;
+	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -781,23 +781,25 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
 
 //	user_sprite.SRCA=txptr->CGadr;
-	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
+//	user_sprite.CTRL=0; //FUNC_Sprite | _ZmCC;
 //	user_sprite.SRCA=txptr->CGadr;
 //	user_sprite.SRCA=AUX_RAM_VDP2/8;
 
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
-//	user_sprite.XA=-(120*2)-1;
-//	user_sprite.YA=-(64*2)-1;
-
-
+#ifdef NOTSCALED
+	user_sprite.CTRL=0;
+	user_sprite.XA=-(120*2)-1;
+	user_sprite.YA=-(64*2)-1;
+#else
+	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
 	user_sprite.XA=x;
 	user_sprite.YA=y;
 
 	user_sprite.XB=user_sprite.XA+(w<<1);
 	user_sprite.YB=user_sprite.YA+(h<<1);
-
+#endif
 
 //	user_sprite.XB=user_sprite.XA+(w*1);
 //	user_sprite.YB=user_sprite.YA+(h*1);

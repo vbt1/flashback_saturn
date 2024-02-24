@@ -215,8 +215,8 @@ hwram = (uint8_t *)hwram_ptr;
 //	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //	_stub->updateScreen(0);
 	
-//	playCutscene(0x40);
-//	playCutscene(0x0D);
+	playCutscene(0x40);
+	playCutscene(0x0D);
 	
 /*
 	// global resources
