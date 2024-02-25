@@ -761,47 +761,16 @@ void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 //	memset((uint8_t *)_txt2Layer,0, w*h);
 }
 
-void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
+void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w,uint8_t *_frontPage)
 {
-//	TEXTURE *txptr = (TEXTURE *)tex_spr;
-//	*txptr = TEXDEF(w, h, 0);
-
 	SPRITE user_sprite;
 
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-
-	if(!front)
-	{
-/*
-	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
-	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
-	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
-	
-	Line 1209: 	_frontPage = (uint8_t *)_res->_scratchBuffer;
-	Line 1210: 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
-	Line 1211: 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);	
-*/
-		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
-		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer, h*w);
-//		memset((void *)(SpriteVRAM + cgaddress),0x0c,h*w);
-	}
-	else
-	{
-		user_sprite.SRCA=(cgaddress) / 8; //memcpy((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2),_frontPage,480*255);
-//		memset((void *)(SpriteVRAM + BACK_RAM_VDP2),0x0c,h*w);	
-		memcpy((void *)(SpriteVRAM + BACK_RAM_VDP2),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);		
-	}
-//	memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-
-//	user_sprite.SRCA=txptr->CGadr;
-//	user_sprite.CTRL=0; //FUNC_Sprite | _ZmCC;
-//	user_sprite.SRCA=txptr->CGadr;
-//	user_sprite.SRCA=AUX_RAM_VDP2/8;
-
+	user_sprite.SRCA=cgaddress8;
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
-#ifdef NOTSCALED
+#if 0
 	user_sprite.CTRL=0;
 	user_sprite.XA=-(120*2)-1;
 	user_sprite.YA=-(64*2)-1;
@@ -817,8 +786,8 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 //	user_sprite.XB=user_sprite.XA+(w*1);
 //	user_sprite.YB=user_sprite.YA+(h*1);
 	user_sprite.GRDA=0;	
-//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
+	memcpy((void *)(SpriteVRAM + cgaddress),(void *)_frontPage, h*w);
+	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 
 /*

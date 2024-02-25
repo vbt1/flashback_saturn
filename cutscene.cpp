@@ -89,8 +89,9 @@ void Cutscene::updatePalette() {
 
 void Cutscene::updateScreen() {
 
-	sync(_frameDelay - 1);
-	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
+	sync(_frameDelay - 3);
+	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
+//	_vid->SAT_displayCutscene((int)_frontPage==SpriteVRAM + cgaddress,0, 0, 128, 240);
 #ifndef SLAVE_SOUND	
 
 // vbt : déplacement de la synchro ici

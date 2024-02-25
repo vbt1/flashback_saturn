@@ -1466,11 +1466,11 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
 		|| strncmp("Movie", entry->name, 5) == 0 
-//		|| strncmp("logo", entry->name, 4)
+		|| strncmp("logo", entry->name, 4)
 //		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
-			emu_printf("_scratchBuffer ");			
+//			emu_printf("_scratchBuffer ");
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
