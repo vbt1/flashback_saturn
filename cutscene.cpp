@@ -101,7 +101,7 @@ void Cutscene::updateScreen() {
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
-	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*168);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
 #endif
 //	_stub->updateScreen(0);
@@ -466,7 +466,7 @@ _vid->_w=480;
 //				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-				_vid->SAT_displayText(-220, 129, h, 480);
+				_vid->SAT_displaySprite(_vid->_txt1Layer,-220, 129, h, 480);
 #endif
 			}
 		} else if (_id == kCineEspions) {
@@ -991,7 +991,7 @@ _vid->_w=480;
 				drawText(0, 0, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-				_vid->SAT_displayText(-240+x, -129+y, 168, 480);
+				_vid->SAT_displaySprite(_vid->_txt1Layer,-240+x, -129+y, 168, 480);
 #endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen

@@ -16,6 +16,7 @@ extern "C"
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern unsigned int end1;
+extern Uint8 *hwram_screen;
 void	*malloc(size_t);
 }
 #include "saturn_print.h"
@@ -156,7 +157,7 @@ void Resource::clearLevelRes() {
 		sat_free(_cmd);
 		sat_free(_pol);
 		sat_free(_cine_off);
-//		sat_free(_cine_txt);  // vbt est dans scratchbuff
+//		sat_free(_cine_txt);
 	}
 }
 
@@ -402,7 +403,7 @@ void Resource::load_CINE() {
 void Resource::free_CINE() {
 	sat_free(_cine_off);
 	_cine_off = 0;
-//	sat_free(_cine_txt); // vbt est dans scratchbuff
+//	sat_free(_cine_txt);
 	_cine_txt = 0;
 }
 
@@ -1436,6 +1437,10 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
+
+
+
+
 	if(hwram==NULL)
 	{
 		hwram = (Uint8 *)malloc(end1);//(282344);
@@ -1456,9 +1461,13 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		}
 	} else {
 
-		if(strstr(entry->name,"names") !=NULL
-		|| strcmp("Flashback strings", entry->name) == 0
-		|| strncmp("Movie", entry->name, 5) == 0)
+		if(strncmp("Movie", entry->name, 5) == 0)
+		{
+			emu_printf("hwram_screen %p\n",hwram_screen);			
+			data = (uint8_t *)hwram_screen;
+		}
+		else if(strstr(entry->name,"names") !=NULL
+		|| strcmp("Flashback strings", entry->name) == 0)
 		{
 			emu_printf("sat_malloc1 ");
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
@@ -1466,7 +1475,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
-		|| strncmp("logo", entry->name, 4)
+		|| strncmp("logo", entry->name, 4) == 0 
 		)
 		{
 			emu_printf("_scratchBuffer  ");

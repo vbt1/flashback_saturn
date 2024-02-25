@@ -652,7 +652,7 @@ void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 }
 
 void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-//	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
+
 	const int offset2 = y * buf->pitch/2 + x/2;
 	uint8_t col;
 
@@ -665,11 +665,12 @@ void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color)
 		break;
 	}
 
+	col&=0x0f;// -= 0xD0;
 	
-		if(x&1)
-			buf->ptr[offset2] |= (0x02);
-		else
-			buf->ptr[offset2] |= (0x02<<4);
+	if(x&1)
+		buf->ptr[offset2] |= col;
+	else
+		buf->ptr[offset2] |= (col<<4);
 }
 
 
@@ -746,13 +747,12 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 
-#ifdef COLOR_4BPP	
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.COLR=  0; //0x40; //perso  // 0x20 // icones
-#else
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	if(ptrsp==_txt1Layer)
+		user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	else
+		user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+
 	user_sprite.COLR=  0;
-#endif	
 	user_sprite.SRCA= ((int)ptrsp)/8;
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=x;
@@ -763,25 +763,6 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 }
 
 #ifndef SLAVE_SOUND
-void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
-{
-//SWAP(_txt1Layer, _txt2Layer);
-	SPRITE user_sprite;
-	user_sprite.CTRL=0;
-//	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.SRCA= (((int)_txt1Layer)-SpriteVRAM) / 8;
-	user_sprite.COLR=0;
-
-	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.XA=x;
-	user_sprite.YA=y;
-	user_sprite.GRDA=0;	
-	
-	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
-//	memset((uint8_t *)_txt2Layer,0, w*h);
-}
-
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
 //	TEXTURE *txptr = (TEXTURE *)tex_spr;

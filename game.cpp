@@ -1000,7 +1000,7 @@ _vid._w=480;
 
 _vid._w=512;
 #ifndef SLAVE_SOUND
-		_vid.SAT_displayText(-220, -128, h-1, 480);
+		_vid.SAT_displaySprite(_vid._txt1Layer,-220, -128, h-1, 480);
 //		_vid.SAT_displayCutscene(0, 0, 255, 480);
 		_vid.SAT_displayCutscene(0,0, 0, 128, 240);//, _res._scratchBuffer);
 		slSynch();
