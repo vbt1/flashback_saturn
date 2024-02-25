@@ -89,7 +89,8 @@ void Cutscene::updatePalette() {
 
 void Cutscene::updateScreen() {
 
-	sync(_frameDelay - 1);
+	sync(_frameDelay - 3);
+//	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 //	_vid->SAT_displayCutscene((int)_frontPage==SpriteVRAM + cgaddress,0, 0, 128, 240);
 #ifndef SLAVE_SOUND	
@@ -100,8 +101,8 @@ void Cutscene::updateScreen() {
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
-//	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
-//	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
+	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
 #endif
 //	_stub->updateScreen(0);
 }
@@ -181,7 +182,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			++len;
 		}
 	}
-	Video::drawCharFunc dcf = _vid->_drawChar;
+	Video::drawCharFunc dcf = _vid->_drawChar4Bpp;
 	const uint8_t *fnt = _res->_fnt;
 	uint16_t lastSep = 0;
 	if (textJustify != kTextJustifyLeft) {
@@ -196,22 +197,22 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	int16_t yPos = y/2;
 	int16_t xPos = x/2;
 	if (textJustify != kTextJustifyLeft) {
-		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W/2);
+		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W);
 	}
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
-			yPos += (Video::CHAR_H*2);
+			yPos += (Video::CHAR_H);
 			xPos = x/2;
 			if (textJustify != kTextJustifyLeft) {
-				xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W*2);
+				xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W);
 			}
 		} else if (p[i] == 0x20) {
-			xPos += (Video::CHAR_W*2);
+			xPos += (Video::CHAR_W);
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
 			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
-			xPos += (Video::CHAR_W*2);
+			xPos += (Video::CHAR_W);
 		}
 	}
 }
@@ -462,7 +463,7 @@ void Cutscene::op_drawCaptionText() {
 //				drawText(0, 129, str, 0xEF, _auxPage, kTextJustifyAlign);
 _vid->_w=480;
 				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
-				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
+//				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
 				_vid->SAT_displayText(-220, 129, h, 480);
@@ -990,7 +991,7 @@ _vid->_w=480;
 				drawText(0, 0, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-//				_vid->SAT_displayText(-240+x, -129+y, 128, 480);
+				_vid->SAT_displayText(-240+x, -129+y, 168, 480);
 #endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
@@ -1201,11 +1202,6 @@ void Cutscene::unload() {
 
 void Cutscene::prepare() {
 //	_frontPage = _vid->_frontLayer;
-#if 0
-	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
-	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
-	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
-#else
 	_frontPage = (uint8_t *)_res->_scratchBuffer;
 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
@@ -1213,7 +1209,6 @@ void Cutscene::prepare() {
 	memset((uint8_t *)(SpriteVRAM + cgaddress), 0x00, IMG_SIZE);
 	memset((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2), 0x00, IMG_SIZE);
 	memset((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2), 0x00, IMG_SIZE);	
-#endif
 	
 	memset(_auxPage, 0x00, IMG_SIZE);
 	memset(_backPage, 0x00, IMG_SIZE);

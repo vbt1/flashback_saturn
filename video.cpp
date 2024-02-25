@@ -70,6 +70,7 @@ Video::Video(Resource *res, SystemStub *stub)
 		break;
 	case kResourceTypeMac:
 		_drawChar = &Video::MAC_drawStringChar;
+		_drawChar4Bpp = &Video::MAC_drawStringChar4Bpp;
 		break;
 	}
 }
@@ -531,6 +532,28 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
 }
 
+void Video::MAC_drawStringChar4Bpp(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+//	emu_printf("Video::MAC_drawStringChar\n");	
+	DecodeBuffer buf;
+	
+	memset(&buf, 0, sizeof(buf));
+	buf.ptr = dst;
+	buf.w = _w;
+	buf.pitch = pitch;
+	buf.h = _h;
+	buf.x = x * _layerScale;
+	buf.y = y * _layerScale;
+	
+//	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
+	buf.setPixel = Video::MAC_setPixelFont4Bpp;
+	_MAC_fontFrontColor = color;
+	_MAC_fontShadowColor = _charShadowColor;
+//	assert(chr >= 32);
+	if(chr<32)
+		return;
+	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
+}
+
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
@@ -556,7 +579,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W*2, y, fnt, col, c);
+		(this->*_drawChar4Bpp)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W, y, fnt, col, c);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
@@ -648,6 +671,40 @@ void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	}
 }
 
+void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
+//	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
+	const int offset2 = y * buf->pitch/2 + x/2;
+	
+		if(x&1)
+			buf->ptr[offset2] |= (0x02);
+		else
+			buf->ptr[offset2] |= (0x02<<4);
+/*
+		if(x&1)	
+	switch (color) {
+	case 0xC0:
+		buf->ptr[offset] = _MAC_fontShadowColor;
+		break;
+	case 0xC1:
+		buf->ptr[offset] = _MAC_fontFrontColor;
+		break;
+	}
+*/	
+/*
+	const int offset = y * buf->pitch + x;
+	
+	switch (color) {
+	case 0xC0:
+		buf->ptr[offset] = _MAC_fontShadowColor;
+		break;
+	case 0xC1:
+		buf->ptr[offset] = _MAC_fontFrontColor;
+		break;
+	}
+*/
+}
+
+
 void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 	uint8_t *p = _frontLayer + y * _layerScale * _w + x * _layerScale;
 	for (int j = 0; j < h * _layerScale; ++j) {
@@ -718,9 +775,6 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
-//	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-//	*txptr = TEXDEF(w, h, 0);
-//SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 
@@ -743,12 +797,11 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 #ifndef SLAVE_SOUND
 void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 {
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-	*txptr = TEXDEF(w, h, 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+//	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= (((int)_txt1Layer)-SpriteVRAM) / 8;
 	user_sprite.COLR=0;
 

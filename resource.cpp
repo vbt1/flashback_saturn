@@ -1399,7 +1399,7 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 }
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
-//		emu_printf("decodeResourceMacText        \n");
+		emu_printf("decodeResourceMacText        \n");
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
@@ -1417,10 +1417,10 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-//		emu_printf("decodeResourceMacData 1       \n");	
+		emu_printf("decodeResourceMacData 1       \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
-//		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
+		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
@@ -1457,20 +1457,19 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 	} else {
 
 		if(strstr(entry->name,"names") !=NULL
-		|| strcmp("Flashback strings", entry->name) == 0)
+		|| strcmp("Flashback strings", entry->name) == 0
+		|| strncmp("Movie", entry->name, 5) == 0)
 		{
-				emu_printf("sat_malloc1 ");
+			emu_printf("sat_malloc1 ");
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 		}		
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
-		|| strncmp("Movie", entry->name, 5) == 0 
 		|| strncmp("logo", entry->name, 4)
-//		|| strcmp("Flashback strings", entry->name) == 0
 		)
 		{
-//			emu_printf("_scratchBuffer ");
+			emu_printf("_scratchBuffer  ");
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}

@@ -1586,7 +1586,7 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 }
 
 void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
-//	emu_printf("Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)\n", dataPtr, pos_x, pos_y, a, b, flags);
+	emu_printf("Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)\n", dataPtr, pos_x, pos_y, a, b, flags);
 
 	bool sprite_mirror_y = false;
 	if (b & 0x40) {
