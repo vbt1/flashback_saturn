@@ -548,7 +548,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 }
 
 const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col) {
-//	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+	emu_printf("Video::drawString(%s\n", str);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;	
 	while (1) {
@@ -718,9 +718,6 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
-//	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-//	*txptr = TEXDEF(w, h, 0);
-//SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 
@@ -743,8 +740,6 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 #ifndef SLAVE_SOUND
 void Video::SAT_displayText(int x, int y, unsigned short h, unsigned short w)
 {
-	TEXTURE *txptr = (TEXTURE *)&tex_spr[1]; 
-	*txptr = TEXDEF(w, h, 0);
 //SWAP(_txt1Layer, _txt2Layer);
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
@@ -786,7 +781,7 @@ void Video::SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w
 //	user_sprite.XB=user_sprite.XA+(w*1);
 //	user_sprite.YB=user_sprite.YA+(h*1);
 	user_sprite.GRDA=0;	
-	memcpy((void *)(SpriteVRAM + cgaddress),(void *)_frontPage, h*w);
+//	memcpy((void *)(SpriteVRAM + cgaddress),(void *)_frontPage, h*w);
 	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 

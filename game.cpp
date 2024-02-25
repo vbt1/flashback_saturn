@@ -1790,7 +1790,7 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 	case kResourceTypeMac:
-emu_printf("MAC_unloadLevelData\n");
+//emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram;
 	hwram_screen = NULL;
 	position_vram = 0;
@@ -1799,8 +1799,7 @@ emu_printf("MAC_unloadLevelData\n");
 //	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library	
 //heapWalk();		
 
-emu_printf("MAC_unloadLevelData\n");
-emu_printf("_res._monster %p\n",_res._monster);
+//emu_printf("_res._monster %p\n",_res._monster);
 //	sat_free(_res._monster);
 emu_printf("_res._spc %p\n",_res._spc);	
 	sat_free(_res._spc);
@@ -1873,7 +1872,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 	pge_resetMessages();
 	_validSaveState = false;
 /* // vbt à remettre ???	
-emu_printf("vbt playmusic loadLevelData\n");
+//emu_printf("vbt playmusic loadLevelData\n");
 //	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre, le seul à garder
 	if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 		_mix.unpauseMusic(); // vbt : on reprend où la musique était

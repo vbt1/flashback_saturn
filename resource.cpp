@@ -41,7 +41,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 
 	
-emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
+//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
