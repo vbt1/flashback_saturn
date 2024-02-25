@@ -70,7 +70,6 @@ Video::Video(Resource *res, SystemStub *stub)
 		break;
 	case kResourceTypeMac:
 		_drawChar = &Video::MAC_drawStringChar;
-		_drawChar4Bpp = &Video::MAC_drawStringChar4Bpp;
 		break;
 	}
 }
@@ -483,7 +482,7 @@ void Video::drawChar(uint8 c, int16 y, int16 x) {
 	}
 }
 
-void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
 	dst += y * pitch + x;
 //	assert(chr >= 32);
 	if(chr < 32)
@@ -510,7 +509,7 @@ void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8
 static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
-void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
 //	emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf;
 	
@@ -523,29 +522,10 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.y = y * _layerScale;
 	
 //	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-	buf.setPixel = Video::MAC_setPixelFont;
-	_MAC_fontFrontColor = color;
-	_MAC_fontShadowColor = _charShadowColor;
-//	assert(chr >= 32);
-	if(chr<32)
-		return;
-	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
-}
-
-void Video::MAC_drawStringChar4Bpp(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-//	emu_printf("Video::MAC_drawStringChar\n");	
-	DecodeBuffer buf;
-	
-	memset(&buf, 0, sizeof(buf));
-	buf.ptr = dst;
-	buf.w = _w;
-	buf.pitch = pitch;
-	buf.h = _h;
-	buf.x = x * _layerScale;
-	buf.y = y * _layerScale;
-	
-//	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-	buf.setPixel = Video::MAC_setPixelFont4Bpp;
+	if (is4Bpp)
+		buf.setPixel = Video::MAC_setPixelFont4Bpp;
+	else
+		buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
 //	assert(chr >= 32);
@@ -563,7 +543,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c, 0);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
@@ -579,7 +559,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar4Bpp)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W, y, fnt, col, c);
+		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W, y, fnt, col, c, 1);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
@@ -589,7 +569,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color) {
 	const uint8_t *fnt = _res->_fnt;
 	for (int i = 0; i < len; ++i) {
-		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
+		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i], 0);
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H , GAMESCREEN_W * GAMESCREEN_H * 4);
 }
@@ -674,34 +654,22 @@ void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 //	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
 	const int offset2 = y * buf->pitch/2 + x/2;
+	uint8_t col;
+
+	switch (color) {
+	case 0xC0:
+		col = _MAC_fontShadowColor;
+		break;
+	case 0xC1:
+		col = _MAC_fontFrontColor;
+		break;
+	}
+
 	
 		if(x&1)
 			buf->ptr[offset2] |= (0x02);
 		else
 			buf->ptr[offset2] |= (0x02<<4);
-/*
-		if(x&1)	
-	switch (color) {
-	case 0xC0:
-		buf->ptr[offset] = _MAC_fontShadowColor;
-		break;
-	case 0xC1:
-		buf->ptr[offset] = _MAC_fontFrontColor;
-		break;
-	}
-*/	
-/*
-	const int offset = y * buf->pitch + x;
-	
-	switch (color) {
-	case 0xC0:
-		buf->ptr[offset] = _MAC_fontShadowColor;
-		break;
-	case 0xC1:
-		buf->ptr[offset] = _MAC_fontFrontColor;
-		break;
-	}
-*/
 }
 
 
