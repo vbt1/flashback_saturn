@@ -106,7 +106,7 @@ struct Video {
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
 	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);
 //<<<<<<< HEAD
-	void SAT_displayCutscene(int x, int y, unsigned short h, unsigned short w, uint8_t *_frontPage);	
+	void SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w);	
 //=======
 //	void SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsigned short w);	
 //>>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7

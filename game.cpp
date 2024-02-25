@@ -1002,7 +1002,7 @@ _vid._w=512;
 #ifndef SLAVE_SOUND
 		_vid.SAT_displayText(-220, -128, h-1, 480);
 //		_vid.SAT_displayCutscene(0, 0, 255, 480);
-		_vid.SAT_displayCutscene(0, 0, 128, 240, _res._scratchBuffer);
+		_vid.SAT_displayCutscene(0,0, 0, 128, 240);//, _res._scratchBuffer);
 		slSynch();
 		memset((uint8_t *)_vid._txt2Layer,0, 480*h);	
 		SWAP(_vid._txt1Layer, _vid._txt2Layer);		
