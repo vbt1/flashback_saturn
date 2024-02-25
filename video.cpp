@@ -782,41 +782,17 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 		user_sprite.SRCA=cgaddress8;
 		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);		
 	}
-//	memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-
-//	user_sprite.SRCA=txptr->CGadr;
-//	user_sprite.CTRL=0; //FUNC_Sprite | _ZmCC;
-//	user_sprite.SRCA=txptr->CGadr;
-//	user_sprite.SRCA=AUX_RAM_VDP2/8;
-
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
-#ifdef NOTSCALED
-	user_sprite.CTRL=0;
-	user_sprite.XA=-(120*2)-1;
-	user_sprite.YA=-(64*2)-1;
-#else
 	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
 	user_sprite.XA=x;
 	user_sprite.YA=y;
 
 	user_sprite.XB=user_sprite.XA+(w<<1);
 	user_sprite.YB=user_sprite.YA+(h<<1);
-#endif
 
-//	user_sprite.XB=user_sprite.XA+(w*1);
-//	user_sprite.YB=user_sprite.YA+(h*1);
 	user_sprite.GRDA=0;	
-//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
-/*
-	_frontPage = (uint8_t *)(SpriteVRAM + cgaddress);
-	_backPage  = (uint8_t *)(SpriteVRAM + BACK_RAM_VDP2);
-	_auxPage   = (uint8_t *)(SpriteVRAM + AUX_RAM_VDP2);
-*/	
-	
 }
 #endif
