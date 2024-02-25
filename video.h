@@ -67,6 +67,7 @@ struct Video {
 	bool _fullRefresh;
 //	uint8_t _shakeOffset;
 	drawCharFunc _drawChar;
+	drawCharFunc _drawChar4Bpp;
 	
 	Video(Resource *res, SystemStub *stub);
 	~Video();
@@ -91,6 +92,7 @@ struct Video {
 	void drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
 	void PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);
 	void MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);	
+	void MAC_drawStringChar4Bpp(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);	
 	void drawChar(uint8_t c, int16 y, int16 x);
 	const char *drawString(const char *str, int16_t x, int16_t y, uint8_t col);
 	const char *drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col);
@@ -101,6 +103,7 @@ struct Video {
 	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
