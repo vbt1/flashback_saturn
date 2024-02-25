@@ -189,7 +189,8 @@ void Game::run() {
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
-		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé	
+// vbt : refaire le chargement des sons
+//		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé	
 		break;
 	}
 
@@ -1717,7 +1718,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 		case kResourceTypeDOS: {
 				const char *name = _monsterNames[0][_curMonsterNum];
 				_res.load(name, Resource::OT_SPRM);
-				_res.load_SPR_OFF(name, _res._sprm);
+//				_res.load_SPR_OFF(name, _res._sprm);
 				_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
 			}
 			break;

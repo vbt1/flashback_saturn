@@ -42,13 +42,13 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 
 	
-//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
+emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
 	static const int kBankDataSize = 0x7000;
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
-//emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);	
+emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);	
 	if (!_bankData) {
 		error("Unable to allocate bank data buffer");
 	}
@@ -58,7 +58,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 Resource::~Resource() {
 //			emu_printf("vbt Resource::~Resource free all resources !!!!!\n");	
-	clearLevelRes();
+/*	clearLevelRes();
 	MAC_unloadLevelData();
 	sat_free(_fnt);
 	sat_free(_icn);
@@ -76,7 +76,7 @@ Resource::~Resource() {
 	sat_free(_sfxList);
 	sat_free(_bankData);
 	delete _aba;
-	delete _mac;
+	delete _mac;*/
 }
 
 
@@ -160,13 +160,14 @@ void Resource::clearLevelRes() {
 //		sat_free(_cine_txt);
 	}
 }
-
+/*
 void Resource::load_DEM(const char *filename) {
 	sat_free(_dem); _dem = 0;
 	_demLen = 0;
 	File f;
 	if (f.open(filename, _dataPath, "rb")) {
 		_demLen = f.size();
+emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);		
 		_dem = (uint8_t *)sat_malloc(_demLen);
 		if (_dem) {
 			f.read(_dem, _demLen);
@@ -192,7 +193,7 @@ void Resource::load_FIB(const char *fileName) {
 	if (f.open(_entryName, _dataPath, "rb")) {
 		_numSfx = f.readUint16LE();
 		_sfxList = (SoundFx *)std_malloc(_numSfx * sizeof(SoundFx));
-//emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);			
+emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);			
 		if (!_sfxList) {
 			error("Unable to allocate SoundFx table");
 		}
@@ -235,7 +236,7 @@ void Resource::load_FIB(const char *fileName) {
 		error("Can't open '%s'", _entryName);
 	}
 }
-
+*/
 void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 //	debug(DBG_RES, "Resource::load_MAP_menu('%s')", fileName);
 	static const int kMenuMapSize = 0x3800 * 4;
@@ -284,7 +285,7 @@ void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 		error("Can't open '%s'", _entryName);
 	}
 }
-
+/*
 void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 //	debug(DBG_RES, "Resource::load_SPR_OFF('%s')", fileName);
 	snprintf(_entryName, sizeof(_entryName), "%s.OFF", fileName);
@@ -322,7 +323,7 @@ void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 	}
 	error("Cannot load '%s'", _entryName);
 }
-
+*/
 static const char *getCineName(Language lang, ResourceType type) {
 	switch (lang) {
 	case LANG_FR:
@@ -498,6 +499,8 @@ static const char *getTextBin(Language lang, ResourceType type) {
 }
 
 void Resource::unload(int objType) {
+	
+	emu_printf("Resource::unload(int objType)\n");
 	switch (objType) {
 	case OT_CMD:
 		sat_free(_cmd);
@@ -520,7 +523,7 @@ void Resource::unload(int objType) {
 }
 
 void Resource::load(const char *objName, int objType, const char *ext) {
-//	emu_printf("Resource::load('%s', %d)\n", objName, objType);
+	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
 	File f;
 		
@@ -928,6 +931,7 @@ void Resource::load_OBC(File *f) {
 }
 
 void Resource::decodeOBJ(const uint8_t *tmp, int size) {
+	emu_printf("Resource::decodeOBJ\n");
 	uint32_t offsets[256];
 	int tmpOffset = 0;
 	_numObjectNodes = 230;
@@ -1094,7 +1098,7 @@ void Resource::load_CMD(File *pf) {
 }
 
 void Resource::load_POL(File *pf) {
-//	debug(DBG_RES, "Resource::load_POL()");
+emu_printf("Resource::load_POL()\n");
 	sat_free(_pol);
 	int len = pf->size();
 	_pol = (uint8_t *)sat_malloc(len);
@@ -1106,6 +1110,7 @@ void Resource::load_POL(File *pf) {
 }
 
 void Resource::load_CMP(File *pf) {
+emu_printf("Resource::load_CMP()\n");	
 	sat_free(_pol);
 	sat_free(_cmd);
 	int len = pf->size();
@@ -1808,10 +1813,12 @@ static void stringLowerCase(char *p) {
 
 void Resource::MAC_unloadCutscene() {
 //	emu_printf("MAC_unloadCutscene\n");	
-	sat_free(_cmd);
-	_cmd = 0;
+// vbt on efface le plus bas puis le plus haut
 	sat_free(_pol);
 	_pol = 0;
+	sat_free(_cmd);
+	_cmd = 0;
+
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
@@ -1881,7 +1888,7 @@ void Resource::MAC_loadSounds() {
 				_sfxList[i].len = READ_BE_UINT32(buf + 0x12);
 				_sfxList[i].freq = READ_BE_UINT16(buf + 0x16);
 				_sfxList[i].data = p;
-				debug(DBG_RES, "sfx #%d len %d datasize %d freq %d", i, _sfxList[i].len, dataSize, _sfxList[i].freq);
+				emu_printf("sfx #%d len %d datasize %d freq %d\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq);
 			}
 		}
 	}

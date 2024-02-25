@@ -39,13 +39,13 @@ void *sat_calloc(size_t nmemb, size_t size) {
 	if (mem == NULL) {
 //		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
 	}
-//	emu_printf("CALLOC: addr: %p, size: %u\n", mem, size);
+	emu_printf("CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 }
 
 void *sat_malloc(size_t size) {
 	void *mem = NULL;
-	size = (size + 7) & ~7; // pour alignement
+	size = (size + 1) & ~1; // pour alignement
 	
 	mem = (void*)MEM_Malloc(size);
 
@@ -61,6 +61,7 @@ void *sat_malloc(size_t size) {
 
 //		}
 	}
+		emu_printf("MEM_MALLOC: size: %u - %p\n", size, mem);	
 	return (void*)((int)mem & 0x002FFFFF);
 }
 
@@ -70,8 +71,11 @@ void sat_free(void *ptr) {
 
 	if(ptr == NULL || ptr == hwram)
 		return;
-	if(((int)ptr) == 0x25C60000 || ((int)ptr) == 0x25C04000 || ((int)ptr) == (0x25C80000-60000)) 
+	
+//	if(((int)ptr) == 0x25C60000 || ((int)ptr) == 0x25C04000 || ((int)ptr) == (0x25C80000-60000)) 
+	if((int)ptr == 0x25C04000) 
 	{
+// 	vbt : 0x25C04000 toujour utilisé	
 //		slPrint("((int)ptr) == 0x25C60000 || ((int)ptr) == 0x25C04000",slLocate(3,21));
 //		char toto[50];
 //		sprintf(toto,"address = %p",ptr);

@@ -38,6 +38,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
+emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
 	_frontLayer = (uint8 *)sat_malloc(_w * _h);
 
 	memset(_frontLayer, 0, _w * _h);

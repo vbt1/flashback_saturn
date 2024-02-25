@@ -73,7 +73,8 @@ void ResourceMac::load() {
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
-//emu_printf("ResourceMac::loadResourceFork\n");	
+//emu_printf("ResourceMac::loadResourceFork\n");
+// vbt : consomme 40ko de ram	
 	_f.seek(resourceOffset);
 	_dataOffset = resourceOffset + _f.readUint32BE();
 	uint32_t mapOffset = resourceOffset + _f.readUint32BE();
@@ -86,7 +87,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
 //int xx = 0;	
-//emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));	
+emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));	
 	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
