@@ -130,18 +130,27 @@ bool Resource::fileExists(const char *filename) {
 }
 
 void Resource::clearLevelRes() {
-//emu_printf("vbt clearLevelRes\n");		
+//emu_printf("vbt clearLevelRes\n");	
+emu_printf("_tbn\n");	
 	sat_free(_tbn); _tbn = 0;
+emu_printf("_mbk\n");		
 	sat_free(_mbk); _mbk = 0;
+emu_printf("_pal\n");		
 	sat_free(_pal); _pal = 0;
+emu_printf("_map\n");		
 	sat_free(_map); _map = 0;
+emu_printf("_lev\n");		
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
+emu_printf("_sgd\n");	
 	sat_free(_sgd); _sgd = 0;
+emu_printf("_bnq\n");
 	sat_free(_bnq); _bnq = 0;
-	sat_free(_ani); _ani = 0;
+emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
+/*	sat_free(_ani);*/ _ani = 0; // hwram
+
 	free_OBJ();
-	
+
 	if(_type==kResourceTypeMac)
 	{
 //	emu_printf("MAC_unloadLevelData\n");
@@ -149,7 +158,7 @@ void Resource::clearLevelRes() {
 		sat_free(_monster);
 //	emu_printf("_res._spc %p\n",_spc);	
 		sat_free(_spc);	
-		sat_free(_ani);
+/*		sat_free(_ani);*/
 		MAC_unloadLevelData();
 	//	sat_free(_res._icn);// icones du menu à ne pas vider
 
@@ -959,17 +968,17 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	for (int i = 0; i < _numObjectNodes; ++i) {
 //slPrintHex(i,slLocate(3,14));		
 		if (prevOffset != offsets[i]) {
-//slPrint("sat_malloc",slLocate(3,15));			
+emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
 //slPrintHex(i,slLocate(3,16));
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 			if (!on) {
 //slPrint("Unable to allocate ObjectNode",slLocate(3,17));				
-				error("Unable to allocate ObjectNode num=%d", i);
+				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
 			}
 			const uint8_t *objData = tmp + offsets[i];
 			on->num_objects = _readUint16(objData); objData += 2;
 			assert(on->num_objects == objectsCount[iObj]);
-//slPrint("sat_malloc(sizeof(Object) * on->num_objects)",slLocate(3,17));			
+emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 //slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
 //if(!on->objects)			
@@ -989,7 +998,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 				obj->opcode_arg1 = _readUint16(objData); objData += 2;
 				obj->opcode_arg2 = _readUint16(objData); objData += 2;
 				obj->opcode_arg3 = _readUint16(objData); objData += 2;
-//				debug(DBG_RES, "obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
+//				emu_printf("obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X\n", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
 			}
 			++iObj;
 			prevOffset = offsets[i];
@@ -1468,6 +1477,11 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 
 		if(strncmp("Movie", entry->name, 5) == 0)
 		{
+			if(hwram_screen==NULL)
+			{
+				hwram_screen=hwram_ptr;
+				hwram_ptr+=45000;
+			}			
 			emu_printf("hwram_screen %p\n",hwram_screen);			
 			data = (uint8_t *)hwram_screen;
 		}
@@ -1651,7 +1665,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 }
 
 void Resource::MAC_unloadLevelData() {
-//	emu_printf("unload _ani %p\n",_ani);	
+	emu_printf("unload _ani %p\n",_ani);	
 	sat_free(_ani); // vbt est dans scratchbuff
 //	emu_printf("unload _ani %p\n",_ani);	
 	_ani = 0;

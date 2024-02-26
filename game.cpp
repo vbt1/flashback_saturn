@@ -470,11 +470,12 @@ void Game::mainLoop() {
 		if (_deathCutsceneCounter == 0) {
 // vbt : clean front layer	
 			memset(_vid._frontLayer, 0x00, 512*448);
+			memset(_vid._backLayer, 0x00, 512*448);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //			_stub->updateScreen(0);
-	
+			_res.clearLevelRes(); // vbt : ajout, on a perdu on libère tout	
 			playCutscene(_cut._deathCutsceneId);
-			_res.clearLevelRes(); // vbt : ajout, on a perdu on libère tout
+
 #ifdef HEAP_WALK
 heapWalk();
 #endif
@@ -1044,6 +1045,7 @@ _vid._w=512;
 		}
 		
 		if (_stub->_pi.enter) {
+			_vid._layerScale=2;
 			_stub->_pi.enter = false;
 			return (current_color == 0);
 		}

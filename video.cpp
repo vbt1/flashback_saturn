@@ -560,7 +560,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W, y, fnt, col, c, 1);
+		(this->*_drawChar)((uint8_t *)_txt1Layer, _w, x + len * CHAR_W*2, y, fnt, col, c, 1);
 		++len;
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
