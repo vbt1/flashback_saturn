@@ -752,7 +752,8 @@ void Game::playCutscene(int id) {
 			_mix.stopMusic();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
-//		slWindow(0 , 0 , 60 , 60 , 150 ,120 , 120);		
+		slScrWindow0(0 , 0 , 511 , 479 );
+		slScrWindowModeNbg0(win0_IN);
 		slSynch();  // vbt : permet l'affichage de sprites
 //		_vid._layerScale=2;		
 	}	
