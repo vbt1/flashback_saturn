@@ -33,7 +33,7 @@ extern "C" void __cxa_pure_virtual() { while (1); }
 
 void *sat_calloc(size_t nmemb, size_t size) {
 	void *mem = NULL;
-
+	size = (size + 1) & ~1; // pour alignement	
 	mem = (void*)MEM_Calloc(nmemb, size);
 
 	if (mem == NULL) {
@@ -104,7 +104,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	void *mem = NULL;
 
 	if(ptr == NULL) return NULL;
-	size = (size + 7) & ~7; // pour alignement
+	size = (size + 1) & ~1; // pour alignement
 	mem = (void*)MEM_Realloc(ptr, size);
 
 	if (mem == NULL) {
@@ -117,7 +117,7 @@ void *sat_realloc(void *ptr, size_t size) {
 
 void *std_malloc(size_t size) {
 	void *mem = NULL;
-	size = (size + 7) & ~7; // pour alignement	
+	size = (size + 1) & ~1; // pour alignement	
 	mem = (void*)malloc(size);
 
 	if (mem == NULL) {
@@ -133,7 +133,7 @@ void *std_malloc(size_t size) {
 
 void *std_calloc(size_t nmemb, size_t size) {
 	void *mem = NULL;
-
+	size = (size + 1) & ~1; // pour alignement	
 	mem = (void*)calloc(nmemb, size);
 
 	if (mem == NULL) {
