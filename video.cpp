@@ -756,7 +756,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	user_sprite.COLR=  0;
 	user_sprite.SRCA= ((int)ptrsp)/8;
 	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.XA=x;
+	user_sprite.XA=63+x;
 	user_sprite.YA=y;
 	user_sprite.GRDA=0;	
 	

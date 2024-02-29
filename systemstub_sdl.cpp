@@ -498,7 +498,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	slPriorityNbg1(6); // Game screen
 	slPrioritySpr0(5);
 	
-	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
+//	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
 	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
 //	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
@@ -514,8 +514,14 @@ void SystemStub_SDL::prepareGfxMode() {
 	VDP2_TVMD &= 0xFEFF;
 	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // à faire toujours en dernier
 	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
-	slScrWindow0(0 , 0 , 511 , 479 );
+	slScrWindow0(63 , 0 , 574 , 479 );
 	slScrWindowModeNbg0(win0_IN);
+	slScrWindow1(63 , 0 , 574 , 479 );
+	slScrWindowModeNbg1(win1_IN);
+	
+	slScrPosNbg0(toFIXED(-63),0) ;
+	slScrPosNbg1(toFIXED(-63),0) ;
+
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config
 	return;
