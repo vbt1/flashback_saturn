@@ -991,7 +991,7 @@ _vid->_w=480;
 				drawText(0, 0, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-				_vid->SAT_displaySprite(_vid->_txt1Layer,-240+x, -129+y, 168, 480);
+				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -129+y, 168, 480);
 #endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen

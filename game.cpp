@@ -602,7 +602,7 @@ heapWalk();
 	}
 	if (_stub->_pi.escape) {
 		_stub->_pi.escape = false;
-		if (_demoBin != -1 /*|| handleConfigPanel()*/) {
+		if (_demoBin != -1 || handleConfigPanel()) {
 			_endLoop = true;
 			return;
 		}
@@ -860,7 +860,7 @@ void Game::showFinalScore() {
 		_stub->sleep(100);
 	}
 }
-/*
+
 bool Game::handleConfigPanel() {
 	static const int x = 7;
 	static const int y = 10;
@@ -871,25 +871,68 @@ bool Game::handleConfigPanel() {
 	_vid._charFrontColor = 0xEE;
 	_vid._charTransparentColor = 0xFF;
 
-	_vid.drawChar(0x81, y, x);
-	for (int i = 1; i < w; ++i) {
-		_vid.drawChar(0x85, y, x + i);
-	}
-	_vid.drawChar(0x82, y, x + w);
-	for (int j = 1; j < h; ++j) {
-		_vid.drawChar(0x86, y + j, x);
-		for (int i = 1; i < w; ++i) {
-			_vid._charTransparentColor = 0xE2;
-			_vid.drawChar(0x20, y + j, x + i);
+	// the panel background is drawn using special characters from FB_TXT.FNT
+	static const bool kUseDefaultFont = true;
+
+	switch (_res._type) {
+/*	case kResourceTypeAmiga:
+		for (int i = 0; i < h; ++i) {
+			for (int j = 0; j < w; ++j) {
+				_vid.fillRect(Video::CHAR_W * (x + j), Video::CHAR_H * (y + i), Video::CHAR_W, Video::CHAR_H, 0xE2);
+			}
 		}
-		_vid._charTransparentColor = 0xFF;
-		_vid.drawChar(0x87, y + j, x + w);
+		break;
+	case kResourceTypeDOS:
+	case kResourceTypePC98:
+		// top-left rounded corner
+		_vid.DOS_drawChar(0x81, y, x, kUseDefaultFont);
+		// top-right rounded corner
+		_vid.DOS_drawChar(0x82, y, x + w, kUseDefaultFont);
+		// bottom-left rounded corner
+		_vid.DOS_drawChar(0x83, y + h, x, kUseDefaultFont);
+		// bottom-right rounded corner
+		_vid.DOS_drawChar(0x84, y + h, x + w, kUseDefaultFont);
+		// horizontal lines
+		for (int i = 1; i < w; ++i) {
+			_vid.DOS_drawChar(0x85, y, x + i, kUseDefaultFont);
+			_vid.DOS_drawChar(0x88, y + h, x + i, kUseDefaultFont);
+		}
+		for (int j = 1; j < h; ++j) {
+			_vid._charTransparentColor = 0xFF;
+			// left vertical line
+			_vid.DOS_drawChar(0x86, y + j, x, kUseDefaultFont);
+			// right vertical line
+			_vid.DOS_drawChar(0x87, y + j, x + w, kUseDefaultFont);
+			_vid._charTransparentColor = 0xE2;
+			for (int i = 1; i < w; ++i) {
+				_vid.DOS_drawChar(0x20, y + j, x + i, kUseDefaultFont);
+			}
+		}
+		break;*/
+	case kResourceTypeMac:
+		// top-left rounded corner
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x81,0);
+		// top-right rounded corner
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x82,0);
+		// bottom-left rounded corner
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x83,0);
+		// bottom-right rounded corner
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x84,0);
+		// horizontal lines
+		for (int i = 1; i < w; ++i) {
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + i), Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x85,0);
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + i), Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x88,0);
+		}
+		// vertical lines
+		for (int i = 1; i < h; ++i) {
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * (y + i), _res._fnt, _vid._charFrontColor, 0x86,0);
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * (y + i), _res._fnt, _vid._charFrontColor, 0x87,0);
+			for (int j = 1; j < w; ++j) {
+				_vid.fillRect(Video::CHAR_W * (x + j), Video::CHAR_H * (y + i), Video::CHAR_W, Video::CHAR_H, 0xE2);
+			}
+		}
+		break;
 	}
-	_vid.drawChar(0x83, y + h, x);
-	for (int i = 1; i < w; ++i) {
-		_vid.drawChar(0x88, y + h, x + i);
-	}
-	_vid.drawChar(0x84, y + h, x + w);
 
 	_menu._charVar3 = 0xE4;
 	_menu._charVar4 = 0xE5;
@@ -897,32 +940,22 @@ bool Game::handleConfigPanel() {
 	_menu._charVar2 = 0xEE;
 
 	_vid.fullRefresh();
-	enum { MENU_ITEM_LOAD = 1, MENU_ITEM_SAVE = 2, MENU_ITEM_CLEAR = 3, MENU_ITEM_SPEECH = 4, MENU_ITEM_ABORT = 5 };
-	uint8 colors[] = { 2, 3, 3, 3, 3, 3};
+	enum { MENU_ITEM_ABORT = 1, MENU_ITEM_LOAD = 2, MENU_ITEM_SAVE = 3 };
+	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
-
-	char tempStr[30];
-
-	sprintf(tempStr, "BLOCKS : %u", getFreeSaveBlocks());
-	_menu.drawString(tempStr, y + 15, 9, 1);
-
-	while (!_stub->_pi.quit && !_stub->_pi.escape) {
-
+	while (!_stub->_pi.quit) {
 		_menu.drawString(_res.getMenuString(LocaleData::LI_18_RESUME_GAME), y + 2, 9, colors[0]);
-		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 4, 9, colors[1]);
-		_menu.drawString(_res.getMenuString(LocaleData::LI_21_SAVE_GAME), y + 6, 9, colors[2]);
-		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 12, 9, colors[5]);
-		sprintf(tempStr, "CLEAR SLOTS");
-		_menu.drawString(tempStr, y + 8, 9, colors[3]);
-		sprintf(tempStr, "%s", vceEnabled? "MUTE SPEECH" : "UNMUTE SPEECH");
-		_menu.drawString(tempStr, y + 10, 9, colors[4]);
-
-		sprintf(tempStr, "%s : %d-%02d", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _currentLevel + 1, _stateSlot);
-		_menu.drawString(tempStr, y + 14, 9, 1);
+		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 4, 9, colors[1]);
+		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 6, 9, colors[2]);
+		_menu.drawString(_res.getMenuString(LocaleData::LI_21_SAVE_GAME), y + 8, 9, colors[3]);
+		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+		char buf[32];
+		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
+		_menu.drawString(buf, y + 10, 9, 1);
 
 		_vid.updateScreen();
 		_stub->sleep(80);
-		inp_update();
+//		inp_update();
 
 		int prev = current;
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -967,10 +1000,12 @@ bool Game::handleConfigPanel() {
 			break;
 		}
 	}
-	_vid.fullRefresh();
+	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
+	_vid.fullRefresh();	
+	
 	return (current == MENU_ITEM_ABORT);
 }
-*/
+
 bool Game::handleContinueAbort() {
 		
 	playCutscene(0x48);
@@ -1003,7 +1038,7 @@ _vid._w=480;
 
 _vid._w=512;
 #ifndef SLAVE_SOUND
-		_vid.SAT_displaySprite(_vid._txt1Layer,-220, -128, h-1, 480);
+		_vid.SAT_displaySprite(_vid._txt1Layer,-220-64, -128, h-1, 480);
 //		_vid.SAT_displayCutscene(0, 0, 255, 480);
 		_vid.SAT_displayCutscene(0,0, 0, 128, 240);//, _res._scratchBuffer);
 		slSynch();

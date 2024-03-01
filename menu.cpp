@@ -79,16 +79,32 @@ void Menu::drawString(const char *str, int16 y, int16 x, uint8 color) {
 	_vid->_charShadowColor = v3b;
 }
 
-void Menu::drawString2(const char *str, int16 y, int16 x) {
-//	debug(DBG_MENU, "Menu::drawString2()");
+void Menu::drawString2(const char *str, int16_t y, int16_t x) {
+	debug(DBG_MENU, "Menu::drawString2()");
+	int w = Video::CHAR_W;
+	int h = Video::CHAR_H;
 	int len = 0;
-	while (*str) {
-		_vid->drawChar((uint8)*str, y, x + len);
-		++str;
-		++len;
+	switch (_res->_type) {
+/*	case kResourceTypeAmiga:
+		for (; str[len]; ++len) {
+			_vid->AMIGA_drawStringChar(_vid->_frontLayer, _vid->_w, Video::CHAR_W * (x + len), Video::CHAR_H * y, _res->_fnt, _vid->_charFrontColor, (uint8_t)str[len]);
+		}
+		break;
+	case kResourceTypeDOS:
+	case kResourceTypePC98:
+		for (; str[len]; ++len) {
+			_vid->DOS_drawChar((uint8_t)str[len], y, x + len, true);
+		}
+		break;*/
+	case kResourceTypeMac:
+		for (; str[len]; ++len) {
+			_vid->MAC_drawStringChar(_vid->_frontLayer, _vid->_w, Video::CHAR_W * (x + len), Video::CHAR_H * y, _res->_fnt, _vid->_charFrontColor, (uint8_t)str[len],0);
+		}
+		break;
 	}
-//	_vid->markBlockAsDirty(x * 8, y * 8, len * 8, 8, _vid->_layerScale);
+//	_vid->markBlockAsDirty(x * w, y * h, len * w, h, _vid->_layerScale);
 }
+
 
 void Menu::loadPicture(const char *prefix) {
 //	emu_printf( "Menu::loadPicture('%s')\n", prefix);
