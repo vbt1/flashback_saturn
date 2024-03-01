@@ -952,8 +952,13 @@ bool Game::handleConfigPanel() {
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
 		_menu.drawString(buf, y + 10, 9, 1);
-
-		_vid.updateScreen();
+//xxxxxxxxxxxxxxxxxx
+//		_vid.updateScreen();
+		
+			_stub->copyRect(112, 160, 400, 286, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);		
+		
+//		_vid.fullRefresh();
 		_stub->sleep(80);
 //		inp_update();
 
@@ -1941,7 +1946,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
 		return;
 	}
-	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
+//	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
 //	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
