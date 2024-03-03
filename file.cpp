@@ -125,6 +125,7 @@ void File::seek(int32_t off) {
 void File::read(void *ptr, uint32_t len) {
 //emu_printf("File::read\n");		
 	_impl->read(ptr, len);
+//emu_printf("File::read done\n");
 }
 
 uint8_t File::readByte() {

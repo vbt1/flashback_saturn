@@ -28,7 +28,7 @@ static char satpath[25];
 //static char current_path[3][16];
 
 static Uint32 current_cached = 0;
- Uint8 cache[CACHE_SIZE];
+static Uint8 cache[CACHE_SIZE];
 //static Uint8* cache = (((Uint8*)PCM_ADDR) + PCM_SIZE);
 
 static Uint8  fully_cached = 0; // If file is cached from start to finish
@@ -441,7 +441,7 @@ partial_cache:
 	if(skip_bytes) {
 		read_buffer = (Uint8*)0x25C08000; //sat_malloc(tot_bytes);
 
-//emu_printf("sat_malloc in sat_fread %p %d\n",read_buffer,tot_bytes);		
+emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);		
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 //		sat_free(read_buffer);

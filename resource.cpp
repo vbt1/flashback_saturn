@@ -4,7 +4,7 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
  
-#define WITH_MEM_MALLOC 1
+//#define WITH_MEM_MALLOC 1
  
 extern "C"
 {
@@ -44,16 +44,33 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_mac = 0;
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
-	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 
+//#ifdef WITH_MEM_MALLOC
+#if 1
+	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+#else
+emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
+	_scratchBuffer = (uint8_t *)current_lwram;
+	current_lwram += kScratchBufferSize;
+#endif
 	
 emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
 	static const int kBankDataSize = 0x7000;
+
+
+//#ifdef WITH_MEM_MALLOC
+#if 1
+emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
-emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);	
+#else
+emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
+	_bankData = (uint8_t *)current_lwram;
+	current_lwram += kBankDataSize;
+#endif
+
 	if (!_bankData) {
 		error("Unable to allocate bank data buffer");
 	}
@@ -395,7 +412,8 @@ void Resource::load_CINE() {
 			File f;
 			if (f.open(_entryName, _dataPath, "rb")) {
 				int len = f.size();
-				_cine_txt = (uint8_t *)sat_malloc(len);
+				_cine_txt = (uint8_t *)sat_malloc(len)
+;
 				if (!_cine_txt) {
 					error("Unable to allocate cinematics text data");
 				}
@@ -984,6 +1002,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 #ifdef WITH_MEM_MALLOC
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
+emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
 			current_lwram += ((sizeof(ObjectNode)+1)&~1);
 #endif			
@@ -996,11 +1015,13 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 //emu_printf("on->num_objects = %d objectsCount[iObj] %d\n", on->num_objects,objectsCount[iObj]);			
 			assert(on->num_objects == objectsCount[iObj]);
 //emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
-#ifdef WITH_MEM_MALLOC
+//#ifdef WITH_MEM_MALLOC
+#if 1
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
+emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
 			on->objects = (Object *)current_lwram;
-			current_lwram += (((sizeof(Object) * on->num_objects)+1)&~1);
+			current_lwram += (sizeof(Object) * on->num_objects);
 #endif
 //slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
 //if(!on->objects)			
@@ -1503,14 +1524,20 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 			{
 				hwram_screen=hwram_ptr;
 				hwram_ptr+=45000;
+				emu_printf("hwram_screen %p\n",hwram_screen);
+				data = (uint8_t *)hwram_screen;
 			}			
-			emu_printf("hwram_screen %p\n",hwram_screen);			
-			data = (uint8_t *)hwram_screen;
+#ifdef WITH_MEM_MALLOC
+			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+#else
+			data = (uint8_t *)current_lwram;
+			current_lwram += ((_resourceMacDataSize+1)&~1);
+#endif
 		}
 		else if(strstr(entry->name,"names") !=NULL
 		|| strstr("strings", entry->name)  !=NULL)
 		{
-			emu_printf("sat_malloc1 ");
+			emu_printf("sat_malloc1 \n");
 #ifdef WITH_MEM_MALLOC
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
@@ -1552,7 +1579,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
-//			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
+			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
@@ -1872,7 +1899,7 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-//	emu_printf("MAC_loadCutscene\n");
+	emu_printf("MAC_loadCutscene\n");
 	MAC_unloadCutscene();
 	char name[32];
 
