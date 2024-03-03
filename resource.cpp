@@ -154,7 +154,7 @@ bool Resource::fileExists(const char *filename) {
 void Resource::clearLevelRes() {
 emu_printf("vbt clearLevelRes\n");
 
-//	current_lwram = (Uint8 *)0x200000;
+current_lwram = (Uint8 *)0x200000;
 
 emu_printf("_tbn\n");	
 	sat_free(_tbn); _tbn = 0;
