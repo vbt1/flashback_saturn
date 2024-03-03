@@ -57,6 +57,8 @@ static int detectVersion(const char *dataPath) {
 Uint8 *hwram = NULL;
 Uint8 *hwram_ptr = NULL;
 Uint8 *hwram_screen = NULL;
+Uint8 *current_lwram = (Uint8 *)0x200000;
+Uint8 *save_lwram = NULL;
 Uint32 position_vram = 0;
 unsigned int end1 = 534000;//538624;
 

@@ -128,7 +128,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	return NULL; // nothing to do...
 	}
 	Uint16 idx;
-	GFS_FILE *fp = NULL;
+	static GFS_FILE fp[1];
 
 	idx = 0;
 	if (path[idx] == '\0')
@@ -210,11 +210,11 @@ GFS_FILE *sat_fopen(const char *path) {
 		
 		// Encapsulate the file data
 //emu_printf("sat_malloc in sat_fopen %s ",path_token);			
-		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
+//		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
 //emu_printf("%p ***\n",fp);		
-		if (fp == NULL) {
+//		if (fp == NULL) {
 //			emu_printf("fp == NULL\n");
-			return NULL;}
+//			return NULL;}
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
 //slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));	
@@ -345,7 +345,7 @@ char *sat_match(const char *path) {
 int sat_fclose(GFS_FILE* fp) {
 //emu_printf("sat_free in sat_fclose\n");	
 	GFS_Close(fp->fid);
-	sat_free(fp);
+//	sat_free(fp);
 
 	return 0; // always ok :-)
 }

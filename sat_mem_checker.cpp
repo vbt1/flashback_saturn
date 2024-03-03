@@ -11,6 +11,8 @@ extern "C" {
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
 extern Uint8 *hwram;
+extern Uint8 *save_lwram;
+extern Uint8 *current_lwram;
 typedef double MemAlign;                        /* 64ビットのアライメント    */
 union mem_head {                                /* セルのヘッダ              */
     struct {
@@ -61,8 +63,10 @@ void *sat_malloc(size_t size) {
 
 //		}
 	}
-		emu_printf("MEM_MALLOC: size: %u - %p\n", size, mem);	
-	return (void*)((int)mem & 0x002FFFFF);
+	emu_printf("MEM_MALLOC: size: %u - %p\n", size, mem);
+	save_lwram = (uint8_t*)((int)mem & 0x002FFFFF);
+		
+	return (void*)save_lwram;
 }
 
 void sat_free(void *ptr) {
@@ -85,15 +89,16 @@ void sat_free(void *ptr) {
 	}
 
 
-	emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
+		
 
-	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
+	if((ptr >= ADR_WORKRAM_L_START+0x40000) && (ptr < ADR_WORKRAM_L_END))
 	{
+		emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 		MEM_Free(ptr);
 	}
 	else
 	{
-//		emu_printf("FREE: addr: %p\n", ptr);
+		emu_printf("FREE: addr: %p\n", ptr);
 		free(ptr);
 	}
 	ptr = NULL;

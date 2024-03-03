@@ -1,4 +1,4 @@
-
+#define WITH_MEM_MALLOC 1
 //#include <assert.h>
 extern "C" {
 #include <string.h>
@@ -16,6 +16,8 @@ extern "C" {
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
+extern Uint8 *save_lwram;
+extern Uint8 *current_lwram;
 extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
@@ -23,14 +25,23 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 //slPrint((char *)name,slLocate(3,22));
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
-
+#ifdef WITH_MEM_MALLOC
 	if(strstr(name," movie")   != NULL || strstr(name,"conditions") != NULL 
 	|| strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
+#else
+	if(strstr(name,"conditions") != NULL 
+	 || strstr(name," map") != NULL)
+#endif
 	{
 //emu_printf("0x25C60000 %d %s\n", decodedSize, name);
-		emu_printf("lwram %d %s\n", decodedSize, name);	
+		emu_printf("lwram_new %d %s\n", decodedSize, name);
 //		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
+#ifdef WITH_MEM_MALLOC
 		dst = (uint8_t *)sat_malloc(decodedSize);
+#else
+		dst = (uint8_t *)current_lwram;
+		current_lwram += ((decodedSize+1)&~1);
+#endif
 	}
 	else
 	{
@@ -41,11 +52,12 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 				hwram_screen=hwram_ptr;
 				hwram_ptr+=45000;
 			}
-			emu_printf("hwram %d %s\n", decodedSize, name);			
+			emu_printf("hwram1 %d %s\n", decodedSize, name);
 			dst = (uint8_t *)hwram_screen;
 		}
 		else
 		{
+#ifdef WITH_MEM_MALLOC
 			if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
 			{
 				emu_printf("hwram %d %s\n", decodedSize, name);
@@ -57,6 +69,34 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 				emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
 				dst = (uint8_t *)sat_malloc(decodedSize);
 			}
+#else
+			if(strstr(name,"movie")   != NULL || strstr(name,"polygons") != NULL)
+			{
+				emu_printf("lwram_old1 %d %s end %d\n", decodedSize, name,end1);
+				dst = (uint8_t *)sat_malloc(decodedSize);
+			}
+			else if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
+			{
+				emu_printf("hwram2 %d %s\n", decodedSize, name);
+				dst = (uint8_t *)hwram_ptr;
+				hwram_ptr+=decodedSize;
+			}
+			else
+			{
+				if(strncmp("Icons", name, 5) == 0 || strncmp("Person", name, 5) == 0 )
+				{
+					emu_printf("lwram_old2 %d %s end %d\n", decodedSize, name,end1);
+					dst = (uint8_t *)sat_malloc(decodedSize);
+				}
+				else
+				{
+					emu_printf("lwram_new %d %s end %d\n", decodedSize, name,end1);
+					dst = (uint8_t *)current_lwram;
+					current_lwram += ((decodedSize+1)&~1);
+				}
+//				dst = (uint8_t *)sat_malloc(decodedSize);
+			}
+#endif
 		}
 	}
 	
@@ -95,7 +135,8 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 			}
 		}
 	}
-//			emu_printf("dst %p\n",dst);
+	emu_printf("dst %p\n",dst);
+	
 	if(count != decodedSize)  // vbt ne pas toucher
 	{
 //		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);

@@ -82,7 +82,7 @@ uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 		}
 		
 		uint8_t *tmp = (uint8_t *)sat_malloc(e->compressedSize);
-//emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);			
+emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);			
 
 		if (!tmp) {
 //			emu_printf("Failed to allocate %d bytes\n", e->compressedSize);

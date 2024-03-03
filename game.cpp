@@ -126,8 +126,8 @@ void heapWalk(void)
 #define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
 #define LOW_WORK_RAM_SIZE 0x100000
 
-//static SAVE_BUFFER sbuf;
-//static Uint8 rle_buf[SAV_BUFSIZE];
+static SAVE_BUFFER sbuf;
+static Uint8 rle_buf[SAV_BUFSIZE];
 extern "C" {
 #include "sega_mem.h"
 }
@@ -764,11 +764,11 @@ void Game::inp_handleSpecialKeys() {
 		_pgeLive[0].life = 0x7FFF;
 	}
 	if (_stub->_pi.load) {
-//		loadGameState(_stateSlot);
+		loadGameState(_stateSlot);
 		_stub->_pi.load = false;
 	}
 	if (_stub->_pi.save) {
-//		saveGameState(_stateSlot);
+		saveGameState(_stateSlot);
 		_stub->_pi.save = false;
 	}
 	if (_stub->_pi.stateSlot != 0) {
@@ -2159,17 +2159,18 @@ void Game::inp_update() {
 void Game::makeGameDemoName(char *buf) {
 	sprintf(buf, "rs-level%d.demo", _currentLevel + 1);
 }
-
+*/
 void Game::makeGameStateName(uint8 slot, char *buf) {
 	sprintf(buf, "rs%d-%02d", _currentLevel + 1, slot);
 }
-*/
-/*
+
 bool Game::saveGameState(uint8 slot) {
 	bool success = false;
 	char stateFile[8];
 	char hdrdesc[10];
+emu_printf("a\n");
 	makeGameStateName(slot, stateFile);
+emu_printf("b\n");
 	sprintf(hdrdesc, "RS:%d-%d", _currentLevel + 1, _currentRoom);
 
 	// Needed structs
@@ -2178,25 +2179,35 @@ bool Game::saveGameState(uint8 slot) {
 	BupDir writetb;
 	BupDate datetb;
 	Uint8 *time;
-	Uint32 libBakBuf[4096];
-	Uint32 BackUpRamWork[2048];
-
+	Uint32 libBakBuf[4096] __attribute__((aligned (4)));
+	Uint32 BackUpRamWork[2048] __attribute__((aligned (4)));
+emu_printf("c\n");
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
-
+emu_printf("d\n");
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
-
+emu_printf("e\n");
 	int cmprSize = LZ_Compress(sbuf.buffer, rle_buf, sbuf.idx);
-
+emu_printf("f\n");
 	PER_SMPC_RES_DIS(); // Disable reset
+emu_printf("g\n");	
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
-		if( BUP_Stat(0, 0, &sttb) == BUP_UNFORMAT) BUP_Format(0);
+PER_SMPC_RES_ENA(); // Enable reset		
+emu_printf("h\n");
+PER_SMPC_RES_DIS(); // Disable reset	
+		if( BUP_Stat(0, 0, &sttb) == BUP_UNFORMAT) 
+		{	
+	emu_printf("h1\n");		
+			BUP_Format(0);
+emu_printf("h2\n");					
+		}
+emu_printf("i\n");		
 	PER_SMPC_RES_ENA(); // Enable reset
-
+emu_printf("j\n");
 	if (sttb.freeblock > 0) { // Not sure of the size of a block
 		memset(writetb.filename, 0, 9);
 		memset(writetb.comment, 0, 9);
-
+emu_printf("k\n");
 		strncpy((char*) writetb.filename, stateFile, 11);
 		strncpy((char*) writetb.comment, hdrdesc, 10);
 
@@ -2215,13 +2226,16 @@ bool Game::saveGameState(uint8 slot) {
 
 		writetb.date = BUP_SetDate(&datetb);
 		writetb.datasize = (cmprSize) + 1;
-		
+emu_printf("l\n");		
 		Sint32 verify;
 		PER_SMPC_RES_DIS(); // Disable reset
+emu_printf("m\n");		
 			BUP_Write(0, &writetb, rle_buf, OFF);
+emu_printf("n\n");
 			verify = BUP_Verify(0, writetb.filename, rle_buf);
+emu_printf("o\n");
 		PER_SMPC_RES_ENA(); // Enable reset
-
+emu_printf("p %d\n",success);
 		if (verify == 0)
 			success = true;
 	}
@@ -2439,7 +2453,7 @@ void Game::clearSaveSlots(uint8 level) {
 		}
 	}
 }
-*/
+
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
 //	debug(DBG_GAME, "AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p", stateNum, x, y, dataPtr, pge);
 	assert(stateNum < 4);

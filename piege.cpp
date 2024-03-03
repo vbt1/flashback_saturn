@@ -83,7 +83,7 @@ int Game::pge_hasMessageData(LivePGE *pge, uint16_t msg_num, uint16_t counter) c
 }
 
 void Game::pge_loadForCurrentLevel(uint16_t idx) {
-//	debug(DBG_PGE, "Game::pge_loadForCurrentLevel() idx=%d", idx);
+	emu_printf("Game::pge_loadForCurrentLevel() idx=%d\n", idx);
 
 	LivePGE *live_pge = &_pgeLive[idx];
 	InitPGE *init_pge = &_res._pgeInit[idx];
@@ -133,6 +133,7 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 			++i;
 			++obj;
 		}
+emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,live_pge);		
 		assert(i < on->num_objects);
 		live_pge->first_obj_number = i;
 		pge_setupDefaultAnim(live_pge);

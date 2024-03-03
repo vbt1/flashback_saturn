@@ -3,6 +3,9 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
+ 
+#define WITH_MEM_MALLOC 1
+ 
 extern "C"
 {
 #include <sl_def.h>
@@ -17,6 +20,8 @@ extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern unsigned int end1;
 extern Uint8 *hwram_screen;
+extern Uint8 *save_lwram;
+extern Uint8 *current_lwram;
 void	*malloc(size_t);
 }
 #include "saturn_print.h"
@@ -130,7 +135,10 @@ bool Resource::fileExists(const char *filename) {
 }
 
 void Resource::clearLevelRes() {
-//emu_printf("vbt clearLevelRes\n");	
+emu_printf("vbt clearLevelRes\n");
+
+//	current_lwram = (Uint8 *)0x200000;
+
 emu_printf("_tbn\n");	
 	sat_free(_tbn); _tbn = 0;
 emu_printf("_mbk\n");		
@@ -658,6 +666,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 	} else {
 		if (_aba) {
 			uint32_t size;
+emu_printf("_aba->loadEntry\n");			
 			uint8_t *dat = _aba->loadEntry(_entryName, &size);
 			if (dat) {
 				switch (objType) {
@@ -696,6 +705,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 				case OT_OBJ:
 					_numObjectNodes = READ_LE_UINT16(dat);
 					assert(_numObjectNodes == 230);
+emu_printf("decodeOBJ1\n");					
 					decodeOBJ(dat + 2, size - 2);
 					break;
 				case OT_ANI:
@@ -935,6 +945,7 @@ void Resource::load_OBC(File *f) {
 	}
 	
 	sat_free(packedData);
+emu_printf("decodeOBJ2\n");	
 	decodeOBJ(tmp, unpackedSize);
 	sat_free(tmp);
 }
@@ -968,18 +979,29 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	for (int i = 0; i < _numObjectNodes; ++i) {
 //slPrintHex(i,slLocate(3,14));		
 		if (prevOffset != offsets[i]) {
-emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
+//emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
 //slPrintHex(i,slLocate(3,16));
+#ifdef WITH_MEM_MALLOC
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
+#else
+			ObjectNode *on = (ObjectNode *)current_lwram;
+			current_lwram += ((sizeof(ObjectNode)+1)&~1);
+#endif			
 			if (!on) {
 //slPrint("Unable to allocate ObjectNode",slLocate(3,17));				
 				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
 			}
 			const uint8_t *objData = tmp + offsets[i];
 			on->num_objects = _readUint16(objData); objData += 2;
+//emu_printf("on->num_objects = %d objectsCount[iObj] %d\n", on->num_objects,objectsCount[iObj]);			
 			assert(on->num_objects == objectsCount[iObj]);
-emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
+//emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
+#ifdef WITH_MEM_MALLOC
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
+#else
+			on->objects = (Object *)current_lwram;
+			current_lwram += (((sizeof(Object) * on->num_objects)+1)&~1);
+#endif
 //slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
 //if(!on->objects)			
 	//slPrint("sat_malloc(sizeof(Object) * on->num_objects) failed",slLocate(3,17));			
@@ -998,7 +1020,7 @@ emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Objec
 				obj->opcode_arg1 = _readUint16(objData); objData += 2;
 				obj->opcode_arg2 = _readUint16(objData); objData += 2;
 				obj->opcode_arg3 = _readUint16(objData); objData += 2;
-//				emu_printf("obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X\n", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
+				emu_printf("obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X\n", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
 			}
 			++iObj;
 			prevOffset = offsets[i];
@@ -1486,15 +1508,20 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 			data = (uint8_t *)hwram_screen;
 		}
 		else if(strstr(entry->name,"names") !=NULL
-		|| strcmp("Flashback strings", entry->name) == 0)
+		|| strstr("strings", entry->name)  !=NULL)
 		{
 			emu_printf("sat_malloc1 ");
+#ifdef WITH_MEM_MALLOC
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+#else
+			data = (uint8_t *)current_lwram;
+			current_lwram += ((_resourceMacDataSize+1)&~1);
+#endif
 		}		
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
-		|| strncmp("logo", entry->name, 4) == 0 
+//		|| strncmp("logo", entry->name, 4) == 0 
 		)
 		{
 			emu_printf("_scratchBuffer  ");
@@ -1513,7 +1540,12 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 			else
 			{
 				emu_printf("sat_malloc2 ");
+#ifdef WITH_MEM_MALLOC
 				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+#else
+				data = (uint8_t *)current_lwram;
+				current_lwram += ((_resourceMacDataSize+1)&~1);
+#endif
 			}
 		}
 
@@ -1672,7 +1704,7 @@ void Resource::MAC_unloadLevelData() {
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevNode != _objectNodesMap[i]) {
-//	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
+	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
 			sat_free(_objectNodesMap[i]);
 			prevNode = _objectNodesMap[i];
 		}
@@ -1711,16 +1743,19 @@ void Resource::MAC_loadLevelData(int level) {
 	//slPrint(name,slLocate(3,13));	
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
-	//slPrint("decodeOBJ",slLocate(3,13));	
+	//slPrint("decodeOBJ",slLocate(3,13));
+emu_printf("decodeOBJ3\n");	
 	decodeOBJ(ptr, _resourceMacDataSize);
 	//slPrint("sat_free1",slLocate(3,13));	
 	
 //	char toto[50];
 //	sprintf(toto,"***%p****",ptr);
-	//slPrint(toto,slLocate(3,20));	
+	//slPrint(toto,slLocate(3,20));
+emu_printf("decodeOBJ3 free %p\n",ptr);		
 	sat_free(ptr);
 //emu_printf(" .CT\n");
 	// .CT
+emu_printf("CT load\n");	
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 	//slPrint(name,slLocate(3,13));
 	ptr = decodeResourceMacData(name, true);
@@ -1826,8 +1861,9 @@ static void stringLowerCase(char *p) {
 }
 
 void Resource::MAC_unloadCutscene() {
-//	emu_printf("MAC_unloadCutscene\n");	
+	emu_printf("MAC_unloadCutscene\n");	
 // vbt on efface le plus bas puis le plus haut
+//	current_lwram=(Uint8 *)0x200000;
 	sat_free(_pol);
 	_pol = 0;
 	sat_free(_cmd);
