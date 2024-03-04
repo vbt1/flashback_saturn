@@ -71,7 +71,7 @@ void *sat_malloc(size_t size) {
 
 void sat_free(void *ptr) {
 #define VBT_L_START    ((volatile void *)(0x200000))
-#define ADR_WORKRAM_L_START    ((volatile void *)(0x280000))
+#define ADR_WORKRAM_L_START    ((volatile void *)(0x260000))
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 
 	if(ptr == NULL || ptr == hwram)
@@ -125,7 +125,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	return (void*)mem;
 
 }
-
+/*
 void *std_malloc(size_t size) {
 	void *mem = NULL;
 	size = (size + 1) & ~1; // pour alignement	
@@ -153,4 +153,4 @@ void *std_calloc(size_t nmemb, size_t size) {
 //	emu_printf("STD_CALLOC: addr: %p, size: %u\n", mem, size);
 	return (void*)mem;
 }
-
+*/

@@ -121,7 +121,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	}
 	else
 	{
-		dst = (uint8_t *)std_malloc(decodedSize);
+//		dst = (uint8_t *)std_malloc(decodedSize);
 //		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
 	}
 */
@@ -142,7 +142,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 			}
 		}
 	}
-	emu_printf("dst %p\n",dst);
+//	emu_printf("dst %p\n",dst);
 	
 	if(count != decodedSize)  // vbt ne pas toucher
 	{

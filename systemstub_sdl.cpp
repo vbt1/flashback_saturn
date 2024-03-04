@@ -442,7 +442,7 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 
 void *SystemStub_SDL::createMutex() {
 //emu_printf("SystemStub_SDL::createMutex\n");	
-	SatMutex *mtx = (SatMutex*)std_malloc(sizeof(SatMutex));
+	SatMutex *mtx = (SatMutex*)malloc(sizeof(SatMutex));
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
 #else

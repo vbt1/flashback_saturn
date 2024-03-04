@@ -81,7 +81,7 @@ emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 Resource::~Resource() {
 //			emu_printf("vbt Resource::~Resource free all resources !!!!!\n");	
 /*	clearLevelRes();
-	MAC_unloadLevelData();
+//	MAC_unloadLevelData();
 	sat_free(_fnt);
 	sat_free(_icn);
 //	sat_free(_tab);
@@ -172,7 +172,7 @@ emu_printf("_sgd\n");
 emu_printf("_bnq\n");
 	sat_free(_bnq); _bnq = 0;
 emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
-/*	sat_free(_ani);*/ _ani = 0; // hwram
+	sat_free(_ani); _ani = 0; // hwram
 
 	free_OBJ();
 
@@ -183,7 +183,7 @@ emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
 		sat_free(_monster);
 //	emu_printf("_res._spc %p\n",_spc);	
 		sat_free(_spc);	
-/*		sat_free(_ani);*/
+		sat_free(_ani);
 		MAC_unloadLevelData();
 	//	sat_free(_res._icn);// icones du menu à ne pas vider
 
@@ -999,7 +999,8 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 		if (prevOffset != offsets[i]) {
 //emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
 //slPrintHex(i,slLocate(3,16));
-#ifdef WITH_MEM_MALLOC
+//#ifdef WITH_MEM_MALLOC
+#if 1
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
@@ -1041,7 +1042,7 @@ emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, curren
 				obj->opcode_arg1 = _readUint16(objData); objData += 2;
 				obj->opcode_arg2 = _readUint16(objData); objData += 2;
 				obj->opcode_arg3 = _readUint16(objData); objData += 2;
-				emu_printf("obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X\n", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
+//				emu_printf("obj_node=%d obj=%d op1=0x%X op2=0x%X op3=0x%X\n", i, j, obj->opcode2, obj->opcode1, obj->opcode3);
 			}
 			++iObj;
 			prevOffset = offsets[i];
@@ -1118,7 +1119,7 @@ void Resource::decodePGE(const uint8_t *p, int size) {
 void Resource::load_ANI(File *f) {
 //	debug(DBG_RES, "Resource::load_ANI()");
 	const int size = f->size();
-	_ani = (uint8_t *)std_malloc(size);
+	_ani = (uint8_t *)sat_malloc(size);
 	if (!_ani) {
 		error("Unable to allocate ANI buffer");
 	} else {
@@ -1270,7 +1271,7 @@ void Resource::load_SPL(File *f) {
 	}
 	sat_free(_sfxList);
 	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)std_calloc(_numSfx, sizeof(SoundFx));
+	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
 	if (!_sfxList) {
 		error("Unable to allocate SoundFx table");
 	}
@@ -1457,7 +1458,7 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 }
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
-		emu_printf("decodeResourceMacText        \n");
+//		emu_printf("decodeResourceMacText        \n");
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
@@ -1475,7 +1476,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-		emu_printf("decodeResourceMacData 1       \n");	
+//		emu_printf("decodeResourceMacData 1       \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
 		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
@@ -1551,7 +1552,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 //		|| strncmp("logo", entry->name, 4) == 0 
 		)
 		{
-			emu_printf("_scratchBuffer  ");
+//			emu_printf("_scratchBuffer  ");
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
@@ -1579,7 +1580,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
-			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
+//			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
@@ -1724,6 +1725,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 }
 
 void Resource::MAC_unloadLevelData() {
+
 	emu_printf("unload _ani %p\n",_ani);	
 	sat_free(_ani); // vbt est dans scratchbuff
 //	emu_printf("unload _ani %p\n",_ani);	
@@ -1741,6 +1743,7 @@ void Resource::MAC_unloadLevelData() {
 	_tbn = 0;
 	sat_free(_str);
 	_str = 0;
+	
 // vbt ajout	
 //	sat_free(_spc);
 //	_spc = 0;	
@@ -1938,7 +1941,7 @@ void Resource::MAC_loadSounds() {
 		-1, 57
 	};
 	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)std_calloc(_numSfx, sizeof(SoundFx));
+	_sfxList = (SoundFx *)calloc(_numSfx, sizeof(SoundFx));
 	if (!_sfxList) {
 		return;
 	}
