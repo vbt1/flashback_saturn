@@ -23,6 +23,7 @@ extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 void	*malloc(size_t);
+void *calloc (size_t, size_t);
 }
 #include "saturn_print.h"
 
@@ -62,13 +63,13 @@ emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchB
 
 
 //#ifdef WITH_MEM_MALLOC
-#if 1
+#if 0
 emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
 #else
 emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 	_bankData = (uint8_t *)current_lwram;
-	current_lwram += kBankDataSize;
+	current_lwram += ((kBankDataSize+3)&~3);
 #endif
 
 	if (!_bankData) {
@@ -1000,12 +1001,12 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 //emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
 //slPrintHex(i,slLocate(3,16));
 //#ifdef WITH_MEM_MALLOC
-#if 1
+#if 0
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
-			current_lwram += ((sizeof(ObjectNode)+1)&~1);
+			current_lwram += ((sizeof(ObjectNode)+3)&~3);
 #endif			
 			if (!on) {
 //slPrint("Unable to allocate ObjectNode",slLocate(3,17));				
@@ -1017,12 +1018,12 @@ emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			assert(on->num_objects == objectsCount[iObj]);
 //emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
 //#ifdef WITH_MEM_MALLOC
-#if 1
+#if 0
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
 			on->objects = (Object *)current_lwram;
-			current_lwram += (sizeof(Object) * on->num_objects);
+			current_lwram += (((sizeof(Object) * on->num_objects)+3)&~3);
 #endif
 //slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
 //if(!on->objects)			
