@@ -50,12 +50,12 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 #if 1
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 #else
-emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
+//emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
 	_scratchBuffer = (uint8_t *)current_lwram;
 	current_lwram += kScratchBufferSize;
 #endif
 	
-emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
+//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
 	if (!_scratchBuffer) {
 		error("Unable to allocate temporary memory buffer");
 	}
@@ -67,7 +67,7 @@ emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchB
 emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
 #else
-emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
+//emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 	_bankData = (uint8_t *)current_lwram;
 	current_lwram += ((kBankDataSize+3)&~3);
 #endif
@@ -1001,7 +1001,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 //emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
 //slPrintHex(i,slLocate(3,16));
 //#ifdef WITH_MEM_MALLOC
-#if 0
+#if 1
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
@@ -1018,7 +1018,7 @@ emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			assert(on->num_objects == objectsCount[iObj]);
 //emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
 //#ifdef WITH_MEM_MALLOC
-#if 0
+#if 1
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
@@ -1480,7 +1480,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 //		emu_printf("decodeResourceMacData 1       \n");	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
-		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
+//		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
@@ -1494,7 +1494,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+//emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
 
 
@@ -1504,11 +1504,11 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 	{
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1  += (int)hwram;
-//		emu_printf("hwram ****%p****\n",hwram);	
+//		//emu_printf("hwram ****%p****\n",hwram);	
 		hwram_ptr = (unsigned char *)hwram;
 	}
 //	else
-//	emu_printf("hwram2 %d %s\n", decodedSize, name);
+//	//emu_printf("hwram2 %d %s\n", decodedSize, name);
 
 
 	uint8_t *data = 0;
@@ -1526,20 +1526,19 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 			{
 				hwram_screen=hwram_ptr;
 				hwram_ptr+=45000;
-				emu_printf("hwram_screen %p\n",hwram_screen);
+				//emu_printf("hwram_screen %p\n",hwram_screen);
 				data = (uint8_t *)hwram_screen;
 			}			
 #ifdef WITH_MEM_MALLOC
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
 			data = (uint8_t *)current_lwram;
-			current_lwram += ((_resourceMacDataSize+1)&~1);
+			current_lwram += ((_resourceMacDataSize+3)&~3);
 #endif
 		}
 		else if(strstr(entry->name,"names") !=NULL
 		|| strstr("strings", entry->name)  !=NULL)
 		{
-			emu_printf("sat_malloc1 \n");
 #ifdef WITH_MEM_MALLOC
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
@@ -1562,7 +1561,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
 			{
-				emu_printf("hwram_ptr ");				
+				//emu_printf("hwram_ptr ");				
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr+=_resourceMacDataSize;
 			}
@@ -1786,8 +1785,8 @@ emu_printf("decodeOBJ3 free %p\n",ptr);
 	sat_free(ptr);
 //emu_printf(" .CT\n");
 	// .CT
-emu_printf("CT load\n");	
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
+emu_printf("CT load¨%s\n",name);
 	//slPrint(name,slLocate(3,13));
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
@@ -1903,7 +1902,7 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-	emu_printf("MAC_loadCutscene\n");
+//	emu_printf("MAC_loadCutscene\n");
 	MAC_unloadCutscene();
 	char name[32];
 

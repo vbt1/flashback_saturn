@@ -1084,13 +1084,14 @@ void Cutscene::mainLoop(uint16_t num) {
 	for (int i = 0; i < 0x20; ++i) {
 		_stub->setPaletteEntry(0xC0 + i, &c);
 	}
-//emu_printf("VBT cutmainLoop will play %d\n",_musicTableDOS[_id]);	
 	if (_id != 0x4A && !_creditsSequence) {
 //		_ply->play(_musicTableDOS[_id],0);
 		_mix.playMusic(_musicTableDOS[_id]);
 	}
 	if(_id == 0x4A)
-		_mix.unpauseMusic();
+	{
+		_mix.unpauseMusic();		
+	}
 	_newPal = false;
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
@@ -1119,6 +1120,7 @@ void Cutscene::mainLoop(uint16_t num) {
 		op >>= 2;
 		if (op >= NUM_OPCODES) {
 		}
+			emu_printf("VBT cutmainLoop k op %d\n",op);		
 		(this->*_opcodeTable[op])();
 		_stub->processEvents();
 		if (_stub->_pi.backspace) {
@@ -1126,6 +1128,7 @@ void Cutscene::mainLoop(uint16_t num) {
 			_interrupted = true;
 		}
 	}
+		emu_printf("VBT cutmainLoop h\n");		
 	_stop=true;
 	if (_interrupted || _id != 0x0D) {
 //		_ply->stop();

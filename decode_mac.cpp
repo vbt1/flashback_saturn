@@ -36,7 +36,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 #endif
 	{
 //emu_printf("0x25C60000 %d %s\n", decodedSize, name);
-		emu_printf("lwram_new %d %s\n", decodedSize, name);
+		//emu_printf("lwram_new %d %s\n", decodedSize, name);
 //		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
 #ifdef WITH_MEM_MALLOC
 		dst = (uint8_t *)sat_malloc(decodedSize);
@@ -55,7 +55,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 				hwram_screen=hwram_ptr;
 				hwram_ptr+=45000;
 			}
-			emu_printf("hwram1 %d %s\n", decodedSize, name);
+			//emu_printf("hwram1 %d %s\n", decodedSize, name);
 			dst = (uint8_t *)hwram_screen;
 		}
 		else
@@ -63,45 +63,45 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 #ifdef WITH_MEM_MALLOC
 			if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
 			{
-				emu_printf("hwram %d %s\n", decodedSize, name);
+				//emu_printf("hwram %d %s\n", decodedSize, name);
 				dst = (uint8_t *)hwram_ptr;
 				hwram_ptr+=decodedSize;
 			}
 			else
 			{
-				emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);			
+				//emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);
 				dst = (uint8_t *)sat_malloc(decodedSize);
 			}
 #else
 			if(strstr(name,"movie")   != NULL || strstr(name,"polygons") != NULL
 			|| strncmp("Icons", name, 5) == 0)
 			{
-//				emu_printf("lwram_old1 %d %s end %d\n", decodedSize, name,end1);
+//				//emu_printf("lwram_old1 %d %s end %d\n", decodedSize, name,end1);
 //				dst = (uint8_t *)sat_malloc(decodedSize);
 				if(strncmp("Icons", name, 5) == 0)
 				{
-					emu_printf("hwram3 %d %s\n", decodedSize, name);
+					//emu_printf("hwram3 %d %s\n", decodedSize, name);
 					dst = (uint8_t *)hwram_ptr;
 					hwram_ptr+=decodedSize;
 				}
 				else
 				{
-					emu_printf("lwram_new %d %s end %d\n", decodedSize, name,end1);
+					//emu_printf("lwram_new %d %s end %d\n", decodedSize, name,end1);
 					dst = (uint8_t *)current_lwram;
-					current_lwram += ((decodedSize+1)&~1);
+					current_lwram += ((decodedSize+3)&~3);
 				}
 			}
 			else if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
 			{
-				emu_printf("hwram2 %d %s\n", decodedSize, name);
+				//emu_printf("hwram2 %d %s\n", decodedSize, name);
 				dst = (uint8_t *)hwram_ptr;
 				hwram_ptr+=decodedSize;
 			}
 			else
 			{
-				emu_printf("lwram_new %d %s end %d\n", decodedSize, name,end1);
+				//emu_printf("lwram_new %d %s end %d\n", decodedSize, name,end1);
 				dst = (uint8_t *)current_lwram;
-				current_lwram += ((decodedSize+1)&~1);
+				current_lwram += ((decodedSize+3)&~3);
 			}
 #endif
 		}

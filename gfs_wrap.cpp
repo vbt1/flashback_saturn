@@ -12,7 +12,7 @@ extern "C" {
 //#include <sega_mem.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
-
+extern Uint8 *current_lwram;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
 
@@ -439,7 +439,8 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-		read_buffer = (Uint8*)0x25C08000; //sat_malloc(tot_bytes);
+//		read_buffer = (Uint8*)0x25C08000; //sat_malloc(tot_bytes);
+		read_buffer = (Uint8*)current_lwram; //sat_malloc(tot_bytes);
 
 emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);		
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);

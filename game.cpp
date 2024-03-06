@@ -30,6 +30,7 @@ void	*malloc(size_t);
 #define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
 extern TEXTURE tex_spr[4];
+extern Uint8 *current_lwram;
 }
 #include "saturn_print.h"
 #include "lz.h"
@@ -2179,8 +2180,12 @@ emu_printf("b\n");
 	BupDir writetb;
 	BupDate datetb;
 	Uint8 *time;
-	Uint32 libBakBuf[4096] __attribute__((aligned (4)));
-	Uint32 BackUpRamWork[2048] __attribute__((aligned (4)));
+//	Uint32 libBakBuf[4096] ;
+//	Uint32 BackUpRamWork[2048];
+
+	Uint32 *libBakBuf    =(Uint32 *)current_lwram;//[4096] ;
+	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];
+
 emu_printf("c\n");
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 emu_printf("d\n");
@@ -2250,8 +2255,11 @@ bool Game::loadGameState(uint8 slot) {
 	
 	BupConfig conf[3];
 	BupDir	dir[1];
-	Uint32 libBakBuf[4096];
-	Uint32 BackUpRamWork[2048];
+//	Uint32 libBakBuf[4096];
+//	Uint32 BackUpRamWork[2048];
+	
+	Uint32 *libBakBuf    =(Uint32 *)current_lwram;//[4096] ;
+	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];	
 	Uint32 i;
 
 	int32 status;
