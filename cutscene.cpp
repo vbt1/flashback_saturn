@@ -1120,7 +1120,7 @@ void Cutscene::mainLoop(uint16_t num) {
 		op >>= 2;
 		if (op >= NUM_OPCODES) {
 		}
-			emu_printf("VBT cutmainLoop k op %d\n",op);		
+//			emu_printf("VBT cutmainLoop k op %d\n",op);
 		(this->*_opcodeTable[op])();
 		_stub->processEvents();
 		if (_stub->_pi.backspace) {
@@ -1128,7 +1128,7 @@ void Cutscene::mainLoop(uint16_t num) {
 			_interrupted = true;
 		}
 	}
-		emu_printf("VBT cutmainLoop h\n");		
+//		emu_printf("VBT cutmainLoop h\n");
 	_stop=true;
 	if (_interrupted || _id != 0x0D) {
 //		_ply->stop();
