@@ -1001,7 +1001,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 //emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
 //slPrintHex(i,slLocate(3,16));
 //#ifdef WITH_MEM_MALLOC
-#if 1
+#if 0
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
@@ -1018,7 +1018,7 @@ emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			assert(on->num_objects == objectsCount[iObj]);
 //emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
 //#ifdef WITH_MEM_MALLOC
-#if 1
+#if 0
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
@@ -1757,6 +1757,7 @@ void Resource::MAC_loadLevelData(int level) {
 //emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
+emu_printf("MAC_loadLevelData %s\n", name);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 	//slPrint(name,slLocate(3,13));		
 	decodePGE(ptr, _resourceMacDataSize);
@@ -1764,12 +1765,14 @@ void Resource::MAC_loadLevelData(int level) {
 //emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
+emu_printf("MAC_loadLevelData %s\n", name);
 	//slPrint(name,slLocate(3,13));
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
 //emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
+emu_printf("MAC_loadLevelData %s\n", name);
 	//slPrint(name,slLocate(3,13));	
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
@@ -1786,7 +1789,7 @@ emu_printf("decodeOBJ3 free %p\n",ptr);
 //emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
-emu_printf("CT load¨%s\n",name);
+emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
 	//slPrint(name,slLocate(3,13));
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
@@ -1796,12 +1799,12 @@ emu_printf("CT load¨%s\n",name);
 //emu_printf(" .SPC\n");
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
-	//slPrint(name,slLocate(3,13));		
+emu_printf("MAC_loadLevelData %s\n", name);		
 	_spc = decodeResourceMacData(name, true);
 //emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
-	//slPrint(name,slLocate(3,13));	
+emu_printf("MAC_loadLevelData %s\n", name);	
 	_tbn = decodeResourceMacText(name, "names");
 //emu_printf(" .Flashback text _tbn %p\n",_tbn);
 	//slPrint("Flashback strings",slLocate(3,13));
