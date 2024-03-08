@@ -343,7 +343,7 @@ char *sat_match(const char *path) {
 */
 
 int sat_fclose(GFS_FILE* fp) {
-//emu_printf("sat_free in sat_fclose\n");	
+emu_printf("sat_free in sat_fclose\n");	
 	GFS_Close(fp->fid);
 //	sat_free(fp);
 

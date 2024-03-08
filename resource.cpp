@@ -1567,7 +1567,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			}
 			else
 			{
-				emu_printf("sat_malloc2 ");
+//				emu_printf("sat_malloc2 ");
 #ifdef WITH_MEM_MALLOC
 				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
@@ -1585,7 +1585,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-		emu_printf("data %p size %d\n",data,_resourceMacDataSize);
+		emu_printf("data %p %d\n",data,_resourceMacDataSize);
 	return data;
 }
 

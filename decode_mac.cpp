@@ -22,7 +22,7 @@ extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-//slPrint((char *)name,slLocate(3,22));
+emu_printf("%s\n", name);
 	decodedSize = f.readUint32BE();
 	uint8_t *dst;
 #ifdef WITH_MEM_MALLOC
@@ -75,46 +75,35 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 				dst = (uint8_t *)sat_malloc(decodedSize);
 			}
 #else
-			if(strstr(name,"movie")   != NULL || strstr(name,"polygons") != NULL)
+			if(strstr(name,"polygons")   != NULL)
 			{
-
-					dst = (uint8_t *)current_lwram;
-					current_lwram += ((decodedSize+3)&~3);
+//				dst = (uint8_t *)sat_malloc(decodedSize);
+				dst = (uint8_t *)current_lwram;
+				current_lwram += ((decodedSize+3)&~3);
+			}
+			else if(strstr(name,"movie") != NULL)
+			{
+//					dst = (uint8_t *)hwram_ptr;
+//				hwram_ptr+=decodedSize;
+				dst = (uint8_t *)current_lwram;
+				current_lwram += ((decodedSize+3)&~3);
+//dst = (uint8_t *)sat_malloc((decodedSize+3)&~3);
 			}
 			else if ((int)hwram_ptr+decodedSize<=end1)
 			{
-				//emu_printf("hwram2 %d %s\n", decodedSize, name);
+				emu_printf("hwram2 %d %s\n", decodedSize, name);
 				dst = (uint8_t *)hwram_ptr;
 				hwram_ptr+=decodedSize;
 			}
 			else
 			{
-				//emu_printf("lwram_new %d %s end %d\n", decodedSize, name,end1);
+//				emu_printf("lwram_new %d %s\n", decodedSize, name);
 				dst = (uint8_t *)current_lwram;
 				current_lwram += ((decodedSize+3)&~3);
 			}
 #endif
 		}
 	}
-	
-/*
-	///Objects
-	else if(strcmp("Person", name) == 0 || strcmp("Mercenary", name) == 0 || strcmp("Replicant", name) == 0 || strncmp("Level", name, 5) == 0)
-	{
-		dst = (uint8_t *)sat_malloc(decodedSize);
-	}
-	else if(strncmp("Objects", name, 7) == 0)
-	{
-		dst = (uint8_t *)hwram_ptr;
-		hwram_ptr+=_resourceMacDataSize;
-//		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
-	}
-	else
-	{
-//		dst = (uint8_t *)std_malloc(decodedSize);
-//		emu_printf("STD name %s %d %p\n", name, decodedSize, dst);		
-	}
-*/
 	uint32_t count = 0;
 	while (count < decodedSize) {
 		const int code = f.readByte();
