@@ -12,4 +12,6 @@ void *std_malloc(size_t size);
 
 void *sat_realloc(void *ptr, size_t size);
 char *sat_strdup(const char *s);
+
+#define SAT_ALIGN(a) ((a+3)&~3)
 #endif

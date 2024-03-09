@@ -69,7 +69,7 @@ emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 #else
 //emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 	_bankData = (uint8_t *)current_lwram;
-	current_lwram += ((kBankDataSize+3)&~3);
+	current_lwram += SAT_ALIGN(kBankDataSize);
 #endif
 
 	if (!_bankData) {
@@ -1006,7 +1006,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
-			current_lwram += ((sizeof(ObjectNode)+3)&~3);
+			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
 #endif			
 			if (!on) {
 //slPrint("Unable to allocate ObjectNode",slLocate(3,17));				
@@ -1023,7 +1023,7 @@ emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 #else
 emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
 			on->objects = (Object *)current_lwram;
-			current_lwram += (((sizeof(Object) * on->num_objects)+3)&~3);
+			current_lwram += SAT_ALIGN(sizeof(Object) * on->num_objects);
 #endif
 //slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
 //if(!on->objects)			
@@ -1533,7 +1533,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
 			data = (uint8_t *)current_lwram;
-			current_lwram += ((_resourceMacDataSize+3)&~3);
+			current_lwram += SAT_ALIGN(_resourceMacDataSize);
 #endif
 		}
 		else if(strstr(entry->name,"names") !=NULL
@@ -1543,7 +1543,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
 			data = (uint8_t *)current_lwram;
-			current_lwram += ((_resourceMacDataSize+1)&~1);
+			current_lwram += SAT_ALIGN(_resourceMacDataSize);
 #endif
 		}		
 		else if(strcmp("Flashback colors", entry->name) == 0 
@@ -1563,7 +1563,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			{
 				//emu_printf("hwram_ptr ");				
 				data = (uint8_t *)hwram_ptr;
-				hwram_ptr+=_resourceMacDataSize;
+				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
 			}
 			else
 			{
@@ -1572,7 +1572,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
 				data = (uint8_t *)current_lwram;
-				current_lwram += ((_resourceMacDataSize+1)&~1);
+				current_lwram += SAT_ALIGN(_resourceMacDataSize);
 #endif
 			}
 		}

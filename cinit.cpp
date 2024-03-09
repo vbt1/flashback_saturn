@@ -15,8 +15,8 @@ extern "C" {
 #include 	"saturn_print.h"
 #include 	"systemstub.h"
 
-#define LOW_WORK_RAM 0x00280000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x80000
+#define LOW_WORK_RAM 0x00290000 // Beginning of LOW WORK RAM (1Mb)
+#define LOW_WORK_RAM_SIZE 0x70000
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 
 #define		SystemWork		0x060ffc00		/* System Variable Address */

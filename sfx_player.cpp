@@ -31,7 +31,7 @@ SfxPlayer::SfxPlayer(Mixer *mixer)
 
 void SfxPlayer::play(uint8 num) {
 	//debug(DBG_SFX, "SfxPlayer::play(%d)", num);
-
+#if 0
 	// FIXME: Disable some tunes that cause stutters on Saturn...
 	if(num >= 72 && num <= 75) return;
 
@@ -52,6 +52,7 @@ void SfxPlayer::play(uint8 num) {
 			_playing = true;
 		}
 	}
+#endif
 }
 
 void SfxPlayer::stop() {
@@ -62,6 +63,7 @@ void SfxPlayer::stop() {
 }
 
 void SfxPlayer::playSample(int channel, const uint8 *sampleData, uint16 period) {
+	
 	assert(channel < NUM_CHANNELS);
 	SampleInfo *si = &_samples[channel];
 	si->len = READ_BE_UINT16(sampleData); sampleData += 2;
@@ -74,6 +76,7 @@ void SfxPlayer::playSample(int channel, const uint8 *sampleData, uint16 period) 
 }
 
 void SfxPlayer::handleTick() {
+#if 0
 	if (!_playing) {
 		return;
 	}
@@ -116,6 +119,7 @@ void SfxPlayer::handleTick() {
 			_modData = 0;
 		}
 	}
+#endif	
 }
 
 void SfxPlayer::mixSamples(int8 *buf, int samplesLen) {

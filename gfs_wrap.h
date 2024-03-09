@@ -9,7 +9,7 @@
 //#define   OPEN_MAX  (Sint32)20
 //#define   DIR_MAX   (Sint32)170
 
-#define   OPEN_MAX  (Sint32)6
+#define   OPEN_MAX  (Sint32)10
 #define   DIR_MAX   (Sint32)16
 
 

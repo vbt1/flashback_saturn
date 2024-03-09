@@ -24,6 +24,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 
 emu_printf("%s\n", name);
 	decodedSize = f.readUint32BE();
+	
 	uint8_t *dst;
 #ifdef WITH_MEM_MALLOC
 //	if(strstr(name,"movie")   != NULL || strstr(name,"conditions") != NULL 
@@ -45,7 +46,7 @@ emu_printf("%s\n", name);
 #else
 //		dst = (uint8_t *)sat_malloc(decodedSize);
 		dst = (uint8_t *)current_lwram;
-		current_lwram += ((decodedSize+3)&~3);
+		current_lwram += SAT_ALIGN(decodedSize);
 #endif
 	}
 	else
@@ -67,7 +68,7 @@ emu_printf("%s\n", name);
 			{
 				//emu_printf("hwram %d %s\n", decodedSize, name);
 				dst = (uint8_t *)hwram_ptr;
-				hwram_ptr+=decodedSize;
+				hwram_ptr += SAT_ALIGN(decodedSize);
 			}
 			else
 			{
@@ -79,27 +80,26 @@ emu_printf("%s\n", name);
 			{
 //				dst = (uint8_t *)sat_malloc(decodedSize);
 				dst = (uint8_t *)current_lwram;
-				current_lwram += ((decodedSize+3)&~3);
+				current_lwram += SAT_ALIGN(decodedSize);
 			}
 			else if(strstr(name,"movie") != NULL)
 			{
 //					dst = (uint8_t *)hwram_ptr;
-//				hwram_ptr+=decodedSize;
+//				hwram_ptr += SAT_ALIGN(decodedSize);
 				dst = (uint8_t *)current_lwram;
-				current_lwram += ((decodedSize+3)&~3);
-//dst = (uint8_t *)sat_malloc((decodedSize+3)&~3);
+				current_lwram += SAT_ALIGN(decodedSize);
 			}
 			else if ((int)hwram_ptr+decodedSize<=end1)
 			{
 				emu_printf("hwram2 %d %s\n", decodedSize, name);
 				dst = (uint8_t *)hwram_ptr;
-				hwram_ptr+=decodedSize;
+				hwram_ptr += SAT_ALIGN(decodedSize);
 			}
 			else
 			{
 //				emu_printf("lwram_new %d %s\n", decodedSize, name);
 				dst = (uint8_t *)current_lwram;
-				current_lwram += ((decodedSize+3)&~3);
+				current_lwram += SAT_ALIGN(decodedSize);
 			}
 #endif
 		}

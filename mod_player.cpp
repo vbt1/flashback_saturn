@@ -540,7 +540,7 @@ bool ModPlayer::mix(int8 *buf, int len) {
 
 void ModPlayer::play(int num, int tempo) {
 emu_printf("ModPlayer::play(%d, %d)\n",num,tempo);
-
+#if 0
 	if (!_playing && num < _modulesFilesCount) {
 		File f;
 		bool found = false;
@@ -571,6 +571,7 @@ emu_printf("ModPlayer::play(%d, %d)\n",num,tempo);
 			_playing = true;
 		}
 	}
+#endif
 }
 
 void ModPlayer::stop() {
