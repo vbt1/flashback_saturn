@@ -1460,7 +1460,7 @@ int Game::pge_op_setCollisionState2(ObjectOpcodeArgs *args) {
 
 int Game::pge_op_saveState(ObjectOpcodeArgs *args) {
 	_saveStateCompleted = true;
-//	_validSaveState = saveGameState(kIngameSaveSlot);
+	_validSaveState = saveGameState(kIngameSaveSlot);
 //	if (_validSaveState && g_options.play_gamesaved_sound) {
 //		_mix.play(Resource::_gameSavedSoundData, Resource::_gameSavedSoundLen, 8000, Mixer::MAX_VOLUME);
 //	}

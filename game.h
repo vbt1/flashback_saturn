@@ -50,9 +50,16 @@ enum {
 
 struct Game {
 	typedef int (Game::*pge_OpcodeProc)(ObjectOpcodeArgs *args);
-	typedef int (Game::*pge_ZOrderCallback)(LivePGE *, LivePGE *, uint8, uint8);
-	typedef int (Game::*col_Callback1)(LivePGE *, LivePGE *, int16, int16);
-	typedef int (Game::*col_Callback2)(LivePGE *, int16, int16, int16);
+	typedef int (Game::*pge_ZOrderCallback)(LivePGE *, LivePGE *, uint8_t, uint8_t);
+	typedef int (Game::*col_Callback1)(LivePGE *, LivePGE *, int16_t, int16_t);
+	typedef int (Game::*col_Callback2)(LivePGE *, int16_t, int16_t, int16_t);
+
+	enum {
+		kIngameSaveSlot = 0//,
+//		kRewindSize = 120, // 10mins (~2MB)
+//		kAutoSaveSlot = 255,
+//		kAutoSaveIntervalMs = 5 * 1000
+	};
 
 	enum {
 		CT_UP_ROOM    = 0x00,

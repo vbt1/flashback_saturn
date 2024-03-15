@@ -1192,12 +1192,12 @@ void Cutscene::unload() {
 		
 //		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
 //		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
-			
+		/*	
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);	
 		slScrWindow0(63 , 0 , 574 , 479 );
 		slScrWindowModeNbg0(win0_IN);
-		slSynch();
+		slSynch();*/
 //		_vid->_layerScale=2;		
 	}
 #endif
@@ -1235,7 +1235,7 @@ void Cutscene::prepare() {
 	const int sy = y;// * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
 
-	slScrAutoDisp(SPRON); // vbt à remettre
+//	slScrAutoDisp(SPRON); // vbt à remettre
 }
 
 void Cutscene::playCredits() {
@@ -1307,7 +1307,7 @@ void Cutscene::play() {
 		_textCurBuf = NULL;
 //		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
 		_creditsSequence = false;
-//		emu_printf("prepare    \n");
+		emu_printf("Cutscene::play() _id=0x%X\n", _id);
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
 		uint16_t cutName = offsets[_id * 2 + 0];
