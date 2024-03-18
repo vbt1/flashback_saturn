@@ -22,13 +22,11 @@ extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-emu_printf("%s\n", name);
+emu_printf("%s %d\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
 #ifdef WITH_MEM_MALLOC
-//	if(strstr(name,"movie")   != NULL || strstr(name,"conditions") != NULL 
-//	|| strstr(name,"polygons") != NULL || strstr(name," map") != NULL)
 	if(strstr(name,"conditions") != NULL 
 	 || strstr(name," map") != NULL
 	 )
@@ -38,9 +36,6 @@ emu_printf("%s\n", name);
 	 )
 #endif
 	{
-//emu_printf("0x25C60000 %d %s\n", decodedSize, name);
-		//emu_printf("lwram_new %d %s\n", decodedSize, name);
-//		dst = (uint8_t *)0x25C60000;//std_malloc(_resourceMacDataSize);
 #ifdef WITH_MEM_MALLOC
 		dst = (uint8_t *)sat_malloc(decodedSize);
 #else
@@ -76,30 +71,26 @@ emu_printf("%s\n", name);
 				dst = (uint8_t *)sat_malloc(decodedSize);
 			}
 #else
-			if(strstr(name,"polygons")   != NULL)
+			if(strstr(name,"polygons")   != NULL || strstr(name,"movie") != NULL)
 			{
 //				dst = (uint8_t *)sat_malloc(decodedSize);
 				dst = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(decodedSize);
 			}
-			else if(strstr(name,"movie") != NULL)
-			{
-//					dst = (uint8_t *)hwram_ptr;
-//				hwram_ptr += SAT_ALIGN(decodedSize);
-				dst = (uint8_t *)current_lwram;
-				current_lwram += SAT_ALIGN(decodedSize);
-			}
-			else if ((int)hwram_ptr+decodedSize<=end1)
-			{
-				emu_printf("hwram2 %d %s\n", decodedSize, name);
-				dst = (uint8_t *)hwram_ptr;
-				hwram_ptr += SAT_ALIGN(decodedSize);
-			}
 			else
 			{
-//				emu_printf("lwram_new %d %s\n", decodedSize, name);
-				dst = (uint8_t *)current_lwram;
-				current_lwram += SAT_ALIGN(decodedSize);
+				if ((int)hwram_ptr+decodedSize<=end1)
+				{
+	//				emu_printf("hwram2 %d %s\n", decodedSize, name);
+					dst = (uint8_t *)hwram_ptr;
+					hwram_ptr += SAT_ALIGN(decodedSize);
+				}
+				else
+				{
+	//				emu_printf("lwram_new %d %s\n", decodedSize, name);
+					dst = (uint8_t *)current_lwram;
+					current_lwram += SAT_ALIGN(decodedSize);
+				}
 			}
 #endif
 		}
@@ -152,6 +143,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	int count = 0;
 	int offset = 0;
 	uint8_t window[(1 << kBits)];
+	uint8_t tmp[512] __attribute__ ((aligned (4)));;
+	
+//	buf->ptrbg = buf->ptr;
+//	buf->ptrbg = &tmp[0];
 
 	for (int y = 0; y < h; ++y) {
 		for (int x = 0; x < w; ++x) {
@@ -175,6 +170,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 					continue;
 				}
 				offset = READ_BE_UINT16(src); src += 2;
+//				offset = ((uint16_t*)src)[0]; src += 2;
 				count = 3 + (offset >> 12);
 				offset &= kMask;
 				offset = (cursor - offset - 1) & kMask;
@@ -186,6 +182,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			setPixel(x, y, w, h, color, buf);
 			--count;
 		}
+//		memcpy(&buf->ptr[y*w],buf->ptrbg,w);
+//		DMA_ScuMemCopy((uint8*)&buf->ptr[y*w],(uint8*)tmp,  w);
+//slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
+//		SCU_DMAWait();
 	}
 }
 
@@ -208,6 +208,7 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 		int count = code & 0x1F;
 		if (count == 0) {
 			count = READ_BE_UINT16(src); src += 2;
+//			count = ((uint16_t*)src)[0]; src += 2;
 		}
 		if ((code & 0x40) == 0) {
 			if ((code & 0x20) == 0) {

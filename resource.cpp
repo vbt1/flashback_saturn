@@ -994,12 +994,9 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	uint32_t prevOffset = 0;
 	ObjectNode *prevNode = 0;
 	int iObj = 0;
-//slPrintHex(_numObjectNodes,slLocate(3,12));	
 	for (int i = 0; i < _numObjectNodes; ++i) {
-//slPrintHex(i,slLocate(3,14));		
 		if (prevOffset != offsets[i]) {
 //emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
-//slPrintHex(i,slLocate(3,16));
 //#ifdef WITH_MEM_MALLOC
 #if 0
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
@@ -1009,14 +1006,12 @@ emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
 #endif			
 			if (!on) {
-//slPrint("Unable to allocate ObjectNode",slLocate(3,17));				
 				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
 			}
 			const uint8_t *objData = tmp + offsets[i];
 			on->num_objects = _readUint16(objData); objData += 2;
 //emu_printf("on->num_objects = %d objectsCount[iObj] %d\n", on->num_objects,objectsCount[iObj]);			
-			assert(on->num_objects == objectsCount[iObj]);
-//emu_printf("sat_malloc(sizeof(Object) * on->num_objects) size %d\n",sizeof(Object) * on->num_objects);			
+			assert(on->num_objects == objectsCount[iObj]);			
 //#ifdef WITH_MEM_MALLOC
 #if 0
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
@@ -1025,11 +1020,7 @@ emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, curren
 			on->objects = (Object *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(Object) * on->num_objects);
 #endif
-//slPrintHex(sizeof(Object) * on->num_objects,slLocate(3,18));			
-//if(!on->objects)			
-	//slPrint("sat_malloc(sizeof(Object) * on->num_objects) failed",slLocate(3,17));			
 			for (int j = 0; j < on->num_objects; ++j) {
-	//slPrint("int j = 0; j < on->num_objects; ++j ",slLocate(3,17));				
 				Object *obj = &on->objects[j];
 				obj->type = _readUint16(objData); objData += 2;
 				obj->dx = *objData++;
@@ -1596,6 +1587,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 //	assert(sig == 0xC211 || sig == 0xC103);
 	if(sig != 0xC211 && sig != 0xC103)
 		return;
+//	const int count = ((uint16_t*)ptr)[0]; ptr += 2;
 	const int count = READ_BE_UINT16(ptr); ptr += 2;
 //	assert(i < count);
 	if(i>=count)
@@ -1605,6 +1597,8 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
 	if (offset != 0) {
 		ptr = basePtr + offset;
+//		const int w = ((uint16_t*)ptr)[0]; ptr += 2;
+//		const int h = ((uint16_t*)ptr)[0]; ptr += 2;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
 //---------------------------------------------------------
@@ -1976,4 +1970,3 @@ void Resource::MAC_loadSounds() {
 		}
 	}
 }
-

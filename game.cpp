@@ -169,6 +169,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 //	_rewindPtr = -1;
 //	_rewindLen = 0;
 //	_cheats = cheats;
+	_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 }
 
 void Game::run() {
@@ -453,7 +454,7 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-emu_printf("mainLoop\n");			
+//emu_printf("mainLoop\n");			
 	playCutscene();
 	if (_cut._id == 0x3D) {
 		showFinalScore();
@@ -1878,7 +1879,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
-	uint8_t buf[16 * 16];
+//	uint8_t buf[16 * 16];
 	switch (_res._type) {
 	case kResourceTypeDOS:
 //		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt ࠲emettre
@@ -2070,6 +2071,7 @@ void Game::handleInventory() {
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}
+//			slSynch();
 		}
 		memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
 		_vid.fullRefresh();

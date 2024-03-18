@@ -584,7 +584,7 @@ void Video::MAC_decodeMap(int level, int room) {
 	buf.setPixel = Video::MAC_setPixel;
 	_res->MAC_loadLevelRoom(level, room, &buf);
 //	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
-	memset(_frontLayer,0x00,GAMESCREEN_W * GAMESCREEN_H * 4);
+	memset(_frontLayer,0x00, buf.w * buf.h);
 	Color roomPalette[256];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {
@@ -613,6 +613,7 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);	
+//	buf->ptrbg[x] = color;
 	buf->ptr[offset] = color;
 	buf->ptrsp[offset2] = color;
 }
@@ -708,22 +709,26 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
+//emu_printf("MAC_drawSprite w1 %d w2 %d h1 %d h2 %d ",buf.w,buf.w2,buf.h,buf.h2);
+
 #ifdef COLOR_4BPP
 		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 #else
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 #endif
-		buf.ptr      = _frontLayer;
 		buf.ptrbg    = _backLayer;
 
 		if(buf.w2 == 160)
 		{
+//emu_printf("fg \n");			
+			buf.ptr      = _frontLayer;
 //			buf.ptrsp = _frontLayer;
 			_res->MAC_decodeImageData(data, frame, &buf);
 //			markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
 		}
 		else
 		{
+emu_printf("sprite \n");				
 			uint8_t buffer[110*110];  // max 160x288 pour le menu
 			buf.ptrsp = buffer;
 			TEXTURE *txptr = &tex_spr[0];
