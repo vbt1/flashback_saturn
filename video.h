@@ -97,12 +97,14 @@ struct Video {
 	void drawStringLen(const char *str, int len, int x, int y, uint8_t color);
 	void MAC_decodeMap(int level, int room);
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color);	
 	static void MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);
+	void MAC_drawFG(int x, int y, const uint8_t *data, int frame);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
 	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);

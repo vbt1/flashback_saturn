@@ -1885,7 +1885,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 //		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt ࠲emettre
 		break;
 	case kResourceTypeMac:
-		switch (iconNum) {
+/*		switch (iconNum) {
 		case 76: // cursor
 			iconNum = 32;
 			break;
@@ -1895,7 +1895,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 		case 78: // down
 			iconNum = 34;
 			break;
-		}
+		}*/
 		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
 		return;
 	}
@@ -1982,7 +1982,8 @@ void Game::handleInventory() {
 				}
 				break;
 			case kResourceTypeMac:
-				drawIcon(31, 56, 140, 0xF);
+//				drawIcon(31, 56, 140, 0xF);
+				_vid.MAC_drawFG(56,140,_res._icn, 31);
 				break;
 			}
 			if (!display_score) {
@@ -1992,9 +1993,11 @@ void Game::handleInventory() {
 					if (items[item_it].icon_num == 0xFF) {
 						break;
 					}
-					drawIcon(items[item_it].icon_num, icon_x_pos, 157, 0xA);
+//					drawIcon(items[item_it].icon_num, icon_x_pos, 157, 0xA);
+					_vid.MAC_drawFG(icon_x_pos,157,_res._icn, items[item_it].icon_num);
 					if (current_item == item_it) {
-						drawIcon(76, icon_x_pos, 157, 0xA);
+//						drawIcon(76, icon_x_pos, 157, 0xA);
+						_vid.MAC_drawFG(icon_x_pos,157,_res._icn, 32); //76
 						selected_pge = items[item_it].live_pge;
 						uint8_t txt_num = items[item_it].init_pge->text_num;
 						const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
@@ -2008,10 +2011,12 @@ void Game::handleInventory() {
 					icon_x_pos += 32;
 				}
 				if (current_line != 0) {
-					drawIcon(77, 120, 143, 0xA); // up arrow
+//					drawIcon(77, 120, 143, 0xA); // up arrow
+					_vid.MAC_drawFG(120,143,_res._icn, 33);//77
 				}
 				if (current_line != num_lines - 1) {
-					drawIcon(78, 120, 176, 0xA); // down arrow
+//					drawIcon(78, 120, 176, 0xA); // down arrow
+					_vid.MAC_drawFG(120,176,_res._icn, 34);//78
 				}
 			} else {
 				char buf[50];

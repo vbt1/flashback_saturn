@@ -617,11 +617,17 @@ void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	buf->ptr[offset] = color;
 	buf->ptrsp[offset2] = color;
 }
+
+void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	const int offset = y * buf->pitch + x;
+	buf->ptr[offset] = color;
+}
+
 #ifdef COLOR_4BPP
 void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
-	if ((buf->ptrbg[offset] & 0x80) == 0) {
+	if ((buf->ptr[offset] & 0x80) == 0) {
 		if(x&1)
 			buf->ptrsp[offset2] |= (color&0x0f);
 		else
@@ -635,7 +641,7 @@ void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color)
 void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);
-	if ((buf->ptrbg[offset] & 0x80) == 0) {
+	if ((buf->ptr[offset] & 0x80) == 0) {
 		buf->ptrsp[offset2] = color;
 //		buf->ptr[offset] = color;
 	}
@@ -693,6 +699,25 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
         buf->y -= (int16_t)READ_BE_UINT16(dataPtr + 6);
 }
 
+
+void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
+	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
+
+	if (dataPtr) {
+		DecodeBuffer buf;
+		memset(&buf, 0, sizeof(buf));
+		buf.w  = buf.pitch = _w;
+		buf.h  = _h;
+		buf.x  = x * _layerScale;
+		buf.y  = y * _layerScale;
+//		fixOffsetDecodeBuffer(&buf, dataPtr);
+
+		buf.setPixel = MAC_setPixelFG;
+		buf.ptr      = _frontLayer;
+		_res->MAC_decodeImageData(data, frame, &buf);
+	}
+}
+
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
 //emu_printf("MAC_drawSprite\n");	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
@@ -716,35 +741,23 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 #else
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 #endif
-		buf.ptrbg    = _backLayer;
+		buf.ptr = _backLayer;
 
-		if(buf.w2 == 160)
-		{
-//emu_printf("fg \n");			
-			buf.ptr      = _frontLayer;
-//			buf.ptrsp = _frontLayer;
-			_res->MAC_decodeImageData(data, frame, &buf);
-//			markBlockAsDirty(buf.x, buf.y, buf.h2, buf.w2, 1);
-		}
-		else
-		{
-emu_printf("sprite \n");				
-			uint8_t buffer[110*110];  // max 160x288 pour le menu
-			buf.ptrsp = buffer;
-			TEXTURE *txptr = &tex_spr[0];
-			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
-			memset(buf.ptrsp,0,buf.w2*buf.h2);
-			_res->MAC_decodeImageData(data, frame, &buf);
+		uint8_t buffer[110*110];  // max 160x288 pour le menu
+		buf.ptrsp = buffer;
+		TEXTURE *txptr = &tex_spr[0];
+		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
+		memset(buf.ptrsp,0,buf.w2*buf.h2);
+		_res->MAC_decodeImageData(data, frame, &buf);
 
 #ifdef COLOR_4BPP			
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-			position_vram+=(buf.w2*buf.h2)/2;
+		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
+		position_vram+=(buf.w2*buf.h2)/2;
 #else
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-			position_vram+=(buf.w2*buf.h2);
+		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+		position_vram+=(buf.w2*buf.h2);
 #endif
-			SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
-		}
+		SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
 	}
 }
 
