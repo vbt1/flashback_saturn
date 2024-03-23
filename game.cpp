@@ -2151,11 +2151,14 @@ emu_printf("b\n");
 
 	Uint32 *libBakBuf    =(Uint32 *)current_lwram;//[4096] ;
 	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];
+
 //	Uint32 *libBakBuf    =(Uint32 *)sat_malloc((4096*4)+(2048*4));//current_lwram;//[4096] ;
 //	Uint32 *BackUpRamWork=(Uint32 *)&libBakBuf[4096];//(current_lwram+(4096*4));//[2048];
 
 emu_printf("c\n");
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
+	sbuf.buffer	 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
+	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));	
 emu_printf("d\n");
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2165,6 +2168,7 @@ emu_printf("e\n");
 	PER_SMPC_RES_DIS(); // Disable reset
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
 PER_SMPC_RES_ENA(); // Enable reset
+
 emu_printf("h\n");
 PER_SMPC_RES_DIS(); // Disable reset
 		if( BUP_Stat(0, 0, &sttb) == BUP_UNFORMAT) 
@@ -2228,13 +2232,15 @@ emu_printf("loadGameState1\n");
 //	Uint32 BackUpRamWork[2048];
 	
 	Uint32 *libBakBuf    =(Uint32 *)current_lwram;//[4096] ;
-	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];	
+	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];
+	sbuf.buffer			 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
 	Uint32 i;
 
 	int32 status;
 emu_printf("loadGameState2\n");
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
-
+	sbuf.buffer	 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
+	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));
 	// Load save from saturn backup memory
 	PER_SMPC_RES_DIS(); // Disable reset
 emu_printf("loadGameState3\n");	
@@ -2325,7 +2331,7 @@ void Game::saveState(SAVE_BUFFER *sbuf) {
 			sbuf->buffer[sbuf->idx] = (cs2->data_buf[idx]); sbuf->idx++;
 		}
 	}
-	WRITE_UINT16((sbuf->buffer + sbuf->idx), _pge_opGunVar); sbuf->idx += 2;
+	WRITE_UINT16((sbuf->buffer + sbuf->idx), _pge_opGunVar);
 }
 
 void Game::loadState(SAVE_BUFFER *sbuf) {

@@ -35,7 +35,7 @@
 #define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
 
 typedef struct {
-	Uint8 buffer[SAV_BUFSIZE]; // 10 Kilobytes of save buffer
+	Uint8 *buffer;  //[SAV_BUFSIZE]; // 10 Kilobytes of save buffer
 	Uint32 idx; // Index of current position inside the buffer
 } SAVE_BUFFER;
 
