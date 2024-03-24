@@ -12,7 +12,7 @@ extern "C" {
 /*---- [2.This part must not be modified] ---------------------------------*/
 
 #define		MAX_VERTICES	1	/* number of vertices that can be used */
-#define		MAX_POLYGONS	24	/* number of vertices that can be used */
+#define		MAX_POLYGONS	32	/* number of vertices that can be used */
 #define		MAX_EVENTS		  1	/* number of events that can be used   */
 #define		MAX_WORKS		 1	/* number of works that can be used    */
 

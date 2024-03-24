@@ -1136,6 +1136,7 @@ void Cutscene::mainLoop(uint16_t num) {
 }
 
 bool Cutscene::load(uint16_t cutName) {
+emu_printf(" Cutscene::load %x \n", cutName);	
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
@@ -1167,6 +1168,7 @@ void Cutscene::unload() {
 		_res->unload(Resource::OT_POL);
 		break;
 	case kResourceTypeMac:
+
 		_res->MAC_unloadCutscene();
 		break;
 	}
@@ -1305,7 +1307,7 @@ void Cutscene::playText(const char *str) {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-//		debug(DBG_CUT, "Cutscene::play() _id=0x%X", _id);
+		emu_printf("Cutscene::play() _id=0x%X\n", _id);
 		_creditsSequence = false;
 		emu_printf("Cutscene::play() _id=0x%X\n", _id);
 		prepare();

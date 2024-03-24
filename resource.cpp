@@ -1899,12 +1899,13 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-//	emu_printf("MAC_loadCutscene\n");
+emu_printf("MAC_loadCutscene %s\n", cutscene);	
 	MAC_unloadCutscene();
 	char name[32];
 
 	snprintf(name, sizeof(name), "%s movie", cutscene);
 	stringLowerCase(name);
+	emu_printf("MAC_loadCutscene %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
 	if (!cmdEntry) {
 		return;

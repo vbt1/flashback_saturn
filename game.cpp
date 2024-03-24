@@ -502,7 +502,7 @@ heapWalk();
 //	slDMACopy(_vid._backLayer, _vid._frontLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
 //	slDMAWait();
 
-	if(position_vram>0x74000)
+	if(position_vram>0x70000)
 	position_vram = 0;
 
 	pge_getInput();

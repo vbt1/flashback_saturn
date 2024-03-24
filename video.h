@@ -15,7 +15,7 @@
 #undef pal
 #undef TEXDEF
 
-#define	cgaddress	0x8000 //SpriteBufSize
+#define	cgaddress	0x2000 //SpriteBufSize
 #define	cgaddress8	cgaddress/8
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
