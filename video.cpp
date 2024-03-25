@@ -13,6 +13,8 @@ extern "C"
 #include <string.h>
 extern TEXTURE tex_spr[4];
 extern Uint32 position_vram;
+extern Uint8 *current_lwram;
+extern Uint8 *hwram_screen;
 void	*malloc(size_t);
 }
 #include "file.h"
@@ -702,7 +704,7 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
 
 void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
-
+//emu_printf("MAC_drawFG\n");
 	if (dataPtr) {
 		DecodeBuffer buf;
 		memset(&buf, 0, sizeof(buf));
@@ -734,17 +736,24 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
-//emu_printf("MAC_drawSprite w1 %d w2 %d h1 %d h2 %d ",buf.w,buf.w2,buf.h,buf.h2);
+emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
 
 #ifdef COLOR_4BPP
 		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 #else
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 #endif
-		buf.ptr = _backLayer;
-
-		uint8_t buffer[110*110];  // max 160x288 pour le menu
-		buf.ptrsp = buffer;
+		if (buf.h2<352)
+			buf.ptr = _backLayer;
+		else
+			buf.ptr = NULL;
+//		uint8_t buffer[110*110];  // max 160x288 pour le menu
+//		if(buf.w2<352)
+			buf.ptrsp = hwram_screen;
+//		else
+//			return;
+	//		buf.ptrsp = current_lwram;
+		
 		TEXTURE *txptr = &tex_spr[0];
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 		memset(buf.ptrsp,0,buf.w2*buf.h2);

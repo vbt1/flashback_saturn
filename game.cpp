@@ -709,7 +709,7 @@ void Game::playCutscene(int id) {
 				_mix.playMusic(num);
 			}
 		}*/
-//		emu_printf("_cut._id %d _musicTableDOS %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
+		emu_printf("_cut._id %d _musicTableDOS %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
 		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
@@ -1448,6 +1448,7 @@ void Game::drawPiege(AnimBufferState *state) {
 			const int frame = _res.MAC_getPersoFrame(pge->anim_number);
 			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
 		} else {
+//emu_printf("MAC_drawSprite 3 monster\n");
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
 			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
 		}
@@ -2135,9 +2136,7 @@ bool Game::saveGameState(uint8 slot) {
 	bool success = false;
 	char stateFile[8];
 	char hdrdesc[10];
-emu_printf("a\n");
 	makeGameStateName(slot, stateFile);
-emu_printf("b\n");
 	sprintf(hdrdesc, "RS:%d-%d", _currentLevel + 1, _currentRoom);
 
 	// Needed structs
@@ -2155,35 +2154,25 @@ emu_printf("b\n");
 //	Uint32 *libBakBuf    =(Uint32 *)sat_malloc((4096*4)+(2048*4));//current_lwram;//[4096] ;
 //	Uint32 *BackUpRamWork=(Uint32 *)&libBakBuf[4096];//(current_lwram+(4096*4));//[2048];
 
-emu_printf("c\n");
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 	sbuf.buffer	 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
 	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));	
-emu_printf("d\n");
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
-emu_printf("e\n");
 	int cmprSize = LZ_Compress(sbuf.buffer, rle_buf, sbuf.idx);
 
 	PER_SMPC_RES_DIS(); // Disable reset
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
-PER_SMPC_RES_ENA(); // Enable reset
-
-emu_printf("h\n");
-PER_SMPC_RES_DIS(); // Disable reset
 		if( BUP_Stat(0, 0, &sttb) == BUP_UNFORMAT) 
 		{	
-	emu_printf("h1\n");		
 			BUP_Format(0);
-emu_printf("h2\n");					
 		}
-emu_printf("i\n");
 	PER_SMPC_RES_ENA(); // Enable reset
-emu_printf("j\n");
+
 	if (sttb.freeblock > 0) { // Not sure of the size of a block
 		memset(writetb.filename, 0, 9);
 		memset(writetb.comment, 0, 9);
-emu_printf("k\n");
+
 		strncpy((char*) writetb.filename, stateFile, 11);
 		strncpy((char*) writetb.comment, hdrdesc, 10);
 
@@ -2202,29 +2191,24 @@ emu_printf("k\n");
 
 		writetb.date = BUP_SetDate(&datetb);
 		writetb.datasize = (cmprSize) + 1;
-emu_printf("l\n");		
+
 		Sint32 verify;
 		PER_SMPC_RES_DIS(); // Disable reset
-emu_printf("m\n");		
 			BUP_Write(0, &writetb, rle_buf, OFF);
-emu_printf("n\n");
 			verify = BUP_Verify(0, writetb.filename, rle_buf);
-emu_printf("o\n");
 		PER_SMPC_RES_ENA(); // Enable reset
-emu_printf("p %d\n",success);
+
 		if (verify == 0)
 			success = true;
 	}
+
 	return success;
 }
 
 bool Game::loadGameState(uint8 slot) {
 	bool success = false;
 	char stateFile[20];
-emu_printf("loadGameState1\n");
 	makeGameStateName(slot, stateFile);
-
-//current_lwram = (Uint8 *)0x200000;	
 
 	BupConfig conf[3];
 	BupDir	dir[1];
@@ -2237,32 +2221,27 @@ emu_printf("loadGameState1\n");
 	Uint32 i;
 
 	int32 status;
-emu_printf("loadGameState2\n");
+
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 	sbuf.buffer	 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
 	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));
 	// Load save from saturn backup memory
 	PER_SMPC_RES_DIS(); // Disable reset
-emu_printf("loadGameState3\n");	
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
-PER_SMPC_RES_ENA(); // Enable reset
-emu_printf("h\n");
-PER_SMPC_RES_DIS(); // Disable reset		
-emu_printf("loadGameState4\n");
 		status = BUP_Read(0, (Uint8*)stateFile, rle_buf);
 	PER_SMPC_RES_ENA(); // Enable reset
 
 	if (status != 0)
 		return false;
-emu_printf("loadGameState5\n");
+
 	BUP_Dir(0, (Uint8*)stateFile, 1, dir);
-emu_printf("loadGameState6\n");
+
 	Uint32 cmprSize = dir[0].datasize;
 
 	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
-emu_printf("loadGameState7\n");
+
 	loadState(&sbuf);
-emu_printf("loadGameState8\n");
+
 	return success;
 }
 

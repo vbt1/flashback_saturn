@@ -35,6 +35,7 @@ void *calloc (size_t, size_t);
 #include "game.h"
 
 extern Uint8 vceEnabled;
+uint8_t * save_current_lwram;
 
 Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	memset(this, 0, sizeof(Resource));
@@ -1808,10 +1809,11 @@ emu_printf("MAC_loadLevelData %s\n", name);
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
-//emu_printf("MAC_loadLevelRoom\n");	
+emu_printf("MAC_loadLevelRoom\n");	
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
+emu_printf("MAC_decodeImageData x\n");	
 	MAC_decodeImageData(ptr, 0, dst);
 	
 //	emu_printf("sat_free(%p)\n",ptr); // vbt : free sur l'image de fond, à ne pas remettre
@@ -1891,6 +1893,8 @@ void Resource::MAC_unloadCutscene() {
 	emu_printf("MAC_unloadCutscene\n");	
 // vbt on efface le plus bas puis le plus haut
 //	current_lwram=(Uint8 *)0x200000;
+	if(_pol!=NULL)
+		current_lwram = (uint8_t *)save_current_lwram;
 	sat_free(_pol);
 	_pol = 0;
 	sat_free(_cmd);
@@ -1902,12 +1906,14 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 emu_printf("MAC_loadCutscene %s\n", cutscene);	
 	MAC_unloadCutscene();
 	char name[32];
+	save_current_lwram = (uint8_t *)current_lwram;
 
 	snprintf(name, sizeof(name), "%s movie", cutscene);
 	stringLowerCase(name);
 	emu_printf("MAC_loadCutscene %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
 	if (!cmdEntry) {
+		current_lwram = (uint8_t *)save_current_lwram;
 		return;
 	}
 	_cmd = decodeResourceMacData(cmdEntry, true);
@@ -1916,6 +1922,7 @@ emu_printf("MAC_loadCutscene %s\n", cutscene);
 	stringLowerCase(name);
 	const ResourceMacEntry *polEntry = _mac->findEntry(name);
 	if (!polEntry) {
+		current_lwram = (uint8_t *)save_current_lwram;		
 		return;
 	}
 	_pol = decodeResourceMacData(polEntry, true);

@@ -144,7 +144,9 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	int offset = 0;
 	uint8_t window[(1 << kBits)];
 	uint8_t tmp[512] __attribute__ ((aligned (4)));;
-	
+
+//emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
+
 //	buf->ptrbg = buf->ptr;
 //	buf->ptrbg = &tmp[0];
 
@@ -190,6 +192,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
+//emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
 	struct {
 		const uint8_t *ptr;
 		int repeatCount;
