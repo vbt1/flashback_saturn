@@ -8,7 +8,9 @@ extern "C"
 {
 #include <sl_def.h>	
 #include <string.h>	
-extern TEXTURE tex_spr[4];	
+extern TEXTURE tex_spr[4];
+extern Uint8 *current_lwram;
+extern Uint8 *save_current_lwram;
 
 }
 #include "mod_player.h"
@@ -89,12 +91,12 @@ void Cutscene::updatePalette() {
 
 void Cutscene::updateScreen() {
 
-	sync(_frameDelay - 3);
+	sync(_frameDelay - 1);
 //	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 //	_vid->SAT_displayCutscene((int)_frontPage==SpriteVRAM + cgaddress,0, 0, 128, 240);
 #ifndef SLAVE_SOUND	
-
+_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
 // vbt : déplacement de la synchro ici
 	slSynch(); // obligatoire
 	
@@ -192,12 +194,12 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		}
 	}
 	const uint8_t *sep = _textSep;
-	y += 50;
+	y += 20;
 	x += (_res->_lang == LANG_JP) ? 0 : 4;
 	int16_t yPos = y/2;
 	int16_t xPos = x/2;
 	if (textJustify != kTextJustifyLeft) {
-		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W);
+		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W); // pas de x2 sur CHAR_W
 	}
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
@@ -448,7 +450,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-//	emu_printf("Cutscene::op_drawCaptionText()\n");		
+	emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
@@ -976,24 +978,30 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-//	debug(DBG_CUT, "Cutscene::op_drawTextAtPos()");
+emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
-		int16_t x = (int8_t)fetchNextCmdByte() * 8;
+		int16_t x = (int8_t)fetchNextCmdByte() ;
 		int16_t y = (int8_t)fetchNextCmdByte() * 8;
 		if (!_creditsSequence) {
+
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				const uint8_t color = 0xD0 + (strId >> 0xC);
 //				drawText(x, y, str, color, _backPage, kTextJustifyCenter);
-
+	emu_printf("Cutscene::op_drawTextAtPos() x %d y %d\n",x, y);
 _vid->_w=480;
-				drawText(0, 0, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
+
+//_vid->_layerScale = 1;
+				drawText(x/2, y, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
+//			drawText(0, y, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
+//_vid->_layerScale = 2;				
 _vid->_w=512;
 #ifndef SLAVE_SOUND
-				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -129+y, 168, 480);
+//				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -121+y, 168, 480);
 #endif
 			}
+
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
 				if ((_cmdPtr - _cmdPtrBak) == 0xA) {
@@ -1003,6 +1011,7 @@ _vid->_w=512;
 					_stub->sleep(15);
 				}
 			}
+
 		}
 	}
 }
@@ -1057,11 +1066,7 @@ void Cutscene::op_handleKeys() {
 		_cmdPtr = getCommandData();
 		n = READ_BE_UINT16(_cmdPtr + n * 2 + 2);
 	}
-	if (_res->isMac()) {
-		_cmdPtr = getCommandData();
-		_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
-		n = 0;
-	}
+
 	_cmdPtr = _cmdPtrBak = getCommandData() + n + _baseOffset;
 }
 
@@ -1120,6 +1125,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 		}
 		op >>= 2;
 		if (op >= NUM_OPCODES) {
+			continue;
 		}
 //			emu_printf("VBT cutmainLoop k op %d\n",op);
 		(this->*_opcodeTable[op])();
@@ -1308,9 +1314,8 @@ void Cutscene::playText(const char *str) {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-		emu_printf("Cutscene::play() _id=0x%X\n", _id);
+		emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
 		_creditsSequence = false;
-		emu_printf("Cutscene::play() _id=0x%X\n", _id);
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
 		uint16_t cutName = offsets[_id * 2 + 0];

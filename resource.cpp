@@ -1813,6 +1813,8 @@ emu_printf("MAC_loadLevelRoom\n");
 	char name[64];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
+	slSynch(); // vbt pour virer les sprites
+
 emu_printf("MAC_decodeImageData x\n");	
 	MAC_decodeImageData(ptr, 0, dst);
 	
@@ -1903,14 +1905,14 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-emu_printf("MAC_loadCutscene %s\n", cutscene);	
+emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 	MAC_unloadCutscene();
 	char name[32];
 	save_current_lwram = (uint8_t *)current_lwram;
 
-	snprintf(name, sizeof(name), "%s movie", cutscene);
+	snprintf(name, sizeof(name), "%s movie", cutscene, current_lwram);
 	stringLowerCase(name);
-	emu_printf("MAC_loadCutscene %s\n",name);	
+	emu_printf("MAC_loadCutscene2 %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
 	if (!cmdEntry) {
 		current_lwram = (uint8_t *)save_current_lwram;
