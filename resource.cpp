@@ -23,7 +23,7 @@ extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 void	*malloc(size_t);
-void *calloc (size_t, size_t);
+//void *calloc (size_t, size_t);
 }
 #include "saturn_print.h"
 
@@ -1496,7 +1496,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	{
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1  += (int)hwram;
-//		//emu_printf("hwram ****%p****\n",hwram);	
+		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
 		hwram_ptr = (unsigned char *)hwram;
 	}
 //	else

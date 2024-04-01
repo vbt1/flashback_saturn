@@ -1120,8 +1120,8 @@ emu_printf("drawStoryTexts\n");
 //		memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
-		while (!_stub->_pi.backspace) {  // vbt : remettre le bouton quit
-//_stub->processEvents();
+		while (!_stub->_pi.escape) {  // vbt : remettre le bouton quit
+_stub->processEvents();
 emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
 			memset(_vid._frontLayer, 0x00, 512*224);			
 //			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
