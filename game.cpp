@@ -189,6 +189,10 @@ void Game::run() {
 	case kResourceTypeMac:
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
+			
+_vid.setTextPalette();	
+_vid.drawString("Loading Please wait", 20, 40, 0xE7);
+_stub->copyRect(0, 0, _vid._w, 120, _vid._frontLayer, _vid._w);
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 // vbt : refaire le chargement des sons
@@ -217,7 +221,8 @@ hwram = (uint8_t *)hwram_ptr;
 //	memset(_vid._frontLayer, 0x00, 512*448);
 //	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //	_stub->updateScreen(0);
-	
+memset(_vid._frontLayer, 0x00, 512*120);
+_stub->copyRect(0, 0, _vid._w, 120, _vid._frontLayer, _vid._w);
 	playCutscene(0x40);
 	playCutscene(0x0D);
 	
