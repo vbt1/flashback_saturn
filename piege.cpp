@@ -141,16 +141,18 @@ emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,l
 }
 
 void Game::pge_process(LivePGE *pge) {
-//	debug(DBG_PGE, "Game::pge_process() pge_num=%ld", pge - &_pgeLive[0]);
+	emu_printf("Game::pge_process() pge_num=%ld\n", pge - &_pgeLive[0]);
 	_pge_playAnimSound = true;
 	_pge_currentPiegeFacingDir = (pge->flags & 1) != 0;
 	_pge_currentPiegeRoom = pge->room_location;
 	MessagePGE *le = _pge_messagesTable[pge->index];
 	if (le) {
+emu_printf("pge_setupNextAnimFrame\n");		
 		pge_setupNextAnimFrame(pge, le);
 	}
 	const uint8_t *anim_data = _res.getAniData(pge->obj_type);
 	if (_res._readUint16(anim_data) <= pge->anim_seq) {
+emu_printf("_res._readUint16(anim_data) <= pge->anim_seq\n");		
 		InitPGE *init_pge = pge->init_PGE;
 		assert(init_pge->obj_node_number < _res._numObjectNodes);
 		ObjectNode *on = _res._objectNodesMap[init_pge->obj_node_number];
@@ -174,16 +176,20 @@ void Game::pge_process(LivePGE *pge) {
 				anim_data = _res.getAniData(pge->obj_type);
 				uint8_t snd = anim_data[2];
 				if (snd) {
+emu_printf("pge_playAnimSound\n");					
 					pge_playAnimSound(pge, snd);
 				}
+emu_printf("pge_setupOtherPieges\n");				
 				pge_setupOtherPieges(pge, init_pge);
 				break;
 			}
 			++obj;
 		}
 	}
+emu_printf("pge_setupAnim\n");	
 	pge_setupAnim(pge);
 	++pge->anim_seq;
+emu_printf("pge_clearMessages\n");
 	pge_clearMessages(pge->index);
 }
 

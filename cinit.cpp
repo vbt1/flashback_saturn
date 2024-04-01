@@ -15,8 +15,8 @@ extern "C" {
 #include 	"saturn_print.h"
 #include 	"systemstub.h"
 
-#define LOW_WORK_RAM 0x00290000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x70000
+#define LOW_WORK_RAM_START 0x00280000 // Beginning of LOW WORK RAM (1Mb)
+#define LOW_WORK_RAM_SIZE 0x80000
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 
 #define		SystemWork		0x060ffc00		/* System Variable Address */
@@ -53,9 +53,9 @@ int	main( void )
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
 //	slSetSprTVMode(TV_320x224); // Init SGL
 
-	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
+	memset((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
-	MEM_Init(LOW_WORK_RAM, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
+	MEM_Init(LOW_WORK_RAM_START, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
 	
 	slTVOff();
 //	

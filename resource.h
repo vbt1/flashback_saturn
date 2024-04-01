@@ -246,10 +246,14 @@ struct Resource {
 		return _tbn + _readUint16(_tbn + num * 2);
 	}
 	const uint8_t *getGameString(int num) const {
+emu_printf("getGameString %x\n",num);		
 		if (_type == kResourceTypeMac) {
+emu_printf("count %x\n",READ_BE_UINT16(_str));			
 			const int count = READ_BE_UINT16(_str);
-			assert(num < count);
+			if(num >= count)
+				return NULL;
 			const int offset = READ_BE_UINT16(_str + 2 + num * 2);
+emu_printf("_str %p off %d\n",_str,offset);			
 			return _str + offset;
 		}
 		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);

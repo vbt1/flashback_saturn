@@ -90,16 +90,19 @@ void Cutscene::updatePalette() {
 }
 
 void Cutscene::updateScreen() {
-
+emu_printf("updateScreen\n");
 	sync(_frameDelay - 1);
 //	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
+emu_printf("SAT_displayCutscene\n");
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 //	_vid->SAT_displayCutscene((int)_frontPage==SpriteVRAM + cgaddress,0, 0, 128, 240);
-#ifndef SLAVE_SOUND	
+#ifndef SLAVE_SOUND
+emu_printf("SAT_displaySprite\n");
 _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
+emu_printf("slSynch\n");
 // vbt : déplacement de la synchro ici
 	slSynch(); // obligatoire
-	
+emu_printf("updatePalette\n");	
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
@@ -981,7 +984,7 @@ void Cutscene::op_drawTextAtPos() {
 emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
-		int16_t x = (int8_t)fetchNextCmdByte() ;
+		int16_t x = (int8_t)fetchNextCmdByte() * 8;
 		int16_t y = (int8_t)fetchNextCmdByte() * 8;
 		if (!_creditsSequence) {
 
@@ -1159,7 +1162,13 @@ bool Cutscene::load(uint16_t cutName) {
 		break;
 	}
 	_res->load_CINE();
-	return _res->_cmd && _res->_pol;
+	bool loaded = (_res->_cmd && _res->_pol);
+emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
+
+	if(!loaded)
+		unload();
+	
+	return loaded;
 }
 
 void Cutscene::unload() {
@@ -1168,14 +1177,15 @@ void Cutscene::unload() {
 	memset(_backPage, 0x00, IMG_SIZE);
 	memset(_frontPage, 0x00, IMG_SIZE);
 */	
-	
+emu_printf(" Cutscene::unload %x\n", _id);	
 	switch (_res->_type) {
 	case kResourceTypeDOS:
 		_res->unload(Resource::OT_CMD);
 		_res->unload(Resource::OT_POL);
 		break;
 	case kResourceTypeMac:
-
+		if (_id != 0x3D)
+			_id = 0xFFFF; // vbt : ajout
 		_res->MAC_unloadCutscene();
 		break;
 	}
@@ -1197,6 +1207,7 @@ void Cutscene::unload() {
 		user_sprite.GRDA=0;	
 		
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+emu_printf("Cutscene::unload slSynch\n");		
 		slSynch();
 		
 //		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
@@ -1272,7 +1283,11 @@ void Cutscene::playCredits() {
 		const uint16_t *offsets = _offsetsTableDOS;
 		uint16_t cutName = offsets[cut_id * 2 + 0];
 		uint16_t cutOff  = offsets[cut_id * 2 + 1];
+		
+		emu_printf("load(cutName)\n");
+		
 		if (load(cutName)) {
+		emu_printf("mainLoop(cutName)\n");			
 			mainLoop(cutOff);
 			unload();
 		}

@@ -22,7 +22,7 @@ extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-emu_printf("%s %d\n", name, decodedSize);
+emu_printf("lzss %s %d\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;

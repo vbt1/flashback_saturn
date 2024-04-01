@@ -71,7 +71,7 @@ void *sat_malloc(size_t size) {
 
 void sat_free(void *ptr) {
 #define VBT_L_START    ((volatile void *)(0x200000))
-#define ADR_WORKRAM_L_START    ((volatile void *)(0x290000))
+#define LOW_WORK_RAM_START    ((volatile void *)(0x280000))
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 
 	if(ptr == NULL || ptr == hwram)
@@ -92,13 +92,13 @@ void sat_free(void *ptr) {
 
 		
 
-	if((ptr >= ADR_WORKRAM_L_START) && (ptr < ADR_WORKRAM_L_END))
+	if((ptr >= LOW_WORK_RAM_START) && (ptr < ADR_WORKRAM_L_END))
 	{
 		emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 		MEM_Free(ptr);
 	}
 	
-	if((ptr >= VBT_L_START) && (ptr < ADR_WORKRAM_L_START))
+	if((ptr >= VBT_L_START) && (ptr < LOW_WORK_RAM_START))
 	{
 		emu_printf("NO FREE: addr: %p\n", ptr);
 	}	

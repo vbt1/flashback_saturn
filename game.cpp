@@ -163,7 +163,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 	_inp_demPos = 0;
 	_skillLevel = _menu._skill = kSkillNormal;
 	_currentLevel = _menu._level = level;
-	_demoBin = -1;
+//	_demoBin = -1;
 //	_widescreenMode = widescreenMode;
 //	_autoSave = autoSave;
 //	_rewindPtr = -1;
@@ -300,6 +300,7 @@ hwram = (uint8_t *)hwram_ptr;
 			_score = 0;
 //			clearStateRewind();
 		//slPrint("loadLevelData1",slLocate(3,13));
+		emu_printf("loadLevelData\n");		
 			loadLevelData();
 		//slPrint("resetGameState",slLocate(3,13));			
 			resetGameState();
@@ -307,9 +308,9 @@ hwram = (uint8_t *)hwram_ptr;
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-		//slPrint("mainLoop",slLocate(3,13));				
+		emu_printf("mainLoop\n");
 				mainLoop();
-				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
+				if (/*_demoBin != -1*/ 0 && _inp_demPos >= _res._demLen) {
 					// exit level
 					_endLoop = true;
 				}
@@ -348,8 +349,6 @@ void Game::displayTitleScreenMac(int num) {
 	DecodeBuffer buf;
 	memset(&buf, 0, sizeof(buf));
 	buf.ptr = _vid._frontLayer;
-//	buf.ptrsp = _vid._frontLayer;
-//	buf.ptrbg = _vid._backLayer;
 	buf.pitch = buf.w = _vid._w;
 	buf.h = _vid._h;
 	buf.x = (_vid._w - w) / 2;
@@ -494,26 +493,20 @@ heapWalk();
 			return;
 		}
 	}
-//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
-//	memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt fait un redraw all
-//	DMA_ScuMemCopy((uint8*)_vid._frontLayer, (uint8*)_vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-//	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-//	SCU_DMAWait();
-//	slDMACopy(_vid._backLayer, _vid._frontLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4);
-//	slDMAWait();
-
 	if(position_vram>0x70000)
 	position_vram = 0;
 
 	pge_getInput();
 	pge_prepare();
 	col_prepareRoomState();
+
 	uint8_t oldLevel = _currentLevel;
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		LivePGE *pge = _pge_liveTable2[i];
 		if (pge) {
 			_col_currentPiegeGridPosY = (pge->pos_y / 36) & ~1;
 			_col_currentPiegeGridPosX = (pge->pos_x + 8) >> 4;
+		
 			pge_process(pge);
 		}
 	}
@@ -538,15 +531,11 @@ heapWalk();
 			_deathCutsceneCounter = 1;
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
-		//slPrint("_mix.pauseMusic",slLocate(3,13));	
-			_mix.pauseMusic();
-//slPrint("loadLevelMap",slLocate(3,13));				
+		_mix.pauseMusic();
 			loadLevelMap();
 			_loadMap = false;
 //			_vid.fullRefresh();
-//slPrint("copyRect",slLocate(3,13));
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//slPrint("updateScreen",slLocate(3,13));			
 //			_stub->updateScreen(0);
 //	_vid.updateScreen();
 
@@ -565,13 +554,9 @@ heapWalk();
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
 	}*/
-//slPrint("prepareAnims",slLocate(3,13));	
 	prepareAnims();
-//slPrint("drawAnims",slLocate(3,13));	
 	drawAnims();
-//slPrint("drawCurrentInventoryItem",slLocate(3,13));	
 	drawCurrentInventoryItem();
-//slPrint("drawLevelTexts",slLocate(3,13));	
 	drawLevelTexts();
 	/*if (g_options.enable_password_menu) {
 		printLevelCode();
@@ -583,14 +568,14 @@ heapWalk();
 	_vid.updateScreen();
 //	updateTiming();
 //slPrint("drawStoryTexts",slLocate(3,13));
-//	drawStoryTexts();  // vbt à remettre ??
+	drawStoryTexts();  // vbt à remettre ??
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
 		handleInventory();
 	}
 	if (_stub->_pi.escape) {
 		_stub->_pi.escape = false;
-		if (_demoBin != -1 || handleConfigPanel()) {
+		if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 			_endLoop = true;
 			return;
 		}
@@ -606,7 +591,6 @@ heapWalk();
 	
 		_cut._stop = false;
 	}
-//slPrint("inp_handleSpecialKeys",slLocate(3,13));	
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -615,7 +599,9 @@ heapWalk();
 			_saveTimestamp = _stub->getTimeStamp();
 		}
 	}*/
-//slPrint("end mainloop",slLocate(3,13));	
+//emu_printf("Game::mainLoop slSynch\n");
+		emu_printf("slsynch 24\n");
+		slSynch();  // vbt : permet l'affichage de sprites
 }
 
 void Game::updateTiming() {
@@ -742,8 +728,8 @@ void Game::playCutscene(int id) {
 		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
 		slScrWindow0(63 , 0 , 574 , 479 );
 		slScrWindowModeNbg0(win0_IN);*/
-		slSynch();  // vbt : permet l'affichage de sprites
-//		_vid._layerScale=2;		
+//emu_printf("Game::playCutscene slSynch %d %d\n", _mix._musicTrack);
+//		slSynch();  // vbt : permet l'affichage de sprites
 	}	
 }
 
@@ -1125,17 +1111,20 @@ static int getLineLength(const uint8_t *str) {
 	}
 	return len;
 }
-
+int xxxx=0;
 void Game::drawStoryTexts() {
+emu_printf("drawStoryTexts\n");	
 	if (_textToDisplay != 0xFFFF) {
 		uint8_t textColor = 0xE8;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
 //		memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-		memcpy(_vid._backLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
-		while (!_stub->_pi.quit) {
-			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
+		while (!_stub->_pi.backspace) {  // vbt : remettre le bouton quit
+//_stub->processEvents();
+emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
+			memset(_vid._frontLayer, 0x00, 512*224);			
+//			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
 			int yPos = 26;
 			if (_res._type == kResourceTypeMac) {
 				if (textSegmentsCount == 0) {
@@ -1208,11 +1197,15 @@ void Game::drawStoryTexts() {
 				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
 */			
-			_vid.updateScreen();
-			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
+//			_vid.updateScreen();
+			while (!_stub->_pi.backspace /*&& !_stub->_pi.quit*/) {
+				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
+					break;
+				}*/
 //				inp_update();
 				_stub->sleep(80);
 			}
+
 /*			if (voiceSegmentData) {
 				_mix.stopAll();
 				sat_free(voiceSegmentData);
@@ -1230,7 +1223,8 @@ void Game::drawStoryTexts() {
 				++str;
 			}
 //			memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
-			memcpy(_vid._frontLayer, _vid._backLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+//			slSynch(); // vbt ajout
 		}
 		_textToDisplay = 0xFFFF;
 	}

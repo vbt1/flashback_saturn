@@ -100,7 +100,7 @@ struct Game {
 	const char **_textsTable;
 	uint8_t _currentLevel;
 	uint8_t _skillLevel;
-	int _demoBin;
+//	int _demoBin;
 	uint32_t _score;
 	uint8_t _currentRoom;
 	uint8_t _currentIcon;

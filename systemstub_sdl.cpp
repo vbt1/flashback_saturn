@@ -706,11 +706,12 @@ inline void timeTick() {
 
 void vblIn (void) {
 	//static Uint8 counter = 0;
-
+//emu_printf("vblIn\n");
 	// Process input
 	sys->processEvents();
 	sys->updateScreen(0);
 	// Pcm elaboration...
+/*
 	PCM_VblIn();	
 
 	// PCM Tasks
@@ -720,7 +721,7 @@ void vblIn (void) {
 	// Fill and play the audio
 	if(audioEnabled)
 		fill_play_audio();
-
+*/
 	timeTick();
 
 	/*if(counter == 20) {
