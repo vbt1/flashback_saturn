@@ -736,14 +736,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.y  = y * _layerScale;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
 
-//emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
+emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
 
 #ifdef COLOR_4BPP
 		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 #else
 		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
 #endif
-		if (buf.h2<352)
+		if (buf.h2!=352 && buf.h2!=176)
 			buf.ptr = _backLayer;
 		else
 			buf.ptr = NULL;

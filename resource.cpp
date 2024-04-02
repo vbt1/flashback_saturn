@@ -378,7 +378,7 @@ static const char *getCineName(Language lang, ResourceType type) {
 
 void Resource::load_CINE() {
 	const char *prefix = getCineName(_lang, _type);
-	emu_printf("Resource::load_CINE('%s')\n", prefix);
+//	emu_printf("Resource::load_CINE('%s')\n", prefix);
 	File f;
 			
 	switch (_type) {
@@ -1488,15 +1488,11 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
-
-
-
-
 	if(hwram==NULL)
 	{
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1  += (int)hwram;
-		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
+//		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
 		hwram_ptr = (unsigned char *)hwram;
 	}
 //	else
@@ -1521,7 +1517,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 				//emu_printf("hwram_screen %p\n",hwram_screen);
 				data = (uint8_t *)hwram_screen;
 			}
-			emu_printf("sat_malloc1 %s\n", entry->name);
+//			emu_printf("sat_malloc1 %s\n", entry->name);
 //#ifdef WITH_MEM_MALLOC
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 //#else
@@ -1536,7 +1532,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 #ifdef WITH_MEM_MALLOC
 			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
-			emu_printf("lwram %p %s\n",current_lwram, entry->name);	
+//			emu_printf("lwram %p %s\n",current_lwram, entry->name);	
 			data = (uint8_t *)current_lwram;
 			current_lwram += SAT_ALIGN(_resourceMacDataSize);
 #endif
@@ -1562,7 +1558,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			}
 			else
 			{
-				emu_printf("sat_malloc2 %s\n", entry->name);
+//				emu_printf("sat_malloc2 %s\n", entry->name);
 #ifdef WITH_MEM_MALLOC
 				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 #else
@@ -1812,7 +1808,7 @@ emu_printf("MAC_loadLevelData %s\n", name);
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
-emu_printf("MAC_loadLevelRoom\n");	
+//emu_printf("MAC_loadLevelRoom\n");	
 	char name[64];
 	
 //	emu_printf("_res._monster %p\n",_monster);
@@ -1899,12 +1895,8 @@ static void stringLowerCase(char *p) {
 }
 
 void Resource::MAC_unloadCutscene() {
-	emu_printf("MAC_unloadCutscene\n");	
-// vbt on efface le plus bas puis le plus haut
-//	current_lwram=(Uint8 *)0x200000;
-//	if(_cmd!=NULL)
 	current_lwram = (uint8_t *)save_current_lwram;
-emu_printf("MAC_unloadCutscene %p\n", current_lwram);
+	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
 	sat_free(_pol);
 	_pol = 0;
 	sat_free(_cmd);

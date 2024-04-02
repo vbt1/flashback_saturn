@@ -83,7 +83,7 @@ int Game::pge_hasMessageData(LivePGE *pge, uint16_t msg_num, uint16_t counter) c
 }
 
 void Game::pge_loadForCurrentLevel(uint16_t idx) {
-	emu_printf("Game::pge_loadForCurrentLevel() idx=%d\n", idx);
+//	emu_printf("Game::pge_loadForCurrentLevel() idx=%d\n", idx);
 
 	LivePGE *live_pge = &_pgeLive[idx];
 	InitPGE *init_pge = &_res._pgeInit[idx];
@@ -133,7 +133,7 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 			++i;
 			++obj;
 		}
-emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,live_pge);		
+//emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,live_pge);		
 		assert(i < on->num_objects);
 		live_pge->first_obj_number = i;
 		pge_setupDefaultAnim(live_pge);
@@ -141,18 +141,18 @@ emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,l
 }
 
 void Game::pge_process(LivePGE *pge) {
-	emu_printf("Game::pge_process() pge_num=%ld\n", pge - &_pgeLive[0]);
+//	emu_printf("Game::pge_process() pge_num=%ld\n", pge - &_pgeLive[0]);
 	_pge_playAnimSound = true;
 	_pge_currentPiegeFacingDir = (pge->flags & 1) != 0;
 	_pge_currentPiegeRoom = pge->room_location;
 	MessagePGE *le = _pge_messagesTable[pge->index];
 	if (le) {
-emu_printf("pge_setupNextAnimFrame\n");		
+//emu_printf("pge_setupNextAnimFrame\n");		
 		pge_setupNextAnimFrame(pge, le);
 	}
 	const uint8_t *anim_data = _res.getAniData(pge->obj_type);
 	if (_res._readUint16(anim_data) <= pge->anim_seq) {
-emu_printf("_res._readUint16(anim_data) <= pge->anim_seq\n");		
+//emu_printf("_res._readUint16(anim_data) <= pge->anim_seq\n");		
 		InitPGE *init_pge = pge->init_PGE;
 		assert(init_pge->obj_node_number < _res._numObjectNodes);
 		ObjectNode *on = _res._objectNodesMap[init_pge->obj_node_number];
@@ -176,20 +176,20 @@ emu_printf("_res._readUint16(anim_data) <= pge->anim_seq\n");
 				anim_data = _res.getAniData(pge->obj_type);
 				uint8_t snd = anim_data[2];
 				if (snd) {
-emu_printf("pge_playAnimSound\n");					
+//emu_printf("pge_playAnimSound\n");					
 					pge_playAnimSound(pge, snd);
 				}
-emu_printf("pge_setupOtherPieges\n");				
+//emu_printf("pge_setupOtherPieges\n");				
 				pge_setupOtherPieges(pge, init_pge);
 				break;
 			}
 			++obj;
 		}
 	}
-emu_printf("pge_setupAnim\n");	
+//emu_printf("pge_setupAnim\n");	
 	pge_setupAnim(pge);
 	++pge->anim_seq;
-emu_printf("pge_clearMessages\n");
+//emu_printf("pge_clearMessages\n");
 	pge_clearMessages(pge->index);
 }
 

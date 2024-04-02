@@ -313,7 +313,7 @@ _stub->copyRect(0, 0, _vid._w, 120, _vid._frontLayer, _vid._w);
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-		emu_printf("mainLoop\n");
+//		emu_printf("mainLoop\n");
 				mainLoop();
 				if (/*_demoBin != -1*/ 0 && _inp_demPos >= _res._demLen) {
 					// exit level
@@ -605,7 +605,7 @@ heapWalk();
 		}
 	}*/
 //emu_printf("Game::mainLoop slSynch\n");
-		emu_printf("slsynch 24\n");
+//		emu_printf("slsynch 24\n");
 		slSynch();  // vbt : permet l'affichage de sprites
 }
 
@@ -1116,18 +1116,16 @@ static int getLineLength(const uint8_t *str) {
 	}
 	return len;
 }
-int xxxx=0;
+
 void Game::drawStoryTexts() {
-emu_printf("drawStoryTexts\n");	
+//emu_printf("drawStoryTexts\n");	
 	if (_textToDisplay != 0xFFFF) {
 		uint8_t textColor = 0xE8;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
-//		memcpy(_vid._tempLayer, _vid._frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
-		while (!_stub->_pi.escape) {  // vbt : remettre le bouton quit
-_stub->processEvents();
-emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
+		while (!_stub->_pi.quit) {
 			memset(_vid._frontLayer, 0x00, 512*224);			
 //			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
 			int yPos = 26;
@@ -1166,7 +1164,7 @@ emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
 				}
 			} else {
 				if (*str == 0xFF) {
-					if (_res._lang == LANG_JP) {
+				/*	if (_res._lang == LANG_JP) {
 						switch (str[1]) {
 						case 0:
 							textColor = 0xE9;
@@ -1179,7 +1177,7 @@ emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
 							break;
 						}
 						str += 2;
-					} else {
+					} else*/ {
 						textColor = str[1];
 						// str[2] is an unused color (possibly the shadow)
 						str += 3;
@@ -1201,9 +1199,12 @@ emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
 			if (voiceSegmentData) {
 				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
-*/			
+*/
 //			_vid.updateScreen();
-			while (!_stub->_pi.backspace /*&& !_stub->_pi.quit*/) {
+			textSpeechSegment++;
+			_stub->copyRect(0, 0, _vid._w, 224, _vid._frontLayer, _vid._w);
+			
+			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
 				}*/
@@ -1227,10 +1228,9 @@ emu_printf("str while %d %x\n", xxxx++,_textToDisplay);
 				}
 				++str;
 			}
-//			memcpy(_vid._frontLayer, _vid._tempLayer, _vid.GAMESCREEN_W * _vid.GAMESCREEN_H);
-			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//			slSynch(); // vbt ajout
 		}
+		memset(_vid._frontLayer, 0x00, 512*224);
+		_stub->copyRect(0, 0, _vid._w, 224, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
 	}
 }
