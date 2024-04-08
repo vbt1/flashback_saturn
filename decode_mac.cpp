@@ -142,15 +142,13 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	int bits = 1;
 	int count = 0;
 	int offset = 0;
-	uint8_t window[(1 << kBits)];
-	uint8_t tmp[512] __attribute__ ((aligned (4)));;
-
-//emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
-
-//	buf->ptrbg = buf->ptr;
-//	buf->ptrbg = &tmp[0];
+	uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
+	uint8_t tmp[4096] __attribute__ ((aligned (4)));
+	uint8_t *tmp_ptr = NULL;
 
 	for (int y = 0; y < h; ++y) {
+		tmp_ptr=(uint8_t *)tmp+(w*(y&7));
+
 		for (int x = 0; x < w; ++x) {
 			if (count == 0) {
 				int carry = bits & 1;
@@ -168,11 +166,11 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 					window[cursor] = color;
 					++cursor;
 					cursor &= kMask;
-					setPixel(x, y, w, h, color, buf);
+//					setPixel(x, y, w, h, color, buf);
+					tmp_ptr[x]=color;
 					continue;
 				}
 				offset = READ_BE_UINT16(src); src += 2;
-//				offset = ((uint16_t*)src)[0]; src += 2;
 				count = 3 + (offset >> 12);
 				offset &= kMask;
 				offset = (cursor - offset - 1) & kMask;
@@ -181,10 +179,17 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			offset &= kMask;
 			window[cursor++] = color;
 			cursor &= kMask;
-			setPixel(x, y, w, h, color, buf);
+//			setPixel(x, y, w, h, color, buf);
+			tmp_ptr[x]=color;
 			--count;
 		}
-//		memcpy(&buf->ptr[y*w],buf->ptrbg,w);
+		if((y & 7) == 7)
+		{
+			memcpy(buf->ptr,tmp,w*8);
+//			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
+			buf->ptr+=w*8;
+		}
+
 //		DMA_ScuMemCopy((uint8*)&buf->ptr[y*w],(uint8*)tmp,  w);
 //slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
 //		SCU_DMAWait();
