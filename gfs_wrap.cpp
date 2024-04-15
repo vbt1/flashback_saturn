@@ -114,7 +114,7 @@ void init_GFS() { //Initialize GFS system
 	current_path[idx][0] = '/';
 */	dir_depth = 0;
 
-	memset(cache, 0, CACHE_SIZE);
+	memset4_fast(cache, 0, CACHE_SIZE);
 }
 
 GFS_FILE *sat_fopen(const char *path) {
@@ -243,7 +243,7 @@ GFS_FILE *sat_fopen(const char *path) {
 			Sint32 tot_sectors;
 			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 			tot_sectors = GFS_ByteToSct(fp->fid, CACHE_SIZE);
-			memset((Uint8*)cache, 0, CACHE_SIZE);			
+			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);			
 
 			fully_cached = 0;
 			cache_offset = 0;

@@ -136,22 +136,22 @@ static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *bu
 }
 
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-	static const int kBits = 12;
-	static const int kMask = (1 << kBits) - 1;
-	int cursor = 0;
-	int bits = 1;
-	int count = 0;
-	int offset = 0;
+	static const short kBits = 12;
+	static const short kMask = (1 << kBits) - 1;
+	unsigned short cursor = 0;
+	short bits = 1;
+	uint8_t count = 0;
+	unsigned short offset = 0;
 	uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
 	uint8_t tmp[4096] __attribute__ ((aligned (4)));
 	uint8_t *tmp_ptr = NULL;
 
-	for (int y = 0; y < h; ++y) {
+	for (unsigned short y = 0; y < h; ++y) {
 		tmp_ptr=(uint8_t *)tmp+(w*(y&7));
 
-		for (int x = 0; x < w; ++x) {
+		for (unsigned short x = 0; x < w; ++x) {
 			if (count == 0) {
-				int carry = bits & 1;
+				uint8_t carry = bits & 1;
 				bits >>= 1;
 				if (bits == 0) {
 					bits = *src++;
@@ -171,6 +171,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 					continue;
 				}
 				offset = READ_BE_UINT16(src); src += 2;
+//offset = ((uint16_t*)src)[0]; src += 2;				
 				count = 3 + (offset >> 12);
 				offset &= kMask;
 				offset = (cursor - offset - 1) & kMask;
@@ -185,8 +186,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 		}
 		if((y & 7) == 7)
 		{
-			memcpy(buf->ptr,tmp,w*8);
-//			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
+//			DMA_ScuMemCopy(buf->ptr,tmp,w*16);
+//			memcpyl(buf->ptr,tmp,w*16);
+//			memcpy(buf->ptr,tmp,w*8);
+			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
 			buf->ptr+=w*8;
 		}
 

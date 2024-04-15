@@ -11,7 +11,7 @@ extern "C"
 extern TEXTURE tex_spr[4];
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
-
+void *memset4_fast(void *, long, size_t);
 }
 #include "mod_player.h"
 #include "resource.h"
@@ -101,7 +101,7 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
-	memset((uint8_t *)_vid->_txt2Layer,0, 480*168);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
+	memset4_fast((uint8_t *)_vid->_txt2Layer,0, 480*168);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
 #endif
 //	_stub->updateScreen(0);
@@ -223,7 +223,7 @@ void Cutscene::clearBackPage() {
 		memcpy(_backPage, _auxPage, IMG_SIZE);
 //		memset(_backPage, 0x00, IMG_SIZE);
 	} else {
-		memset(_backPage, 0xC0, IMG_SIZE);
+		memset4_fast(_backPage, 0xC0, IMG_SIZE);
 	}
 }
 
@@ -1216,13 +1216,13 @@ void Cutscene::prepare() {
 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
 
-	memset((uint8_t *)(SpriteVRAM + cgaddress), 0x00, IMG_SIZE);
-	memset((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2), 0x00, IMG_SIZE);
-	memset((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2), 0x00, IMG_SIZE);	
+	memset4_fast((uint8_t *)(SpriteVRAM + cgaddress), 0x00, IMG_SIZE);
+	memset4_fast((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2), 0x00, IMG_SIZE);
+	memset4_fast((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2), 0x00, IMG_SIZE);	
 	
-	memset(_auxPage, 0x00, IMG_SIZE);
-	memset(_backPage, 0x00, IMG_SIZE);
-	memset(_frontPage, 0x00, IMG_SIZE);
+	memset4_fast(_auxPage, 0x00, IMG_SIZE);
+	memset4_fast(_backPage, 0x00, IMG_SIZE);
+	memset4_fast(_frontPage, 0x00, IMG_SIZE);
 	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);
 	
 	_stub->_pi.dirMask = 0;

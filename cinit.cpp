@@ -10,6 +10,7 @@ extern "C" {
 #include	"gfs_wrap.h"
 #include <stdarg.h>
 #include <string.h>
+void *memset4_fast(void *, long, size_t);
 }
 
 #include 	"saturn_print.h"
@@ -53,7 +54,7 @@ int	main( void )
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
 //	slSetSprTVMode(TV_320x224); // Init SGL
 
-	memset((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
+	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM_START, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
 	
