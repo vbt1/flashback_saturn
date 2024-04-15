@@ -136,6 +136,7 @@ static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *bu
 }
 
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
+	
 	static const short kBits = 12;
 	static const short kMask = (1 << kBits) - 1;
 	unsigned short cursor = 0;
@@ -145,6 +146,8 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
 	uint8_t tmp[4096] __attribute__ ((aligned (4)));
 	uint8_t *tmp_ptr = NULL;
+
+slTVOff();
 
 	for (unsigned short y = 0; y < h; ++y) {
 		tmp_ptr=(uint8_t *)tmp+(w*(y&7));
@@ -186,10 +189,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 		}
 		if((y & 7) == 7)
 		{
-//			DMA_ScuMemCopy(buf->ptr,tmp,w*16);
-//			memcpyl(buf->ptr,tmp,w*16);
+//			DMA_ScuMemCopy(buf->ptr,tmp,w*8);
+			memcpyl(buf->ptr,tmp,w*8);
 //			memcpy(buf->ptr,tmp,w*8);
-			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
+//			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
 			buf->ptr+=w*8;
 		}
 
@@ -197,6 +200,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
 //		SCU_DMAWait();
 	}
+	slTVOn();
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
