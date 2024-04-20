@@ -938,7 +938,7 @@ void play_manage_buffers(void) {
 
 	return;
 }
-
+/*
 void SCU_DMAWait(void) {
 	Uint32 res;
 
@@ -948,4 +948,4 @@ void SCU_DMAWait(void) {
 		//emu_printf("SCU DMA COPY FAILED!\n");
 	}
 }
-
+*/
