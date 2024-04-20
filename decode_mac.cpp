@@ -145,12 +145,11 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	unsigned short offset = 0;
 	uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
 	uint8_t tmp[4096] __attribute__ ((aligned (4)));
-	uint8_t *tmp_ptr = NULL;
+	uint8_t *tmp_ptr = (uint8_t *)tmp;
 
 slTVOff();
 
 	for (unsigned short y = 0; y < h; ++y) {
-		tmp_ptr=(uint8_t *)tmp+(w*(y&7));
 
 		for (unsigned short x = 0; x < w; ++x) {
 			if (count == 0) {
@@ -187,6 +186,7 @@ slTVOff();
 			tmp_ptr[x]=color;
 			--count;
 		}
+		tmp_ptr+=w;
 		if((y & 7) == 7)
 		{
 //			DMA_ScuMemCopy(buf->ptr,tmp,w*8);
@@ -194,8 +194,8 @@ slTVOff();
 //			memcpy(buf->ptr,tmp,w*8);
 //			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
 			buf->ptr+=w*8;
+			tmp_ptr=(uint8_t *)tmp;
 		}
-
 //		DMA_ScuMemCopy((uint8*)&buf->ptr[y*w],(uint8*)tmp,  w);
 //slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
 //		SCU_DMAWait();

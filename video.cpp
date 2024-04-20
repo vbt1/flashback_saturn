@@ -48,8 +48,8 @@ Video::Video(Resource *res, SystemStub *stub)
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 //	_backLayer = (uint8_t *)LOW_WORK_RAM;
 
-	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);
-	_txt2Layer = (uint8_t *)(SpriteVRAM + TEXT2_RAM_VDP2);	
+//	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);
+//	_txt2Layer = (uint8_t *)(SpriteVRAM + TEXT2_RAM_VDP2);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
 	
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
@@ -552,7 +552,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
-
+/*
 const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
@@ -568,7 +568,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
-
+*/
 void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color) {
 	const uint8_t *fnt = _res->_fnt;
 	for (int i = 0; i < len; ++i) {
@@ -770,11 +770,11 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 {
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-
+/*
 	if(ptrsp==_txt1Layer)
 		user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	else
-		user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	else*/
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 
 	user_sprite.COLR=  0;
 	user_sprite.SRCA= ((int)ptrsp)/8;

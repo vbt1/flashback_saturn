@@ -93,7 +93,7 @@ Sint16 CartRAM_init(Uint8 cs) {
 
 	return id;
 }
-
+/*
 void SCU_DMAWait(void) {
 	Uint32 res;
 
@@ -103,5 +103,5 @@ void SCU_DMAWait(void) {
 		fprintf_saturn(stdout, "SCU DMA COPY FAILED!");
 	}
 }
-
+*/
 }

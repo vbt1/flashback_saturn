@@ -303,7 +303,7 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 		buf+=pitch;
 		ptr+=pitch;			
 //			slDMAWait();
-		SCU_DMAWait();
+//		SCU_DMAWait();
 	}
 }
 

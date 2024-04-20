@@ -55,7 +55,7 @@ struct Video {
 	int _layerScale; // 1 for Amiga/PC, 2 for Macintosh
 	uint8_t *_frontLayer;//[GAMESCREEN_W * GAMESCREEN_H*4];
 //	uint8_t _backLayer[GAMESCREEN_W * GAMESCREEN_H*2];
-	uint8_t *_backLayer, *_txt1Layer, *_txt2Layer;
+	uint8_t *_backLayer; //, *_txt1Layer, *_txt2Layer;
 //	uint8_t _tempLayer[GAMESCREEN_W * GAMESCREEN_H];
 //	uint8_t _tempLayer2[GAMESCREEN_W * GAMESCREEN_H];  // à remettre sans x4 (buffer video low res
 	uint8_t _unkPalSlot1, _unkPalSlot2;
