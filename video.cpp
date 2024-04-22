@@ -115,7 +115,7 @@ void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
 //	_stub->updateScreen(0);
-//	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
+	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
 //		memset(_screenBlocks, 1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 //	_fullRefresh = false;
 //_shakeOffset=0;
@@ -789,9 +789,6 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 #ifndef SLAVE_SOUND
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
-//	TEXTURE *txptr = (TEXTURE *)tex_spr;
-//	*txptr = TEXDEF(w, h, 0);
-
 	SPRITE user_sprite;
 
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites

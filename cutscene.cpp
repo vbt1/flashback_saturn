@@ -184,7 +184,7 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 }
 
 #if 0
-void Cutscene::drawTextVBT(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
+void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
 //	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
@@ -228,10 +228,10 @@ void Cutscene::drawTextVBT(int16_t x, int16_t y, const uint8_t *p, uint16_t colo
 		}
 	}
 }
-#endif
-
+#else
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
+	emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
+	memset(&_vid->_frontLayer[512*y],0x00,512*(440-y));
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
 		len = *p++;
@@ -274,7 +274,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		}
 	}
 }
-
+#endif
 void Cutscene::clearBackPage() {
 //emu_printf("clearBackPage\n");		
 	if (_clearScreen == 0) {
@@ -1037,7 +1037,7 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-//emu_printf("Cutscene::op_drawTextAtPos()\n");
+emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
@@ -1047,37 +1047,24 @@ void Cutscene::op_drawTextAtPos() {
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				const uint8_t color = 0xD0 + (strId >> 0xC);
-//				drawText(x, y, str, color, _backPage, kTextJustifyCenter);
-//	emu_printf("Cutscene::op_drawTextAtPos() x %d y %d\n",x, y);
-/*
-_vid->_w=480;
-
-//_vid->_layerScale = 1;
-				drawText(x/2, y, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
-//			drawText(0, y, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
-//_vid->_layerScale = 2;				
-_vid->_w=512;
-*/
-				memset(&_vid->_frontLayer[512*y],0x00,512*(440-y));
 				drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
-
+				_stub->copyRect(0, 224, 512, 224, _frontPage, _vid->_w);
 #ifndef SLAVE_SOUND
 //				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -121+y, 168, 480);
 #endif
 			}
-
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
 				if ((_cmdPtr - _cmdPtrBak) == 0xA) {
-					_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
-//					_stub->updateScreen(0);
+//					_stub->copyRect(0, 224, 512, 224, _frontPage, _vid->_w);				
 				} else {
 					_stub->sleep(15);
 				}
 			}
-
 		}
 	}
+	else
+		memset(_vid->_frontLayer,0x00,512*400);
 }
 
 void Cutscene::op_handleKeys() {

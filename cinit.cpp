@@ -28,7 +28,7 @@ extern void ss_main( void );
 
 extern "C" {
 	TEXTURE tex_spr[4];
-	extern void DMA_ScuInit(void);
+//	extern void DMA_ScuInit(void);
 }
 
 int	main( void )
@@ -72,7 +72,7 @@ int	main( void )
 #ifdef _PAR_UPLOAD_
 	cdUnlock(); // Unlock the cd drive
 #endif
-	DMA_ScuInit(); // Init for SCU DMA
+//	DMA_ScuInit(); // Init for SCU DMA
 #ifdef SLAVE_SOUND
 
 	SPR_InitSlaveSH();
