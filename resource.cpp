@@ -1517,13 +1517,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 				//emu_printf("hwram_screen %p\n",hwram_screen);
 				data = (uint8_t *)hwram_screen;
 			}
-//			emu_printf("sat_malloc1 %s\n", entry->name);
-//#ifdef WITH_MEM_MALLOC
-//			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-//#else
-			data = (uint8_t *)current_lwram;
-			current_lwram += SAT_ALIGN(_resourceMacDataSize);
-//#endif
+			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
 		}
 		else if(strstr(entry->name,"names") !=NULL
 //		|| strstr("strings", entry->name)  !=NULL

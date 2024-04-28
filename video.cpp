@@ -115,7 +115,7 @@ void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
 //	_stub->updateScreen(0);
-	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
+//	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
 //		memset(_screenBlocks, 1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 //	_fullRefresh = false;
 //_shakeOffset=0;

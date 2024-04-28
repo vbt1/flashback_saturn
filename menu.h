@@ -50,7 +50,7 @@ struct Menu {
 	};
 
 	static const char *_levelNames[];
-	static const char *_passwordsDOS[];	
+//	static const char *_passwordsDOS[];	
 //	static const char *_passwords[8][3];
 //	static const char *_passwordsMac[];
 	
