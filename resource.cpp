@@ -1519,7 +1519,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			}
 			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
 		}
-		else if(strstr(entry->name,"names") !=NULL
+/*		else if(strstr(entry->name,"names") !=NULL
 //		|| strstr("strings", entry->name)  !=NULL
 		)
 		{
@@ -1530,7 +1530,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			data = (uint8_t *)current_lwram;
 			current_lwram += SAT_ALIGN(_resourceMacDataSize);
 #endif
-		}		
+		}*/
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
@@ -1895,7 +1895,8 @@ void Resource::MAC_unloadCutscene() {
 	_pol = 0;
 	sat_free(_cmd);
 	_cmd = 0;
-
+	sat_free(_cine_txt);
+	_cine_txt = 0;
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {

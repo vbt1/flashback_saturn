@@ -90,6 +90,7 @@ File::~File() {
 
 bool File::open(const char *filename, const char *directory, const char *mode) {
 	_impl->close();
+//emu_printf("File::open(%s)\n",filename);	
 	memset(name, 0, 50);
 //	char buf[512];
 //	sprintf(buf, "%s/%s", directory, filename);
@@ -105,6 +106,7 @@ bool File::open(const char *filename, const char *directory, const char *mode) {
 }
 
 void File::close() {
+emu_printf("File::close()\n");	
 	if (_impl) {
 		_impl->close();
 	}
@@ -123,7 +125,7 @@ void File::seek(int32_t off) {
 }
 
 void File::read(void *ptr, uint32_t len) {
-//emu_printf("File::read\n");		
+//emu_printf("File::read %p\n",ptr);		
 	_impl->read(ptr, len);
 //emu_printf("File::read done\n");
 }

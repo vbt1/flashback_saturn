@@ -1019,7 +1019,6 @@ void Cutscene::op_copyScreen() {
 		}
 	}
 	*/
-//xxxxxxxxxxxxxxxx
 //	updateScreen();
 }
 
@@ -1219,7 +1218,10 @@ void Cutscene::unload() {
 		_res->MAC_unloadCutscene();
 		break;
 	}
-#ifndef SLAVE_SOUND	
+#ifndef SLAVE_SOUND
+
+emu_printf("unloading %x\n",_id);
+	
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
 /*

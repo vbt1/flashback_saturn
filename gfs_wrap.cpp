@@ -21,7 +21,7 @@ int	 strncasecmp(const char *, const char *, size_t) __pure;
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 4)
+#define CACHE_SIZE (SECTOR_SIZE * 8)
 
 static char satpath[25];
 //static char current_path[15][16];

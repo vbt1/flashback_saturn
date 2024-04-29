@@ -159,9 +159,6 @@ void Video::updateScreen() {
 //		_shakeOffset = 0;
 //		_fullRefresh = true;
 	}
-	
-	
-//	xxxxxxxxxxxxxx
 }
 
 void Video::fullRefresh() {
@@ -525,10 +522,10 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.y = y * _layerScale;
 	
 //	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-	if (is4Bpp)
-		buf.setPixel = Video::MAC_setPixelFont4Bpp;
-	else
-		buf.setPixel = Video::MAC_setPixelFont;
+//	if (is4Bpp)
+//		buf.setPixel = Video::MAC_setPixelFont4Bpp;
+//	else
+	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
 //	assert(chr >= 32);
@@ -584,9 +581,11 @@ void Video::MAC_decodeMap(int level, int room) {
 	buf.w = buf.pitch = _w;
 	buf.h = _h;
 	buf.setPixel = Video::MAC_setPixel;
+
 	_res->MAC_loadLevelRoom(level, room, &buf);
 //	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
 	memset(_frontLayer,0x00, buf.w * buf.h);
+	
 	Color roomPalette[256];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {
