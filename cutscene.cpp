@@ -1242,7 +1242,7 @@ emu_printf("unloading %x\n",_id);
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 		slSynch();
 */
-		
+		memset4_fast((uint8_t *)(SpriteVRAM + cgaddress), 0x00, IMG_SIZE);
 		memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
 		/*	

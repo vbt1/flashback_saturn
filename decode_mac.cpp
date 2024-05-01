@@ -134,11 +134,84 @@ static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *bu
 		}
 	}
 }
+#define CS1(x)                  (0x24000000UL + (x))
+void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
+uint32_t start = *(volatile uint32_t *)CS1(0x1014);	
+	static const short kBits = 12;
+	static const short kMask = (1 << kBits) - 1;
 
+	unsigned short cursor = 0;
+	short bits = 1;
+	uint8_t count = 0;
+	unsigned short offset = 0;
+	static uint8_t window[(3 << kBits)] __attribute__ ((aligned (4)));
+	uint8_t *tmp_ptr = (uint8_t *)window+4096;
+//slTVOff();
+
+	for (unsigned short y = 0; y < h; ++y) {
+		unsigned short x = 0;
+//		for (unsigned short x = 0; x < w; ++x)
+		while(x++ < w)
+		{
+			if (count == 0) {
+				uint8_t carry = bits & 1;
+				bits >>= 1;
+				if (bits == 0) {
+					bits = *src++;
+					if (carry) {
+						bits |= 0x100;
+					}
+					carry = bits & 1;
+					bits >>= 1;
+				}
+				if (!carry) {
+					const uint8_t color = *src++;
+					window[cursor++] = color;
+					*tmp_ptr++=color;
+					cursor &= kMask;
+					continue;
+				}
+				offset = READ_BE_UINT16(src); src += 2;
+				count = 3 + (offset >> 12);
+				offset &= kMask;
+				offset = (cursor - offset - 1) & kMask;
+			}
+			
+//			emu_printf("count %d\n",count);
+			do
+			{
+				uint8_t color = window[offset++];
+				window[cursor++] = color;
+				*tmp_ptr++=color;
+				cursor &= kMask;
+				offset &= kMask;
+			}while(--count >0 && x++<w);
+		}
+
+		if((y & 7) == 7)
+		{
+			tmp_ptr-=4096;
+			memcpyl(buf->ptr,tmp_ptr,w*8);
+//			slTransferEntry((void *)tmp_ptr,(void *)buf->ptr,w*32);
+			buf->ptr+=w*8;
+
+		}
+//		DMA_ScuMemCopy((uint8*)&buf->ptr[y*w],(uint8*)tmp,  w);
+//slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
+	}
+//	slTVOn();
+
+    uint32_t end = *(volatile uint32_t *)CS1(0x1014);
+
+    emu_printf("time = %d start %d %d\n", end-start,start,end);
+}
+
+/*
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	
 	static const short kBits = 12;
 	static const short kMask = (1 << kBits) - 1;
+
 	unsigned short cursor = 0;
 	short bits = 1;
 	uint8_t count = 0;
@@ -146,7 +219,6 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
 	uint8_t tmp[4096] __attribute__ ((aligned (4)));
 	uint8_t *tmp_ptr = (uint8_t *)tmp;
-
 slTVOff();
 
 	for (unsigned short y = 0; y < h; ++y) {
@@ -168,12 +240,10 @@ slTVOff();
 					window[cursor] = color;
 					++cursor;
 					cursor &= kMask;
-//					setPixel(x, y, w, h, color, buf);
 					tmp_ptr[x]=color;
 					continue;
 				}
 				offset = READ_BE_UINT16(src); src += 2;
-//offset = ((uint16_t*)src)[0]; src += 2;				
 				count = 3 + (offset >> 12);
 				offset &= kMask;
 				offset = (cursor - offset - 1) & kMask;
@@ -182,8 +252,8 @@ slTVOff();
 			offset &= kMask;
 			window[cursor++] = color;
 			cursor &= kMask;
-//			setPixel(x, y, w, h, color, buf);
 			tmp_ptr[x]=color;
+			
 			--count;
 		}
 		tmp_ptr+=w;
@@ -201,7 +271,7 @@ slTVOff();
 //		SCU_DMAWait();
 	}
 	slTVOn();
-}
+}*/
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
