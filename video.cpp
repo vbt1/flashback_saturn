@@ -584,7 +584,7 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	_res->MAC_loadLevelRoom(level, room, &buf);
 //	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
-	memset(_frontLayer,0x00, buf.w * buf.h);
+//	memset(_frontLayer,0x00, buf.w * buf.h); // ralentit le changement d'écran
 	
 	Color roomPalette[256];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
