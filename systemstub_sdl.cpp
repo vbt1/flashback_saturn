@@ -171,6 +171,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
+	virtual void SAT_updatePalette();
 //	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
@@ -250,7 +251,8 @@ void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 			c[j] = col;
 		}
 		_pal[i] = ((c[2] >> 3) << 10) | ((c[1] >> 3) << 5) | (c[0] >> 3) | RGB_Flag; // BGR for saturn
-	}	
+	}
+	
 }
 
 void SystemStub_SDL::setPaletteEntry(uint8 i, const Color *c) {
@@ -313,8 +315,15 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 }
 
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
-//	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
+//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
+	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
+}
+
+
+void SystemStub_SDL::SAT_updatePalette()
+{
+//	memcpy((void*)(CRAM_BANK + 512 + 384), (void*)_pal+384, 32 * 2);  // vbt à remettre	
+//	slTransferEntry((void*)_pal+384, (void*)(CRAM_BANK + 512+384), 32 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {

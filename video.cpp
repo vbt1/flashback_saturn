@@ -334,7 +334,7 @@ void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
 		}
 	}
 }
-
+/*
 void Video::setLevelPalettes() {
 	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
 	if (_unkPalSlot2 == 0) {
@@ -365,7 +365,7 @@ void Video::setLevelPalettes() {
 	// slots 0xC and 0xD are cutscene palettes
 	setTextPalette();
 }
-
+*/
 void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
 //	emu_printf("Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
@@ -792,7 +792,7 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 
-	if(front)
+	if(!front)
 	{
 		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
 		memcpy((void *)(SpriteVRAM + BACK_RAM_VDP2),(void *)_res->_scratchBuffer, h*w);
@@ -802,6 +802,10 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 		user_sprite.SRCA=cgaddress8;
 		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);		
 	}
+	
+		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
+		memcpy((void *)(SpriteVRAM + BACK_RAM_VDP2),(void *)_res->_scratchBuffer, h*w);
+		
 	user_sprite.COLR=0;
 
 	user_sprite.SIZE=(w/8)<<8|h;
@@ -814,5 +818,10 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
 	user_sprite.GRDA=0;	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	
+	
+		user_sprite.SRCA=cgaddress8;
+		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
+	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets	
 }
 #endif

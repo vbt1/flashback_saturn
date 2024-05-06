@@ -1810,11 +1810,12 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //	_monster = 0;
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-	slSynch(); // vbt pour virer les sprites
+//	slSynch(); // vbt pour virer les sprites
 
-emu_printf("MAC_decodeImageData x\n");	
+
 	MAC_decodeImageData(ptr, 0, dst);
-	
+slDynamicFrame(ON);
+slSynch();
 //	emu_printf("sat_free(%p)\n",ptr); // vbt : free sur l'image de fond, à ne pas remettre
 //	sat_free(ptr);
 }

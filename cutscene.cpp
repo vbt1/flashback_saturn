@@ -58,9 +58,15 @@ void Cutscene::sync(int frameDelay) {
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
 	if (pause > 0) {
+////emu_printf("start sleep %d fdelay %d delay %d\n",pause,frameDelay ,delay);		
 		_stub->sleep(pause);
+////emu_printf("end sleep\n");		
+
 	}
 	_tstamp = _stub->getTimeStamp();
+////emu_printf("start SAT_updatePalette()\n");
+//	_stub->SAT_updatePalette();
+////emu_printf("end SAT_updatePalette()\n");	
 }
 
 void Cutscene::copyPalette(const uint8_t *palo, uint16_t num) {
@@ -92,7 +98,7 @@ void Cutscene::updatePalette() {
 #define TEXT_AS_NBG 1
 
 void Cutscene::updateScreen() {
-	sync(_frameDelay - 1);
+
 //	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 //	_vid->SAT_displayCutscene((int)_frontPage==SpriteVRAM + cgaddress,0, 0, 128, 240);
@@ -103,7 +109,7 @@ void Cutscene::updateScreen() {
 _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
 // vbt : déplacement de la synchro ici
 #endif
-	slSynch(); // obligatoire
+
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
@@ -113,6 +119,13 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
 #else
 	_stub->copyRect(0, 0, _vid->_w, 448, _vid->_frontLayer, _vid->_w);
 #endif
+////emu_printf("start slsynch()\n");
+
+	slSynch(); // obligatoire
+//_stub->SAT_updatePalette();
+	sync(_frameDelay - 1);
+
+////emu_printf("end slsynch()\n");
 
 #endif
 //	_stub->updateScreen(0);
@@ -230,7 +243,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 }
 #else
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-//	emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
+//	//emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
 	memset(&_vid->_frontLayer[512*y],0x00,512*(440-y));
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
@@ -286,7 +299,7 @@ void Cutscene::clearBackPage() {
 }
 
 void Cutscene::drawCreditsText() {
-//emu_printf("drawCreditsText\n");	
+////emu_printf("drawCreditsText\n");	
 	if (_creditsKeepText) {
 		if (_creditsSlowText) {
 			return;
@@ -355,7 +368,7 @@ void Cutscene::drawCreditsText() {
 }
 
 void Cutscene::op_markCurPos() {
-//	emu_printf("Cutscene::op_markCurPos()\n");
+	//emu_printf("Cutscene::op_markCurPos()\n");
 	_cmdPtrBak = _cmdPtr;
 	_frameDelay = 5;
 	if (!_creditsSequence) {
@@ -373,7 +386,7 @@ void Cutscene::op_markCurPos() {
 }
 
 void Cutscene::op_refreshScreen() {
-	debug(DBG_CUT, "Cutscene::op_refreshScreen()");
+	//emu_printf("Cutscene::op_refreshScreen()\n");
 	_clearScreen = fetchNextCmdByte();
 	if (_clearScreen != 0) {
 		clearBackPage();
@@ -382,7 +395,7 @@ void Cutscene::op_refreshScreen() {
 }
 
 void Cutscene::op_waitForSync() {
-	debug(DBG_CUT, "Cutscene::op_waitForSync()");
+	//emu_printf("Cutscene::op_waitForSync()\n");
 	if (_creditsSequence) {
 		uint16_t n = fetchNextCmdByte() * 2;
 		do {
@@ -391,7 +404,7 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = _res->isDOS() ? 20 : 60;
 			}
-			memcpy(_backPage, _frontPage, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
+			memcpy(_backPage, _frontPage, IMG_SIZE);
 			drawCreditsText();
 			updateScreen();
 		} while (--n);
@@ -404,7 +417,7 @@ void Cutscene::op_waitForSync() {
 }
 
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
-//	emu_printf("Cutscene::drawShape()\n");
+//	//emu_printf("Cutscene::drawShape()\n");
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -450,7 +463,7 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 }
 
 void Cutscene::op_drawShape() {
-//	debug(DBG_CUT, "Cutscene::op_drawShape()");
+//	//emu_printf("Cutscene::op_drawShape() clearscreen %d\n",_clearScreen);
 
 	int16_t x = 0;
 	int16_t y = 0;
@@ -493,7 +506,7 @@ void Cutscene::op_drawShape() {
 static int _paletteNum = -1;
 
 void Cutscene::op_setPalette() {
-//	debug(DBG_CUT, "Cutscene::op_setPalette()");
+	//emu_printf("Cutscene::op_setPalette()\n");
 	uint8_t num = fetchNextCmdByte();
 	uint8_t palNum = fetchNextCmdByte();
 	uint16_t off = READ_BE_UINT16(_polPtr + 6);
@@ -507,7 +520,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-//	emu_printf("Cutscene::op_drawCaptionText()\n");		
+//	//emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 		if (strId != 0xFFFF) {
@@ -533,7 +546,7 @@ void Cutscene::op_skip3() {
 }
 
 void Cutscene::op_refreshAll() {
-//	debug(DBG_CUT, "Cutscene::op_refreshAll()");
+	//emu_printf("Cutscene::op_refreshAll()\n");
 	_frameDelay = 5;
 	updateScreen();
 	clearBackPage();
@@ -542,7 +555,7 @@ void Cutscene::op_refreshAll() {
 }
 
 void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
-//	emu_printf("Cutscene::drawShapeScale(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
+//	//emu_printf("Cutscene::drawShapeScale(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -724,7 +737,7 @@ void Cutscene::op_drawShapeScale() {
 }
 
 void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
-//	emu_printf("Cutscene::drawShapeScaleRotate(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
+//	//emu_printf("Cutscene::drawShapeScaleRotate(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -987,12 +1000,12 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 }
 */
 void Cutscene::op_copyScreen() {
-//	emu_printf("Cutscene::op_copyScreen()\n");
+	//emu_printf("Cutscene::op_copyScreen()\n");
 	_creditsSlowText = true;
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
 	}
-//	memcpy(_backPage, _frontPage, IMG_SIZE);
+	memcpy(_backPage, _frontPage, IMG_SIZE);
 	_frameDelay = 10;
 //slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 /*
@@ -1019,11 +1032,11 @@ void Cutscene::op_copyScreen() {
 		}
 	}
 	*/
-//	updateScreen();
+	updateScreen(); // vbt : remis permet de revoir "present" au boot
 }
 
 void Cutscene::op_drawTextAtPos() {
-//emu_printf("Cutscene::op_drawTextAtPos()\n");
+////emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
@@ -1112,7 +1125,7 @@ uint8_t Cutscene::fetchNextCmdByte() {
 }
 
 uint16_t Cutscene::fetchNextCmdWord() {
-//	emu_printf("_cmdPtr %p\n",_cmdPtr);
+//	//emu_printf("_cmdPtr %p\n",_cmdPtr);
 	uint16_t i = READ_BE_UINT16(_cmdPtr);
 	_cmdPtr += 2;
 	return i;
@@ -1129,7 +1142,7 @@ void Cutscene::mainLoop(uint16_t num) {
 	}
 	if (_id != 0x4A && !_creditsSequence) {
 //		_ply->play(_musicTableDOS[_id],0);
-emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
+//emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 		_mix.playMusic(_musicTableDOS[_id]);
 	}
 	if(_id == 0x4A)
@@ -1165,7 +1178,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 		if (op >= NUM_OPCODES) {
 			continue;
 		}
-//			emu_printf("VBT cutmainLoop k op %d\n",op);
+//			//emu_printf("VBT cutmainLoop k op %d\n",op);
 		(this->*_opcodeTable[op])();
 		_stub->processEvents();
 		if (_stub->_pi.backspace) {
@@ -1173,7 +1186,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 			_interrupted = true;
 		}
 	}
-//		emu_printf("VBT cutmainLoop h\n");
+//		//emu_printf("VBT cutmainLoop h\n");
 	_stop=true;
 	if (_interrupted || _id != 0x0D) {
 //		_ply->stop();
@@ -1181,7 +1194,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 }
 
 bool Cutscene::load(uint16_t cutName) {
-//emu_printf(" Cutscene::load %x \n", cutName);	
+////emu_printf(" Cutscene::load %x \n", cutName);	
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
@@ -1198,7 +1211,7 @@ bool Cutscene::load(uint16_t cutName) {
 	}
 	_res->load_CINE();
 	bool loaded = (_res->_cmd && _res->_pol);
-//emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
+////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
 
 	if(!loaded)
 		unload();
@@ -1220,7 +1233,7 @@ void Cutscene::unload() {
 	}
 #ifndef SLAVE_SOUND
 
-emu_printf("unloading %x\n",_id);
+//emu_printf("unloading %x\n",_id);
 	
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
@@ -1357,7 +1370,7 @@ void Cutscene::playText(const char *str) {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-		emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
+		//emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
 		_creditsSequence = false;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
@@ -1429,10 +1442,12 @@ void Cutscene::play() {
 /*		else if (_id == 8) {
 			playSet(_caillouSetData, 0x5E4);
 		}*/
-//		emu_printf("fullRefresh\n");
+//		//emu_printf("fullRefresh\n");
 //		_vid->fullRefresh();
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+//	_stub->SAT_updatePalette();
 //	_stub->updateScreen(0);
+
 		if (_id != 0x3D) {
 			_id = 0xFFFF;
 		}
@@ -1448,7 +1463,7 @@ static void readSetPalette(const uint8_t *p, uint16_t offset, uint16_t *palette)
 }
 
 void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, const uint8_t *paletteLut) {
-emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d,%p)\n",p,offset,x,y,paletteLut);	
+//emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d,%p)\n",p,offset,x,y,paletteLut);	
 	const int count = READ_BE_UINT16(p + offset); offset += 2;
 	for (int i = 0; i < count - 1; ++i) {
 		offset += 5; // shape_marker

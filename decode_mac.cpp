@@ -1,3 +1,4 @@
+//#pragma GCC optimize ("O2")
 //#define WITH_MEM_MALLOC 1
 //#include <assert.h>
 extern "C" {
@@ -22,7 +23,7 @@ extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-emu_printf("lzss %s %d\n", name, decodedSize);
+//emu_printf("lzss %s %d\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
@@ -96,6 +97,9 @@ emu_printf("lzss %s %d\n", name, decodedSize);
 		}
 	}
 	uint32_t count = 0;
+//	int a=0;
+//	int b=0;
+	
 	while (count < decodedSize) {
 		const int code = f.readByte();
 		for (int i = 0; i < 8 && count < decodedSize; ++i) {
@@ -105,20 +109,29 @@ emu_printf("lzss %s %d\n", name, decodedSize);
 				int offset = f.readUint16BE();
 				const int len = (offset >> 12) + 3;
 				offset &= 0xFFF;
-				for (int j = 0; j < len; ++j) {
-					dst[count + j] = dst[count - offset - 1 + j];
+
+//				const unsigned int target = count - offset - 1;
+				/*
+				if(-offset+len<0 && len >8)
+					memcpy(&dst[count],&dst[count - offset - 1],len);
+				else*/
+				{
+					for (int j = 0; j < len; ++j) {
+						dst[count + j] = dst[count - offset - 1 + j];
+					}
 				}
 				count += len;
 			}
 		}
 	}
+//	emu_printf("inf %d sup %d\n",a,b);
 //	emu_printf("dst %p\n",dst);
-	
+	/*
 	if(count != decodedSize)  // vbt ne pas toucher
 	{
 //		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);
 		return dst;		
-	}
+	}*/
 	return dst;
 }
 
@@ -179,6 +192,33 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
             const short tt = kMask - count;
 
             if (cursor <= tt && offset <= tt) {
+//				emu_printf("data size count %d\n",count);
+//				if(count>18)
+//				emu_printf("count %d\n",count);
+/*
+                while (count >= 18 && x + 18 <= w) {
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    count -= 18;
+                    x += 18;
+                }
+*/
                 // Unrolled loop
                 while (count >= 16 && x + 16 <= w) {
                     *tmp_ptr++ = window[cursor++] = window[offset++];
@@ -201,6 +241,22 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     x += 16;
                 }
 
+                while (count >= 12 && x + 12 <= w) {
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    count -= 10;
+                    x += 10;
+                }
+
+
                 while (count >= 8 && x + 8 <= w) {
                     *tmp_ptr++ = window[cursor++] = window[offset++];
                     *tmp_ptr++ = window[cursor++] = window[offset++];
@@ -213,7 +269,18 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     count -= 8;
                     x += 8;
                 }
-
+/*
+                while (count >= 6 && x + 6 <= w) {
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    *tmp_ptr++ = window[cursor++] = window[offset++];
+                    count -= 6;
+                    x += 6;
+                }
+*/
                 while (count >= 4 && x + 4 <= w) {
                     *tmp_ptr++ = window[cursor++] = window[offset++];
                     *tmp_ptr++ = window[cursor++] = window[offset++];

@@ -21,14 +21,14 @@ int	 strncasecmp(const char *, const char *, size_t) __pure;
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 8)
+#define CACHE_SIZE (SECTOR_SIZE * 12)
 
 static char satpath[25];
 //static char current_path[15][16];
 //static char current_path[3][16];
 
 static Uint32 current_cached = 0;
-static Uint8 cache[CACHE_SIZE];
+static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 //static Uint8* cache = (((Uint8*)PCM_ADDR) + PCM_SIZE);
 
 static Uint8  fully_cached = 0; // If file is cached from start to finish
