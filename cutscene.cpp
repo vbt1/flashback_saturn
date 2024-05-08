@@ -98,7 +98,7 @@ void Cutscene::updatePalette() {
 #define TEXT_AS_NBG 1
 
 void Cutscene::updateScreen() {
-
+	sync(_frameDelay - 1);
 //	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 //	_vid->SAT_displayCutscene((int)_frontPage==SpriteVRAM + cgaddress,0, 0, 128, 240);
@@ -106,7 +106,7 @@ void Cutscene::updateScreen() {
 
 
 #ifndef TEXT_AS_NBG
-_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
+_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480,0);
 // vbt : déplacement de la synchro ici
 #endif
 
@@ -123,8 +123,6 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480);
 
 	slSynch(); // obligatoire
 //_stub->SAT_updatePalette();
-	sync(_frameDelay - 1);
-
 ////emu_printf("end slsynch()\n");
 
 #endif
@@ -243,7 +241,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 }
 #else
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-//	//emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
+emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
 	memset(&_vid->_frontLayer[512*y],0x00,512*(440-y));
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
@@ -253,6 +251,10 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			++len;
 		}
 	}
+	char toto[100];
+	memcpy(toto,p, len);
+	emu_printf("text %s\n",toto);
+	
 	Video::drawCharFunc dcf = _vid->_drawChar;
 	const uint8_t *fnt = /*(_res->_lang == LANG_JP) ? Video::_font8Jp :*/ _res->_fnt;
 	uint16_t lastSep = 0;
@@ -299,7 +301,7 @@ void Cutscene::clearBackPage() {
 }
 
 void Cutscene::drawCreditsText() {
-////emu_printf("drawCreditsText\n");	
+emu_printf("drawCreditsText\n");	
 	if (_creditsKeepText) {
 		if (_creditsSlowText) {
 			return;
@@ -520,7 +522,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-//	//emu_printf("Cutscene::op_drawCaptionText()\n");		
+emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 		if (strId != 0xFFFF) {
@@ -1049,7 +1051,7 @@ void Cutscene::op_drawTextAtPos() {
 				drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
 				_stub->copyRect(0, 224, 512, 224, _frontPage, _vid->_w);
 #ifndef SLAVE_SOUND
-//				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -121+y, 168, 480);
+//				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -121+y, 168, 480,0);
 #endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
@@ -1273,7 +1275,7 @@ void Cutscene::prepare() {
 	_frontPage = (uint8_t *)_res->_scratchBuffer;
 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
-
+	memset4_fast(&_vid->_frontLayer[50*_vid->_w], 0x00,17*_vid->_w);
 	memset4_fast((uint8_t *)(SpriteVRAM + cgaddress), 0x00, IMG_SIZE);
 	memset4_fast((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2), 0x00, IMG_SIZE);
 	memset4_fast((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2), 0x00, IMG_SIZE);	

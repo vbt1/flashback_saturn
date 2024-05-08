@@ -221,8 +221,8 @@ hwram = (uint8_t *)hwram_ptr;
 //	memset(_vid._frontLayer, 0x00, 512*448);
 //	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //	_stub->updateScreen(0);
-memset(_vid._frontLayer, 0x00, 512*120);
-_stub->copyRect(0, 0, _vid._w, 120, _vid._frontLayer, _vid._w);
+memset(&_vid._frontLayer[80*_vid._w], 0x00, _vid._w*16);
+_stub->copyRect(20, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
 	playCutscene(0x40);
 	playCutscene(0x0D);
 	
@@ -987,7 +987,7 @@ unsigned int h = 256;
 
 //_vid._w=512;
 #ifndef SLAVE_SOUND
-//		_vid.SAT_displaySprite(_vid._txt1Layer,-220-64, -128, h-1, 480);
+//		_vid.SAT_displaySprite(_vid._txt1Layer,-220-64, -128, h-1, 480,0);
 //		_vid.SAT_displayCutscene(0, 0, 255, 480);
 		_vid.SAT_displayCutscene(0,0, 0, 128, 240);//, _res._scratchBuffer);
 		slSynch();
@@ -1084,6 +1084,7 @@ void Game::printSaveStateCompleted() {
 }
 
 void Game::drawLevelTexts() {
+
 	LivePGE *pge = &_pgeLive[0];
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
 	if (obj == 0) {
@@ -1096,7 +1097,11 @@ void Game::drawLevelTexts() {
 			drawIcon(icon_num, 80, 8, 0xA);
 			uint8_t txt_num = pge->init_PGE->text_num;
 			const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
+//			char toto [256];
+//			memcpy(&toto[1],str,*str);
+//	emu_printf("drawLevelTexts %s\n",toto);			
 			drawString(str, 176, 26, 0xE6, true);
+		
 			if (icon_num == 2) {
 				printSaveStateCompleted();
 				return;
@@ -1105,6 +1110,11 @@ void Game::drawLevelTexts() {
 			_currentInventoryIconNum = obj - 1;
 		}
 	}
+	else
+	{
+		memset4_fast(&_vid._frontLayer[50*_vid._w], 0x00,17*_vid._w);
+	}
+	_stub->copyRect(176, 50, _vid._w, 17, _vid._frontLayer, _vid._w);
 	_saveStateCompleted = false;
 }
 
@@ -1118,11 +1128,10 @@ static int getLineLength(const uint8_t *str) {
 }
 
 void Game::drawStoryTexts() {
-//emu_printf("drawStoryTexts\n");	
+	
 	if (_textToDisplay != 0xFFFF) {
 		uint8_t textColor = 0xE8;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
-
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
 		while (!_stub->_pi.quit) {

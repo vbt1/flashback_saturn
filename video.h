@@ -107,12 +107,8 @@ struct Video {
 	void MAC_drawFG(int x, int y, const uint8_t *data, int frame);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
-	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);
-//<<<<<<< HEAD
+	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w, const uint8_t *data);
 	void SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w);	
-//=======
-//	void SAT_displayCutscene(bool layer, int x, int y, unsigned short h, unsigned short w);	
-//>>>>>>> 702ad37d8359135611c9b1f4de5696ded241c5e7
 };
 
 #endif // VIDEO_H__

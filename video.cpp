@@ -744,7 +744,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 #endif
 		buf.ptrsp = hwram_screen;
 		
-		if (buf.h2!=352 && buf.h2!=176)
+		if (buf.h2!=352 && buf.h2!=176 && data!=_res->_icn)
 			buf.ptr = _backLayer;
 		else
 			buf.ptr = NULL;
@@ -754,28 +754,32 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		memset(buf.ptrsp,0,buf.w2*buf.h2);
 		_res->MAC_decodeImageData(data, frame, &buf);
 
-#ifdef COLOR_4BPP			
+#ifdef COLOR_4BPP
 		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
 		position_vram+=(buf.w2*buf.h2)/2;
 #else
 		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 		position_vram+=(buf.w2*buf.h2);
 #endif
-		SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2);
+		SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2,data);
 	}
 }
 
-void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
+void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w, const uint8_t *data)
 {
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-/*
-	if(ptrsp==_txt1Layer)
-		user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	else*/
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 
-	user_sprite.COLR=  0;
+#ifdef COLOR_4BPP
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+if(data==_res->_monster)
+	user_sprite.COLR=  80;	
+if(data==_res->_perso)
+	user_sprite.COLR=  64;
+#else
+	user_sprite.COLR= 0;
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+#endif
 	user_sprite.SRCA= ((int)ptrsp)/8;
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=63+x;
@@ -791,7 +795,7 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 	SPRITE user_sprite;
 
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-
+/*
 	if(!front)
 	{
 		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
@@ -802,12 +806,8 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 		user_sprite.SRCA=cgaddress8;
 		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);		
 	}
-	
-//		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
-//		memcpy((void *)(SpriteVRAM + BACK_RAM_VDP2),(void *)_res->_scratchBuffer, h*w);
-		
+*/	
 	user_sprite.COLR=0;
-
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
 	user_sprite.XA=x;
