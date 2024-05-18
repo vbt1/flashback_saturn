@@ -32,8 +32,18 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	 || strstr(name," map") != NULL
 	 )
 #else
-	if(strstr(name,"conditions") != NULL 
+
+	 if(strstr(name,"Junky") != NULL
+	 || strstr(name,"Replicant") != NULL
+	 || strstr(name,"Alien") != NULL
+	 )
+	 {
+		dst = (uint8_t *)_scratchBuffer;
+	//	current_lwram += SAT_ALIGN(decodedSize);
+	 }
+	else if(strstr(name,"conditions") != NULL 
 	 || strstr(name," map") != NULL
+	 || strstr(name,"Mercenary") != NULL
 	 )
 #endif
 	{

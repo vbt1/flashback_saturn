@@ -13,6 +13,7 @@ extern "C"
 #include <string.h>
 extern TEXTURE tex_spr[4];
 extern Uint32 position_vram;
+extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
 void	*malloc(size_t);
@@ -28,7 +29,7 @@ void	*malloc(size_t);
 #undef VDP2_VRAM_B0
 #define VDP2_VRAM_B0 NULL 
 */
-//#define COLOR_4BPP 1
+#define COLOR_4BPP 1
 #define LOW_WORK_RAM 0x00200000
 
 Video::Video(Resource *res, SystemStub *stub)
@@ -191,7 +192,7 @@ void Video::fadeOutPalette() {
 		_stub->sleep(50);
 	}
 }
-
+/*
 void Video::setPaletteSlotBE(int palSlot, int palNum) {
 	//	debug(DBG_VIDEO, "Video::setPaletteSlotBE()");
 	const uint8_t *p = _res->_pal + palNum * 32;
@@ -207,7 +208,7 @@ void Video::setPaletteSlotBE(int palSlot, int palNum) {
 		_stub->setPaletteEntry(palSlot * 0x10 + i, &c);
 	}
 }
-
+*/
 void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 	//	debug(DBG_VIDEO, "Video::setPaletteSlotLE()");
 	for (int i = 0; i < 16; ++i) {
@@ -536,6 +537,7 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
+//	memset4_fast(&_frontLayer[((y<<1)-1)*_w], 0xC0,16*_w);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;
 	while (1) {
@@ -546,6 +548,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c, 0);
 		++len;
 	}
+	_stub->copyRect(x, (y<<1), _w, 16, _frontLayer, _w);	
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
@@ -719,6 +722,8 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	}
 }
 
+extern uint16_t _monster_tex[700];
+
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
 //emu_printf("MAC_drawSprite\n");	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
@@ -733,57 +738,65 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 		buf.x  = x * _layerScale;
 		buf.y  = y * _layerScale;
-		fixOffsetDecodeBuffer(&buf, dataPtr);
-
-//emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
-
-#ifdef COLOR_4BPP
-		buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
-#else
-		buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
-#endif
 		buf.ptrsp = hwram_screen;
+		fixOffsetDecodeBuffer(&buf, dataPtr);
 		
 		if (buf.h2!=352 && buf.h2!=176 && data!=_res->_icn)
 			buf.ptr = _backLayer;
 		else
 			buf.ptr = NULL;
 
-		TEXTURE *txptr = &tex_spr[0];
-		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
-		memset(buf.ptrsp,0,buf.w2*buf.h2);
-		_res->MAC_decodeImageData(data, frame, &buf);
+//		if(data!=_res->_monster)
+		{
+			TEXTURE *txptr = &tex_spr[0];			
+			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);			
+			memset(buf.ptrsp,0,buf.w2*buf.h2);			
+emu_printf("frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);
+			position_vram+=(buf.w2*buf.h2)/2;
+		//emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
 
-#ifdef COLOR_4BPP
-		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-		position_vram+=(buf.w2*buf.h2)/2;
-#else
-		memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-		position_vram+=(buf.w2*buf.h2);
-#endif
-		SAT_displaySprite((uint8_t*)(SpriteVRAM + ((txptr->CGadr) << 3)), buf.x-320, buf.y-224, buf.w2, buf.h2,data);
+		#ifdef COLOR_4BPP
+				buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+		#else
+				buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
+		#endif
+			_res->MAC_decodeImageData(data, frame, &buf);
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);			
+//			SAT_displaySprite(txptr->CGadr, buf.x-320, buf.y-224, buf.w2, buf.h2,data);
+			SAT_displaySprite(txptr->CGadr, buf,data);
+		}
+		/*else
+		{
+emu_printf("frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
+//			SAT_displaySprite(_monster_tex[frame], buf.x-320, buf.y-224, buf.w2, buf.h2,data);
+			SAT_displaySprite(_monster_tex[frame], buf,data);
+		}*/
 	}
 }
 
-void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w, const uint8_t *data)
+//void Video::SAT_displaySprite(unsigned short cgaddr, int x, int y, unsigned short h, unsigned short w, const uint8_t *data)
+void Video::SAT_displaySprite(unsigned short cgaddr, DecodeBuffer buf, const uint8_t *data)
 {
 	SPRITE user_sprite;
-	user_sprite.CTRL=0;
 
 #ifdef COLOR_4BPP
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.CTRL=0;
 if(data==_res->_monster)
-	user_sprite.COLR=  80;	
+{
+	user_sprite.COLR= 80;
+	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
+}
 if(data==_res->_perso)
-	user_sprite.COLR=  64;
+	user_sprite.COLR= 64;
 #else
 	user_sprite.COLR= 0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 #endif
-	user_sprite.SRCA= ((int)ptrsp)/8;
-	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.XA=63+x;
-	user_sprite.YA=y;
+	user_sprite.SRCA= cgaddr;
+	user_sprite.SIZE=(buf.h2/8)<<8|buf.w2;
+	user_sprite.XA=63+(buf.x-320);
+	user_sprite.YA=(buf.y-224);
 	user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
@@ -820,8 +833,8 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 //	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 	
 	
-		user_sprite.SRCA=cgaddress8;
-		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
-	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets	
+		user_sprite.SRCA=cgaddress8+(position_vram_aft_monster/8);
+//		memcpy((void *)(SpriteVRAM + cgaddress + position_vram_aft_monster),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
+//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets	
 }
 #endif

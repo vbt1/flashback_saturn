@@ -1002,7 +1002,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 #if 0
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
-emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
+//emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
 #endif			
@@ -1017,7 +1017,7 @@ emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 #if 0
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
-emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
+//emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
 			on->objects = (Object *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(Object) * on->num_objects);
 #endif
@@ -1486,7 +1486,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-//emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
 	if(hwram==NULL)
 	{
@@ -1501,7 +1501,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 	uint8_t *data = 0;
 	if (decompressLzss) {
-//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
+emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
@@ -1519,22 +1519,9 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 			}
 			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
 		}
-/*		else if(strstr(entry->name,"names") !=NULL
-//		|| strstr("strings", entry->name)  !=NULL
-		)
-		{
-#ifdef WITH_MEM_MALLOC
-			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-#else
-//			emu_printf("lwram %p %s\n",current_lwram, entry->name);	
-			data = (uint8_t *)current_lwram;
-			current_lwram += SAT_ALIGN(_resourceMacDataSize);
-#endif
-		}*/
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
-//		|| strncmp("logo", entry->name, 4) == 0 
 		)
 		{
 //			emu_printf("_scratchBuffer  ");
@@ -1546,7 +1533,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
 			{
-				//emu_printf("hwram_ptr ");				
+//				emu_printf("hwram_ptr ");				
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
 			}
@@ -1681,16 +1668,16 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 		{ "glue", "Alien", 0x36 },
 		{ 0, 0, 0 }
 	};
-	sat_free(_monster);
-	_monster = 0;
+//	sat_free(_monster);
+//	_monster = 0;
 	for (int i = 0; data[i].id; ++i) {
 		if (strcmp(data[i].id, name) == 0) {
-			_monster = decodeResourceMacData(data[i].name, true);
-			if(_monster==NULL)
-			{
+//			_monster = decodeResourceMacData(data[i].name, true);
+//			if(_monster==NULL)
+//			{
 //emu_printf("%s not loaded\n",data[i].name);
-				return;
-			}
+//				return;
+//			}
 //			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
 			MAC_copyClut16(clut, 5, data[i].index);
 			break;

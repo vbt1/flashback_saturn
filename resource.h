@@ -333,6 +333,7 @@ struct Resource {
 		assert(0);
 		return 0;
 	}
+	
 	int MAC_getMonsterFrame(int anim) const {
 		static const int16_t data[] = {
 			0x22F, 0x28D, // junky - 94
@@ -349,6 +350,7 @@ struct Resource {
 		assert(0);
 		return 0;
 	}
+
 };
 
 #endif // RESOURCE_H__
