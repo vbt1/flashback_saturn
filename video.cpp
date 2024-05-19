@@ -601,7 +601,7 @@ void Video::MAC_decodeMap(int level, int room) {
 		}
 	}
 }
-#ifdef COLOR_4BPP
+//#ifdef COLOR_4BPP
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
@@ -613,7 +613,7 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 		buf->ptrsp[offset2] |= ((color&0x0f)<<4);
 	}
 }
-#endif
+//#endif
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);	
@@ -627,7 +627,7 @@ void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	buf->ptr[offset] = color;
 }
 
-#ifdef COLOR_4BPP
+//#ifdef COLOR_4BPP
 void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
@@ -641,7 +641,7 @@ void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color)
 //		buf->ptr[offset] = color;
 	}
 }
-#endif
+//#endif
 void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);
@@ -742,11 +742,6 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
 //emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
 
-#ifdef COLOR_4BPP
-			buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
-#else
-			buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
-#endif
 		buf.ptrsp = hwram_screen;
 		
 		if (buf.h2!=352 && buf.h2!=176 && data!=_res->_icn)
@@ -761,14 +756,26 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			TEXTURE *txptr = &tex_spr[0];
 			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 			memset(buf.ptrsp,0x00,buf.w2*buf.h2);			
+			
+			if(data==_res->_perso)
+				buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+			else
+				buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
+			
 			_res->MAC_decodeImageData(data, frame, &buf);
-#ifdef COLOR_4BPP
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-			position_vram+=(buf.w2*buf.h2)/2;
-#else
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-			position_vram+=(buf.w2*buf.h2);
-#endif
+			
+			
+			
+			if(data==_res->_perso)
+			{
+				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
+				position_vram+=(buf.w2*buf.h2)/2;
+			}
+			else
+			{
+				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+				position_vram+=(buf.w2*buf.h2);
+			}
 			SAT_displaySprite(txptr->CGadr, buf,data);
 		}
 #ifdef PRELOAD_MONSTERS
@@ -804,11 +811,21 @@ if(data==_res->_icn)
 	
 if(data==_res->_monster)
 {
+	user_sprite.COLR= 80;	
 	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 }
-
+else if(data==_res->_perso)
+{
+	user_sprite.COLR= 64;	
+//	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+}
+else
+{
 	user_sprite.COLR= 0;
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites	
+}
 #endif
 	user_sprite.SRCA= cgaddr;
 	user_sprite.SIZE=(buf.h2/8)<<8|buf.w2;

@@ -1967,21 +1967,24 @@ emu_printf("monster %s frames %d\n",data[i].name,count);
 
 										TEXTURE *txptr = &tex_spr[0];
 										*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
-#ifdef COLOR_4BPP
+//#ifdef COLOR_4BPP
 										buf.setPixel = _vid.MAC_setPixel4Bpp;//eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 										memset(buf.ptrsp,0,buf.w2*buf.h2/2);
 										position_vram+=(buf.w2*buf.h2)/2;
+/*
 #else
 										buf.setPixel = _vid.MAC_setPixel;//eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 										memset(buf.ptrsp,0,buf.w2*buf.h2);
 										position_vram+=(buf.w2*buf.h2);
 #endif
-										_res.MAC_decodeImageData(_res._monster, j, &buf);
-#ifdef COLOR_4BPP
+*/										_res.MAC_decodeImageData(_res._monster, j, &buf);
+//#ifdef COLOR_4BPP
 										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
+/*
 #else
 										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 #endif
+*/
 //										_monster_tex[data[i].index+j]=txptr->CGadr;
 										_res._sprData[data[i].index+j]=txptr->CGadr;
 
