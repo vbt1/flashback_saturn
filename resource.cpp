@@ -1,4 +1,4 @@
-
+//#define PRELOAD_MONSTERS 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1668,11 +1668,16 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 		{ "glue", "Alien", 0x36 },
 		{ 0, 0, 0 }
 	};
-//	sat_free(_monster);
-//	_monster = 0;
+
+#ifndef PRELOAD_MONSTERS	
+	sat_free(_monster);
+	_monster = 0;
+#endif
 	for (int i = 0; data[i].id; ++i) {
 		if (strcmp(data[i].id, name) == 0) {
-//			_monster = decodeResourceMacData(data[i].name, true);
+#ifndef PRELOAD_MONSTERS
+			_monster = decodeResourceMacData(data[i].name, true);
+#endif
 //			if(_monster==NULL)
 //			{
 //emu_printf("%s not loaded\n",data[i].name);

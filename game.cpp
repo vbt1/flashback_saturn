@@ -1,4 +1,5 @@
-
+//#define PRELOAD_MONSTERS 1
+//#define COLOR_4BPP 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1790,8 +1791,9 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 		case kResourceTypeMac: {
 				Color palette[256];
 				_cut._stop=true; // vbt bidouille pour relancer la piste audio
+#ifndef PRELOAD_MONSTERS				
 				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
-
+#endif
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
 					const int color = kMonsterPalette * 16 + i;
@@ -1898,6 +1900,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 		_res.MAC_loadLevelData(_currentLevel);
 
 /*********************************/
+#ifdef PRELOAD_MONSTERS
 		_curMonsterNum = 0xFFFF;
 
 		const uint8_t *mList = _monsterListLevels[_currentLevel];
@@ -1930,12 +1933,12 @@ emu_printf("_res._spc %p\n",_res._spc);
 						{
 							if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) 
 							{
-/*								
-			0x22F, 0x28D, // junky - 94
-			0x2EA, 0x385, // mercenai - 156
-			0x387, 0x42F, // replican - 169
-			0x430, 0x4E8, // glue - 185
-*/
+								
+//			0x22F, 0x28D, // junky - 94
+//			0x2EA, 0x385, // mercenai - 156
+//			0x387, 0x42F, // replican - 169
+//			0x430, 0x4E8, // glue - 185
+
 //	const int frame = pge->anim_number-22F;							
 								
 								_res._monster = _res.decodeResourceMacData(data[i].name, true);								
@@ -1956,21 +1959,30 @@ emu_printf("monster %s frames %d\n",data[i].name,count);
 										buf.x  = 0;
 										buf.y  = 0;
 						//				fixOffsetDecodeBuffer(&buf, dataPtr);
-
-										buf.setPixel = _vid.MAC_setPixel4Bpp ;//eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 										buf.ptrsp = hwram_ptr;
+
 										TEXTURE *txptr = &tex_spr[0];
 										*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
+#ifdef COLOR_4BPP
+										buf.setPixel = _vid.MAC_setPixel4Bpp;//eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
 										memset(buf.ptrsp,0,buf.w2*buf.h2/2);
+										position_vram+=(buf.w2*buf.h2)/2;
+#else
+										buf.setPixel = _vid.MAC_setPixel;//eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+										memset(buf.ptrsp,0,buf.w2*buf.h2);
+										position_vram+=(buf.w2*buf.h2);
+#endif
 										_res.MAC_decodeImageData(_res._monster, j, &buf);
-
+#ifdef COLOR_4BPP
 										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
+#else
+										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+#endif
 										_monster_tex[data[i].index+j]=txptr->CGadr;
 
 emu_printf("j %d index %d\n",j,data[i].index+j);
 										
-										_vid.SAT_displaySprite(_monster_tex[data[i].index+j], buf,_res._monster);
-										position_vram+=(buf.w2*buf.h2)/2;
+//										_vid.SAT_displaySprite(_monster_tex[data[i].index+j], buf,_res._monster);
 									}
 //									slSynch();
 								}
@@ -1984,7 +1996,9 @@ emu_printf("j %d index %d\n",j,data[i].index+j);
 		}
 		
 		emu_printf("vram position %x\n",position_vram);	
+#endif
 		position_vram_aft_monster = position_vram;
+
 /*********************************/		
 		break;
 	}

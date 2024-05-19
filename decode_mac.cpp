@@ -32,7 +32,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	 || strstr(name," map") != NULL
 	 )
 #else
-
+/*  // fait perdre le dernier sprite du junky
 	 if(strstr(name,"Junky") != NULL
 	 || strstr(name,"Replicant") != NULL
 	 || strstr(name,"Alien") != NULL
@@ -41,7 +41,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 		dst = (uint8_t *)_scratchBuffer;
 	//	current_lwram += SAT_ALIGN(decodedSize);
 	 }
-	else if(strstr(name,"conditions") != NULL 
+	else*/ if(strstr(name,"conditions") != NULL 
 	 || strstr(name," map") != NULL
 	 || strstr(name,"Mercenary") != NULL
 	 )
@@ -563,7 +563,7 @@ slTVOff();
 }*/
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-//emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
+emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
 	struct {
 		const uint8_t *ptr;
 		int repeatCount;
@@ -623,4 +623,6 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			}
 		}
 	}
+emu_printf("decodeC211 end\n");
+	
 }

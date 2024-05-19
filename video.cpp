@@ -1,4 +1,4 @@
-
+//#define COLOR_4BPP 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -29,7 +29,6 @@ void	*malloc(size_t);
 #undef VDP2_VRAM_B0
 #define VDP2_VRAM_B0 NULL 
 */
-#define COLOR_4BPP 1
 #define LOW_WORK_RAM 0x00200000
 
 Video::Video(Resource *res, SystemStub *stub)
@@ -738,50 +737,56 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 		buf.x  = x * _layerScale;
 		buf.y  = y * _layerScale;
-		buf.ptrsp = hwram_screen;
 		fixOffsetDecodeBuffer(&buf, dataPtr);
+
+//emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
+
+#ifdef COLOR_4BPP
+			buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
+#else
+			buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
+#endif
+		buf.ptrsp = hwram_screen;
 		
 		if (buf.h2!=352 && buf.h2!=176 && data!=_res->_icn)
 			buf.ptr = _backLayer;
 		else
 			buf.ptr = NULL;
-
-//		if(data!=_res->_monster)
+#ifdef PRELOAD_MONSTERS
+		if(data!=_res->_monster)
+#endif
 		{
-			TEXTURE *txptr = &tex_spr[0];			
-			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);			
-			memset(buf.ptrsp,0,buf.w2*buf.h2);			
-emu_printf("frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);
-			position_vram+=(buf.w2*buf.h2)/2;
-		//emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
-
-		#ifdef COLOR_4BPP
-				buf.setPixel = eraseBackground ? MAC_setPixel4Bpp : MAC_setPixelMask4Bpp;
-		#else
-				buf.setPixel = eraseBackground ? MAC_setPixel : MAC_setPixelMask;
-		#endif
+emu_printf("perso frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
+			TEXTURE *txptr = &tex_spr[0];
+			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
+			memset(buf.ptrsp,0x00,buf.w2*buf.h2);			
 			_res->MAC_decodeImageData(data, frame, &buf);
-			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);			
-//			SAT_displaySprite(txptr->CGadr, buf.x-320, buf.y-224, buf.w2, buf.h2,data);
+#ifdef COLOR_4BPP
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
+			position_vram+=(buf.w2*buf.h2)/2;
+#else
+			memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+			position_vram+=(buf.w2*buf.h2);
+#endif
 			SAT_displaySprite(txptr->CGadr, buf,data);
 		}
-		/*else
+#ifdef PRELOAD_MONSTERS
+		else
 		{
-emu_printf("frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
-//			SAT_displaySprite(_monster_tex[frame], buf.x-320, buf.y-224, buf.w2, buf.h2,data);
+emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
 			SAT_displaySprite(_monster_tex[frame], buf,data);
-		}*/
+		}
+#endif		
 	}
 }
 
-//void Video::SAT_displaySprite(unsigned short cgaddr, int x, int y, unsigned short h, unsigned short w, const uint8_t *data)
 void Video::SAT_displaySprite(unsigned short cgaddr, DecodeBuffer buf, const uint8_t *data)
 {
 	SPRITE user_sprite;
+	user_sprite.CTRL=0;
 
 #ifdef COLOR_4BPP
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.CTRL=0;
 if(data==_res->_monster)
 {
 	user_sprite.COLR= 80;
