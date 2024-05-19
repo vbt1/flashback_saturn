@@ -1,4 +1,4 @@
-//#define PRELOAD_MONSTERS 1
+#define PRELOAD_MONSTERS 1
 //#define COLOR_4BPP 1
 /*
  * REminiscence - Flashback interpreter
@@ -1383,7 +1383,7 @@ void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
 		switch (_res._type) {
 		case kResourceTypeDOS:
 			assert(pge->anim_number < 1287);
-			dataPtr = _res._sprData[pge->anim_number];
+//			dataPtr = _res._sprData[pge->anim_number];
 			if (dataPtr == 0) {
 				return;
 			}
@@ -1510,17 +1510,21 @@ void Game::drawPiege(AnimBufferState *state) {
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
 //emu_printf("MAC_drawSprite1\n");			
-			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
+			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, 0, (pge->flags & 2) != 0, _eraseBackground);
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
 				break;
 			}
 			const int frame = _res.MAC_getPersoFrame(pge->anim_number);
-			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, (pge->flags & 2) != 0, _eraseBackground);
+			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, 0, (pge->flags & 2) != 0, _eraseBackground);
 		} else {
 //emu_printf("MAC_drawSprite 3 monster\n");
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
-			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, (pge->flags & 2) != 0, _eraseBackground);
+#ifndef PRELOAD_MONSTERS
+			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, 0, (pge->flags & 2) != 0, _eraseBackground);
+#else
+			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
+#endif
 		}
 		break;
 	}
@@ -1785,15 +1789,15 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 				const char *name = _monsterNames[0][_curMonsterNum];
 				_res.load(name, Resource::OT_SPRM);
 //				_res.load_SPR_OFF(name, _res._sprm);
-				_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
+//				_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
 			}
 			break;
 		case kResourceTypeMac: {
 				Color palette[256];
 				_cut._stop=true; // vbt bidouille pour relancer la piste audio
-#ifndef PRELOAD_MONSTERS				
+
+// on l'appelle juste pour la palette				
 				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
-#endif
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
 					const int color = kMonsterPalette * 16 + i;
@@ -1837,8 +1841,8 @@ void Game::loadLevelMap() {
 	}
 }
 
-uint16_t _monster_tex[700];
-
+//uint16_t _monster_tex[700];
+//_sprData
 
 void Game::loadLevelData() {
 emu_printf("loadLevelData\n");	
@@ -1921,11 +1925,11 @@ emu_printf("_res._spc %p\n",_res._spc);
 							const char *name;
 							int index;
 						} data[] = {
-							{ "junky", "Junky", 0x22F-0x22F },
-							{ "mercenai", "Mercenary", 0x2EA-0x22F },
-							{ "replican", "Replicant", 0x387-0x22F },
-							{ "glue", "Alien", 0x430-0x22F },
-							{ 0, 0, 0 }
+							{ "junky", "Junky",0x22F},
+							{ "mercenai", "Mercenary",0x2EA},
+							{ "replican", "Replicant",0x387},
+							{ "glue", "Alien",0x430},
+							{ 0, 0,0}
 						};
 						sat_free(_res._monster);
 						_res._monster = 0;
@@ -1978,9 +1982,10 @@ emu_printf("monster %s frames %d\n",data[i].name,count);
 #else
 										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 #endif
-										_monster_tex[data[i].index+j]=txptr->CGadr;
+//										_monster_tex[data[i].index+j]=txptr->CGadr;
+										_res._sprData[data[i].index+j]=txptr->CGadr;
 
-emu_printf("j %d index %d\n",j,data[i].index+j);
+//emu_printf("j %d index %d\n",j,data[i].index+j);
 										
 //										_vid.SAT_displaySprite(_monster_tex[data[i].index+j], buf,_res._monster);
 									}
@@ -2073,7 +2078,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 			iconNum = 34;
 			break;
 		}*/
-		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, false, true);
+		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, 0, false, true);
 		return;
 	}
 //	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);

@@ -105,7 +105,7 @@ struct Video {
 	static void MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);
 	void MAC_drawFG(int x, int y, const uint8_t *data, int frame);
-	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground);
+	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
 	void SAT_displaySprite(unsigned short cgaddr, DecodeBuffer buf, const uint8_t *data);
 	void SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w);	

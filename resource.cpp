@@ -1,4 +1,4 @@
-//#define PRELOAD_MONSTERS 1
+#define PRELOAD_MONSTERS 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1346,6 +1346,7 @@ void Resource::load_BNQ(File *f) {
 }
 
 void Resource::load_SPM(File *f) {
+/* // vbt version pc on verra plus tard	
 	static const int kPersoDatSize = 178647;
 	const int len = f->size();
 	f->seek(len - 4);
@@ -1379,6 +1380,7 @@ void Resource::load_SPM(File *f) {
 		}
 	}
 	sat_free(tmp);
+*/	
 }
 
 void Resource::clearBankData() {
@@ -1840,14 +1842,45 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 	}
 	for (int i = 0; i < 4; ++i) {
 		MAC_copyClut16(clut, i, offset + i);
-		MAC_copyClut16(clut, 8 + i, offset + i);
+		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
 	}
-	MAC_copyClut16(clut, 4, 0x30);
+	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal
 	// 5 is monster palette
 	MAC_clearClut16(clut, 6);
 	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);
 	MAC_copyClut16(clut, 0xC, 0x37);
 	MAC_copyClut16(clut, 0xD, 0x38);
+	
+/*
+	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
+	if (_unkPalSlot2 == 0) {
+		_unkPalSlot2 = _mapPalSlot3;
+	}
+	if (_unkPalSlot1 == 0) {
+		_unkPalSlot1 = _mapPalSlot3;
+	}
+	// background
+	setPaletteSlotBE(0x0, _mapPalSlot1);
+	// objects
+	setPaletteSlotBE(0x1, _mapPalSlot2);
+	setPaletteSlotBE(0x2, _mapPalSlot3);
+	setPaletteSlotBE(0x3, _mapPalSlot4);
+	// conrad
+	if (_unkPalSlot1 == _mapPalSlot3) {
+		setPaletteSlotLE(4, _conradPal1);
+	} else {
+		setPaletteSlotLE(4, _conradPal2);
+	}
+	// slot 5 is monster palette
+	// foreground
+	setPaletteSlotBE(0x8, _mapPalSlot1);
+	setPaletteSlotBE(0x9, _mapPalSlot2);
+	// inventory
+	setPaletteSlotBE(0xA, _unkPalSlot2);
+	setPaletteSlotBE(0xB, _mapPalSlot4);
+	// slots 0xC and 0xD are cutscene palettes
+	setTextPalette();
+*/
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {

@@ -563,7 +563,7 @@ slTVOff();
 }*/
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
+//emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
 	struct {
 		const uint8_t *ptr;
 		int repeatCount;
@@ -623,6 +623,6 @@ emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
 			}
 		}
 	}
-emu_printf("decodeC211 end\n");
+//emu_printf("decodeC211 end\n");
 	
 }

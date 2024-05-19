@@ -1,3 +1,4 @@
+#define PRELOAD_MONSTERS 1
 //#define COLOR_4BPP 1
 /*
  * REminiscence - Flashback interpreter
@@ -721,10 +722,10 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	}
 }
 
-extern uint16_t _monster_tex[700];
+//extern uint16_t _monster_tex[700];
 
-void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xflip, bool eraseBackground) {
-//emu_printf("MAC_drawSprite\n");	
+void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground) {
+//emu_printf("MAC_drawSprite %p %p\n",data,_res->_monster);	
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
 
 	if (dataPtr) {
@@ -756,7 +757,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, bool xf
 		if(data!=_res->_monster)
 #endif
 		{
-emu_printf("perso frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
+//emu_printf("perso frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
 			TEXTURE *txptr = &tex_spr[0];
 			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 			memset(buf.ptrsp,0x00,buf.w2*buf.h2);			
@@ -773,8 +774,8 @@ emu_printf("perso frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2
 #ifdef PRELOAD_MONSTERS
 		else
 		{
-emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
-			SAT_displaySprite(_monster_tex[frame], buf,data);
+//emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
+			SAT_displaySprite(_res->_sprData[anim_number], buf,data);
 		}
 #endif		
 	}
@@ -787,6 +788,8 @@ void Video::SAT_displaySprite(unsigned short cgaddr, DecodeBuffer buf, const uin
 
 #ifdef COLOR_4BPP
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	
+	user_sprite.COLR= 32;
 if(data==_res->_monster)
 {
 	user_sprite.COLR= 80;
@@ -794,7 +797,16 @@ if(data==_res->_monster)
 }
 if(data==_res->_perso)
 	user_sprite.COLR= 64;
+
+if(data==_res->_icn)
+	user_sprite.COLR= 0xa*16;
 #else
+	
+if(data==_res->_monster)
+{
+	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
+}
+
 	user_sprite.COLR= 0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 #endif
