@@ -603,14 +603,12 @@ void Video::MAC_decodeMap(int level, int room) {
 }
 //#ifdef COLOR_4BPP
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = y * buf->pitch + x;
-	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
-	buf->ptr[offset] = color;
+	const int offset = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
 	if(x&1)
-		buf->ptrsp[offset2] |= (color&0x0f);
+		buf->ptrsp[offset] |= (color&0x0f);
 	else
 	{
-		buf->ptrsp[offset2] |= ((color&0x0f)<<4);
+		buf->ptrsp[offset] |= ((color&0x0f)<<4);
 	}
 }
 //#endif
@@ -841,14 +839,14 @@ else
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites	
 }
 #endif
-	if(spr.cgaddr<0x10000)
+	if(spr.cgaddr<=0x10000)
 		user_sprite.SRCA = spr.cgaddr;
 	else
 	{
 		TEXTURE *txptr = &tex_spr[0];
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
-emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
+//emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
 
 		position_vram+=(buf.w2*buf.h2)/2;
 	

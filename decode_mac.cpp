@@ -26,7 +26,6 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
-
 	 if(strstr(name,"Junky") != NULL
 	 || strstr(name,"Replicant") != NULL
 	 || strstr(name,"Alien") != NULL

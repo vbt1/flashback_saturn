@@ -106,7 +106,7 @@ bool File::open(const char *filename, const char *directory, const char *mode) {
 }
 
 void File::close() {
-emu_printf("File::close()\n");	
+//emu_printf("File::close()\n");	
 	if (_impl) {
 		_impl->close();
 	}

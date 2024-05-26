@@ -102,7 +102,7 @@ struct Resource {
 	enum {
 		kPaulaFreq = 3546897,
 		kClutSize = 1024,
-		kScratchBufferSize = 0x231EC //0x20000 //512 * 448//320 * 224 + 1024
+		kScratchBufferSize = 0x191EC //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
 	static const uint16_t _voicesOffsetsTable[];

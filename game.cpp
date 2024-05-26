@@ -1790,16 +1790,6 @@ void Game::loadLevelMap() {
 		break;
 	}
 }
-/*
-static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
-        if (buf->xflip) {
-		buf->x += (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
-        } else 
-		{
-		buf->x -= (int16_t)READ_BE_UINT16(dataPtr + 4);
-        }
-        buf->y -= (int16_t)READ_BE_UINT16(dataPtr + 6);
-}*/
 
 void Game::loadLevelData() {
 emu_printf("loadLevelData\n");	
@@ -1833,7 +1823,6 @@ emu_printf("loadLevelData\n");
 //	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //heapWalk();		
 
-//emu_printf("_res._monster %p\n",_res._monster);
 //	sat_free(_res._monster);
 emu_printf("_res._spc %p\n",_res._spc);	
 	sat_free(_res._spc);
@@ -1852,9 +1841,6 @@ emu_printf("_res._spc %p\n",_res._spc);
 	}
 	sat_free(_res._sfxList);
 */	
-//	sat_free(_res._bankData);
-//	delete _res._aba;
-//	delete _res._mac;
 		_res.MAC_loadLevelData(_currentLevel);
 
 /*********************************/
@@ -1873,7 +1859,6 @@ emu_printf("_res._spc %p\n",_res._spc);
 				switch (_res._type) {
 
 				case kResourceTypeMac: {
-	//					_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 						static const struct {
 							const char *id;
 							const char *name;
@@ -1893,7 +1878,6 @@ emu_printf("_res._spc %p\n",_res._spc);
 							{
 								_res._monster = _res.decodeResourceMacData(data[i].name, true);								
 								const int count = READ_BE_UINT16(_res._monster+2);
-emu_printf("_res._monster bef %p clwram %p\n",_res._monster,current_lwram);
 
 								Color palette[256];
 
@@ -1905,37 +1889,35 @@ emu_printf("_res._monster bef %p clwram %p\n",_res._monster,current_lwram);
 									_stub->setPaletteEntry(color, &palette[color]);
 								}
 
-emu_printf("monster %s frames %d\n",data[i].name,count);
 								for (unsigned int j = 0; j < count;j++)
 								{
 									const uint8_t *dataPtr = _res.MAC_getImageData(_res._monster, j);
-emu_printf("j %d dataPtr %p\n",j,dataPtr);
+;
 									if (dataPtr) {
 										DecodeBuffer buf;
 										memset(&buf, 0, sizeof(buf));
-										buf.xflip = 0;
-										buf.w  = buf.pitch = _vid._w;
-										buf.w2 = READ_BE_UINT16(dataPtr + 2);
+										buf.w  = _vid._w;
 										buf.h  = _vid._h;
+										buf.w2 = READ_BE_UINT16(dataPtr + 2);
 										buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
-//										fixOffsetDecodeBuffer(&buf, dataPtr);
 										buf.ptrsp = hwram_ptr;
-
 										buf.setPixel = _vid.MAC_setPixel4Bpp;
 										memset(buf.ptrsp,0,buf.w2*buf.h2/2);
 
 										_res.MAC_decodeImageData(_res._monster, j, &buf);
 
-										_res._sprData[data[i].index+j].size   = (buf.h2/8)<<8|buf.w2;
-										_res._sprData[data[i].index+j].x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
-										_res._sprData[data[i].index+j].x	  = (int16_t)READ_BE_UINT16(dataPtr + 4);
-										_res._sprData[data[i].index+j].y	  = (int16_t)READ_BE_UINT16(dataPtr + 6);
-										
-										buf.x  = 80 - _res._sprData[data[i].index+j].x;
-										buf.y  = 80 - _res._sprData[data[i].index+j].y;
+										SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[data[i].index + j];
 
-										buf.w2 =  _res._sprData[data[i].index+j].size & 0xFF;
-										buf.h2 = (_res._sprData[data[i].index+j].size>>8)*8;
+										sprData->size   = (buf.h2/8)<<8|buf.w2;
+										sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
+										sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+										sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+										
+										buf.x  = 80 - sprData->x;
+										buf.y  = 80 - sprData->y;
+
+										buf.w2 =  sprData->size & 0xFF;
+										buf.h2 = (sprData->size>>8)*8;
 										
 										if(position_vram <= VRAM_MAX)
 										{
@@ -1944,30 +1926,26 @@ emu_printf("j %d dataPtr %p\n",j,dataPtr);
 
 											position_vram+=(buf.w2*buf.h2)/2;
 											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-											_res._sprData[data[i].index+j].cgaddr = txptr->CGadr;
+											sprData->cgaddr = txptr->CGadr;
 											position_vram_aft_monster = position_vram;
 										}
 										else
 										{
 											memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2/2);											
-											_res._sprData[data[i].index+j].cgaddr = (int)current_lwram;
+											sprData->cgaddr = (int)current_lwram;
 											current_lwram += SAT_ALIGN(buf.w2*buf.h2/2);											
-											
-										//	TEXTURE *txptr = &tex_spr[0];
-										//	*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 										}
 
-										char toto[60]; 
-										sprintf(toto,"%s %03d 0x%06x %d %d",data[i].id,j, _res._sprData[data[i].index+j].cgaddr, buf.w2,buf.h2);
+										char toto[60];
+										sprintf(toto,"%s %03d 0x%06x %d %d",data[i].id,j, sprData->cgaddr, buf.w2,buf.h2);
 										_vid.drawString(toto, 4, 60, 0xE7);
 										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 
-										_vid.SAT_displaySprite(_res._sprData[data[i].index+j], buf,_res._monster);
+										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 									}
 									slSynch();
 								}
-								emu_printf("_res._monster aft %p clwram %p\n",_res._monster,current_lwram);								
 							}
 						}
 					}
@@ -1975,7 +1953,6 @@ emu_printf("j %d dataPtr %p\n",j,dataPtr);
 				}
 			}
 			mList += 2;
-			emu_printf("vram position %x\n",position_vram);
 		}
 #endif
 

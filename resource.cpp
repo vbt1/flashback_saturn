@@ -725,7 +725,7 @@ emu_printf("_aba->loadEntry\n");
 				case OT_OBJ:
 					_numObjectNodes = READ_LE_UINT16(dat);
 					assert(_numObjectNodes == 230);
-emu_printf("decodeOBJ1\n");					
+//emu_printf("decodeOBJ1\n");					
 					decodeOBJ(dat + 2, size - 2);
 					break;
 				case OT_ANI:
@@ -965,13 +965,13 @@ void Resource::load_OBC(File *f) {
 	}
 	
 	sat_free(packedData);
-emu_printf("decodeOBJ2\n");	
+//emu_printf("decodeOBJ2\n");	
 	decodeOBJ(tmp, unpackedSize);
 	sat_free(tmp);
 }
 
 void Resource::decodeOBJ(const uint8_t *tmp, int size) {
-	emu_printf("Resource::decodeOBJ\n");
+	//emu_printf("Resource::decodeOBJ\n");
 	uint32_t offsets[256];
 	int tmpOffset = 0;
 	_numObjectNodes = 230;
