@@ -102,7 +102,7 @@ struct Resource {
 	enum {
 		kPaulaFreq = 3546897,
 		kClutSize = 1024,
-		kScratchBufferSize = 0x181EC //0x20000 //512 * 448//320 * 224 + 1024
+		kScratchBufferSize = 0x231EC //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
 	static const uint16_t _voicesOffsetsTable[];
@@ -134,7 +134,10 @@ struct Resource {
 	int8_t _ctData[256 + 112 * 64];
 	uint8_t *_spr1;
 //	uint8_t *_sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
-	uint16_t _sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+	SAT_sprite _sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+	
+	
+	
 //	uint8_t _sprm[0x10000];
 	uint8_t *_sprm; // vbt : pas utilisé pour mac
 	uint16_t _pgeNum;

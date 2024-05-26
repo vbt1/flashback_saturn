@@ -1512,13 +1512,13 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 
 		if(strncmp("Movie", entry->name, 5) == 0)
 		{
-			if(hwram_screen==NULL)
+			/*if(hwram_screen==NULL)
 			{
 				hwram_screen=hwram_ptr;
 				hwram_ptr+=45000;
 				//emu_printf("hwram_screen %p\n",hwram_screen);
 				data = (uint8_t *)hwram_screen;
-			}
+			}*/
 			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
 		}
 		else if(strcmp("Flashback colors", entry->name) == 0 
@@ -1578,6 +1578,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 	
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
+	
 	if (offset != 0) {
 		ptr = basePtr + offset;
 //		const int w = ((uint16_t*)ptr)[0]; ptr += 2;
@@ -1685,7 +1686,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 //emu_printf("%s not loaded\n",data[i].name);
 //				return;
 //			}
-//			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
+			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
 			MAC_copyClut16(clut, 5, data[i].index);
 			break;
 		}
@@ -1804,12 +1805,12 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //	_monster = 0;
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-//	slSynch(); // vbt pour virer les sprites
+	slSynch(); // vbt pour virer les sprites
 
 
 	MAC_decodeImageData(ptr, 0, dst);
-slDynamicFrame(ON);
-slSynch();
+//slDynamicFrame(ON);
+//slSynch();
 //	emu_printf("sat_free(%p)\n",ptr); // vbt : free sur l'image de fond, à ne pas remettre
 //	sat_free(ptr);
 }
@@ -1888,14 +1889,19 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 	const uint16_t sig = READ_BE_UINT16(ptr); 
 	ptr += 2;
 	if(sig != 0xC211)
+	{
 		return NULL;
+	}
 	const int count = READ_BE_UINT16(ptr);
 	ptr += 2;
 	
 	if (!(i < count))
-		return NULL;		
+	{
+		return NULL;
+	}
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
+//		emu_printf("MAC_getImageData basePtr %p offset %02x\n",ptr,offset);
 	return (offset != 0) ? basePtr + offset : 0;
 }
 

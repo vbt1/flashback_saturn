@@ -88,6 +88,14 @@ struct Level {
 	uint8_t track;
 };
 
+struct SAT_sprite {
+	uint32_t cgaddr;
+	uint16_t size;
+	int16_t x_flip;
+	int16_t x;
+	int16_t y;
+};
+
 struct InitPGE {
 	uint16_t type;
 	int16_t pos_x;

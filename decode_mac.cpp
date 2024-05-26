@@ -1,5 +1,4 @@
 //#pragma GCC optimize ("O2")
-//#define WITH_MEM_MALLOC 1
 //#include <assert.h>
 extern "C" {
 #include <string.h>
@@ -23,65 +22,29 @@ extern unsigned int end1;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-//emu_printf("lzss %s %d\n", name, decodedSize);
+//emu_printf("lzss %s %05x\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
-#ifdef WITH_MEM_MALLOC
-	if(strstr(name,"conditions") != NULL 
-	 || strstr(name," map") != NULL
-	 )
-#else
-/*  // fait perdre le dernier sprite du junky
+
 	 if(strstr(name,"Junky") != NULL
 	 || strstr(name,"Replicant") != NULL
 	 || strstr(name,"Alien") != NULL
-	 )
-	 {
-		dst = (uint8_t *)_scratchBuffer;
-	//	current_lwram += SAT_ALIGN(decodedSize);
-	 }
-	else*/ if(strstr(name,"conditions") != NULL 
-	 || strstr(name," map") != NULL
 	 || strstr(name,"Mercenary") != NULL
 	 )
-#endif
-	{
-#ifdef WITH_MEM_MALLOC
-		dst = (uint8_t *)sat_malloc(decodedSize);
-#else
-//		dst = (uint8_t *)sat_malloc(decodedSize);
-		dst = (uint8_t *)current_lwram;
-		current_lwram += SAT_ALIGN(decodedSize);
-#endif
-	}
+	 {
+		dst = (uint8_t *)current_lwram+(decodedSize);  // /2 car 4bpp
+		current_lwram += SAT_ALIGN(4);
+	 }
 	else
 	{
 		if(strstr(name,"Room") != NULL)
 		{
-			if(hwram_screen==NULL)
-			{
-				hwram_screen=hwram_ptr;
-				hwram_ptr+=45000;
-			}
 			//emu_printf("hwram1 %d %s\n", decodedSize, name);
 			dst = (uint8_t *)hwram_screen;
 		}
 		else
 		{
-#ifdef WITH_MEM_MALLOC
-			if ((int)hwram_ptr+decodedSize<=end1 && strncmp("Icons", name, 5) != 0 )
-			{
-				//emu_printf("hwram %d %s\n", decodedSize, name);
-				dst = (uint8_t *)hwram_ptr;
-				hwram_ptr += SAT_ALIGN(decodedSize);
-			}
-			else
-			{
-				//emu_printf("lwram %d %s end %d\n", decodedSize, name,end1);
-				dst = (uint8_t *)sat_malloc(decodedSize);
-			}
-#else
 			if(strstr(name,"polygons")   != NULL || strstr(name,"movie") != NULL)
 			{
 //				dst = (uint8_t *)sat_malloc(decodedSize);
@@ -103,13 +66,10 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 					current_lwram += SAT_ALIGN(decodedSize);
 				}
 			}
-#endif
 		}
 	}
 	uint32_t count = 0;
-//	int a=0;
-//	int b=0;
-	
+
 	while (count < decodedSize) {
 		const int code = f.readByte();
 		for (int i = 0; i < 8 && count < decodedSize; ++i) {
@@ -563,7 +523,7 @@ slTVOff();
 }*/
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-//emu_printf("decodeC211 w %d h %d %p %p\n",w,h,buf->ptr,buf->ptrsp);
+//emu_printf("decodeC211 src strt %p\n",src);
 	struct {
 		const uint8_t *ptr;
 		int repeatCount;

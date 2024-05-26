@@ -15,7 +15,7 @@
 #undef pal
 #undef TEXDEF
 
-#define	cgaddress	0x2000 //SpriteBufSize
+#define	cgaddress	0x1000 //SpriteBufSize
 #define	cgaddress8	cgaddress/8
 #define pal1 COL_256
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
@@ -107,7 +107,7 @@ struct Video {
 	void MAC_drawFG(int x, int y, const uint8_t *data, int frame);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
-	void SAT_displaySprite(unsigned short cgaddr, DecodeBuffer buf, const uint8_t *data);
+	void SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data);
 	void SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w);	
 };
 
