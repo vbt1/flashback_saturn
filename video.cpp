@@ -41,8 +41,10 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
-//emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
+emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
 	_frontLayer = (uint8 *)sat_malloc(_w * _h);
+//	_frontLayer = (uint8 *)current_lwram; //sat_malloc(_w * _h);
+//	current_lwram+=_w * _h;
 
 	memset(_frontLayer, 0, _w * _h);
 
@@ -723,7 +725,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 //extern uint16_t _monster_tex[700];
 
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground) {
-//emu_printf("MAC_drawSprite %p %p\n",data,_res->_monster);	
+//emu_printf("MAC_drawSprite %p %p anim_number %d\n",data,_res->_monster,anim_number);	
 //emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
 
 	DecodeBuffer buf;
@@ -731,7 +733,8 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	buf.xflip = xflip;
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
-			
+if(data==_res->_spc)
+emu_printf("MAC_drawSprite %p %p anim_number %d frame %d %04x\n",data,_res->_spc,anim_number,frame,position_vram);	
 #ifdef PRELOAD_MONSTERS
 	if(data!=_res->_monster)
 #endif
@@ -757,7 +760,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 			memset(buf.ptrsp,0x00,buf.w2*buf.h2);			
 #ifdef PRELOAD_MONSTERS			
-			if(data==_res->_perso)
+			if(data==_res->_perso) //|| data==_res->_spc)
 #else
 			if(data==_res->_perso || data==_res->_monster)	
 #endif
@@ -767,13 +770,17 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 		
 			_res->MAC_decodeImageData(data, frame, &buf);
 			
-			if(data==_res->_perso)
+			if(data==_res->_perso) //|| data==_res->_spc)
 			{
+//				if((position_vram+(buf.w2*buf.h2)/2) >0x66000)
+//					position_vram = position_vram_aft_monster;
 				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
 				position_vram+=(buf.w2*buf.h2)/2;
 			}
 			else
 			{
+//				if((position_vram+(buf.w2*buf.h2)) >0x66000)
+//					position_vram = position_vram_aft_monster;				
 				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 				position_vram+=(buf.w2*buf.h2);
 			}
@@ -786,6 +793,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	}
 	else
 	{
+emu_printf("frame monster %d no copy\n",frame);		
 		buf.w2 =  _res->_sprData[anim_number].size & 0xFF;
 		buf.h2 = (_res->_sprData[anim_number].size>>8)*8;
 		if(buf.xflip)
@@ -800,6 +808,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
 void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data)
 {
+//emu_printf("SAT_displaySprite\n");	
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 
@@ -832,23 +841,38 @@ else if(data==_res->_perso)
 	user_sprite.COLR= 64;	
 //	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-}
+}/*
+else if(data==_res->_spc)
+{
+	user_sprite.COLR= 128+128+128+32;	
+//	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+}*/
 else
 {
 	user_sprite.COLR= 0;
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites	
 }
 #endif
+//emu_printf("spr.cgaddr %p\n", spr.cgaddr);
+
 	if(spr.cgaddr<=0x10000)
+	{
+//emu_printf("spr.cgaddr %p\n", spr.cgaddr);
 		user_sprite.SRCA = spr.cgaddr;
+	}
 	else
 	{
 		TEXTURE *txptr = &tex_spr[0];
+		
+//		if((position_vram+(buf.w2*buf.h2)) >0x66000)
+//			position_vram = position_vram_aft_monster;		
+		
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
-//emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
+emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
 
-		position_vram+=(buf.w2*buf.h2)/2;
+		position_vram+=SAT_ALIGN((buf.w2*buf.h2)/2);
 	
 		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2)/2);
 		user_sprite.SRCA = txptr->CGadr;

@@ -73,7 +73,7 @@ void ResourceMac::load() {
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
-//emu_printf("ResourceMac::loadResourceFork\n");
+emu_printf("ResourceMac::loadResourceFork\n");
 // vbt : consomme 40ko de ram	
 	_f.seek(resourceOffset);
 	_dataOffset = resourceOffset + _f.readUint32BE();
@@ -87,8 +87,11 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
 //int xx = 0;	
-//emu_printf("SAT_CALLOC: _types: %d\n", sizeof(ResourceMacType));	
+	
 	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
+
+emu_printf("SAT_CALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_map.typesCount);
+
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
 		_types[i].count = _f.readUint16BE() + 1;
@@ -98,6 +101,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 		}
 	}
 	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+emu_printf("SAT_CALLOC: _entries: %p size %d\n", _types,sizeof(ResourceMacEntry *)*_map.typesCount);	
 //	xx+=sizeof(ResourceMacEntry *);
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);

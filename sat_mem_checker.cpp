@@ -35,8 +35,7 @@ extern "C" void __cxa_pure_virtual() { while (1); }
 
 void *sat_calloc(size_t nmemb, size_t size) {
 	void *mem = NULL;
-	size = (size + 1) & ~1; // pour alignement	
-	mem = (void*)MEM_Calloc(nmemb, size);
+	mem = (void*)MEM_Calloc(nmemb, SAT_ALIGN(size));
 
 	if (mem == NULL) {
 //		emu_printf("CALLOC: nmemb: %u, size: %u - FAILED\n", nmemb, size);
@@ -47,13 +46,15 @@ void *sat_calloc(size_t nmemb, size_t size) {
 
 void *sat_malloc(size_t size) {
 	void *mem = NULL;
-	size = (size + 1) & ~1; // pour alignement
 	
-	mem = (void*)MEM_Malloc(size);
+	mem = (void*)MEM_Malloc(SAT_ALIGN(size));
 
 	if (mem == NULL) {
+//		do
+		{
 		emu_printf("MEM_MALLOC: size: %u - FAILED\n", size);
-
+		}
+//while(1);
 		mem = (uint8_t *)0x25C04000;
 //		mem = (void*)malloc(size);;
 //		if (!dst) {
@@ -98,13 +99,15 @@ void sat_free(void *ptr) {
 	if((ptr >= VBT_L_START) && (ptr < (volatile void *)LOW_WORK_RAM_START))
 	{
 		emu_printf("NO FREE: addr: %p\n", ptr);
+		ptr = NULL;
 	}	
 	else
 	{
 		emu_printf("FREE: addr: %p\n", ptr);
+		ptr = NULL;
 	//	free(ptr);
 	}
-	ptr = NULL;
+
 	return;
 }
 
@@ -112,8 +115,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	void *mem = NULL;
 
 	if(ptr == NULL) return NULL;
-	size = (size + 1) & ~1; // pour alignement
-	mem = (void*)MEM_Realloc(ptr, size);
+	mem = (void*)MEM_Realloc(ptr, SAT_ALIGN(size));
 
 	if (mem == NULL) {
 		emu_printf("REALLOC: ptr: %.8X, size: %u - FAILED\n", ptr, size);

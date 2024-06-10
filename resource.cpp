@@ -23,6 +23,8 @@ extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 void	*malloc(size_t);
+extern Uint32 position_vram;
+extern Uint32 position_vram_aft_monster;
 //void *calloc (size_t, size_t);
 }
 #include "saturn_print.h"
@@ -50,16 +52,16 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 //#ifdef WITH_MEM_MALLOC
 #if 1
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 #else
 //emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
 	_scratchBuffer = (uint8_t *)current_lwram;
 	current_lwram += kScratchBufferSize;
 #endif
 	
-//emu_printf("sat_malloc kScratchBufferSize: %d %p\n",kScratchBufferSize,_scratchBuffer);	
-	if (!_scratchBuffer) {
-		error("Unable to allocate temporary memory buffer");
-	}
+//	if (!_scratchBuffer) {
+//		error("Unable to allocate temporary memory buffer");
+//	}
 	static const int kBankDataSize = 0x7000;
 
 
@@ -68,7 +70,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
 #else
-//emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
+emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 	_bankData = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(kBankDataSize);
 #endif
@@ -156,7 +158,7 @@ bool Resource::fileExists(const char *filename) {
 void Resource::clearLevelRes() {
 emu_printf("vbt clearLevelRes\n");
 
-current_lwram = (Uint8 *)0x200000;
+current_lwram = (Uint8 *)VBT_L_START;//+(448*512);
 
 emu_printf("_tbn\n");	
 	sat_free(_tbn); _tbn = 0;
@@ -1512,13 +1514,6 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 
 		if(strncmp("Movie", entry->name, 5) == 0)
 		{
-			/*if(hwram_screen==NULL)
-			{
-				hwram_screen=hwram_ptr;
-				hwram_ptr+=45000;
-				//emu_printf("hwram_screen %p\n",hwram_screen);
-				data = (uint8_t *)hwram_screen;
-			}*/
 			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
 		}
 		else if(strcmp("Flashback colors", entry->name) == 0 
@@ -1526,7 +1521,7 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		|| strncmp("intro", entry->name, 5) == 0 
 		)
 		{
-//			emu_printf("_scratchBuffer  ");
+			emu_printf("_scratchBuffer %p\n", _scratchBuffer);
 //			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
@@ -1760,7 +1755,6 @@ emu_printf("MAC_loadLevelData %s\n", name);
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	//slPrint("decodeOBJ",slLocate(3,13));
-emu_printf("decodeOBJ3\n");	
 	decodeOBJ(ptr, _resourceMacDataSize);
 	//slPrint("sat_free1",slLocate(3,13));	
 	
@@ -1784,6 +1778,7 @@ emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 emu_printf("MAC_loadLevelData %s\n", name);		
 	_spc = decodeResourceMacData(name, true);
+	
 //emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
@@ -1901,7 +1896,7 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 	}
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
-//		emu_printf("MAC_getImageData basePtr %p offset %02x\n",ptr,offset);
+//		emu_printf("MAC_getImageData basePtr %p offset %02x %p %p\n",ptr,offset,ptr + i * 4,current_lwram);
 	return (offset != 0) ? basePtr + offset : 0;
 }
 
@@ -1932,7 +1927,7 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
+//		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 //	MAC_unloadCutscene();
 	char name[32];
 	save_current_lwram = (uint8_t *)current_lwram;

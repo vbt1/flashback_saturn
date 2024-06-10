@@ -314,7 +314,8 @@ _stub->copyRect(0, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
 		//slPrint("loadLevelData1",slLocate(3,13));
 		emu_printf("loadLevelData\n");		
 			loadLevelData();
-		//slPrint("resetGameState",slLocate(3,13));			
+		//slPrint("resetGameState",slLocate(3,13));
+emu_printf("resetGameState\n");		
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -642,7 +643,7 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF && _cut._id != 8) {
-//		_sfxPly.stop(); // vbt � voir		
+//		_sfxPly.stop(); // vbt à voir
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
 //		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
@@ -1469,6 +1470,7 @@ void Game::drawPiege(AnimBufferState *state) {
 			_vid.MAC_drawSprite(state->x, state->y, _res._perso, frame, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
 		} else {
 //emu_printf("MAC_drawSprite 3 monster\n");
+// vbt : gerer le cas du sprite pas en vram !!!!
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
 #ifndef PRELOAD_MONSTERS
 			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
@@ -1844,6 +1846,13 @@ emu_printf("_res._spc %p\n",_res._spc);
 		_res.MAC_loadLevelData(_currentLevel);
 
 /*********************************/
+
+/*
+    DRAM0 = (Uint32 *)0x22400000;
+    DRAM1 = (Uint32 *)0x22600000;
+*/
+//Uint8 *current_dram=(Uint8 *)0x22400000;
+
 #ifdef PRELOAD_MONSTERS
 		_curMonsterNum = 0xFFFF;
 
@@ -1870,6 +1879,9 @@ emu_printf("_res._spc %p\n",_res._spc);
 							{ "glue", "Alien",0x430},			//			0x430, 0x4E8, // glue - 185
 							{ 0, 0,0}
 						};
+
+//emu_printf("free monster %p\n",_res._monster);
+	
 						sat_free(_res._monster);
 						_res._monster = 0;
 						for (int i = 0; data[i].id; ++i) 
@@ -1918,31 +1930,47 @@ emu_printf("_res._spc %p\n",_res._spc);
 
 										buf.w2 =  sprData->size & 0xFF;
 										buf.h2 = (sprData->size>>8)*8;
-										
-										if(position_vram <= VRAM_MAX)
-										{
-											TEXTURE *txptr = &tex_spr[0];
-											*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
+										TEXTURE *txptr = &tex_spr[0];
+										*txptr = TEXDEF(buf.h2, buf.w2, position_vram);	
+										
+										if((position_vram) <= VRAM_MAX)
+										{
+											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);																						
 											position_vram+=(buf.w2*buf.h2)/2;
-											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-											sprData->cgaddr = txptr->CGadr;
 											position_vram_aft_monster = position_vram;
 										}
 										else
 										{
-											memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2/2);											
+//											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+											memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2/2);
+											buf.ptrsp = current_lwram;
+
+										}
+//										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);											
+										sprData->cgaddr = (int)txptr->CGadr;
+
+										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+										if(position_vram > VRAM_MAX)
+										{
 											sprData->cgaddr = (int)current_lwram;
 											current_lwram += SAT_ALIGN(buf.w2*buf.h2/2);											
 										}
 
 										char toto[60];
-										sprintf(toto,"%s %03d 0x%06x %d %d",data[i].id,j, sprData->cgaddr, buf.w2,buf.h2);
+										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
 										_vid.drawString(toto, 4, 60, 0xE7);
+
 										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-
-										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+									}
+									else
+									{
+										char toto[60];
+										sprintf(toto,"no data ptr  %d %d                 ",j,count);
+										_vid.drawString(toto, 4, 60, 0xE7);
+										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);										
 									}
 									slSynch();
 								}
@@ -1956,6 +1984,113 @@ emu_printf("_res._spc %p\n",_res._spc);
 		}
 #endif
 
+
+
+
+
+
+///////////////////////////////////////////////////	
+	Color roomPalette[256];
+	_res.MAC_setupRoomClut(_currentLevel, _currentRoom, roomPalette);
+	for (int j = 0; j < 16; ++j) {
+		if (j == 5 || j == 7 || j == 14 || j == 15) {
+			continue;
+		}
+		for (int i = 0; i < 16; ++i) {
+			const int color = j * 16 + i;
+			_stub->setPaletteEntry(color, &roomPalette[color]);
+		}
+	}
+						
+								const int count = 0x22F;//READ_BE_UINT16(_res._spc) / 2; //_res._numSpc;//READ_BE_UINT16(_res._spc+2);
+
+								for (unsigned int j = 0; j < count;j++)
+								{
+									const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
+;
+									if (dataPtr) {
+										DecodeBuffer buf;
+										memset(&buf, 0, sizeof(buf));
+										buf.w  = _vid._w;
+										buf.h  = _vid._h;
+										buf.w2 = READ_BE_UINT16(dataPtr + 2);
+										buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
+										buf.ptrsp = hwram_ptr;
+										buf.setPixel = _vid.MAC_setPixel;
+										memset(buf.ptrsp,0,buf.w2*buf.h2);
+
+										_res.MAC_decodeImageData(_res._spc, j, &buf);
+
+										SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[j];
+
+										sprData->size   = (buf.h2/8)<<8|buf.w2;
+										sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
+										sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+										sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+										
+										buf.x  = 80 - sprData->x;
+										buf.y  = 160 - sprData->y;
+
+										buf.w2 =  sprData->size & 0xFF;
+										buf.h2 = (sprData->size>>8)*8;
+
+										TEXTURE *txptr = &tex_spr[0];
+										*txptr = TEXDEF(buf.h2, buf.w2, position_vram);	
+										
+										if((position_vram) <= VRAM_MAX)
+										{
+											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);																						
+											position_vram+=(buf.w2*buf.h2);
+											position_vram_aft_monster = position_vram;
+										}
+										else
+										{
+//											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+											memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2/2);
+											buf.ptrsp = current_lwram;
+
+										}
+										sprData->cgaddr = (int)txptr->CGadr;
+
+										_vid.SAT_displaySprite(*sprData, buf,_res._spc);
+										if(position_vram > VRAM_MAX)
+										{
+											sprData->cgaddr = (int)current_lwram;
+											current_lwram += SAT_ALIGN(buf.w2*buf.h2);
+										}
+
+										char toto[60];
+										sprintf(toto,"%03d/%03d 0x%06x %d %d",j,count, current_lwram, buf.w2,buf.h2);
+										_vid.drawString(toto, 4, 60, 0xE7);
+
+//										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+									}
+									slSynch();
+								}
+
+///////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*********************************/		
 		break;
 	}
@@ -1964,7 +2099,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
-
+emu_printf("clearBankData\n");
 	_res.clearBankData();
 	_printLevelCodeCounter = 150;
 
@@ -1976,7 +2111,9 @@ emu_printf("_res._spc %p\n",_res._spc);
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
+emu_printf("pge_loadForCurrentLevel %d\n",n);	
 	while (n--) {
+emu_printf("pge_loadForCurrentLevel %d\n",n);		
 		pge_loadForCurrentLevel(n);
 	}
 /*
@@ -1992,7 +2129,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 		}
 		_printLevelCodeCounter = 0;
 	}*/
-
+emu_printf("_pge_liveTable1\n");
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {
 			LivePGE *pge = &_pgeLive[i];
@@ -2000,6 +2137,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
+emu_printf("pge_resetMessages\n");	
 	pge_resetMessages();
 	_validSaveState = false;
 /* // vbt à remettre ???	

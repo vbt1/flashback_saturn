@@ -407,6 +407,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	Uint32 dataToRead = MIN(request_block, remaining_data);
 
 	if((stream->file_hash == current_cached) && fully_cached) {
+emu_printf("fully_cached\n");		
 		memcpy(ptr, cache + stream->f_seek_pos, dataToRead);	
 		stream->f_seek_pos += dataToRead;
 		
@@ -415,7 +416,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 		Uint32 end_offset;
 
 partial_cache:
-
+//emu_printf("partial_cache\n"); tout est en partial cache .....
 		end_offset = cache_offset + CACHE_SIZE;
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
@@ -439,8 +440,8 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-//		read_buffer = (Uint8*)0x25C08000; //sat_malloc(tot_bytes);
-		read_buffer = (Uint8*)current_lwram; //sat_malloc(tot_bytes);
+emu_printf("skip_bytes\n");		
+		read_buffer = (Uint8*)current_lwram;
 
 //emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);		
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
