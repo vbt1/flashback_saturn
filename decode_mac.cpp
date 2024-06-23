@@ -34,7 +34,22 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 	 || strstr(name,"Mercenary") != NULL
 	 )
 	 {
-		 
+		 	if(strstr(name,"Junky") != NULL)
+			{
+				dst = (uint8_t *)current_lwram;
+				current_lwram+=4;
+			}
+			if(strstr(name,"Replicant") != NULL)
+			{
+				dst = (uint8_t *)hwram_ptr;
+				hwram_ptr += SAT_ALIGN(decodedSize);
+			}
+			else
+			{
+				dst = (uint8_t *)current_lwram;
+				current_lwram+=SAT_ALIGN(decodedSize);		
+			}
+		/* 
 		if(strstr(name,"Junky") != NULL)
 		{
 			dst = (uint8_t *)current_lwram;
@@ -54,12 +69,8 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 		//dst = (uint8_t *)current_lwram+(decodedSize+80000);  // /2 car 4bpp
 		dst = (uint8_t *)current_dram2;  // /2 car 4bpp
 		current_dram2+=SAT_ALIGN(decodedSize);
-		}
+		}*/
 	 }
-	 /*
-    DRAM0 = (Uint32 *)0x22400000;
-    DRAM1 = (Uint32 *)0x22600000;	 
-	 */
 	else
 	{
 		if(strstr(name,"Room") != NULL)
@@ -81,8 +92,11 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 			else if(strstr(name,"Person")   != NULL)
 			{
 //				dst = (uint8_t *)sat_malloc(decodedSize);
-				dst = (uint8_t *)current_dram;
-				current_dram += SAT_ALIGN(decodedSize);
+				dst = (uint8_t *)current_dram2;
+				current_dram2 += SAT_ALIGN(decodedSize)/2;
+				
+				
+				
 			}			
 			
 			else

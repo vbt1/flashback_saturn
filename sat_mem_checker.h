@@ -18,7 +18,7 @@ void *memset4_fast(void *, long, size_t);
 #define SAT_ALIGN(a) ((a+3)&~3)
 
 
-#define LOW_WORK_RAM_START 0x0028C000 // Beginning of LOW WORK RAM (1Mb)
+#define LOW_WORK_RAM_START 0x0029E000 // Beginning of LOW WORK RAM (1Mb)
 #define LOW_WORK_RAM_SIZE 0x300000-LOW_WORK_RAM_START
 
 #define VBT_L_START    ((volatile void *)(0x200000))

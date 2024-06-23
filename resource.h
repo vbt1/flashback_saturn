@@ -133,8 +133,7 @@ struct Resource {
 	uint8_t *_tbn;
 	int8_t _ctData[256 + 112 * 64];
 	uint8_t *_spr1;
-//	uint8_t *_sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
-	SAT_sprite _sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+	SAT_sprite _sprData[NUM_SPRITES+1100]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 	
 	
 	

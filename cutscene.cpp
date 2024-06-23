@@ -1216,7 +1216,7 @@ bool Cutscene::load(uint16_t cutName) {
 }
 
 void Cutscene::unload() {
-	return;
+//	return;
 	
 	switch (_res->_type) {
 	case kResourceTypeDOS:

@@ -228,8 +228,8 @@ hwram = (uint8_t *)hwram_ptr;
 //	memset(_vid._frontLayer, 0x00, 512*448);
 //	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //	_stub->updateScreen(0);
-memset4_fast(&_vid._frontLayer[80*_vid._w], 0x00, _vid._w*16);
-_stub->copyRect(0, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
+memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h);
+_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	playCutscene(0x40);
 	playCutscene(0x0D);
 	
@@ -637,7 +637,7 @@ void Game::playCutscene(int id) {
 	return;
 #endif
 
-		return;
+//		return;   // vbt : pour ne pas lire les videos
 
 	if (id != -1) {
 		_cut._id = id;
@@ -1826,7 +1826,7 @@ emu_printf("loadLevelData\n");
 //heapWalk();		
 
 //	sat_free(_res._monster);
-emu_printf("_res._spc %p\n",_res._spc);	
+//emu_printf("_res._spc %p\n",_res._spc);	
 	sat_free(_res._spc);
 	sat_free(_res._ani);
 	_res.MAC_unloadLevelData();
@@ -1842,17 +1842,16 @@ emu_printf("_res._spc %p\n",_res._spc);
 		sat_free(_res._sfxList[i].data);
 	}
 	sat_free(_res._sfxList);
-*/	
+*/
+	_vid.drawString("Loading Please wait", 20, 40, 0xE7);
+	
 		_res.MAC_loadLevelData(_currentLevel);
 
 /*********************************/
 
-/*
-    DRAM0 = (Uint32 *)0x22400000;
-    DRAM1 = (Uint32 *)0x22600000;
-*/
 //Uint8 *current_dram=(Uint8 *)0x22400000;
-
+//		memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
+//		_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
 #ifdef PRELOAD_MONSTERS
 		_curMonsterNum = 0xFFFF;
 
@@ -1891,8 +1890,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 								_res._monster = _res.decodeResourceMacData(data[i].name, true);								
 								const int count = READ_BE_UINT16(_res._monster+2);
 
-								Color palette[256];
-
+/*								Color palette[256];
 				// on l'appelle juste pour la palette				
 								_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 								static const int kMonsterPalette = 5;
@@ -1900,11 +1898,11 @@ emu_printf("_res._spc %p\n",_res._spc);
 									const int color = kMonsterPalette * 16 + i;
 									_stub->setPaletteEntry(color, &palette[color]);
 								}
-
+*/
 								for (unsigned int j = 0; j < count;j++)
 								{
 									const uint8_t *dataPtr = _res.MAC_getImageData(_res._monster, j);
-;
+
 									if (dataPtr) {
 										DecodeBuffer buf;
 										memset(&buf, 0, sizeof(buf));
@@ -1914,7 +1912,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 										buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 										buf.ptrsp = hwram_ptr;
 										buf.setPixel = _vid.MAC_setPixel4Bpp;
-										memset(buf.ptrsp,0,buf.w2*buf.h2/2);
+										memset(buf.ptrsp,0,buf.w2*buf.h2);
 
 										_res.MAC_decodeImageData(_res._monster, j, &buf);
 
@@ -1942,28 +1940,31 @@ emu_printf("_res._spc %p\n",_res._spc);
 										}
 										else
 										{
-//											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-											memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2/2);
+											memcpy(current_lwram,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
 											buf.ptrsp = current_lwram;
-
 										}
-//										memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);											
 										sprData->cgaddr = (int)txptr->CGadr;
 
-										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 										if(position_vram > VRAM_MAX)
 										{
 											sprData->cgaddr = (int)current_lwram;
-											current_lwram += SAT_ALIGN(buf.w2*buf.h2/2);											
+											current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;											
 										}
-
+//										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+										
+										if(position_vram>VRAM_MAX+0x10000)
+											position_vram = position_vram_aft_monster; // vbt on repart des monsters										
+										
+/*										
 										char toto[60];
 										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
 										_vid.drawString(toto, 4, 60, 0xE7);
 
 										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+*/
 									}
+/*
 									else
 									{
 										char toto[60];
@@ -1973,6 +1974,7 @@ emu_printf("_res._spc %p\n",_res._spc);
 										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);										
 									}
 									slSynch();
+*/
 								}
 							}
 						}
@@ -1987,8 +1989,8 @@ emu_printf("_res._spc %p\n",_res._spc);
 
 
 
-
-
+#if 1
+/*
 ///////////////////////////////////////////////////	
 	Color roomPalette[256];
 	_res.MAC_setupRoomClut(_currentLevel, _currentRoom, roomPalette);
@@ -2001,100 +2003,94 @@ emu_printf("_res._spc %p\n",_res._spc);
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
-						
-								const int count = 0x22F;//READ_BE_UINT16(_res._spc) / 2; //_res._numSpc;//READ_BE_UINT16(_res._spc+2);
+*/
+	const int count = 1100;//READ_BE_UINT16(_res._spc) / 2; //_res._numSpc;//READ_BE_UINT16(_res._spc+2);
 
-								for (unsigned int j = 0; j < count;j++)
-								{
-									const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
-;
-									if (dataPtr) {
-										DecodeBuffer buf;
-										memset(&buf, 0, sizeof(buf));
-										buf.w  = _vid._w;
-										buf.h  = _vid._h;
-										buf.w2 = READ_BE_UINT16(dataPtr + 2);
-										buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
-										buf.ptrsp = hwram_ptr;
-										buf.setPixel = _vid.MAC_setPixel;
-										memset(buf.ptrsp,0,buf.w2*buf.h2);
+	for (unsigned int j = 0; j < count;j++)
+	{
+		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
 
-										_res.MAC_decodeImageData(_res._spc, j, &buf);
+		if (dataPtr) {
+			DecodeBuffer buf;
+			memset(&buf, 0, sizeof(buf));
+			buf.w  = _vid._w;
+			buf.h  = _vid._h;
+			buf.w2 = READ_BE_UINT16(dataPtr + 2);
+			buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
+			buf.ptrsp = hwram_ptr;
+			buf.setPixel = _vid.MAC_setPixel;
+			memset(buf.ptrsp,0,buf.w2*buf.h2*2);
 
-										SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[j];
+			_res.MAC_decodeImageData(_res._spc, j, &buf);
 
-										sprData->size   = (buf.h2/8)<<8|buf.w2;
-										sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
-										sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
-										sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
-										
-										buf.x  = 80 - sprData->x;
-										buf.y  = 160 - sprData->y;
+			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES+j];
 
-										buf.w2 =  sprData->size & 0xFF;
-										buf.h2 = (sprData->size>>8)*8;
+			sprData->size   = (buf.h2/8)<<8|buf.w2;
+			sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
+			sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+			
+			buf.x  = 80 - sprData->x;
+			buf.y  = 180 - sprData->y;
 
-										TEXTURE *txptr = &tex_spr[0];
-										*txptr = TEXDEF(buf.h2, buf.w2, position_vram);	
-										
-										if((position_vram) <= VRAM_MAX)
-										{
-											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);																						
-											position_vram+=(buf.w2*buf.h2);
-											position_vram_aft_monster = position_vram;
-										}
-										else
-										{
-//											memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-											memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2/2);
-											buf.ptrsp = current_lwram;
+			buf.w2 =  sprData->size & 0xFF;
+			buf.h2 = (sprData->size>>8)*8;
 
-										}
-										sprData->cgaddr = (int)txptr->CGadr;
+			TEXTURE *txptr = &tex_spr[0];
+			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);	
+			
+			if((position_vram) <= VRAM_MAX)
+			{
+				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);																						
+				position_vram+=(buf.w2*buf.h2);
+				position_vram_aft_monster = position_vram;
+			}
+			else
+			{
+				memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2);
+				buf.ptrsp = current_lwram;
+			}
 
-										_vid.SAT_displaySprite(*sprData, buf,_res._spc);
-										if(position_vram > VRAM_MAX)
-										{
-											sprData->cgaddr = (int)current_lwram;
-											current_lwram += SAT_ALIGN(buf.w2*buf.h2);
-										}
+			sprData->cgaddr = (int)txptr->CGadr;
 
-										char toto[60];
-										sprintf(toto,"%03d/%03d 0x%06x %d %d",j,count, current_lwram, buf.w2,buf.h2);
-										_vid.drawString(toto, 4, 60, 0xE7);
+			if(position_vram > VRAM_MAX)
+			{
+				sprData->cgaddr = (int)current_lwram;
+				if(sprData->cgaddr+SAT_ALIGN(buf.w2*buf.h2)<LOW_WORK_RAM_START)
+					current_lwram += SAT_ALIGN(buf.w2*buf.h2);											
+			}
+//			_vid.SAT_displaySprite(*sprData, buf,_res._spc);
+			
+			if(position_vram>VRAM_MAX+0x10000)
+				position_vram = position_vram_aft_monster; // vbt on repart des monsters	
+/*
+			char toto[60];
+			sprintf(toto,"%03d/%03d 0x%06x %d %d",j,count, current_lwram, buf.w2,buf.h2);
+			_vid.drawString(toto, 4, 60, 0xE7);
 
 //										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-									}
-									slSynch();
-								}
+			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+*/
+		}
+/*		else
+		{
+			char toto[60];
+			sprintf(toto,"no data ptr  %d %d                 ",j,count);
+			_vid.drawString(toto, 4, 60, 0xE7);
+			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);										
+		}									
+		slSynch();
+*/
+	}
 
 ///////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif
 
 
 /*********************************/		
 		break;
 	}
-
 	_cut._id = lvl->cutscene_id;
 
 	_curMonsterNum = 0xFFFF;
@@ -2111,9 +2107,9 @@ emu_printf("clearBankData\n");
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
-emu_printf("pge_loadForCurrentLevel %d\n",n);	
+//emu_printf("pge_loadForCurrentLevel %d\n",n);	
 	while (n--) {
-emu_printf("pge_loadForCurrentLevel %d\n",n);		
+//emu_printf("pge_loadForCurrentLevel %d\n",n);		
 		pge_loadForCurrentLevel(n);
 	}
 /*
@@ -2129,7 +2125,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 		}
 		_printLevelCodeCounter = 0;
 	}*/
-emu_printf("_pge_liveTable1\n");
+//emu_printf("_pge_liveTable1\n");
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {
 			LivePGE *pge = &_pgeLive[i];
@@ -2137,7 +2133,7 @@ emu_printf("_pge_liveTable1\n");
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
-emu_printf("pge_resetMessages\n");	
+//emu_printf("pge_resetMessages\n");	
 	pge_resetMessages();
 	_validSaveState = false;
 /* // vbt à remettre ???	
@@ -2148,6 +2144,8 @@ emu_printf("pge_resetMessages\n");
 	else
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 */
+	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
+	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {

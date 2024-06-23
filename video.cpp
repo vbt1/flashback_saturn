@@ -42,12 +42,13 @@ Video::Video(Resource *res, SystemStub *stub)
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
 emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
-	_frontLayer = (uint8 *)sat_malloc(_w * _h);
+	Uint32 *DRAM0 = (Uint32 *)0x22400000;
+	_frontLayer = (uint8 *)DRAM0; //sat_malloc(_w * _h);
 //	_frontLayer = (uint8 *)current_lwram; //sat_malloc(_w * _h);
 //	current_lwram+=_w * _h;
 
-	memset(_frontLayer, 0, _w * _h);
-
+	memset(&_frontLayer[0], 0, _w * _h);
+//	_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 //	_backLayer = (uint8_t *)LOW_WORK_RAM;
 
@@ -733,10 +734,36 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	buf.xflip = xflip;
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
-if(data==_res->_spc)
-emu_printf("MAC_drawSprite %p %p anim_number %d frame %d %04x\n",data,_res->_spc,anim_number,frame,position_vram);	
+//if(data==_res->_spc)
+//emu_printf("MAC_drawSprite %p %p anim_number %d frame %d %04x\n",data,_res->_spc,anim_number,frame,position_vram);	
 #ifdef PRELOAD_MONSTERS
-	if(data!=_res->_monster)
+	if(data==_res->_monster)
+	{
+//emu_printf("frame monster %d no copy\n",frame);		
+		buf.w2 =  _res->_sprData[anim_number].size & 0xFF;
+		buf.h2 = (_res->_sprData[anim_number].size>>8)*8;
+		if(buf.xflip)
+			buf.x  += _res->_sprData[anim_number].x_flip;
+		else
+			buf.x  -= _res->_sprData[anim_number].x;
+	
+		buf.y  -= _res->_sprData[anim_number].y;		
+		SAT_displaySprite(_res->_sprData[anim_number], buf,data);
+	}		
+	else if(data==_res->_spc)
+	{
+//emu_printf("frame spc %d no copy\n",frame);		
+		buf.w2 =  _res->_sprData[_res->NUM_SPRITES+frame].size & 0xFF;
+		buf.h2 = (_res->_sprData[_res->NUM_SPRITES+frame].size>>8)*8;
+		if(buf.xflip)
+			buf.x  += _res->_sprData[_res->NUM_SPRITES+frame].x_flip;
+		else
+			buf.x  -= _res->_sprData[_res->NUM_SPRITES+frame].x;
+	
+		buf.y  -= _res->_sprData[_res->NUM_SPRITES+frame].y;		
+		SAT_displaySprite(_res->_sprData[_res->NUM_SPRITES+frame], buf,data);
+	}
+	else
 #endif
 	{
 		const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
@@ -791,19 +818,7 @@ emu_printf("MAC_drawSprite %p %p anim_number %d frame %d %04x\n",data,_res->_spc
 		}
 //emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);
 	}
-	else
-	{
-emu_printf("frame monster %d no copy\n",frame);		
-		buf.w2 =  _res->_sprData[anim_number].size & 0xFF;
-		buf.h2 = (_res->_sprData[anim_number].size>>8)*8;
-		if(buf.xflip)
-			buf.x  += _res->_sprData[anim_number].x_flip;
-		else
-			buf.x  -= _res->_sprData[anim_number].x;
-	
-		buf.y  -= _res->_sprData[anim_number].y;		
-		SAT_displaySprite(_res->_sprData[anim_number], buf,data);
-	}
+
 }
 
 void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data)
@@ -870,11 +885,19 @@ else
 		
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
-emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
+//emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
 
-		position_vram+=SAT_ALIGN((buf.w2*buf.h2)/2);
-	
-		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2)/2);
+		if(data!=_res->_spc)
+		{
+			position_vram+=SAT_ALIGN((buf.w2*buf.h2)/2);
+			memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2)/2);
+		}
+		else
+		{
+			position_vram+=SAT_ALIGN((buf.w2*buf.h2));
+			memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2));
+		}
+
 		user_sprite.SRCA = txptr->CGadr;
 	}
 	user_sprite.SIZE= spr.size;//(buf.h2/8)<<8|buf.w2;

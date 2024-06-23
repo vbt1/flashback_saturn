@@ -71,8 +71,10 @@ emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
 #else
 emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
-	_bankData = (uint8_t *)current_lwram;
-	current_lwram += SAT_ALIGN(kBankDataSize);
+//	_bankData = (uint8_t *)current_lwram;
+	Uint32 *DRAM0 = (Uint32 *)0x22438000;
+	_bankData = (uint8_t *)DRAM0;
+//	current_lwram += SAT_ALIGN(kBankDataSize);
 #endif
 
 	if (!_bankData) {
@@ -1880,11 +1882,14 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
+//emu_printf("MAC_getImageData basePtr %p offset %02x %p %p\n",ptr,0,ptr + i * 4,current_lwram);
+	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); 
 	ptr += 2;
 	if(sig != 0xC211)
 	{
+//emu_printf("MAC_getImageData bad sig\n");		
 		return NULL;
 	}
 	const int count = READ_BE_UINT16(ptr);
