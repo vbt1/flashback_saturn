@@ -1,0 +1,3 @@
+{
+    "cmake.configureArgs": [ "-DCMAKE_INSTALL_PREFIX=/saturn/fb" ]
+}

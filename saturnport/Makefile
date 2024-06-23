@@ -1,5 +1,5 @@
 
 CMNDIR = ./
-SRCDIR = ../
+SRCDIR = ../src
 include ./Makefile.template
 

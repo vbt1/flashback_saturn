@@ -1,0 +1,6 @@
+[
+{
+      "name": "SEGA Saturn",
+      "toolchainFile": "/opt/saturn/CMake/sega_saturn.cmake"
+    }
+  ]

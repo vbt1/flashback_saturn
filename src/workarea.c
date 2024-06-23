@@ -3,9 +3,9 @@
 /*          for SGL ver. 2.10 (default)                                    */
 /*                                                                         */
 /*-------------------------------------------------------------------------*/
-extern "C" {
-#include	"sl_def2.h"
-} 
+//extern "C" {
+#include	"sl_def.h"
+//} 
 /*---- [1.This part must not be modified] ---------------------------------*/
 #define		SystemWork		0x060ffc00			/* System Variable         */
 

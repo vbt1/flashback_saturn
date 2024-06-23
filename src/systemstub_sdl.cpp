@@ -16,13 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 //#define SLAVE_SOUND 1
+//#define SOUND 1
 extern "C" {
 #include <string.h>	
 #include <sgl.h>
 #include <sl_def.h>
 //#include <sega_mem.h>
 #include <sega_int.h>
+#ifdef SOUND
 #include <sega_pcm.h>
+#endif
 #include <sega_snd.h>
 //#include "sega_csh.h"
 //#include "sega_spr.h"
@@ -115,8 +118,10 @@ typedef struct {
 /* Required for audio sound buffers */
 Uint8 buffer_filled[2];
 Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
+#ifdef SOUND
 static PcmWork pcm_work[2];
 static PcmHn pcm[2];
+#endif
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
 static Mixer *mix = NULL;
@@ -139,11 +144,13 @@ static volatile	Uint8  tick_wrap = 0;
 static Uint8 firstSoundRun = 1;
 
 /* FUNCTIONS */
+#ifdef SOUND
 static PcmHn createHandle(int bufno);
 static void play_manage_buffers(void);
-static void fill_buffer_slot(void);
 void fill_play_audio(void);
 void sat_restart_audio(void);
+#endif
+static void fill_buffer_slot(void);
 void vblIn(void); // This is run at each vblnk-in
 uint8 isNTSC(void);
 
@@ -415,6 +422,7 @@ uint32 SystemStub_SDL::getTimeStamp() {
 }
 
 void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
+#ifdef SOUND
 	mix = (Mixer*)param;
 
 	memset(ring_bufs, 0, SND_BUFFER_SIZE * 2 * SND_BUF_SLOTS);
@@ -430,9 +438,11 @@ void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 	// start playing
 	PCM_Start(pcm[0]); 
 	PCM_EntryNext(pcm[1]);
+#endif
 }
 
 void SystemStub_SDL::stopAudio() {
+#ifdef SOUND
 	audioEnabled = 0;
 
 	// Stopping playback
@@ -448,6 +458,7 @@ void SystemStub_SDL::stopAudio() {
 
 
 	return;
+#endif
 }
 
 uint32 SystemStub_SDL::getOutputSampleRate() {
@@ -752,7 +763,7 @@ uint8 isNTSC (void) {
 	else
 		return 0;
 }
-
+#ifdef SOUND
 void fill_play_audio(void) {
 //emu_printf("SystemStub_SDL::fill_play_audio\n");
 #ifdef SLAVE_SOUND
@@ -855,7 +866,7 @@ void sat_restart_audio(void) {
 #endif
 	return;
 }
-
+#endif
 void fill_buffer_slot(void) {
 	//slCashPurge();
 //emu_printf("fill_buffer_slot\n");
@@ -905,7 +916,7 @@ void fill_buffer_slot(void) {
 
 	return;
 }
-
+#ifdef SOUND
 void play_manage_buffers(void) {
 	static int curPlyBuf = 0;
 	static Uint16 counter = 0;
@@ -952,6 +963,7 @@ void play_manage_buffers(void) {
 
 	return;
 }
+#endif
 /*
 void SCU_DMAWait(void) {
 	Uint32 res;
