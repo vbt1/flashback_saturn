@@ -20,6 +20,7 @@ void *memset4_fast(void *, long, size_t);
 #include "saturn_print.h"
 #include "video.h"
 
+extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 
 static void scalePoints(Point *pt, int count, int scale) {
@@ -1217,7 +1218,8 @@ bool Cutscene::load(uint16_t cutName) {
 
 void Cutscene::unload() {
 //	return;
-	
+//	position_vram = 0;
+//	position_vram_aft_monster = 0;
 	switch (_res->_type) {
 	case kResourceTypeDOS:
 		_res->unload(Resource::OT_CMD);

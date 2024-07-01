@@ -55,6 +55,8 @@ extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
+//extern Uint8 *current_dram;
+extern Uint8 *current_dram2;
 extern unsigned int end1;
 
 #ifdef HEAP_WALK
@@ -637,7 +639,7 @@ void Game::playCutscene(int id) {
 	return;
 #endif
 
-//		return;   // vbt : pour ne pas lire les videos
+		return;   // vbt : pour ne pas lire les videos
 
 	if (id != -1) {
 		_cut._id = id;
@@ -952,7 +954,7 @@ bool Game::handleConfigPanel() {
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
 				break;
-//			case MENU_ITEM_CLEAR:    // vbt : à remettre plus tard
+//			case MENU_ITEM_CLEAR:    // vbt : à ²emettre plus tard
 //				clearSaveSlots(_currentLevel);
 //				break;
 			}
@@ -1878,8 +1880,6 @@ emu_printf("loadLevelData\n");
 							{ "glue", "Alien",0x430},			//			0x430, 0x4E8, // glue - 185
 							{ 0, 0,0}
 						};
-
-//emu_printf("free monster %p\n",_res._monster);
 	
 						sat_free(_res._monster);
 						_res._monster = 0;
@@ -1890,7 +1890,7 @@ emu_printf("loadLevelData\n");
 								_res._monster = _res.decodeResourceMacData(data[i].name, true);								
 								const int count = READ_BE_UINT16(_res._monster+2);
 
-/*								Color palette[256];
+							Color palette[256];
 				// on l'appelle juste pour la palette				
 								_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 								static const int kMonsterPalette = 5;
@@ -1898,11 +1898,12 @@ emu_printf("loadLevelData\n");
 									const int color = kMonsterPalette * 16 + i;
 									_stub->setPaletteEntry(color, &palette[color]);
 								}
-*/
+
 								for (unsigned int j = 0; j < count;j++)
 								{
 									const uint8_t *dataPtr = _res.MAC_getImageData(_res._monster, j);
-
+									char toto[60];
+										
 									if (dataPtr) {
 										DecodeBuffer buf;
 										memset(&buf, 0, sizeof(buf));
@@ -1910,7 +1911,7 @@ emu_printf("loadLevelData\n");
 										buf.h  = _vid._h;
 										buf.w2 = READ_BE_UINT16(dataPtr + 2);
 										buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
-										buf.ptrsp = hwram_ptr;
+										buf.ptrsp = hwram_screen; //hwram_ptr;
 										buf.setPixel = _vid.MAC_setPixel4Bpp;
 										memset(buf.ptrsp,0,buf.w2*buf.h2);
 
@@ -1950,31 +1951,22 @@ emu_printf("loadLevelData\n");
 											sprData->cgaddr = (int)current_lwram;
 											current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;											
 										}
-//										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 										
 										if(position_vram>VRAM_MAX+0x10000)
 											position_vram = position_vram_aft_monster; // vbt on repart des monsters										
-										
-/*										
-										char toto[60];
-										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
-										_vid.drawString(toto, 4, 60, 0xE7);
 
-										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-*/
+										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
 									}
-/*
 									else
 									{
-										char toto[60];
 										sprintf(toto,"no data ptr  %d %d                 ",j,count);
-										_vid.drawString(toto, 4, 60, 0xE7);
-										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-										memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);										
 									}
+									_vid.drawString(toto, 4, 60, 0xE7);
+									_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+									memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);	
+										
 									slSynch();
-*/
 								}
 							}
 						}
@@ -2004,8 +1996,8 @@ emu_printf("loadLevelData\n");
 		}
 	}
 */
-	const int count = 1100;//READ_BE_UINT16(_res._spc) / 2; //_res._numSpc;//READ_BE_UINT16(_res._spc+2);
-
+	const int count = READ_BE_UINT16(_res._spc+2);//READ_BE_UINT16(_res._spc) / 2; //_res._numSpc;//READ_BE_UINT16(_res._spc+2);
+	emu_printf("nb spc %d %d %d\n", READ_BE_UINT16(_res._spc)/2, _res._numSpc, READ_BE_UINT16(_res._spc+2));
 	for (unsigned int j = 0; j < count;j++)
 	{
 		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
@@ -2018,12 +2010,12 @@ emu_printf("loadLevelData\n");
 			buf.w2 = READ_BE_UINT16(dataPtr + 2);
 			buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 			buf.ptrsp = hwram_ptr;
-			buf.setPixel = _vid.MAC_setPixel;
-			memset(buf.ptrsp,0,buf.w2*buf.h2*2);
+			buf.setPixel = _vid.MAC_setPixel4Bpp;
+			memset(buf.ptrsp,0,buf.w2*buf.h2);
 
 			_res.MAC_decodeImageData(_res._spc, j, &buf);
 
-			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES+j];
+			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
 
 			sprData->size   = (buf.h2/8)<<8|buf.w2;
 			sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
@@ -2031,7 +2023,7 @@ emu_printf("loadLevelData\n");
 			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
 			
 			buf.x  = 80 - sprData->x;
-			buf.y  = 180 - sprData->y;
+			buf.y  = 80 - sprData->y;
 
 			buf.w2 =  sprData->size & 0xFF;
 			buf.h2 = (sprData->size>>8)*8;
@@ -2041,37 +2033,55 @@ emu_printf("loadLevelData\n");
 			
 			if((position_vram) <= VRAM_MAX)
 			{
-				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);																						
-				position_vram+=(buf.w2*buf.h2);
+				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);																						
+				position_vram+=(buf.w2*buf.h2)/2;
 				position_vram_aft_monster = position_vram;
 			}
 			else
 			{
-				memcpy(current_lwram,(void *)buf.ptrsp,buf.w2*buf.h2);
-				buf.ptrsp = current_lwram;
+				if(buf.h2!=352)
+				{
+				memcpy(current_dram2,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
+				buf.ptrsp = current_dram2;
+				}
+				else
+				{
+				memcpy(hwram_ptr,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
+				buf.ptrsp = hwram_ptr;
+				}
+				emu_printf("lwram %p hwram %p\n",current_dram2,hwram_ptr);
 			}
-
 			sprData->cgaddr = (int)txptr->CGadr;
 
 			if(position_vram > VRAM_MAX)
 			{
-				sprData->cgaddr = (int)current_lwram;
-				if(sprData->cgaddr+SAT_ALIGN(buf.w2*buf.h2)<LOW_WORK_RAM_START)
-					current_lwram += SAT_ALIGN(buf.w2*buf.h2);											
+				if(buf.h2!=352)
+				{				
+				sprData->cgaddr = (int)current_dram2;
+				current_dram2 += SAT_ALIGN(buf.w2*buf.h2)/2;
+				}
+				else
+				{
+				sprData->cgaddr = (int)hwram_ptr;
+				hwram_ptr += SAT_ALIGN(buf.w2*buf.h2)/2;					
+				}
 			}
-//			_vid.SAT_displaySprite(*sprData, buf,_res._spc);
+//										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 			
 			if(position_vram>VRAM_MAX+0x10000)
-				position_vram = position_vram_aft_monster; // vbt on repart des monsters	
-/*
+				position_vram = position_vram_aft_monster; // vbt on repart des monsters										
+			
+/*										
 			char toto[60];
-			sprintf(toto,"%03d/%03d 0x%06x %d %d",j,count, current_lwram, buf.w2,buf.h2);
+			sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
 			_vid.drawString(toto, 4, 60, 0xE7);
 
-//										_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 */
 		}
+
+
 /*		else
 		{
 			char toto[60];
@@ -2187,7 +2197,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	} else if (num >= 68 && num <= 75) {
 		// in-game music
 		_sfxPly.play(num);
-// 		_mix.playMusic(num); // vbt à voir entre les 2		
+// 		_mix.playMusic(num); // vbt à ¶oir entre les 2		
 	} else if (num == 76) {
 		// metro
 	} else if (num == 77) {

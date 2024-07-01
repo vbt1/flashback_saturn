@@ -19,7 +19,7 @@ extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 extern unsigned int end1;
-Uint8 *current_dram=(Uint8 *)0x22400000;
+//Uint8 *current_dram=(Uint8 *)0x22400000;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
@@ -28,48 +28,18 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
-	 if(strstr(name,"Junky") != NULL
-	 || strstr(name,"Replicant") != NULL
+	 if(strstr(name,"Junky") != NULL)
+	 {
+		dst = (uint8_t *)current_lwram;
+		current_lwram+=4;
+	 }
+	 else if(strstr(name,"Replicant") != NULL
 	 || strstr(name,"Alien") != NULL
 	 || strstr(name,"Mercenary") != NULL
 	 )
 	 {
-		 	if(strstr(name,"Junky") != NULL)
-			{
-				dst = (uint8_t *)current_lwram;
-				current_lwram+=4;
-			}
-			if(strstr(name,"Replicant") != NULL)
-			{
-				dst = (uint8_t *)hwram_ptr;
-				hwram_ptr += SAT_ALIGN(decodedSize);
-			}
-			else
-			{
-				dst = (uint8_t *)current_lwram;
-				current_lwram+=SAT_ALIGN(decodedSize);		
-			}
-		/* 
-		if(strstr(name,"Junky") != NULL)
-		{
-			dst = (uint8_t *)current_lwram;
-			current_lwram+=SAT_ALIGN(decodedSize);			
-//		dst = (uint8_t *)current_lwram+4;  // /2 car 4bpp
-//			dst = (uint8_t *)0x22400000;  // /2 car 4bpp
-		}
-		if(strstr(name,"Mercenary") != NULL)
-		{
-//			dst = (uint8_t *)current_lwram+(50*80*20);
-			dst = (uint8_t *)hwram_ptr;
-			hwram_ptr+=SAT_ALIGN(decodedSize);
-			//dst = (uint8_t *)0x22600000;
-		}
-		else
-		{
-		//dst = (uint8_t *)current_lwram+(decodedSize+80000);  // /2 car 4bpp
-		dst = (uint8_t *)current_dram2;  // /2 car 4bpp
-		current_dram2+=SAT_ALIGN(decodedSize);
-		}*/
+		dst = (uint8_t *)current_dram2;
+		current_dram2 += SAT_ALIGN(decodedSize);	 
 	 }
 	else
 	{
@@ -82,23 +52,17 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 		{
 			if(strstr(name,"polygons")   != NULL || strstr(name,"movie") != NULL)
 			{
-//				dst = (uint8_t *)sat_malloc(decodedSize);
 				dst = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(decodedSize);
 			}
-			
-			
-			
+/*			
 			else if(strstr(name,"Person")   != NULL)
 			{
 //				dst = (uint8_t *)sat_malloc(decodedSize);
 				dst = (uint8_t *)current_dram2;
-				current_dram2 += SAT_ALIGN(decodedSize)/2;
-				
-				
-				
+				current_dram2 += SAT_ALIGN(decodedSize);
 			}			
-			
+*/			
 			else
 			{
 				if ((int)hwram_ptr+decodedSize<=end1)

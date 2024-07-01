@@ -856,16 +856,17 @@ else if(data==_res->_perso)
 	user_sprite.COLR= 64;	
 //	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-}/*
+}
 else if(data==_res->_spc)
 {
 	user_sprite.COLR= 128+128+128+32;	
-//	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
+	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-}*/
+}
 else
 {
 	user_sprite.COLR= 0;
+//	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites	
 }
 #endif
@@ -873,31 +874,15 @@ else
 
 	if(spr.cgaddr<=0x10000)
 	{
-//emu_printf("spr.cgaddr %p\n", spr.cgaddr);
 		user_sprite.SRCA = spr.cgaddr;
 	}
 	else
 	{
 		TEXTURE *txptr = &tex_spr[0];
-		
-//		if((position_vram+(buf.w2*buf.h2)) >0x66000)
-//			position_vram = position_vram_aft_monster;		
-		
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
-//emu_printf("copy from lwram to vram!!!!!! %p to %p\n",spr.cgaddr,SpriteVRAM + ((txptr->CGadr) << 3));	
-
-		if(data!=_res->_spc)
-		{
-			position_vram+=SAT_ALIGN((buf.w2*buf.h2)/2);
-			memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2)/2);
-		}
-		else
-		{
-			position_vram+=SAT_ALIGN((buf.w2*buf.h2));
-			memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2));
-		}
-
+		position_vram+=SAT_ALIGN((buf.w2*buf.h2)/2);
+		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2)/2);
 		user_sprite.SRCA = txptr->CGadr;
 	}
 	user_sprite.SIZE= spr.size;//(buf.h2/8)<<8|buf.w2;
@@ -914,18 +899,6 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 	SPRITE user_sprite;
 
 	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-/*
-	if(!front)
-	{
-		user_sprite.SRCA = BACK_RAM_VDP2 / 8;
-		memcpy((void *)(SpriteVRAM + BACK_RAM_VDP2),(void *)_res->_scratchBuffer, h*w);
-	}
-	else
-	{
-		user_sprite.SRCA=cgaddress8;
-		memcpy((void *)(SpriteVRAM + cgaddress),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);		
-	}
-*/	
 	user_sprite.COLR=0;
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
@@ -937,10 +910,8 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
 	user_sprite.GRDA=0;	
 //	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-	
-	
-		user_sprite.SRCA=cgaddress8+(position_vram_aft_monster/8);
-		memcpy((void *)(SpriteVRAM + cgaddress + position_vram_aft_monster),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
+	user_sprite.SRCA=cgaddress8+(position_vram_aft_monster/8);
+	memcpy((void *)(SpriteVRAM + cgaddress + position_vram_aft_monster),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets	
 }
 #endif

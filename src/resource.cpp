@@ -71,10 +71,8 @@ emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
 	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
 #else
 emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
-//	_bankData = (uint8_t *)current_lwram;
-	Uint32 *DRAM0 = (Uint32 *)0x22438000;
-	_bankData = (uint8_t *)DRAM0;
-//	current_lwram += SAT_ALIGN(kBankDataSize);
+	_bankData = (uint8_t *)current_lwram;
+	current_lwram += SAT_ALIGN(kBankDataSize);
 #endif
 
 	if (!_bankData) {
