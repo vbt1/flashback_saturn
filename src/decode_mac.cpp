@@ -28,13 +28,14 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
-	 if(strstr(name,"Junky") != NULL)
+	 if(strstr(name,"Junky") != NULL
+	 	 || strstr(name,"Alien") != NULL
+	 )
 	 {
 		dst = (uint8_t *)current_lwram;
 		current_lwram+=4;
 	 }
 	 else if(strstr(name,"Replicant") != NULL
-	 || strstr(name,"Alien") != NULL
 	 || strstr(name,"Mercenary") != NULL
 	 )
 	 {
@@ -55,14 +56,6 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 				dst = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(decodedSize);
 			}
-/*			
-			else if(strstr(name,"Person")   != NULL)
-			{
-//				dst = (uint8_t *)sat_malloc(decodedSize);
-				dst = (uint8_t *)current_dram2;
-				current_dram2 += SAT_ALIGN(decodedSize);
-			}			
-*/			
 			else
 			{
 				if ((int)hwram_ptr+decodedSize<=end1)
@@ -165,7 +158,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
             }
 
             const short tt = kMask - count;
-
+#if 0
             if (cursor <= tt && offset <= tt) {
 //				emu_printf("data size count %d\n",count);
 //				if(count>18)
@@ -277,7 +270,9 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     count--;
                     x++;
                 }
-            } else {
+            } else 
+#endif				
+			{
                 while (count > 0 && x < w) {
                     uint8_t color = window[offset++];
                     window[cursor++] = color;
@@ -344,7 +339,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			}
 
 			const short tt = kMask-count;
-
+#if 0
 			if(cursor<=tt && offset<=tt)
 			{
 #if 1				
@@ -425,6 +420,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 #endif	
 			}
 			else
+#endif				
 			{
 //				nb_2++;
 				do

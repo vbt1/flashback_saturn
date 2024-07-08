@@ -55,11 +55,11 @@ void *sat_malloc(size_t size) {
 		emu_printf("MEM_MALLOC: size: %u - FAILED\n", size);
 		}
 //while(1);
-		mem = (uint8_t *)0x25C04000;
+//		mem = (uint8_t *)0x25C04000;
 //		mem = (void*)malloc(size);;
 //		if (!dst) {
 			
-//			emu_printf("Failed to allocate %d bytes for LZSS in HWRAM\n", decodedSize);		
+			emu_printf("MEM_MALLOC Failed to allocate %d bytes in LHWRAM\n", size);		
 //			dst = (uint8_t *)0x25C04000;
 
 //		}

@@ -1,6 +1,6 @@
 #define PRELOAD_MONSTERS 1
 //#define COLOR_4BPP 1
-#define VRAM_MAX 0x64000
+#define VRAM_MAX 0x67000
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -33,6 +33,7 @@ void	*malloc(size_t);
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
 extern TEXTURE tex_spr[4];
 extern Uint8 *current_lwram;
+extern Uint8 *save_current_lwram;
 }
 #include "saturn_print.h"
 #include "lz.h"
@@ -638,8 +639,8 @@ void Game::playCutscene(int id) {
 #ifdef SLAVE_SOUND	// vbt : pas de video si on utilise le slave pour l'audio
 	return;
 #endif
-
-		return;   // vbt : pour ne pas lire les videos
+//emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram);
+//		return;   // vbt : pour ne pas lire les videos
 
 	if (id != -1) {
 		_cut._id = id;
@@ -1951,22 +1952,22 @@ emu_printf("loadLevelData\n");
 											sprData->cgaddr = (int)current_lwram;
 											current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;											
 										}
-										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+//										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 										
 										if(position_vram>VRAM_MAX+0x10000)
 											position_vram = position_vram_aft_monster; // vbt on repart des monsters										
 
-										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
+//										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
 									}
 									else
 									{
-										sprintf(toto,"no data ptr  %d %d                 ",j,count);
+//										sprintf(toto,"no data ptr  %d %d                 ",j,count);
 									}
-									_vid.drawString(toto, 4, 60, 0xE7);
-									_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-									memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);	
+//									_vid.drawString(toto, 4, 60, 0xE7);
+//									_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+//									memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);	
 										
-									slSynch();
+//									slSynch();
 								}
 							}
 						}
@@ -2066,7 +2067,7 @@ emu_printf("loadLevelData\n");
 				hwram_ptr += SAT_ALIGN(buf.w2*buf.h2)/2;					
 				}
 			}
-//										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 			
 			if(position_vram>VRAM_MAX+0x10000)
 				position_vram = position_vram_aft_monster; // vbt on repart des monsters										
@@ -2117,7 +2118,7 @@ emu_printf("clearBankData\n");
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
-//emu_printf("pge_loadForCurrentLevel %d\n",n);	
+emu_printf("pge_loadForCurrentLevel %d\n",n);	
 	while (n--) {
 //emu_printf("pge_loadForCurrentLevel %d\n",n);		
 		pge_loadForCurrentLevel(n);
@@ -2135,7 +2136,7 @@ emu_printf("clearBankData\n");
 		}
 		_printLevelCodeCounter = 0;
 	}*/
-//emu_printf("_pge_liveTable1\n");
+emu_printf("_pge_liveTable1\n");
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {
 			LivePGE *pge = &_pgeLive[i];
@@ -2143,7 +2144,7 @@ emu_printf("clearBankData\n");
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
-//emu_printf("pge_resetMessages\n");	
+emu_printf("pge_resetMessages\n");	
 	pge_resetMessages();
 	_validSaveState = false;
 /* // vbt à remettre ???	

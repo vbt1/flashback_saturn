@@ -910,8 +910,10 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
 	user_sprite.GRDA=0;	
 //	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-	user_sprite.SRCA=cgaddress8+(position_vram_aft_monster/8);
-	memcpy((void *)(SpriteVRAM + cgaddress + position_vram_aft_monster),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
+//	user_sprite.SRCA=cgaddress8+(position_vram_aft_monster/8);
+	user_sprite.SRCA=(0x10000-(IMG_SIZE/8));
+//	memcpy((void *)(SpriteVRAM + cgaddress + position_vram_aft_monster),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
+	memcpy((void *)(SpriteVRAM + 0x80000 - IMG_SIZE),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets	
 }
 #endif

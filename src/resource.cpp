@@ -25,7 +25,7 @@ extern Uint8 *current_lwram;
 void	*malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
-//void *calloc (size_t, size_t);
+void *calloc (size_t, size_t);
 }
 #include "saturn_print.h"
 
@@ -876,7 +876,7 @@ void Resource::load_MAP(File *f) {
 }
 
 void Resource::load_OBJ(File *f) {
-//	debug(DBG_RES, "Resource::load_OBJ()");
+	debug(DBG_RES, "Resource::load_OBJ()");
 
 	_numObjectNodes = f->readUint16LE();
 	assert(_numObjectNodes < 255);
@@ -1559,7 +1559,7 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 }
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst) {
-	
+//emu_printf("MAC_decodeImageData %p %p %i\n",ptr,dst,i);	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
 //	assert(sig == 0xC211 || sig == 0xC103);
@@ -1802,7 +1802,6 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	uint8_t *ptr = decodeResourceMacData(name, true);
 	slSynch(); // vbt pour virer les sprites
 
-
 	MAC_decodeImageData(ptr, 0, dst);
 //slDynamicFrame(ON);
 //slSynch();
@@ -1930,7 +1929,7 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-//		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
+		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 //	MAC_unloadCutscene();
 	char name[32];
 	save_current_lwram = (uint8_t *)current_lwram;

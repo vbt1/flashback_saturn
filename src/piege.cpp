@@ -133,7 +133,7 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 			++i;
 			++obj;
 		}
-//emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,live_pge);		
+emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,live_pge);		
 		assert(i < on->num_objects);
 		live_pge->first_obj_number = i;
 		pge_setupDefaultAnim(live_pge);

@@ -61,10 +61,7 @@ void Cutscene::sync(int frameDelay) {
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
 	if (pause > 0) {
-////emu_printf("start sleep %d fdelay %d delay %d\n",pause,frameDelay ,delay);		
 		_stub->sleep(pause);
-////emu_printf("end sleep\n");		
-
 	}
 	_tstamp = _stub->getTimeStamp();
 }
@@ -95,8 +92,6 @@ void Cutscene::updatePalette() {
 	}
 }
 
-#define TEXT_AS_NBG 1
-
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
 //	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
@@ -104,21 +99,10 @@ void Cutscene::updateScreen() {
 
 #ifndef SLAVE_SOUND
 
-
-#ifndef TEXT_AS_NBG
-_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 168, 480,0); // vbt : plus utilisé
-// vbt : déplacement de la synchro ici
-#endif
-
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
-#ifndef TEXT_AS_NBG
-	memset4_fast((uint8_t *)_vid->_txt2Layer,0, 480*168);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
-	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
-#else
 	_stub->copyRect(0, 96, 480, _vid->_h-96, _vid->_frontLayer, _vid->_w);
-#endif
 	slSynch(); // obligatoire
 #endif
 //	_stub->updateScreen(0);
@@ -1217,6 +1201,7 @@ bool Cutscene::load(uint16_t cutName) {
 }
 
 void Cutscene::unload() {
+
 //	return;
 //	position_vram = 0;
 //	position_vram_aft_monster = 0;
@@ -1231,20 +1216,16 @@ void Cutscene::unload() {
 		_res->MAC_unloadCutscene();
 		break;
 	}
+	
 #ifndef SLAVE_SOUND
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
-		memset4_fast((uint8_t *)(SpriteVRAM + cgaddress + (position_vram_aft_monster/8)), 0x00, IMG_SIZE);
-		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* _vid->_h);
-		_stub->copyRect(0, 96, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
-		/*	
-		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);	
-		slScrWindow0(63 , 0 , 574 , 479 );
-		slScrWindowModeNbg0(win0_IN);
-		slSynch();*/
+		memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE), 0x00, IMG_SIZE);
+		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
+		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);	
 	}
 #endif
+
 }
 
 void Cutscene::prepare() {
@@ -1252,17 +1233,19 @@ void Cutscene::prepare() {
 	_frontPage = (uint8_t *)_res->_scratchBuffer;
 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
+
 	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
 	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
-	memset4_fast((uint8_t *)(SpriteVRAM + cgaddress + (position_vram_aft_monster)), 0x00, IMG_SIZE);
-	memset4_fast((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2 + (position_vram_aft_monster)), 0x00, IMG_SIZE);
-	memset4_fast((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2 + (position_vram_aft_monster)), 0x00, IMG_SIZE);	
+	memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE), 0x00, IMG_SIZE);
+//	memset4_fast((uint8_t *)(SpriteVRAM + cgaddress + (position_vram_aft_monster)), 0x00, IMG_SIZE);
+//	memset4_fast((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2 + (position_vram_aft_monster)), 0x00, IMG_SIZE);
+//	memset4_fast((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2 + (position_vram_aft_monster)), 0x00, IMG_SIZE);	
 	
 	memset4_fast(_auxPage, 0x00, IMG_SIZE);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
 //	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);
-	
+
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
@@ -1315,38 +1298,7 @@ void Cutscene::playCredits() {
 	}
 	_creditsSequence = false;
 }
-/*
-void Cutscene::playText(const char *str) {
-	Color c;
-	// background
-	c.r = c.g = c.b = 0;
-	_stub->setPaletteEntry(0xC0, &c);
-	// text
-	c.r = c.g = c.b = 255;
-	_stub->setPaletteEntry(0xC1, &c);
 
-	int lines = 0;
-	for (int i = 0; str[i]; ++i) {
-		if (str[i] == '|') {
-			++lines;
-		}
-	}
-	const int y = (128 - lines * 8) / 2;
-	memset(_backPage, 0xC0, _vid->_w* _vid->_h);
-	drawText(0, y, (const uint8_t *)str, 0xC1, _backPage, kTextJustifyAlign);
-//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w); // ingame ? // vbt à revoir sinon ca écrit dans vdp2
-//	_stub->updateScreen(0);
-
-	while (!_stub->_pi.quit) {
-		_stub->processEvents();
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
-			break;
-		}
-		_stub->sleep(30);
-	}
-}
-*/
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
