@@ -37,6 +37,7 @@ void *calloc (size_t, size_t);
 #include "game.h"
 
 extern Uint8 vceEnabled;
+extern Uint8 *current_dram;
 uint8_t * save_current_lwram;
 
 Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
@@ -51,7 +52,8 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 //#ifdef WITH_MEM_MALLOC
 #if 1
-	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+//	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+	_scratchBuffer = (uint8_t *)current_dram;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 #else
 //emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
@@ -1519,6 +1521,8 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
+		|| strncmp("logo", entry->name, 5) == 0 
+		|| strncmp("espion", entry->name, 5) == 0 
 		)
 		{
 			emu_printf("_scratchBuffer %p\n", _scratchBuffer);

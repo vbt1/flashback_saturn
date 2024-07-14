@@ -83,7 +83,7 @@ int Game::pge_hasMessageData(LivePGE *pge, uint16_t msg_num, uint16_t counter) c
 }
 
 void Game::pge_loadForCurrentLevel(uint16_t idx) {
-//	emu_printf("Game::pge_loadForCurrentLevel() idx=%d\n", idx);
+	emu_printf("Game::pge_loadForCurrentLevel() %p\n", &_pgeLive[idx]);
 
 	LivePGE *live_pge = &_pgeLive[idx];
 	InitPGE *init_pge = &_res._pgeInit[idx];

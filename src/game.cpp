@@ -1952,12 +1952,13 @@ emu_printf("loadLevelData\n");
 											sprData->cgaddr = (int)current_lwram;
 											current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;											
 										}
-//										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+/*										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 										
 										if(position_vram>VRAM_MAX+0x10000)
 											position_vram = position_vram_aft_monster; // vbt on repart des monsters										
 
-//										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
+										sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
+*/
 									}
 									else
 									{
@@ -1998,7 +1999,7 @@ emu_printf("loadLevelData\n");
 	}
 */
 	const int count = READ_BE_UINT16(_res._spc+2);//READ_BE_UINT16(_res._spc) / 2; //_res._numSpc;//READ_BE_UINT16(_res._spc+2);
-	emu_printf("nb spc %d %d %d\n", READ_BE_UINT16(_res._spc)/2, _res._numSpc, READ_BE_UINT16(_res._spc+2));
+//	emu_printf("nb spc %d\n", READ_BE_UINT16(_res._spc+2));
 	for (unsigned int j = 0; j < count;j++)
 	{
 		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
@@ -2042,15 +2043,15 @@ emu_printf("loadLevelData\n");
 			{
 				if(buf.h2!=352)
 				{
-				memcpy(current_dram2,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
-				buf.ptrsp = current_dram2;
+				memcpy(current_lwram,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
+				buf.ptrsp = current_lwram;
 				}
 				else
 				{
 				memcpy(hwram_ptr,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
 				buf.ptrsp = hwram_ptr;
 				}
-				emu_printf("lwram %p hwram %p\n",current_dram2,hwram_ptr);
+				emu_printf("lwram %p hwram %p\n",current_lwram,hwram_ptr);
 			}
 			sprData->cgaddr = (int)txptr->CGadr;
 
@@ -2058,8 +2059,8 @@ emu_printf("loadLevelData\n");
 			{
 				if(buf.h2!=352)
 				{				
-				sprData->cgaddr = (int)current_dram2;
-				current_dram2 += SAT_ALIGN(buf.w2*buf.h2)/2;
+				sprData->cgaddr = (int)current_lwram;
+				current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;
 				}
 				else
 				{
@@ -2067,14 +2068,15 @@ emu_printf("loadLevelData\n");
 				hwram_ptr += SAT_ALIGN(buf.w2*buf.h2)/2;					
 				}
 			}
-										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
-			
+
+//			_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+/*
 			if(position_vram>VRAM_MAX+0x10000)
 				position_vram = position_vram_aft_monster; // vbt on repart des monsters										
 			
-/*										
+										
 			char toto[60];
-			sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w2,buf.h2);
+			sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w2,buf.h2);
 			_vid.drawString(toto, 4, 60, 0xE7);
 
 			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
@@ -2082,17 +2084,17 @@ emu_printf("loadLevelData\n");
 */
 		}
 
-
-/*		else
+/*
+		else
 		{
 			char toto[60];
 			sprintf(toto,"no data ptr  %d %d                 ",j,count);
 			_vid.drawString(toto, 4, 60, 0xE7);
 			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);										
-		}									
-		slSynch();
-*/
+		}	*/								
+//		slSynch();
+
 	}
 
 ///////////////////////////////////////////////////

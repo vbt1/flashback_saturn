@@ -96,13 +96,14 @@ struct Resource {
 		NUM_SFXS = 66,
 		NUM_BANK_BUFFERS = 50,
 		NUM_CUTSCENE_TEXTS = 117,
-		NUM_SPRITES = 1287
+		NUM_SPRITES = 1287,
+		NUM_SPC = 1137
 	};
 
 	enum {
 		kPaulaFreq = 3546897,
 		kClutSize = 1024,
-		kScratchBufferSize = 0x191EC //0x20000 //512 * 448//320 * 224 + 1024
+		kScratchBufferSize = 0x20000 //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
 	static const uint16_t _voicesOffsetsTable[];
@@ -133,7 +134,7 @@ struct Resource {
 	uint8_t *_tbn;
 	int8_t _ctData[256 + 112 * 64];
 	uint8_t *_spr1;
-	SAT_sprite _sprData[NUM_SPRITES+1100]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+	SAT_sprite _sprData[NUM_SPRITES+NUM_SPC]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 	
 	
 	
