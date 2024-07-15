@@ -107,15 +107,30 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *buf) {
 	y += buf->y;
 	if (y >= 0 && y < buf->h) {
+//	buf->setPixel(buf, x, y, color);
+/*
 		if (buf->xflip) {
 			x = w - 1 - x;
-		}
+		}*/
 		x += buf->x;
-		if (x >= 0 && x < buf->w) {
+		if (x >= 0 && x < buf->w) 
+		{
 			buf->setPixel(buf, x, y, color);
 		}
 	}
 }
+
+/*
+	const int offset = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
+	if(x&1)
+		buf->ptrsp[offset] |= (color&0x0f);
+	else
+	{
+		buf->ptrsp[offset] = ((color&0x0f)<<4);
+	}
+*/
+
+
 #define CS1(x)                  (0x24000000UL + (x))
 
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
@@ -147,7 +162,18 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                 if (!carry) {
                     const uint8_t color = *src++;
                     window[cursor++] = color;
-                    *tmp_ptr++ = color;
+//                    *tmp_ptr++ = color;
+
+	if(x&1)
+	{
+		*tmp_ptr |= (color&0x0f);
+		tmp_ptr++;
+	}
+	else
+	{
+		*tmp_ptr = ((color&0x0f)<<4);
+	}
+
                     cursor &= kMask;
                     x++;
                     continue;
@@ -159,125 +185,22 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
             }
 
             const short tt = kMask - count;
-#if 0
-            if (cursor <= tt && offset <= tt) {
-//				emu_printf("data size count %d\n",count);
-//				if(count>18)
-//				emu_printf("count %d\n",count);
-/*
-                while (count >= 18 && x + 18 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 18;
-                    x += 18;
-                }
-*/
-                // Unrolled loop
-                while (count >= 16 && x + 16 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 16;
-                    x += 16;
-                }
-
-                while (count >= 12 && x + 12 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 10;
-                    x += 10;
-                }
-
-
-                while (count >= 8 && x + 8 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 8;
-                    x += 8;
-                }
-/*
-                while (count >= 6 && x + 6 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 6;
-                    x += 6;
-                }
-*/
-                while (count >= 4 && x + 4 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 4;
-                    x += 4;
-                }
-
-                while (count >= 2 && x + 2 <= w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count -= 2;
-                    x += 2;
-                }
-
-                while (count > 0 && x < w) {
-                    *tmp_ptr++ = window[cursor++] = window[offset++];
-                    count--;
-                    x++;
-                }
-            } else 
-#endif				
 			{
                 while (count > 0 && x < w) {
                     uint8_t color = window[offset++];
                     window[cursor++] = color;
-                    *tmp_ptr++ = color;
+   //                 *tmp_ptr++ = color;
+
+	if(x&1)
+	{
+		*tmp_ptr |= (color&0x0f);
+		tmp_ptr++;
+	}
+	else
+	{
+		*tmp_ptr = ((color&0x0f)<<4);
+	}
+
                     cursor &= kMask;
                     offset &= kMask;
                     count--;
@@ -287,242 +210,12 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
         }
 
         if ((y & 7) == 7) {
-            tmp_ptr -= 4096;
-            memcpyl(buf->ptr, tmp_ptr, w * 8);
-            buf->ptr += w * 8;
+            tmp_ptr = (uint8_t *)window + 4096;
+            memcpyl(buf->ptr, tmp_ptr, w * 4);
+            buf->ptr += w * 4;
         }
     }
 }
-
-
-
-#if 0
-
-void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-//uint32_t start = *(volatile uint32_t *)CS1(0x1014);	
-	static const short kBits = 12;
-	static const short kMask = (1 << kBits) - 1;
-
-	unsigned short cursor = 0;
-	short bits = 1;
-	uint8_t count = 0;
-	unsigned short offset = 0;
-	static uint8_t window[(3 << kBits)] __attribute__ ((aligned (4)));
-	uint8_t *tmp_ptr = (uint8_t *)window+4096;
-//slTVOff();
-	for (unsigned short y = 0; y < h; ++y) {
-		unsigned short x = 0;
-
-		while(x++ < w)
-		{
-			if (count == 0) {
-				uint8_t carry = bits & 1;
-				bits >>= 1;
-				if (bits == 0) {
-					bits = *src++;
-					if (carry) {
-						bits |= 0x100;
-					}
-					carry = bits & 1;
-					bits >>= 1;
-				}
-				if (!carry) {
-					const uint8_t color = *src++;
-					window[cursor++] = color;
-					*tmp_ptr++=color;
-					cursor &= kMask;
-					continue;
-				}
-				offset = READ_BE_UINT16(src); src += 2;
-				count = 3 + (offset >> 12);
-				offset &= kMask;
-				offset = (cursor - offset - 1) & kMask;
-			}
-
-			const short tt = kMask-count;
-#if 0
-			if(cursor<=tt && offset<=tt)
-			{
-#if 1				
-				do
-				{
-					if(count>16 && x+16<w)
-					{
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-
-						count-=16;
-						x+=16;
-					}					
-					
-					if(count>8 && x+8<w)
-					{
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						count-=8;
-						x+=8;
-					}
-					
-					if(count>4 && x+4<w)
-					{
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						count-=4;
-						x+=4;
-					}
-					if(count>2 && x+2<w)
-					{
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						count-=2;
-						x+=2;
-					}
-					
-					else
-					{			
-						*tmp_ptr++ = window[cursor++] = window[offset++];
-						count--;
-						x++;
-					}
-					x--;
-				}while(count >0 && x++<w);
-#else
-				unsigned short rr2=(x+count<w)?count:1+((x+count)&512)-x;
-				unsigned short count2 = (x+count<w)?0:count-rr2;
-				
-				memcpy(tmp_ptr,&window[offset],rr2);
-				tmp_ptr+=rr2;
-				cursor+=rr2;
-				offset+=rr2;
-				x+=rr2-1;
-				count=count2;				
-#endif	
-			}
-			else
-#endif				
-			{
-//				nb_2++;
-				do
-				{
-					uint8_t color = window[offset++];
-					window[cursor++] = color;
-					*tmp_ptr++=color;
-					cursor &= kMask;
-					offset &= kMask;
-					count--;					
-				}while(count >0 && x++<w);
-			}
-		}
-		if((y & 7) == 7)
-		{
-			tmp_ptr-=4096;
-			memcpyl(buf->ptr,tmp_ptr,w*8);
-//			slTransferEntry((void *)tmp_ptr,(void *)buf->ptr,w*32);
-			buf->ptr+=w*8;
-
-		}
-//		DMA_ScuMemCopy((uint8*)&buf->ptr[y*w],(uint8*)tmp,  w);
-//slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
-	}
-//	slTVOn();
-//emu_printf("nb0 no overlap %d overlap = %d\n", nb_0,nb_1);
-//emu_printf("nb0 %d loop1 = %d loop2 %d\n", nb_0,nb_1,nb_2);
-//emu_printf("nb1c %d nb1w = %d nb1l %d\n", nb_1,nb_1w,nb_1l);
-//emu_printf("nb0 = %d nb1 %d nb2 = %d nb3 %d nb4 %d\n",nb_0, nb_1,nb_2,nb_3,nb_4);
-
-//    uint32_t end = *(volatile uint32_t *)CS1(0x1014);
-
-//    emu_printf("time = %d start %d %d\n", end-start,start,end);
-}
-#endif
-/*
-void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-	
-	static const short kBits = 12;
-	static const short kMask = (1 << kBits) - 1;
-
-	unsigned short cursor = 0;
-	short bits = 1;
-	uint8_t count = 0;
-	unsigned short offset = 0;
-	uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
-	uint8_t tmp[4096] __attribute__ ((aligned (4)));
-	uint8_t *tmp_ptr = (uint8_t *)tmp;
-slTVOff();
-
-	for (unsigned short y = 0; y < h; ++y) {
-
-		for (unsigned short x = 0; x < w; ++x) {
-			if (count == 0) {
-				uint8_t carry = bits & 1;
-				bits >>= 1;
-				if (bits == 0) {
-					bits = *src++;
-					if (carry) {
-						bits |= 0x100;
-					}
-					carry = bits & 1;
-					bits >>= 1;
-				}
-				if (!carry) {
-					const uint8_t color = *src++;
-					window[cursor] = color;
-					++cursor;
-					cursor &= kMask;
-					tmp_ptr[x]=color;
-					continue;
-				}
-				offset = READ_BE_UINT16(src); src += 2;
-				count = 3 + (offset >> 12);
-				offset &= kMask;
-				offset = (cursor - offset - 1) & kMask;
-			}
-			const uint8_t color = window[offset++];
-			offset &= kMask;
-			window[cursor++] = color;
-			cursor &= kMask;
-			tmp_ptr[x]=color;
-			
-			--count;
-		}
-		tmp_ptr+=w;
-		if((y & 7) == 7)
-		{
-//			DMA_ScuMemCopy(buf->ptr,tmp,w*8);
-			memcpyl(buf->ptr,tmp,w*8);
-//			memcpy(buf->ptr,tmp,w*8);
-//			slTransferEntry((void *)tmp,(void *)buf->ptr,w*8);
-			buf->ptr+=w*8;
-			tmp_ptr=(uint8_t *)tmp;
-		}
-//		DMA_ScuMemCopy((uint8*)&buf->ptr[y*w],(uint8*)tmp,  w);
-//slTransferEntry((void *)tmp,(void *)&buf->ptr[y*w],w);
-//		SCU_DMAWait();
-	}
-	slTVOn();
-}*/
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //emu_printf("decodeC211 src strt %p\n",src);

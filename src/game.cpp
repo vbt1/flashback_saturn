@@ -1942,15 +1942,15 @@ emu_printf("loadLevelData\n");
 										}
 										else
 										{
-											memcpy(current_lwram,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
-											buf.ptrsp = current_lwram;
+											memcpy(current_dram2,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
+											buf.ptrsp = current_dram2;
 										}
 										sprData->cgaddr = (int)txptr->CGadr;
 
 										if(position_vram > VRAM_MAX)
 										{
-											sprData->cgaddr = (int)current_lwram;
-											current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;											
+											sprData->cgaddr = (int)current_dram2;
+											current_dram2 += SAT_ALIGN(buf.w2*buf.h2)/2;											
 										}
 /*										_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 										

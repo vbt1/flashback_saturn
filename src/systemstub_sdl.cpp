@@ -521,7 +521,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 	slPriorityNbg0(4); // Game screen
 	slPriorityNbg1(6); // Game screen
-	slPrioritySpr0(5);
+	slPrioritySpr0(4);
 	
 //	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
 
@@ -553,7 +553,8 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	slScrPosNbg0(toFIXED(-63),0) ;
 	slScrPosNbg1(toFIXED(-63),0) ;
-
+//	slSpecialPrioModeNbg0(2);
+//	slSpecialPrioBitNbg0(6);
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config
 	return;

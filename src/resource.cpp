@@ -1841,7 +1841,7 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 	}
 	for (int i = 0; i < 4; ++i) {
 		MAC_copyClut16(clut, i, offset + i);
-		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
+//		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
 	}
 	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal
 	// 5 is monster palette
