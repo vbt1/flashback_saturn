@@ -553,8 +553,10 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	slScrPosNbg0(toFIXED(-63),0) ;
 	slScrPosNbg1(toFIXED(-63),0) ;
-//	slSpecialPrioModeNbg0(2);
-//	slSpecialPrioBitNbg0(6);
+	slSpecialPrioModeNbg0(2);
+	slSpecialPrioBitNbg0(1);
+	slSpecialFuncCodeA(0x12);
+//	slSpecialFuncCodeB(0x4);
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config
 	return;

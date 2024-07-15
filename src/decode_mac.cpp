@@ -162,8 +162,8 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                 if (!carry) {
                     const uint8_t color = *src++;
                     window[cursor++] = color;
-//                    *tmp_ptr++ = color;
-
+                    *tmp_ptr++ = color;
+/*
 	if(x&1)
 	{
 		*tmp_ptr |= (color&0x0f);
@@ -173,7 +173,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	{
 		*tmp_ptr = ((color&0x0f)<<4);
 	}
-
+*/
                     cursor &= kMask;
                     x++;
                     continue;
@@ -189,8 +189,8 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                 while (count > 0 && x < w) {
                     uint8_t color = window[offset++];
                     window[cursor++] = color;
-   //                 *tmp_ptr++ = color;
-
+                    *tmp_ptr++ = color;
+/*
 	if(x&1)
 	{
 		*tmp_ptr |= (color&0x0f);
@@ -200,7 +200,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	{
 		*tmp_ptr = ((color&0x0f)<<4);
 	}
-
+*/
                     cursor &= kMask;
                     offset &= kMask;
                     count--;
@@ -211,8 +211,8 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 
         if ((y & 7) == 7) {
             tmp_ptr = (uint8_t *)window + 4096;
-            memcpyl(buf->ptr, tmp_ptr, w * 4);
-            buf->ptr += w * 4;
+            memcpyl(buf->ptr, tmp_ptr, w * 8);
+            buf->ptr += w * 8;
         }
     }
 }
