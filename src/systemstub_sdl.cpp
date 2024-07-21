@@ -163,7 +163,7 @@ struct SystemStub_SDL : SystemStub {
 	};
 
 	uint8 _overscanColor;
-	uint16 _pal[256];
+	uint16 _pal[512];
 	uint16 _screenW, _screenH;
 
 	/* Controller data */
@@ -173,8 +173,8 @@ struct SystemStub_SDL : SystemStub {
 	virtual ~SystemStub_SDL() {}
 	virtual void init(const char *title, uint16 w, uint16 h);
 	virtual void destroy();
-	virtual void setPaletteEntry(uint8 i, const Color *c);
-	virtual void getPaletteEntry(uint8 i, Color *c);
+	virtual void setPaletteEntry(uint16 i, const Color *c);
+	virtual void getPaletteEntry(uint16 i, Color *c);
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
@@ -262,7 +262,7 @@ void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 	
 }
 
-void SystemStub_SDL::setPaletteEntry(uint8 i, const Color *c) {
+void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
 	uint8 r = (c->r << 2) | (c->r & 3);
 	uint8 g = (c->g << 2) | (c->g & 3);
 	uint8 b = (c->b << 2) | (c->b & 3);
@@ -270,7 +270,7 @@ void SystemStub_SDL::setPaletteEntry(uint8 i, const Color *c) {
 	_pal[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | ((r >> 3) << 0) | RGB_Flag;
 }
 
-void SystemStub_SDL::getPaletteEntry(uint8 i, Color *c) {
+void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 	Uint8 b = ((_pal[i] >> 10) & 0x1F) << 1;
 	Uint8 g = ((_pal[i] >> 5)  & 0x1F) << 1;
 	Uint8 r = ((_pal[i] >> 0)  & 0x1F) << 1;
@@ -323,7 +323,10 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
 //	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
-	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 2);  // vbt à remettre
+	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 4);  // vbt à remettre
+//	memcpy((void*)(CRAM_BANK + 1024), (void*)_pal+512, 256 * 2);  // vbt à remettre
+//	memset((void*)(CRAM_BANK), 0x84, 256 * 2);  // vbt à remettre
+//	memset((void*)(CRAM_BANK+1024), 0x84, 256 * 8);  // vbt à remettre
 }
 
 
@@ -512,7 +515,7 @@ void SystemStub_SDL::prepareGfxMode() {
 //	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
 	slBMPaletteNbg0(1); // NBG1 (game screen) uses palette 1 in CRAM
 	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
-	slColRAMOffsetSpr(1) ;
+	slColRAMOffsetSpr(2) ;  // spr palette
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
 #endif
@@ -553,9 +556,9 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	slScrPosNbg0(toFIXED(-63),0) ;
 	slScrPosNbg1(toFIXED(-63),0) ;
-	slSpecialPrioModeNbg0(2);
-	slSpecialPrioBitNbg0(1);
-	slSpecialFuncCodeA(0x12);
+	slSpecialPrioModeNbg0(spPRI_Dot);
+	slSpecialPrioBitNbg0(1); // obligatoire
+	slSpecialFuncCodeA(sfCOL_ef);
 //	slSpecialFuncCodeB(0x4);
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config

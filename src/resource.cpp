@@ -1610,7 +1610,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 	ptr += 6; // seed+flags
 	_clutSize = READ_BE_UINT16(ptr); ptr += 2;
-	
+emu_printf("_clutSize %d\n",_clutSize);	
 	assert(_clutSize < kClutSize);
 	for (int i = 0; i < _clutSize; ++i) {
 		const int index = READ_BE_UINT16(ptr); ptr += 2;
@@ -1686,7 +1686,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 //				return;
 //			}
 			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
-			MAC_copyClut16(clut, 5, data[i].index);
+			MAC_copyClut16(clut, 16+5, data[i].index);
 			break;
 		}
 	}
@@ -1840,16 +1840,45 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 		}
 	}
 	for (int i = 0; i < 4; ++i) {
+emu_printf("palette BG %d 16x%d\n",i*16,sizeof(Color));		
 		MAC_copyClut16(clut, i, offset + i);
-//		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
+emu_printf("palette FG %d 16x%d\n",(i+8)*16,sizeof(Color));			
+		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
 	}
-	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal
-	// 5 is monster palette
-	MAC_clearClut16(clut, 6);
-	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);
+
+	Color tmp[256];
+	memcpy(tmp,clut,256*sizeof(Color));
+
+//	static const unsigned char lut[16]={14,15,30,31,46,47,62,63,142,143,158,159,174,175,190,191};		
+	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,126,127,
+										142,143,158,159,174,175,190,191,206,207,222,223,238,239,254,255};
+
+	int j=0;
+
+	for(int i=128;i<160;i++)
+	{
+		clut[lut[j]].r = tmp[i].r;
+		clut[lut[j]].g = tmp[i].g;
+		clut[lut[j]].b = tmp[i].b;
+		
+		clut[i].r = tmp[lut[j]].r;
+		clut[i].g = tmp[lut[j]].g;
+		clut[i].b = tmp[lut[j]].b;
+		j++;
+	}	
+
+	MAC_copyClut16(clut, 16+0, offset + 0);
+	MAC_copyClut16(clut, 16+1, offset + 1);
+	MAC_copyClut16(clut, 16+2, offset + 2);
+	MAC_copyClut16(clut, 16+3, offset + 3);
+//	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal
+	MAC_copyClut16(clut, 16+4, 0x30);  // palette perso principal
+// 5 is monster palette
+	MAC_clearClut16(clut, 16+6);
+//	MAC_clearClut16(clut, 6);
+	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);  // spc ?
 	MAC_copyClut16(clut, 0xC, 0x37);
 	MAC_copyClut16(clut, 0xD, 0x38);
-	
 /*
 	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
 	if (_unkPalSlot2 == 0) {

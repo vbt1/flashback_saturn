@@ -592,7 +592,7 @@ void Video::MAC_decodeMap(int level, int room) {
 //	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
 //	memset(_frontLayer,0x00, buf.w * buf.h); // ralentit le changement d'écran
 	
-	Color roomPalette[256];
+	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {
 		if (j == 5 || j == 7 || j == 14 || j == 15) {
@@ -603,6 +603,16 @@ void Video::MAC_decodeMap(int level, int room) {
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
+//vbt ajout	
+	for (int j = 0; j < 16; ++j) {
+		if (j == 5 || j == 7 || j == 14 || j == 15) {
+			continue;
+		}
+		for (int i = 0; i < 16; ++i) {
+			const int color = j * 16 + i + 256;
+			_stub->setPaletteEntry(color, &roomPalette[color]);
+		}
+	}	
 }
 //#ifdef COLOR_4BPP
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
@@ -629,8 +639,16 @@ void Video::MAC_setPixelPerso(DecodeBuffer *buf, int x, int y, uint8_t color) {
 }
 
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
+//static unsigned char lut[16]={14,15,30,31,46,47,62,63,142,143,158,159,174,175,190,191};
+
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
+/*
+	if(color<128)
+		buf->ptr[offset] = color;
+	else
+		buf->ptr[offset] = lut[color&0xf];
+*/
 }
 /*
 //#ifdef COLOR_4BPP
@@ -821,7 +839,6 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	}
 
 }
-
 void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data)
 {
 //emu_printf("SAT_displaySprite\n");	
@@ -860,9 +877,9 @@ else if(data==_res->_perso)
 }
 else if(data==_res->_spc)
 {
-	user_sprite.COLR= 128+128+128+32;	
+	user_sprite.COLR= 64;//96;	
 	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 }
 else
 {
@@ -883,7 +900,7 @@ else
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
 
-		if(data==_res->_perso)
+		if(data==_res->_perso || data==_res->_spc)
 		{
 		position_vram+=SAT_ALIGN((buf.w2*buf.h2));
 		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2));

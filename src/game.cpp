@@ -1748,14 +1748,14 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 			}
 			break;
 		case kResourceTypeMac: {
-				Color palette[256];
+				Color palette[512];
 				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 
 // on l'appelle juste pour la palette				
 				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
-					const int color = kMonsterPalette * 16 + i;
+					const int color = 256 + kMonsterPalette * 16 + i;
 					_stub->setPaletteEntry(color, &palette[color]);
 				}
 			}
@@ -1891,7 +1891,7 @@ emu_printf("loadLevelData\n");
 								_res._monster = _res.decodeResourceMacData(data[i].name, true);								
 								const int count = READ_BE_UINT16(_res._monster+2);
 
-							Color palette[256];
+							Color palette[512];
 				// on l'appelle juste pour la palette				
 								_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 								static const int kMonsterPalette = 5;
@@ -1903,7 +1903,7 @@ emu_printf("loadLevelData\n");
 								for (unsigned int j = 0; j < count;j++)
 								{
 									const uint8_t *dataPtr = _res.MAC_getImageData(_res._monster, j);
-									char toto[60];
+//									char toto[60];
 										
 									if (dataPtr) {
 										DecodeBuffer buf;
@@ -2012,7 +2012,7 @@ emu_printf("loadLevelData\n");
 			buf.w2 = READ_BE_UINT16(dataPtr + 2);
 			buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
 			buf.ptrsp = hwram_ptr;
-			buf.setPixel = _vid.MAC_setPixel4Bpp;
+			buf.setPixel = _vid.MAC_setPixel;//4Bpp;
 			memset(buf.ptrsp,0,buf.w2*buf.h2);
 
 			_res.MAC_decodeImageData(_res._spc, j, &buf);
@@ -2035,20 +2035,20 @@ emu_printf("loadLevelData\n");
 			
 			if((position_vram) <= VRAM_MAX)
 			{
-				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);																						
-				position_vram+=(buf.w2*buf.h2)/2;
+				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
+				position_vram+=(buf.w2*buf.h2);
 				position_vram_aft_monster = position_vram;
 			}
 			else
 			{
 				if(buf.h2!=352)
 				{
-				memcpy(current_lwram,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
+				memcpy(current_lwram,(void *)buf.ptrsp,(buf.w2*buf.h2));
 				buf.ptrsp = current_lwram;
 				}
 				else
 				{
-				memcpy(hwram_ptr,(void *)buf.ptrsp,(buf.w2*buf.h2)/2);
+				memcpy(hwram_ptr,(void *)buf.ptrsp,(buf.w2*buf.h2));
 				buf.ptrsp = hwram_ptr;
 				}
 				emu_printf("lwram %p hwram %p\n",current_lwram,hwram_ptr);
@@ -2060,12 +2060,12 @@ emu_printf("loadLevelData\n");
 				if(buf.h2!=352)
 				{				
 				sprData->cgaddr = (int)current_lwram;
-				current_lwram += SAT_ALIGN(buf.w2*buf.h2)/2;
+				current_lwram += SAT_ALIGN(buf.w2*buf.h2);
 				}
 				else
 				{
 				sprData->cgaddr = (int)hwram_ptr;
-				hwram_ptr += SAT_ALIGN(buf.w2*buf.h2)/2;					
+				hwram_ptr += SAT_ALIGN(buf.w2*buf.h2);					
 				}
 			}
 

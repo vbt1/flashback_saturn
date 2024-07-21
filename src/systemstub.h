@@ -78,8 +78,8 @@ struct SystemStub {
 	virtual void init(const char *title, uint16 w, uint16 h) = 0;
 	virtual void destroy() = 0;
 
-	virtual void setPaletteEntry(uint8 i, const Color *c) = 0;
-	virtual void getPaletteEntry(uint8 i, Color *c) = 0;
+	virtual void setPaletteEntry(uint16 i, const Color *c) = 0;
+	virtual void getPaletteEntry(uint16 i, Color *c) = 0;
 	virtual void setOverscanColor(uint8 i) = 0;
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
 //	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;

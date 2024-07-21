@@ -136,6 +136,9 @@ static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *bu
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
     static const short kBits = 12;
     static const short kMask = (1 << kBits) - 1;
+//	static const unsigned char lut[16]={14,15,30,31,46,47,62,63,142,143,158,159,174,175,190,191};
+	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,126,127,
+										142,143,158,159,174,175,190,191,206,207,222,223,238,239,254,255};
 
     unsigned short cursor = 0;
     short bits = 1;
@@ -160,7 +163,19 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     bits >>= 1;
                 }
                 if (!carry) {
-                    const uint8_t color = *src++;
+//                    const uint8_t color = (*src++) &0x8f;
+                    uint8_t color = (*src++);// &0x9f;
+
+					if(color >= 128 && color < 160)
+						color = lut[color&0x1f];
+					else
+					{
+						if(color==14)
+							color=128;
+						if(color==15)
+							color=129;
+					}
+
                     window[cursor++] = color;
                     *tmp_ptr++ = color;
 /*

@@ -86,7 +86,7 @@ void Cutscene::updatePalette() {
 			c.r = ((color & 0xF00) >> 6) | t;
 			c.g = ((color & 0x0F0) >> 2) | t;
 			c.b = ((color & 0x00F) << 2) | t;
-			_stub->setPaletteEntry(0xC0 + i, &c);
+			_stub->setPaletteEntry(256 + 0xC0 + i, &c);
 		}
 		_newPal = false;
 	}
@@ -1119,7 +1119,7 @@ void Cutscene::mainLoop(uint16_t num) {
 	Color c;
 	c.r = c.g = c.b = 0;
 	for (int i = 0; i < 0x20; ++i) {
-		_stub->setPaletteEntry(0xC0 + i, &c);
+		_stub->setPaletteEntry(256 + 0xC0 + i, &c);
 	}
 	if (_id != 0x4A && !_creditsSequence) {
 //		_ply->play(_musicTableDOS[_id],0);
