@@ -164,7 +164,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                 }
                 if (!carry) {
 //                    const uint8_t color = (*src++) &0x8f;
-                    uint8_t color = (*src++);// &0x9f;
+                    uint8_t color = (*src++) &0x9f;
 
 					if(color >= 128 && color < 160)
 						color = lut[color&0x1f];
@@ -174,6 +174,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 							color=128;
 						if(color==15)
 							color=129;
+						if(color==30)
+							color=130;
+						if(color==31)
+							color=131;
 					}
 
                     window[cursor++] = color;

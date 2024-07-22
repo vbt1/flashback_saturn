@@ -382,11 +382,13 @@ static const char *getCineName(Language lang, ResourceType type) {
 
 void Resource::load_CINE() {
 	const char *prefix = getCineName(_lang, _type);
-//	emu_printf("Resource::load_CINE('%s')\n", prefix);
-	File f;
+	emu_printf("Resource::load_CINE('%s')\n", prefix);
+
+//	File f;
 			
 	switch (_type) {
 	case kResourceTypeDOS:
+/*
 		if (_cine_off == 0) {
 			snprintf(_entryName, sizeof(_entryName), "%sCINE.BIN", prefix);
 			if (!f.open(_entryName, _dataPath, "rb")) {
@@ -436,6 +438,7 @@ void Resource::load_CINE() {
 			error("Cannot load '%s'", _entryName);
 		}
 		break;
+*/
 	case kResourceTypeMac:
 		MAC_loadCutsceneText();
 		break;
@@ -1876,9 +1879,30 @@ emu_printf("palette FG %d 16x%d\n",(i+8)*16,sizeof(Color));
 // 5 is monster palette
 	MAC_clearClut16(clut, 16+6);
 //	MAC_clearClut16(clut, 6);
-	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);  // spc ?
+	MAC_copyClut16(clut, 16+0xA, _macLevelColorOffsets[0] + 2);  // icons
 	MAC_copyClut16(clut, 0xC, 0x37);
 	MAC_copyClut16(clut, 0xD, 0x38);
+/*
+	// background
+	setPaletteSlotBE(0x0, _mapPalSlot1);
+	// objects
+	setPaletteSlotBE(0x1, _mapPalSlot2);
+	setPaletteSlotBE(0x2, _mapPalSlot3);
+	setPaletteSlotBE(0x3, _mapPalSlot4);
+	// conrad
+	if (_unkPalSlot1 == _mapPalSlot3) {
+		setPaletteSlotLE(4, _conradPal1);
+	} else {
+		setPaletteSlotLE(4, _conradPal2);
+	}
+	// slot 5 is monster palette
+	// foreground
+	setPaletteSlotBE(0x8, _mapPalSlot1);
+	setPaletteSlotBE(0x9, _mapPalSlot2);
+	// inventory
+	setPaletteSlotBE(0xA, _unkPalSlot2);
+	setPaletteSlotBE(0xB, _mapPalSlot4);
+*/
 /*
 	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
 	if (_unkPalSlot2 == 0) {
