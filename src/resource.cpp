@@ -1565,7 +1565,7 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 	return data;
 }
 
-void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst) {
+void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask) {
 //emu_printf("MAC_decodeImageData %p %p %i\n",ptr,dst,i);	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
@@ -1604,7 +1604,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst)
 			decodeC211(ptr + 4, w, h, dst);
 			break;
 		case 0xC103:
-			decodeC103(ptr, w, h, dst);
+			decodeC103(ptr, w, h, dst, mask);
 			break;
 		}
 	}
@@ -1688,7 +1688,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 //emu_printf("%s not loaded\n",data[i].name);
 //				return;
 //			}
-			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
+//			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
 			MAC_copyClut16(clut, 16+5, data[i].index);
 			break;
 		}
@@ -1703,7 +1703,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
 //emu_printf("MAC_decodeImageData\n");		
-		MAC_decodeImageData(ptr, 0, buf);
+		MAC_decodeImageData(ptr, 0, buf, 0xff);
 //emu_printf("end MAC_decodeImageData\n");
 //		sat_free(ptr);  // pas de vidage car on utilise scratchbuffer
 	}
@@ -1809,7 +1809,7 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	uint8_t *ptr = decodeResourceMacData(name, true);
 	slSynch(); // vbt pour virer les sprites
 
-	MAC_decodeImageData(ptr, 0, dst);
+	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 //slDynamicFrame(ON);
 //slSynch();
 //	emu_printf("sat_free(%p)\n",ptr); // vbt : free sur l'image de fond, à ne pas remettre
@@ -1842,31 +1842,29 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 			break;
 		}
 	}
+
 	for (int i = 0; i < 4; ++i) {
-emu_printf("palette BG %d 16x%d\n",i*16,sizeof(Color));		
 		MAC_copyClut16(clut, i, offset + i);
-emu_printf("palette FG %d 16x%d\n",(i+8)*16,sizeof(Color));			
+//if(i==0)
 		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
 	}
 
 	Color tmp[256];
 	memcpy(tmp,clut,256*sizeof(Color));
 
-//	static const unsigned char lut[16]={14,15,30,31,46,47,62,63,142,143,158,159,174,175,190,191};		
-	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,126,127,
-										142,143,158,159,174,175,190,191,206,207,222,223,238,239,254,255};
-
+	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,126,127,
+										158,159,174,175,190,191,206,207,222,223,238,239,254,255};
 	int j=0;
 
 	for(int i=128;i<160;i++)
 	{
-		clut[lut[j]].r = tmp[i].r;
-		clut[lut[j]].g = tmp[i].g;
-		clut[lut[j]].b = tmp[i].b;
+		clut[lut[j]].r = tmp[i].r;  //14->128
+		clut[lut[j]].g = tmp[i].g;  //15->129
+		clut[lut[j]].b = tmp[i].b;	//30->130
 		
-		clut[i].r = tmp[lut[j]].r;
-		clut[i].g = tmp[lut[j]].g;
-		clut[i].b = tmp[lut[j]].b;
+		clut[i].r = tmp[lut[j]].r; //128->14
+		clut[i].g = tmp[lut[j]].g; //129->15
+		clut[i].b = tmp[lut[j]].b; //130->30
 		j++;
 	}	
 
@@ -1874,14 +1872,27 @@ emu_printf("palette FG %d 16x%d\n",(i+8)*16,sizeof(Color));
 	MAC_copyClut16(clut, 16+1, offset + 1);
 	MAC_copyClut16(clut, 16+2, offset + 2);
 	MAC_copyClut16(clut, 16+3, offset + 3);
-//	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal
+
+	MAC_copyClut16(clut, 16+8, offset + 0);
+	MAC_copyClut16(clut, 16+9, offset + 1);
+	MAC_copyClut16(clut, 16+10, offset + 2);
+	MAC_copyClut16(clut, 16+11, offset + 3);
+
+//	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal inutile ? surtout ne pas mettre
 	MAC_copyClut16(clut, 16+4, 0x30);  // palette perso principal
 // 5 is monster palette
+
+//	MAC_clearClut16(clut, 6); // ne pas mettre à vérifier
 	MAC_clearClut16(clut, 16+6);
-//	MAC_clearClut16(clut, 6);
+
+	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);  // inventory pour fg
 	MAC_copyClut16(clut, 16+0xA, _macLevelColorOffsets[0] + 2);  // icons
+
 	MAC_copyClut16(clut, 0xC, 0x37);
 	MAC_copyClut16(clut, 0xD, 0x38);
+
+	MAC_copyClut16(clut, 16+0xC, 0x37);
+	MAC_copyClut16(clut, 16+0xD, 0x38);
 /*
 	// background
 	setPaletteSlotBE(0x0, _mapPalSlot1);

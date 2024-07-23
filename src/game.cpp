@@ -1917,7 +1917,7 @@ emu_printf("loadLevelData\n");
 										buf.setPixel = _vid.MAC_setPixel4Bpp;
 										memset(buf.ptrsp,0,buf.w2*buf.h2);
 
-										_res.MAC_decodeImageData(_res._monster, j, &buf);
+										_res.MAC_decodeImageData(_res._monster, j, &buf, 0xff);
 
 										SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[data[i].index + j];
 
@@ -1994,7 +1994,7 @@ emu_printf("loadLevelData\n");
 			buf.setPixel = _vid.MAC_setPixel;//4Bpp;
 			memset(buf.ptrsp,0,buf.w2*buf.h2);
 
-			_res.MAC_decodeImageData(_res._spc, j, &buf);
+			_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
 
 			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
 

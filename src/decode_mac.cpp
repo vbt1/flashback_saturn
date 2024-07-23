@@ -133,13 +133,11 @@ static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *bu
 
 #define CS1(x)                  (0x24000000UL + (x))
 
-void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
+void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
     static const short kBits = 12;
     static const short kMask = (1 << kBits) - 1;
-//	static const unsigned char lut[16]={14,15,30,31,46,47,62,63,142,143,158,159,174,175,190,191};
-	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,126,127,
-										142,143,158,159,174,175,190,191,206,207,222,223,238,239,254,255};
-
+	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,126,127,
+										158,159,174,175,190,191,206,207,222,223,238,239,254,255};
     unsigned short cursor = 0;
     short bits = 1;
     uint8_t count = 0;
@@ -164,35 +162,31 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                 }
                 if (!carry) {
 //                    const uint8_t color = (*src++) &0x8f;
-                    uint8_t color = (*src++) &0x9f;
+                    uint8_t color = (*src++) & mask;
 
-					if(color >= 128 && color < 160)
-						color = lut[color&0x1f];
-					else
+					if(mask!=0xff)
 					{
-						if(color==14)
-							color=128;
-						if(color==15)
-							color=129;
-						if(color==30)
-							color=130;
-						if(color==31)
-							color=131;
+						if(color >= 128 && color < 160)
+						{
+							color = lut[color&0x1f];
+						}
+						else
+						{
+							if(color==14)	color=128;
+							if(color==15)	color=129;
+							if(color==30)	color=130;
+							if(color==31)	color=131;
+						}
 					}
-
                     window[cursor++] = color;
                     *tmp_ptr++ = color;
-/*
-	if(x&1)
+/*	if(x&1)
 	{
 		*tmp_ptr |= (color&0x0f);
 		tmp_ptr++;
 	}
 	else
-	{
-		*tmp_ptr = ((color&0x0f)<<4);
-	}
-*/
+		*tmp_ptr = ((color&0x0f)<<4);*/
                     cursor &= kMask;
                     x++;
                     continue;

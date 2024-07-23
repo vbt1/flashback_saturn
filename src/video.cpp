@@ -535,7 +535,7 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 //	assert(chr >= 32);
 	if(chr<32)
 		return;
-	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf);
+	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf, 0xff);
 }
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
@@ -595,9 +595,10 @@ void Video::MAC_decodeMap(int level, int room) {
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {
-		if (j == 5 || j == 7 || j == 14 || j == 15) {
+// vbt : vérifier les impacts, gène les couleurs du niveau 1		
+		/*if (j == 5 || j == 7 || j == 14 || j == 15) {
 			continue;
-		}
+		}*/
 		for (int i = 0; i < 16; ++i) {
 			const int color = j * 16 + i;
 			_stub->setPaletteEntry(color, &roomPalette[color]);
@@ -639,8 +640,6 @@ void Video::MAC_setPixelPerso(DecodeBuffer *buf, int x, int y, uint8_t color) {
 }
 
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
-//static unsigned char lut[16]={14,15,30,31,46,47,62,63,142,143,158,159,174,175,190,191};
-
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
 /*
@@ -745,7 +744,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 
 		buf.setPixel = MAC_setPixelFG;
 		buf.ptr      = _frontLayer;
-		_res->MAC_decodeImageData(data, frame, &buf);
+		_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 	}
 }
 
@@ -818,7 +817,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			else
 				buf.setPixel = MAC_setPixel;
 		
-			_res->MAC_decodeImageData(data, frame, &buf);
+			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 			
 	/*		if(data==_res->_perso)
 			{
