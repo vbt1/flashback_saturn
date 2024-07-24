@@ -1805,9 +1805,9 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //	emu_printf("_res._monster %p\n",_monster);
 //	sat_free(_monster);
 //	_monster = 0;
+	slSynch(); // vbt pour virer les sprites
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-	slSynch(); // vbt pour virer les sprites
 
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 //slDynamicFrame(ON);
