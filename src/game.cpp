@@ -1922,7 +1922,7 @@ emu_printf("loadLevelData\n");
 										SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[data[i].index + j];
 
 										sprData->size   = (buf.h2/8)<<8|buf.w2;
-										sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
+										sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h2-READ_BE_UINT16(dataPtr)));
 										sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
 										sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
 										
@@ -1999,7 +1999,7 @@ emu_printf("loadLevelData\n");
 			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
 
 			sprData->size   = (buf.h2/8)<<8|buf.w2;
-			sprData->x_flip = (int16_t)READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1;
+			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h2-READ_BE_UINT16(dataPtr)));
 			sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
 			

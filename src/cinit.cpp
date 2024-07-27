@@ -46,7 +46,18 @@ int	main( void )
 		*dst = 0;
 	}
 	init_GFS(); // Initialize GFS system
-	CartRAM_init(0);
+//	CartRAM_init(0);
+	int id = CartRAM_init(0);
+    if(id!=0x5c)
+    {
+		slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL		
+		slTVOn();
+		slPrint("No ram cart found",slLocate(10,12));
+		slPrint("Please insert 4Mb",slLocate(10,14));
+		emu_printf("id %x\n",id);
+		slSynch();
+		while(1);
+    }
 #ifdef _352_CLOCK_
 	slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
@@ -56,8 +67,7 @@ int	main( void )
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM_START, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
-	
-	slTVOff();
+//	slTVOff();
 //	
 	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
