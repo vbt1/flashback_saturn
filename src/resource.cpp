@@ -1854,19 +1854,11 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 
 	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,126,127,
 										158,159,174,175,190,191,206,207,222,223,238,239,254,255};
-	int j=0;
-
-	for(int i=128;i<160;i++)
-	{
-		clut[lut[j]].r = tmp[i].r;  //14->128
-		clut[lut[j]].g = tmp[i].g;  //15->129
-		clut[lut[j]].b = tmp[i].b;	//30->130
-		
-		clut[i].r = tmp[lut[j]].r; //128->14
-		clut[i].g = tmp[lut[j]].g; //129->15
-		clut[i].b = tmp[lut[j]].b; //130->30
-		j++;
-	}	
+// on recase les palettes de fg sur 4à7 (ex palettes de sprites
+	MAC_copyClut16(clut, 4+0, offset + 0);
+	MAC_copyClut16(clut, 4+1, offset + 1);
+	MAC_copyClut16(clut, 4+2, offset + 2);
+	MAC_copyClut16(clut, 4+3, offset + 3);
 
 	MAC_copyClut16(clut, 16+0, offset + 0);
 	MAC_copyClut16(clut, 16+1, offset + 1);
@@ -1885,7 +1877,7 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 //	MAC_clearClut16(clut, 6); // ne pas mettre à vérifier
 	MAC_clearClut16(clut, 16+6);
 
-	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);  // inventory pour fg
+//	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);  // inventory pour fg
 	MAC_copyClut16(clut, 16+0xA, _macLevelColorOffsets[0] + 2);  // icons
 
 	MAC_copyClut16(clut, 0xC, 0x37);
@@ -1893,7 +1885,21 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 
 	MAC_copyClut16(clut, 16+0xC, 0x37);
 	MAC_copyClut16(clut, 16+0xD, 0x38);
-/*
+
+	int j=0;
+
+	for(int i=128;i<160;i++)
+	{
+		clut[lut[j]].r = tmp[i].r;  //14->128
+		clut[lut[j]].g = tmp[i].g;  //15->129
+		clut[lut[j]].b = tmp[i].b;	//30->130
+		
+		clut[i].r = tmp[lut[j]].r; //128->14
+		clut[i].g = tmp[lut[j]].g; //129->15
+		clut[i].b = tmp[lut[j]].b; //130->30
+		j++;
+	}
+/*	
 	// background
 	setPaletteSlotBE(0x0, _mapPalSlot1);
 	// objects

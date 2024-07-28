@@ -162,7 +162,12 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                 }
                 if (!carry) {
 //                    const uint8_t color = (*src++) &0x8f;
-                    uint8_t color = (*src++) & mask;
+//                    uint8_t color = (*src++) & mask;
+                    uint8_t color;
+					if(*src>=128)
+					color = (*src++) & mask;
+					else
+					color = (*src++);
 
 					if(mask!=0xff)
 					{
