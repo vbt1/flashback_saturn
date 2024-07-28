@@ -54,7 +54,7 @@ int	main( void )
 		slTVOn();
 		slPrint("No ram cart found",slLocate(10,12));
 		slPrint("Please insert 4Mb",slLocate(10,14));
-		emu_printf("id %x\n",id);
+//		emu_printf("id %x\n",id);
 		slSynch();
 		while(1);
     }

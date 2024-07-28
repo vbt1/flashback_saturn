@@ -635,11 +635,6 @@ void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	buf->ptrsp[offset2] = color;
 }
 
-void Video::MAC_setPixelPerso(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);	
-	buf->ptrsp[offset2] = color;
-}
-
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
@@ -723,7 +718,8 @@ void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 
 static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
         if (buf->xflip) {
-		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf->h2-READ_BE_UINT16(dataPtr)));
+//		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf->h2-READ_BE_UINT16(dataPtr)));
+		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - (buf->h2-READ_BE_UINT16(dataPtr)));
         } else {
 		buf->x -= (int16_t)READ_BE_UINT16(dataPtr + 4);
         }
@@ -814,18 +810,18 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			memset(buf.ptrsp,0x00,buf.w2*buf.h2);			
 		
 			if(data==_res->_perso)
-				buf.setPixel = MAC_setPixelPerso; //MAC_setPixel4Bpp;
+				buf.setPixel = MAC_setPixel4Bpp;
 			else
 				buf.setPixel = MAC_setPixel;
 		
 			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 			
-	/*		if(data==_res->_perso)
+			if(data==_res->_perso)
 			{
 				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
 				position_vram+=(buf.w2*buf.h2)/2;
 			}
-			else*/
+			else
 			{
 				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
 				position_vram+=(buf.w2*buf.h2);
@@ -873,11 +869,11 @@ else if(data==_res->_perso)
 {
 	user_sprite.COLR= 64;	
 	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 }
 else if(data==_res->_spc)
 {
-	user_sprite.COLR= 64;//96;	
+	user_sprite.COLR= 0;	
 	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
 	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 }
@@ -900,7 +896,7 @@ else
 		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
 
 
-		if(data==_res->_perso || data==_res->_spc)
+		if(/*data==_res->_perso ||*/ data==_res->_spc)
 		{
 		position_vram+=SAT_ALIGN((buf.w2*buf.h2));
 		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2));

@@ -98,7 +98,6 @@ struct Video {
 	void MAC_decodeMap(int level, int room);
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color);	
-	static void MAC_setPixelPerso(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
