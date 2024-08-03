@@ -1,5 +1,4 @@
 #define PRELOAD_MONSTERS 1
-//#define COLOR_4BPP 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -12,7 +11,7 @@ extern "C"
 #include "sat_mem_checker.h"
 #include "saturn_print.h"
 #include <string.h>
-extern TEXTURE tex_spr[4];
+//extern TEXTURE tex_spr[4];
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
@@ -52,8 +51,8 @@ emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 //	_backLayer = (uint8_t *)LOW_WORK_RAM;
 
-//	_txt1Layer = (uint8_t *)(SpriteVRAM + TEXT1_RAM_VDP2);
-//	_txt2Layer = (uint8_t *)(SpriteVRAM + TEXT2_RAM_VDP2);	
+	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE - 480*70);//+ TEXT1_RAM_VDP2);
+	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE - 480*140);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
 	
 	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
@@ -526,10 +525,10 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 	buf.y = y * _layerScale;
 	
 //	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-//	if (is4Bpp)
-//		buf.setPixel = Video::MAC_setPixelFont4Bpp;
-//	else
-	buf.setPixel = Video::MAC_setPixelFont;
+	if (is4Bpp)
+		buf.setPixel = Video::MAC_setPixelFont4Bpp;
+	else
+		buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
 //	assert(chr >= 32);
@@ -616,60 +615,27 @@ void Video::MAC_decodeMap(int level, int room) {
 		}
 	}	
 }
-//#ifdef COLOR_4BPP
+
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
+	const int offset = (y-buf->y) * (buf->h>>1) + ((x>>1)-(buf->x>>1));	
 	if(x&1)
-		buf->ptrsp[offset] |= (color&0x0f);
+		buf->ptr[offset] |= (color&0x0f);
 	else
 	{
-		buf->ptrsp[offset] = ((color&0x0f)<<4);
+		buf->ptr[offset] = ((color&0x0f)<<4);
 	}
 }
-//#endif
+
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = (y-buf->y) * buf->h2 + (x-buf->x);	
-	buf->ptrsp[offset] = color;
+	const int offset = (y-buf->y) * buf->h + (x-buf->x);	
+	buf->ptr[offset] = color;
 }
 
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
-/*
-	if(color<128)
-		buf->ptr[offset] = color;
-	else
-		buf->ptr[offset] = lut[color&0xf];
-*/
 }
-/*
-//#ifdef COLOR_4BPP
-void Video::MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = y * buf->pitch + x;
-	const int offset2 = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));
-//	if ((buf->ptr[offset] & 0x80) == 0) 
-	{
-		if(x&1)
-			buf->ptrsp[offset2] |= (color&0x0f);
-		else
-		{
-			buf->ptrsp[offset2] = ((color&0x0f)<<4);
-		}
-//		buf->ptr[offset] = color;
-	}
-}
-*/
-//#endif
-/*
-void Video::MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = y * buf->pitch + x;
-	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);
-	if ((buf->ptr[offset] & 0x80) == 0) {
-		buf->ptrsp[offset2] = color;
-//		buf->ptr[offset] = color;
-	}
-}
-*/
+
 void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	switch (color) {
@@ -715,8 +681,8 @@ void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 
 static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
         if (buf->xflip) {
-//		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf->h2-READ_BE_UINT16(dataPtr)));
-		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - (buf->h2-READ_BE_UINT16(dataPtr)));
+//		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf->h-READ_BE_UINT16(dataPtr)));
+		buf->x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - (buf->h-READ_BE_UINT16(dataPtr)));
         } else {
 		buf->x -= (int16_t)READ_BE_UINT16(dataPtr + 4);
         }
@@ -728,8 +694,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
 //emu_printf("MAC_drawFG\n");
 	if (dataPtr) {
-		DecodeBuffer buf;
-		memset(&buf, 0, sizeof(buf));
+		DecodeBuffer buf{};
 		buf.w  = buf.pitch = _w;
 		buf.h  = _h;
 		buf.x  = x * _layerScale;
@@ -746,7 +711,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground) {
 //emu_printf("MAC_drawSprite %p %p anim_number %d\n",data,_res->_monster,anim_number);	
-//emu_printf("MAC_drawSprite w2 %d h2 %d\n",buf.w2,buf.h2);
+//emu_printf("MAC_drawSprite w %d h %d\n",buf.w,buf.h);
 
 	DecodeBuffer buf;
 	memset(&buf, 0, sizeof(buf));
@@ -760,8 +725,8 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 		const SAT_sprite spriteData = _res->_sprData[index];
 		
 //		emu_printf("frame %s %d no copy\n", (data == _res->_monster) ? "monster" : "spc", frame);
-		buf.w2 = spriteData.size & 0xFF;
-		buf.h2 = (spriteData.size >> 8) * 8;
+		buf.w = spriteData.size & 0xFF;
+		buf.h = (spriteData.size >> 8) * 8;
         buf.x += (buf.xflip ? spriteData.x_flip : -spriteData.x);
 		buf.y -= spriteData.y;
 		
@@ -769,119 +734,92 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	}	
 	else
 	{
-emu_printf("frame std %d no copy %d\n",frame,buf.h2);		
+//emu_printf("frame std %d no copy %d\n",frame,buf.h);		
 		const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
 
 		if (dataPtr) 	{
-
-			buf.w = _w;
-			buf.h = _h;
-			buf.w2 = READ_BE_UINT16(dataPtr + 2);
-			buf.h2 = (READ_BE_UINT16(dataPtr) + 7) & ~7;
-			buf.ptrsp = hwram_screen;
+			buf.w = READ_BE_UINT16(dataPtr + 2);
+			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
+			buf.ptr = hwram_screen;
 			buf.setPixel = (data == _res->_perso) ? MAC_setPixel4Bpp : MAC_setPixel;
-			size_t dataSize = (data == _res->_perso) ? (buf.w2 * buf.h2) / 2 : buf.w2 * buf.h2;
+			size_t dataSize = (data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h;
 
 			fixOffsetDecodeBuffer(&buf, dataPtr);
-			memset(buf.ptrsp, 0x00, buf.w2 * buf.h2);
+			memset(buf.ptr, 0x00, buf.w * buf.h);
 
-			// emu_printf("perso frame %d index %d w %d h %d\n", frame, frame - 0x22F, buf.w2, buf.h2);
-			TEXTURE tx = TEXDEF(buf.h2, buf.w2, position_vram);
+			// emu_printf("perso frame %d index %d w %d h %d\n", frame, frame - 0x22F, buf.w, buf.h);
+			TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
 
 			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 			_res->_sprData[anim_number].cgaddr = tx.CGadr;
-			_res->_sprData[anim_number].size = (buf.h2 / 8) << 8 | buf.w2;
+			_res->_sprData[anim_number].size = (buf.h / 8) << 8 | buf.w;
 
-			memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptrsp, dataSize);
+			memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
 			position_vram += dataSize;
 
 			SAT_displaySprite(_res->_sprData[anim_number], buf, data);
 		}
-//emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);
+//emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w,buf.h);
 	}
 
 }
-void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data)
+void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
-//emu_printf("SAT_displaySprite\n");	
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
 
-#ifdef COLOR_4BPP
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	
-	user_sprite.COLR= 32;
-if(data==_res->_monster)
-{
-	user_sprite.COLR= 80;
-#ifdef PRELOAD_MONSTERS	
-	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-#endif
-}
-if(data==_res->_perso)
-	user_sprite.COLR= 64;
-
-if(data==_res->_icn)
-	user_sprite.COLR= 0xa*16;
-#else
-	
-if(data==_res->_monster)
-{
-	user_sprite.COLR= 80;	
-	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-}
-else if(data==_res->_perso)
-{
-	user_sprite.COLR= 64;	
-	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-}
-else if(data==_res->_spc)
-{
-	user_sprite.COLR= 0;	
-	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-}
-else
-{
-	user_sprite.COLR= 0;
-//	user_sprite.CTRL=(buf.xflip?(1 << 4):0);
-	user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites	
-}
-#endif
-//emu_printf("spr.cgaddr %p\n", spr.cgaddr);
-
-	if(spr.cgaddr<=0x10000)
-	{
-		user_sprite.SRCA = spr.cgaddr;
-	}
+	if(ptrsp==_txt1Layer)
+		user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	else
-	{
-		TEXTURE *txptr = &tex_spr[0];
-		*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
+		user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 
-
-		if(/*data==_res->_perso ||*/ data==_res->_spc)
-		{
-		position_vram+=SAT_ALIGN((buf.w2*buf.h2));
-		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2));
-		}
-		else
-		{
-		position_vram+=SAT_ALIGN((buf.w2*buf.h2)/2);
-		memcpy((uint8_t *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)spr.cgaddr,(buf.w2*buf.h2)/2);
-		}
-		user_sprite.SRCA = txptr->CGadr;
-	}
-	user_sprite.SIZE= spr.size;//(buf.h2/8)<<8|buf.w2;
-	user_sprite.XA=63+(buf.x-320);
-	user_sprite.YA=(buf.y-224);
+	user_sprite.COLR=  0;
+	user_sprite.SRCA= ((int)ptrsp)/8;
+	user_sprite.SIZE=(w/8)<<8|h;
+	user_sprite.XA=63+x;
+	user_sprite.YA=y;
 	user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
 
+void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data) {
+    // emu_printf("SAT_displaySprite\n");
+    SPRITE user_sprite{};
+    user_sprite.CTRL = buf.xflip ? (1 << 4) : 0;
+
+    if (data == _res->_monster || data == _txt1Layer) {
+        user_sprite.COLR = 80;
+        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+    } else if (data == _res->_perso) {
+        user_sprite.COLR = 64;
+        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+    } else {
+        user_sprite.COLR = 0;
+        user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
+    }
+
+    // emu_printf("spr.cgaddr %p\n", spr.cgaddr);
+
+    if (spr.cgaddr <= 0x10000) {
+        user_sprite.SRCA = spr.cgaddr;
+    } else {
+        TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+
+        size_t dataSize = (data == _res->_spc) ? buf.w * buf.h : (buf.w * buf.h) / 2;
+        position_vram += SAT_ALIGN(dataSize);
+        memcpy((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spr.cgaddr, dataSize);
+
+        user_sprite.SRCA = tx.CGadr;
+    }
+
+    user_sprite.SIZE = spr.size; // (buf.h / 8) << 8 | buf.w;
+    user_sprite.XA = 63 + (buf.x - 320);
+    user_sprite.YA = buf.y - 224;
+    user_sprite.GRDA = 0;
+
+    slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
+}
 #ifndef SLAVE_SOUND
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {

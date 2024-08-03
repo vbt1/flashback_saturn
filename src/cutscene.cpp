@@ -8,7 +8,7 @@ extern "C"
 {
 #include <sl_def.h>	
 #include <string.h>	
-extern TEXTURE tex_spr[4];
+//extern TEXTURE tex_spr[4];
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 void *memset4_fast(void *, long, size_t);
@@ -98,12 +98,17 @@ void Cutscene::updateScreen() {
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 
 #ifndef SLAVE_SOUND
-
+_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à remettre
+// vbt : déplacement de la synchro ici
+	slSynch(); // obligatoire
 	updatePalette();
 	SWAP(_frontPage, _backPage);
 //	memset(_backPage,0x00,IMG_SIZE);
-	_stub->copyRect(0, 96, 480, _vid->_h-96, _vid->_frontLayer, _vid->_w);
-	slSynch(); // obligatoire
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*70);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
+	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
+
+//	_stub->copyRect(0, 96, 480, _vid->_h-96, _vid->_frontLayer, _vid->_w);
+//	slSynch(); // obligatoire
 #endif
 //	_stub->updateScreen(0);
 }
@@ -173,7 +178,7 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 	return ret;
 }
 
-#if 0
+#if 1
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
 //	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
 	int len = 0;
@@ -194,7 +199,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		}
 	}
 	const uint8_t *sep = _textSep;
-	y += 20;
+//	y += 20; // vbt : vait un vide de 20 lignes
 	x += /*(_res->_lang == LANG_JP) ? 0 :*/ 4;
 	int16_t yPos = y/2;
 	int16_t xPos = x/2;
@@ -504,10 +509,19 @@ void Cutscene::op_drawCaptionText() {
 emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
+
+		const int h = 128;
 		if (strId != 0xFFFF) {
 			const uint8_t *str = _res->getCineString(strId);
 			if (str) {
-				drawText(0, 129, str, 0xEF, _vid->_frontLayer, kTextJustifyAlign);
+//				drawText(0, 129, str, 0xEF, _vid->_frontLayer, kTextJustifyAlign);
+_vid->_w=480;
+				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
+//				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
+_vid->_w=512;
+#ifndef SLAVE_SOUND
+//				_vid->SAT_displaySprite(_vid->_txt1Layer,-220, 129, h, 480);  // vbt à remettre
+#endif
 			}
 		} else if (_id == kCineEspions) {
 			// cutscene relies on drawCaptionText opcodes for timing
@@ -1027,10 +1041,13 @@ void Cutscene::op_drawTextAtPos() {
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				const uint8_t color = 0xD0 + (strId >> 0xC);
-				drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
+//				drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
 //				_stub->copyRect(0, 0, 480, 224, _frontPage, _vid->_w);  // vbt : pas besoin ?
+_vid->_w=480;
+				drawText(x/2, y, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
+_vid->_w=512;
 #ifndef SLAVE_SOUND
-//				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -121+y, 168, 480,0);
+//				_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64+x, -121+y, 168, 480);
 #endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
@@ -1220,9 +1237,25 @@ void Cutscene::unload() {
 #ifndef SLAVE_SOUND
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
-		memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE), 0x00, IMG_SIZE);
-		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
-		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);	
+//		memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE), 0x00, IMG_SIZE);
+//		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
+//		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);
+		SPRITE user_sprite;
+		user_sprite.CTRL= FUNC_End;
+		user_sprite.PMOD=0;
+		user_sprite.SRCA=0;
+		user_sprite.COLR=0;
+
+		user_sprite.SIZE=0;
+		user_sprite.XA=0;
+		user_sprite.YA=0;
+
+		user_sprite.XB=0;
+		user_sprite.YB=0;
+		user_sprite.GRDA=0;
+
+		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+		slSynch();
 	}
 #endif
 
@@ -1244,7 +1277,7 @@ void Cutscene::prepare() {
 	memset4_fast(_auxPage, 0x00, IMG_SIZE);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
-//	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);
+	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);
 
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
@@ -1263,6 +1296,7 @@ void Cutscene::prepare() {
 	_gfx.setClippingRect(sx, sy, sw, sh);
 
 	slScrAutoDisp(NBG1ON|SPRON); // vbt à remettre
+//	slScrAutoDisp(SPRON); // vbt à remettre
 }
 
 void Cutscene::playCredits() {

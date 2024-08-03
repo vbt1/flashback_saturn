@@ -106,30 +106,20 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 
 static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *buf) {
 	y += buf->y;
-	if (y >= 0 && y < buf->h) {
+//	if (y >= 0 && y < buf->h) 
+	{
 //	buf->setPixel(buf, x, y, color);
 /*
 		if (buf->xflip) {
 			x = w - 1 - x;
 		}*/
 		x += buf->x;
-		if (x >= 0 && x < buf->w) 
+//		if (x >= 0 && x < buf->w) 
 		{
 			buf->setPixel(buf, x, y, color);
 		}
 	}
 }
-
-/*
-	const int offset = (y-buf->y) * (buf->h2>>1) + ((x>>1)-(buf->x>>1));	
-	if(x&1)
-		buf->ptrsp[offset] |= (color&0x0f);
-	else
-	{
-		buf->ptrsp[offset] = ((color&0x0f)<<4);
-	}
-*/
-
 
 #define CS1(x)                  (0x24000000UL + (x))
 

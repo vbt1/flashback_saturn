@@ -34,7 +34,7 @@ extern "C" {
 #include "sat_mem_checker.h"
 #include "cdtoc.h"
 void	*malloc(size_t);
-extern TEXTURE tex_spr[4];
+//extern TEXTURE tex_spr[4];
 }
 
 //extern void emu_printf(const char *format, ...);

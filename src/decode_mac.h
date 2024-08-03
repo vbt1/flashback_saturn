@@ -9,9 +9,7 @@ uint8_t *decodeLzss(File &f, const char *name, const uint8_t *_scratchBuffer, ui
 
 struct DecodeBuffer {
 	uint8_t *ptr;
-	uint8_t *ptrsp;
 	int w, h, pitch;
-	int w2, h2;
 	int x, y;
 	bool xflip;
 
