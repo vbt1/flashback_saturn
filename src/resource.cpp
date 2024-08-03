@@ -1587,17 +1587,6 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 //		const int h = ((uint16_t*)ptr)[0]; ptr += 2;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
-//---------------------------------------------------------
-// nettoyage 
-/*		const int offset = dst->y * dst->pitch + dst->x;
-		uint8_t *cleanPtr = dst->ptr+offset;
-		
-		for(int height=0;height<h;height++)
-		{
-			memset(cleanPtr,0,w);
-			cleanPtr+=dst->pitch;
-		}*/
-//---------------------------------------------------------		
 		
 		switch (sig) {
 		case 0xC211:

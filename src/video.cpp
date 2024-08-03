@@ -628,11 +628,8 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 }
 //#endif
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = y * buf->pitch + x;
-	const int offset2 = (y-buf->y) * buf->h2 + (x-buf->x);	
-//	buf->ptrbg[x] = color;
-	buf->ptr[offset] = color;
-	buf->ptrsp[offset2] = color;
+	const int offset = (y-buf->y) * buf->h2 + (x-buf->x);	
+	buf->ptrsp[offset] = color;
 }
 
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
@@ -756,80 +753,49 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	buf.xflip = xflip;
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
-//if(data==_res->_spc)
-//emu_printf("MAC_drawSprite %p %p anim_number %d frame %d %04x\n",data,_res->_spc,anim_number,frame,position_vram);	
-#ifdef PRELOAD_MONSTERS
-	if(data==_res->_monster)
+
+	if(data == _res->_monster || data == _res->_spc)
 	{
-//emu_printf("frame monster %d no copy\n",frame);		
-		buf.w2 =  _res->_sprData[anim_number].size & 0xFF;
-		buf.h2 = (_res->_sprData[anim_number].size>>8)*8;
-		if(buf.xflip)
-			buf.x  += _res->_sprData[anim_number].x_flip;
-		else
-			buf.x  -= _res->_sprData[anim_number].x;
-	
-		buf.y  -= _res->_sprData[anim_number].y;		
-		SAT_displaySprite(_res->_sprData[anim_number], buf,data);
-	}		
-	else if(data==_res->_spc)
-	{
-//emu_printf("frame spc %d no copy\n",frame);		
-		buf.w2 =  _res->_sprData[_res->NUM_SPRITES+frame].size & 0xFF;
-		buf.h2 = (_res->_sprData[_res->NUM_SPRITES+frame].size>>8)*8;
-		if(buf.xflip)
-			buf.x  += _res->_sprData[_res->NUM_SPRITES+frame].x_flip;
-		else
-			buf.x  -= _res->_sprData[_res->NUM_SPRITES+frame].x;
-	
-		buf.y  -= _res->_sprData[_res->NUM_SPRITES+frame].y;		
-		SAT_displaySprite(_res->_sprData[_res->NUM_SPRITES+frame], buf,data);
-	}
+		const int index = (data == _res->_monster) ? anim_number : _res->NUM_SPRITES + frame;
+		const SAT_sprite spriteData = _res->_sprData[index];
+		
+//		emu_printf("frame %s %d no copy\n", (data == _res->_monster) ? "monster" : "spc", frame);
+		buf.w2 = spriteData.size & 0xFF;
+		buf.h2 = (spriteData.size >> 8) * 8;
+        buf.x += (buf.xflip ? spriteData.x_flip : -spriteData.x);
+		buf.y -= spriteData.y;
+		
+		SAT_displaySprite(spriteData, buf, data);
+	}	
 	else
-#endif
 	{
+emu_printf("frame std %d no copy %d\n",frame,buf.h2);		
 		const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
 
 		if (dataPtr) 	{
 
-			buf.w  = buf.pitch = _w;
+			buf.w = _w;
+			buf.h = _h;
 			buf.w2 = READ_BE_UINT16(dataPtr + 2);
-			buf.h  = _h;
-			buf.h2 = (READ_BE_UINT16(dataPtr)+7) & ~7;
-			fixOffsetDecodeBuffer(&buf, dataPtr);
-		
-			if (buf.h2!=352 && buf.h2!=176 && data!=_res->_icn)
-				buf.ptr = _backLayer;
-			else
-				buf.ptr = NULL;			
-		
+			buf.h2 = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptrsp = hwram_screen;
-//emu_printf("perso frame %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);			
-			TEXTURE *txptr = &tex_spr[0];
-			*txptr = TEXDEF(buf.h2, buf.w2, position_vram);
-			memset(buf.ptrsp,0x00,buf.w2*buf.h2);			
-		
-			if(data==_res->_perso)
-				buf.setPixel = MAC_setPixel4Bpp;
-			else
-				buf.setPixel = MAC_setPixel;
-		
-			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
-			
-			if(data==_res->_perso)
-			{
-				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2/2);
-				position_vram+=(buf.w2*buf.h2)/2;
-			}
-			else
-			{
-				memcpy((void *)(SpriteVRAM + ((txptr->CGadr) << 3)),(void *)buf.ptrsp,buf.w2*buf.h2);
-				position_vram+=(buf.w2*buf.h2);
-			}
-			_res->_sprData[anim_number].cgaddr = txptr->CGadr;
-			_res->_sprData[anim_number].size   = (buf.h2/8)<<8|buf.w2;			
+			buf.setPixel = (data == _res->_perso) ? MAC_setPixel4Bpp : MAC_setPixel;
+			size_t dataSize = (data == _res->_perso) ? (buf.w2 * buf.h2) / 2 : buf.w2 * buf.h2;
 
-			SAT_displaySprite(_res->_sprData[anim_number], buf,data);
+			fixOffsetDecodeBuffer(&buf, dataPtr);
+			memset(buf.ptrsp, 0x00, buf.w2 * buf.h2);
+
+			// emu_printf("perso frame %d index %d w %d h %d\n", frame, frame - 0x22F, buf.w2, buf.h2);
+			TEXTURE tx = TEXDEF(buf.h2, buf.w2, position_vram);
+
+			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
+			_res->_sprData[anim_number].cgaddr = tx.CGadr;
+			_res->_sprData[anim_number].size = (buf.h2 / 8) << 8 | buf.w2;
+
+			memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptrsp, dataSize);
+			position_vram += dataSize;
+
+			SAT_displaySprite(_res->_sprData[anim_number], buf, data);
 		}
 //emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w2,buf.h2);
 	}
