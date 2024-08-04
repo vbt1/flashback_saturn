@@ -1016,12 +1016,8 @@ bool Game::handleContinueAbort() {
 	uint8_t color_inc = 0xFF;
 	Color col;
 	_stub->getPaletteEntry(0xE4, &col);
-//_vid._w=480;
-unsigned int h = 256;
-memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
-//_vid._layerScale=1;	
+
 	while (timeout >= 0 && !_stub->_pi.quit) {
-//_vid._w=480;
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
@@ -1035,13 +1031,9 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 		sprintf(textBuf, "SCORE  %08lu", _score);
 		_vid.drawString(textBuf, 90, 180, 0xE3);
 
-//_vid._w=512;
 #ifndef SLAVE_SOUND
-//		_vid.SAT_displaySprite(_vid._txt1Layer,-220-64, -128, h-1, 480);
 		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
 		slSynch();
-//		memset((uint8_t *)_vid._txt2Layer,0, 480*h);
-//		SWAP(_vid._txt1Layer, _vid._txt2Layer);
 #endif
 		if (_res.isMac()) {
 
@@ -1080,18 +1072,12 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 		if (_stub->_pi.enter) {
 			_vid._layerScale=2;
 			_stub->_pi.enter = false;
-//			memset((uint8_t *)_vid.xxxxxxxxxxxxxxxxxxxxxxxxxxx,0, 480*h);
 			memset(_vid._frontLayer,0x00,_vid._w*_vid._h);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			slSynch(); // vire le sprite bg
 			return (current_color == 0);
 		}
-		
-	
 		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//		_stub->updateScreen(0);
-
-
 
 		static const int COLOR_STEP = 8;
 		static const int COLOR_MIN = 16;
@@ -1114,7 +1100,6 @@ memset((uint8_t *)_vid._txt1Layer,0,h * _vid._w);
 		--timeout;
 
 	}
-//_vid._layerScale=2;
 	return false;
 }
 /*
