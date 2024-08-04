@@ -104,21 +104,10 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 	return dst;
 }
 
-static void setPixel(int x, int y, int w, int h, uint8_t color, DecodeBuffer *buf) {
+inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
 	y += buf->y;
-//	if (y >= 0 && y < buf->h) 
-	{
-//	buf->setPixel(buf, x, y, color);
-/*
-		if (buf->xflip) {
-			x = w - 1 - x;
-		}*/
-		x += buf->x;
-//		if (x >= 0 && x < buf->w) 
-		{
-			buf->setPixel(buf, x, y, color);
-		}
-	}
+	x += buf->x;
+	buf->setPixel(buf, x, y, color);
 }
 
 #define CS1(x)                  (0x24000000UL + (x))
@@ -277,11 +266,11 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 				}
 				const uint8_t color = *src++;
 				for (int i = 0; i < count; ++i) {
-					setPixel(x++, y, w, h, color, buf);
+					setPixeli(x++, y, color, buf);
 				}
 			} else {
 				for (int i = 0; i < count; ++i) {
-					setPixel(x++, y, w, h, *src++, buf);
+					setPixeli(x++, y, *src++, buf);
 				}
 			}
 		}

@@ -808,7 +808,7 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
 
         size_t dataSize = (data == _res->_spc) ? buf.w * buf.h : (buf.w * buf.h) / 2;
         position_vram += SAT_ALIGN(dataSize);
-        memcpy((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spr.cgaddr, dataSize);
+        memcpyl((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spr.cgaddr, dataSize);
 
         user_sprite.SRCA = tx.CGadr;
     }
@@ -823,24 +823,23 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
 #ifndef SLAVE_SOUND
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
-	SPRITE user_sprite;
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = (w / 8) << 8 | h;
+    user_sprite.CTRL = FUNC_Sprite | _ZmCC;
+    user_sprite.XA = x;
+    user_sprite.YA = y;
+    user_sprite.XB = x + (w << 1);
+    user_sprite.YB = y + (h << 1);
+    user_sprite.GRDA = 0;
+    user_sprite.SRCA = (0x10000 - (IMG_SIZE / 8));
 
-	user_sprite.PMOD=CL256Bnk| ECdis | SPdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	user_sprite.COLR=0;
-	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.CTRL=FUNC_Sprite | _ZmCC;
-	user_sprite.XA=x;
-	user_sprite.YA=y;
+    const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
+    const uint8_t* bufferOffset = _res->_scratchBuffer + (front ? 0 : IMG_SIZE);
 
-	user_sprite.XB=user_sprite.XA+(w<<1);
-	user_sprite.YB=user_sprite.YA+(h<<1);
+    memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, h * w);
 
-	user_sprite.GRDA=0;	
-//	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-//	user_sprite.SRCA=cgaddress8+(position_vram_aft_monster/8);
-	user_sprite.SRCA=(0x10000-(IMG_SIZE/8));
-//	memcpy((void *)(SpriteVRAM + cgaddress + position_vram_aft_monster),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
-	memcpy((void *)(SpriteVRAM + 0x80000 - IMG_SIZE),(void *)_res->_scratchBuffer+(IMG_SIZE*1), h*w);	
-	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets	
+    slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
 #endif

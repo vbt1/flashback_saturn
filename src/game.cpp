@@ -1038,7 +1038,7 @@ _vid._w=480;
 _vid._w=512;
 #ifndef SLAVE_SOUND
 		_vid.SAT_displaySprite(_vid._txt1Layer,-220-64, -128, h-1, 480);
-		_vid.SAT_displayCutscene(0,0, 0, 128, 240);//, _res._scratchBuffer);
+		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
 		slSynch();
 		memset((uint8_t *)_vid._txt2Layer,0, 480*h);
 		SWAP(_vid._txt1Layer, _vid._txt2Layer);
@@ -1969,13 +1969,13 @@ emu_printf("loadLevelData\n");
 
 								if(position_vram>VRAM_MAX+0x10000)
 									position_vram = position_vram_aft_monster; // vbt on repart des monsters
-
+								
 								sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w,buf.h);
 */
 							}
 //							_vid.drawString(toto, 4, 60, 0xE7);
 //							_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-//							memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+//							memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);	
 
 //							slSynch();
 						}

@@ -1501,7 +1501,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 	{
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1  += (int)hwram;
-//		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
+		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
 		hwram_ptr = (unsigned char *)hwram;
 	}
 //	else

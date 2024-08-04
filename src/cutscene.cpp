@@ -9,6 +9,7 @@ extern "C"
 #include <sl_def.h>	
 #include <string.h>	
 //extern TEXTURE tex_spr[4];
+extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 void *memset4_fast(void *, long, size_t);
@@ -94,7 +95,6 @@ void Cutscene::updatePalette() {
 
 void Cutscene::updateScreen() {
 	sync(_frameDelay - 1);
-//	_vid->SAT_displayCutscene(0, 0, 128, 240,_frontPage);
 	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
 
 #ifndef SLAVE_SOUND
@@ -1060,8 +1060,8 @@ _vid->_w=512;
 			}
 		}
 	}
-	else
-		memset(_vid->_frontLayer,0x00,512*400);
+//	else
+//		memset(_vid->_frontLayer,0x00,512*400);
 }
 
 void Cutscene::op_handleKeys() {
