@@ -99,8 +99,6 @@ struct Video {
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color);	
 	static void MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
-	static void MAC_setPixelMask(DecodeBuffer *buf, int x, int y, uint8_t color);
-	static void MAC_setPixelMask4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
 	static void MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);

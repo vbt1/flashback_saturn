@@ -232,7 +232,8 @@ void Video::setTextPalette() {
 		c.b = (color & 0x00F) << 2;
 		c.g = (color & 0x0F0) >> 2;
 		c.r = (color & 0xF00) >> 6;
-		_stub->setPaletteEntry(0xE0 + i, &c);
+		_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : front palette
+		_stub->setPaletteEntry(256+0xE0 + i, &c);  // vbt : sprite palette
 	}
 }
 
@@ -514,9 +515,7 @@ static uint8_t _MAC_fontShadowColor;
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
 //	emu_printf("Video::MAC_drawStringChar\n");	
-	DecodeBuffer buf;
-	
-	memset(&buf, 0, sizeof(buf));
+	DecodeBuffer buf{};
 	buf.ptr = dst;
 	buf.w = _w;
 	buf.pitch = pitch;
@@ -689,7 +688,6 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
         buf->y -= (int16_t)READ_BE_UINT16(dataPtr + 6);
 }
 
-
 void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
 //emu_printf("MAC_drawFG\n");
@@ -699,7 +697,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 		buf.h  = _h;
 		buf.x  = x * _layerScale;
 		buf.y  = y * _layerScale;
-		fixOffsetDecodeBuffer(&buf, dataPtr);
+//		fixOffsetDecodeBuffer(&buf, dataPtr);
 
 		buf.setPixel = MAC_setPixelFG;
 		buf.ptr      = _frontLayer;
@@ -707,14 +705,10 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	}
 }
 
-//extern uint16_t _monster_tex[700];
-
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground) {
 //emu_printf("MAC_drawSprite %p %p anim_number %d\n",data,_res->_monster,anim_number);	
-//emu_printf("MAC_drawSprite w %d h %d\n",buf.w,buf.h);
 
-	DecodeBuffer buf;
-	memset(&buf, 0, sizeof(buf));
+	DecodeBuffer buf{};
 	buf.xflip = xflip;
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
@@ -767,18 +761,12 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 {
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-
-	if(ptrsp==_txt1Layer)
-		user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-	else
-		user_sprite.PMOD= CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
-
-	user_sprite.COLR=  0;
+	user_sprite.COLR = 224;		
+	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= ((int)ptrsp)/8;
 	user_sprite.SIZE=(w/8)<<8|h;
 	user_sprite.XA=63+x;
 	user_sprite.YA=y;
-	user_sprite.GRDA=0;	
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
@@ -788,9 +776,12 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     SPRITE user_sprite{};
     user_sprite.CTRL = buf.xflip ? (1 << 4) : 0;
 
-    if (data == _res->_monster || data == _txt1Layer) {
+    if (data == _res->_monster) {
         user_sprite.COLR = 80;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+/*    } else if (data == _txt1Layer) {
+        user_sprite.COLR = 224;
+        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;*/
     } else if (data == _res->_perso) {
         user_sprite.COLR = 64;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;

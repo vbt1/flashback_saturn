@@ -4,7 +4,7 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 //#define SLAVE_SOUND 1
-//#define SUBTITLE_SPRITE 1
+#define SUBTITLE_SPRITE 1
 extern "C"
 {
 #include <sl_def.h>	

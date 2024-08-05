@@ -1,6 +1,6 @@
 #define PRELOAD_MONSTERS 1
 //#define COLOR_4BPP 1
-#define VRAM_MAX 0x65000
+#define VRAM_MAX 0x60000
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
