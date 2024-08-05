@@ -1,4 +1,5 @@
 #define PRELOAD_MONSTERS 1
+#define VRAM_MAX 0x65000
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -736,12 +737,18 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptr = hwram_screen;
 			buf.setPixel = (data == _res->_perso) ? MAC_setPixel4Bpp : MAC_setPixel;
-			size_t dataSize = (data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h;
+			size_t dataSize = SAT_ALIGN((data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h);
 
 			fixOffsetDecodeBuffer(&buf, dataPtr);
-			memset(buf.ptr, 0x00, buf.w * buf.h);
+			memset(buf.ptr, 0x00, dataSize);
 
 			// emu_printf("perso frame %d index %d w %d h %d\n", frame, frame - 0x22F, buf.w, buf.h);
+
+			if(position_vram+(dataSize)>VRAM_MAX+0x12000)
+			{
+				position_vram = position_vram_aft_monster;
+			}
+
 			TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
 
 			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
@@ -779,9 +786,6 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     if (data == _res->_monster) {
         user_sprite.COLR = 80;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-/*    } else if (data == _txt1Layer) {
-        user_sprite.COLR = 224;
-        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;*/
     } else if (data == _res->_perso) {
         user_sprite.COLR = 64;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
@@ -792,22 +796,29 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
 
     // emu_printf("spr.cgaddr %p\n", spr.cgaddr);
 
-    if (spr.cgaddr <= 0x10000) {
-        user_sprite.SRCA = spr.cgaddr;
-    } else {
-        TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-
-        size_t dataSize = (data == _res->_spc) ? buf.w * buf.h : (buf.w * buf.h) / 2;
-        position_vram += SAT_ALIGN(dataSize);
-        memcpyl((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spr.cgaddr, dataSize);
-
-        user_sprite.SRCA = tx.CGadr;
-    }
-
-    user_sprite.SIZE = spr.size; // (buf.h / 8) << 8 | buf.w;
+    user_sprite.SIZE = spr.size;
     user_sprite.XA = 63 + (buf.x - 320);
     user_sprite.YA = buf.y - 224;
     user_sprite.GRDA = 0;
+	
+//	if(user_sprite.XA>255) return;
+//	if(user_sprite.XA<-256) return;	
+
+    if (spr.cgaddr < 0x10000) {
+        user_sprite.SRCA = spr.cgaddr;
+    } else {
+
+        size_t dataSize = SAT_ALIGN((data == _res->_spc) ? buf.w * buf.h : (buf.w * buf.h) / 2);
+
+		if(position_vram+dataSize>VRAM_MAX+0x12000)
+		{
+			position_vram = position_vram_aft_monster;
+		}
+		TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+	    position_vram += dataSize;
+		memcpy((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spr.cgaddr, dataSize);
+        user_sprite.SRCA = tx.CGadr;
+    }
 
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }

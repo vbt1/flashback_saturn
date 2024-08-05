@@ -1,6 +1,6 @@
 #define PRELOAD_MONSTERS 1
 //#define COLOR_4BPP 1
-#define VRAM_MAX 0x60000
+#define VRAM_MAX 0x65000
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -511,9 +511,8 @@ heapWalk();
 			return;
 		}
 	}
-	if(position_vram>VRAM_MAX+0xC000)
-//	position_vram = 0;
-		position_vram = position_vram_aft_monster; // vbt on repart des monsters
+//	if(position_vram>VRAM_MAX+0xE000)
+//		position_vram = position_vram_aft_monster; // vbt on repart des monsters
 
 	pge_getInput();
 	pge_prepare();
