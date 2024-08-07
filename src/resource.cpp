@@ -1791,18 +1791,12 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //emu_printf("MAC_loadLevelRoom\n");	
 	char name[64];
 	
-//	emu_printf("_res._monster %p\n",_monster);
-//	sat_free(_monster);
-//	_monster = 0;
-	slSynch(); // vbt pour virer les sprites
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 //slDynamicFrame(ON);
 //slSynch();
-//	emu_printf("sat_free(%p)\n",ptr); // vbt : free sur l'image de fond, à ne pas remettre
-//	sat_free(ptr);
 }
 
 void Resource::MAC_clearClut16(Color *clut, uint8_t dest) {
@@ -1992,11 +1986,13 @@ void Resource::MAC_unloadCutscene() {
 }
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
+	slTVOff();
+	slSynch();
 		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 //	MAC_unloadCutscene();
 	char name[32];
 	save_current_lwram = (uint8_t *)current_lwram;
-
+// vbt :  paraléliser les décodages !!!
 	snprintf(name, sizeof(name), "%s movie", cutscene, current_lwram);
 	stringLowerCase(name);
 //	emu_printf("MAC_loadCutscene2 %s\n",name);	
@@ -2015,6 +2011,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		return;
 	}
 	_pol = decodeResourceMacData(polEntry, true);
+	slTVOn();
 }
 
 void Resource::MAC_loadCutsceneText() {

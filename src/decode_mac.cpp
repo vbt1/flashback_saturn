@@ -124,8 +124,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     static uint8_t window[(3 << kBits)] __attribute__ ((aligned (4)));
     uint8_t *tmp_ptr = (uint8_t *)window + 4096;
 
-		slSynch(); // vbt pour virer les sprites	
-		slTVOff();
+	slTVOff();
 
     for (unsigned short y = 0; y < h; ++y) {
         unsigned short x = 0;
@@ -167,13 +166,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 					}
                     window[cursor++] = color;
                     *tmp_ptr++ = color;
-/*	if(x&1)
-	{
-		*tmp_ptr |= (color&0x0f);
-		tmp_ptr++;
-	}
-	else
-		*tmp_ptr = ((color&0x0f)<<4);*/
+
                     cursor &= kMask;
                     x++;
                     continue;
@@ -190,17 +183,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                     uint8_t color = window[offset++];
                     window[cursor++] = color;
                     *tmp_ptr++ = color;
-/*
-	if(x&1)
-	{
-		*tmp_ptr |= (color&0x0f);
-		tmp_ptr++;
-	}
-	else
-	{
-		*tmp_ptr = ((color&0x0f)<<4);
-	}
-*/
+
                     cursor &= kMask;
                     offset &= kMask;
                     count--;
@@ -215,9 +198,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
             buf->ptr += w * 8;
         }
     }
-	
-		slTVOn();
-//		slSynch();	
+	slTVOn();
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {

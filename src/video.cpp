@@ -580,17 +580,15 @@ void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color)
 }
 
 void Video::MAC_decodeMap(int level, int room) {
-	DecodeBuffer buf;
-	memset(&buf, 0, sizeof(buf));
+	DecodeBuffer buf{};
+
 	buf.ptr = _backLayer;
 	buf.w = buf.pitch = _w;
 	buf.h = _h;
 	buf.setPixel = Video::MAC_setPixel;
 
 	_res->MAC_loadLevelRoom(level, room, &buf);
-//	memcpy(_backLayer, _frontLayer, GAMESCREEN_W * GAMESCREEN_H * 4);
-//	memset(_frontLayer,0x00, buf.w * buf.h); // ralentit le changement d'écran
-	
+
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 	for (int j = 0; j < 16; ++j) {

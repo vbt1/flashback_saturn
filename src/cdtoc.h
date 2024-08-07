@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SEGA_CDC.H>
+#include <sega_cdc.h>
 
 // -------------------------------------
 // Constants
