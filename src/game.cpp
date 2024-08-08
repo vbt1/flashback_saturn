@@ -2297,8 +2297,8 @@ void Game::handleInventory() {
 					current_item = current_line * 4;
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (current_line > 0) {
 					--current_line;
 					current_item = current_line * 4;
