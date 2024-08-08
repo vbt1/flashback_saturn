@@ -491,11 +491,15 @@ void Game::mainLoop() {
 heapWalk();
 #endif
 			if (!handleContinueAbort()) {
-				memset(_vid._frontLayer,0x00,512*400);				
+//				memset(_vid._frontLayer,0x00,512*400);
+//				_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+				
 				playCutscene(0x41);
 				_endLoop = true;
 			} else {
-					memset(_vid._frontLayer,0x00,512*400);
+//					memset(_vid._frontLayer,0x00,512*400);
+//					_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+
 					if (_validSaveState) {
 						if (!loadGameState(0)) {
 							return;
@@ -1021,7 +1025,9 @@ bool Game::handleContinueAbort() {
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_02_TIME);
+		
 		sprintf(textBuf, "%s : %d", str, timeout / 10);
+		memset(&_vid._frontLayer[(140<<1)*512],0x00,14*512);
 		_vid.drawString(textBuf, 90, 140, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_03_CONTINUE);
 		_vid.drawString(str, 45, 96, colors[0]);
@@ -1076,7 +1082,7 @@ bool Game::handleContinueAbort() {
 			slSynch(); // vire le sprite bg
 			return (current_color == 0);
 		}
-		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+//		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 
 		static const int COLOR_STEP = 8;
 		static const int COLOR_MIN = 16;
@@ -1097,8 +1103,9 @@ bool Game::handleContinueAbort() {
 		_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
-
 	}
+	memset(_vid._frontLayer,0x00,512*400);
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	return false;
 }
 /*

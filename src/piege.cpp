@@ -95,6 +95,8 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 	live_pge->anim_seq = 0;
 	live_pge->room_location = init_pge->init_room;
 
+	emu_printf("Game::pge_loadForCurrentLevel() room %d\n", init_pge->init_room);
+
 	live_pge->life = init_pge->life;
 	if (_skillLevel >= 2 && init_pge->object_type == 10) {
 		live_pge->life *= 2;
