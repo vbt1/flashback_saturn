@@ -15,6 +15,7 @@ extern "C"
 //extern TEXTURE tex_spr[4];
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
+extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
 void	*malloc(size_t);
 }
@@ -43,6 +44,8 @@ Video::Video(Resource *res, SystemStub *stub)
 emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
 	Uint32 *DRAM0 = (Uint32 *)0x22400000;
 	_frontLayer = (uint8 *)DRAM0; //sat_malloc(_w * _h);
+//	_frontLayer = (uint8 *)current_lwram; //sat_malloc(_w * _h);
+//	current_lwram+=_w * _h;
 
 	memset(&_frontLayer[0], 0, _w * _h);
 //	_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);

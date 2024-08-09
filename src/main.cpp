@@ -19,19 +19,10 @@ extern "C" {
 #include 	<sl_def.h>
 //#include "sega_mem.h"
 #include "gfs_wrap.h"
-#include "sat_mem_checker.h"
 void	*malloc(size_t);
-Uint8 *hwram = NULL;
-Uint8 *hwram_ptr = NULL;
-Uint8 *hwram_screen = NULL;
-Uint8 *current_lwram = (Uint8 *)VBT_L_START;
-Uint8 *save_lwram = NULL;
-Uint32 position_vram = 0;
-Uint32 position_vram_aft_monster = 0;
-unsigned int end1 = 600000;
 }
 #include "saturn_print.h"
-
+#include "sat_mem_checker.h"
 
 #include "file.h"
 #include "game.h"
@@ -63,6 +54,15 @@ static int detectVersion(const char *dataPath) {
 	}
 	return -1;
 }
+
+Uint8 *hwram = NULL;
+Uint8 *hwram_ptr = NULL;
+Uint8 *hwram_screen = NULL;
+Uint8 *current_lwram = (Uint8 *)VBT_L_START;
+Uint8 *save_lwram = NULL;
+Uint32 position_vram = 0;
+Uint32 position_vram_aft_monster = 0;
+unsigned int end1 = 600000;//-16384;//538624;
 
 void ss_main(void) {
 	const int version = detectVersion("/");

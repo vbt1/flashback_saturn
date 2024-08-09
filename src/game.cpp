@@ -50,6 +50,8 @@ extern Uint8 *save_current_lwram;
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 extern "C" {
 extern CdcStat  statdata;
+}
+
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
@@ -58,9 +60,6 @@ extern Uint32 position_vram_aft_monster;
 //extern Uint8 *current_dram;
 extern Uint8 *current_dram2;
 extern unsigned int end1;
-}
-
-
 
 #ifdef HEAP_WALK
 extern Uint32  end;
@@ -199,8 +198,8 @@ _vid.setTextPalette();
 _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
-//		hwram_screen=hwram_ptr;
-//		hwram_ptr+=45000;
+		hwram_screen=hwram_ptr;
+		hwram_ptr+=45000;
 
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
@@ -209,7 +208,7 @@ _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		break;
 	}
 
-//hwram = (uint8_t *)hwram_ptr;
+hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION
 //emu_printf("handleProtectionScreen\n");
@@ -1977,67 +1976,74 @@ emu_printf("loadLevelData\n");
 			}
 			mList += 2;
 		}
+#endif
 
-		const int count = READ_BE_UINT16(_res._spc+2);
 
-		for (unsigned int j = 0; j < count;j++)
-		{
-			const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
 
-			if (dataPtr) {
-				DecodeBuffer buf{};
-				buf.w = READ_BE_UINT16(dataPtr + 2);
-				buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
-				buf.ptr = hwram_ptr;
-				buf.setPixel = _vid.MAC_setPixel;//4Bpp;
-				memset(buf.ptr,0,buf.w*buf.h);
 
-				_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
+#if 1
+	const int count = READ_BE_UINT16(_res._spc+2);
 
-				SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
+	for (unsigned int j = 0; j < count;j++)
+	{
+		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
 
-				sprData->size   = (buf.h/8)<<8|buf.w;
-				sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
-				sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
-				sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+		if (dataPtr) {
+			DecodeBuffer buf{};
+			buf.w = READ_BE_UINT16(dataPtr + 2);
+			buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
+			buf.ptr = hwram_ptr;
+			buf.setPixel = _vid.MAC_setPixel;//4Bpp;
+			memset(buf.ptr,0,buf.w*buf.h);
 
-				buf.x  = 80 - sprData->x;
-				buf.y  = 80 - sprData->y;
+			_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
 
-				buf.w =  sprData->size & 0xFF;
-				buf.h = (sprData->size>>8)*8;
+			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
 
-				size_t dataSize = (buf.w * buf.h);
-				if ((position_vram + dataSize) <= VRAM_MAX)
-				{
-					TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-					sprData->cgaddr = (int)tx.CGadr;
-					memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
-					position_vram += dataSize;
-					position_vram_aft_monster = position_vram;
-				}
-				else
-				{
-					memcpy(current_dram2, (void *)buf.ptr, dataSize);
-					sprData->cgaddr = (int)current_dram2;
-					current_dram2 += SAT_ALIGN(dataSize);
-				}
-	/*
-				_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+			sprData->size   = (buf.h/8)<<8|buf.w;
+			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
+			sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-				if(position_vram>VRAM_MAX+0x10000)
-					position_vram = position_vram_aft_monster; // vbt on repart des monsters										
-				
-											
-				char toto[60];
-				sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
-				_vid.drawString(toto, 4, 60, 0xE7);
+			buf.x  = 80 - sprData->x;
+			buf.y  = 80 - sprData->y;
 
-				_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-				memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-	*/
+			buf.w =  sprData->size & 0xFF;
+			buf.h = (sprData->size>>8)*8;
+
+			size_t dataSize = (buf.w * buf.h);
+			if ((position_vram + dataSize) <= VRAM_MAX)
+			{
+				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+				sprData->cgaddr = (int)tx.CGadr;
+				memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
+				position_vram += dataSize;
+				position_vram_aft_monster = position_vram;
 			}
+			else
+			{
+				memcpy(current_dram2, (void *)buf.ptr, dataSize);
+				sprData->cgaddr = (int)current_dram2;
+				current_dram2 += SAT_ALIGN(dataSize);
+			}
+/*
+			_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+
+			if(position_vram>VRAM_MAX+0x10000)
+				position_vram = position_vram_aft_monster; // vbt on repart des monsters										
+			
+										
+			char toto[60];
+			sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
+			_vid.drawString(toto, 4, 60, 0xE7);
+
+			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+*/
 		}
+//		slSynch();
+
+	}
 
 ///////////////////////////////////////////////////
 #endif
@@ -2062,7 +2068,22 @@ emu_printf("clearBankData\n");
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
+/* /// vbt : pour afficher les bgs	
+slScrAutoDisp(NBG0ON|NBG1ON|SPRON);	
+	for (int i = _currentRoom;i <  _currentRoom+n;i++)
+	{
+		_vid.MAC_decodeMap(_currentLevel, i);
+			char toto[60];
+			sprintf(toto,"room %02d",i);
+			_vid.drawString(toto, 4, 60, 0xE7);
 
+			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);		
+		slSynch();
+	}
+	slScrAutoDisp(NBG1ON|SPRON);
+emu_printf("pge_loadForCurrentLevel %d\n",n);	
+*/
 	while (n--) {
 //emu_printf("pge_loadForCurrentLevel %d\n",n);		
 		pge_loadForCurrentLevel(n);
@@ -2301,7 +2322,7 @@ void Game::handleInventory() {
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}
-			if (_stub->_pi.escape) {
+			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
 				_stub->_pi.escape = false;
 			}
 //			slSynch();
