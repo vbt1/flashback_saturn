@@ -50,8 +50,6 @@ extern Uint8 *save_current_lwram;
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 extern "C" {
 extern CdcStat  statdata;
-}
-
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
@@ -60,6 +58,9 @@ extern Uint32 position_vram_aft_monster;
 //extern Uint8 *current_dram;
 extern Uint8 *current_dram2;
 extern unsigned int end1;
+}
+
+
 
 #ifdef HEAP_WALK
 extern Uint32  end;

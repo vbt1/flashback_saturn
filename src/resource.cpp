@@ -565,7 +565,7 @@ void Resource::unload(int objType) {
 		break;
 	}
 }
-
+/*
 void Resource::load(const char *objName, int objType, const char *ext) {
 	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
@@ -764,6 +764,7 @@ emu_printf("_aba->loadEntry\n");
 	}
 	f.close();
 }
+*/
 void Resource::load_CT(File *pf) {
 //	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
@@ -879,7 +880,7 @@ void Resource::load_MAP(File *f) {
 	}
 #endif
 }
-
+/*
 void Resource::load_OBJ(File *f) {
 	debug(DBG_RES, "Resource::load_OBJ()");
 
@@ -937,7 +938,7 @@ void Resource::load_OBJ(File *f) {
 		_objectNodesMap[i] = prevNode;
 	}
 }
-
+*/
 void Resource::free_OBJ() {
 //	emu_printf("Resource::free_OBJ()\n");
 	ObjectNode *prevNode = 0;
@@ -1491,7 +1492,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
-//	emu_printf("Resource::decodeResourceMacData '%d'\n",entry->dataOffset);	
+	emu_printf("Resource::decodeResourceMacData '%d %p'\n",entry->dataOffset, entry);	
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
@@ -1510,7 +1511,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 
 	uint8_t *data = 0;
 	if (decompressLzss) {
-emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
+//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
@@ -1524,7 +1525,7 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
-		|| strncmp("logo", entry->name, 5) == 0 
+		|| strncmp("logo", entry->name, 4) == 0 
 		|| strncmp("espion", entry->name, 5) == 0 
 		)
 		{
@@ -1544,12 +1545,8 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 			else
 			{
 //				emu_printf("sat_malloc2 %s\n", entry->name);
-#ifdef WITH_MEM_MALLOC
-				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-#else
 				data = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(_resourceMacDataSize);
-#endif
 			}
 		}
 

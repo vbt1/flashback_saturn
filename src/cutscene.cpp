@@ -1198,10 +1198,10 @@ bool Cutscene::load(uint16_t cutName) {
 	
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	switch (_res->_type) {
-	case kResourceTypeDOS:
+	/*case kResourceTypeDOS:
 		_res->load(name, Resource::OT_CMD);
 		_res->load(name, Resource::OT_POL);
-		break;
+		break;*/
 	case kResourceTypeMac:
 		_res->MAC_loadCutscene(name);
 		break;

@@ -7,11 +7,6 @@ extern "C" {
 #include <ctype.h>
 #include "sat_mem_checker.h"
 #include <sl_def.h>
-}
-
-#include "decode_mac.h"
-#include "util.h"
-#include "saturn_print.h"
 
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
@@ -21,6 +16,13 @@ extern Uint8 *current_lwram;
 extern unsigned int end1;
 Uint8 *current_dram=(Uint8 *)0x22440000;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
+}
+
+#include "decode_mac.h"
+#include "util.h"
+#include "saturn_print.h"
+
+
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
