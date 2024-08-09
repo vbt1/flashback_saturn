@@ -1,40 +1,23 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
-extern "C" {
-	#include 	<string.h>
-}
-#include 	"saturn_print.h"
-#include "cutscene.h"
-#include "resource.h"
-#include "systemstub.h"
-#include "game.h"
-
-
-
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
-
+ extern "C" {
+#include 	<string.h>
+}
 #include "game.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "util.h"
+extern "C" {
+extern Uint8 *hwram_screen;
+extern Uint8 *hwram;
+}
+//#include 	"saturn_print.h"
+//#include "cutscene.h"
+//#include "resource.h"
+
+//#include "game.h"
 
 void Game::pge_resetMessages() {
 	memset(_pge_messagesTable, 0, sizeof(_pge_messagesTable));
@@ -83,7 +66,7 @@ int Game::pge_hasMessageData(LivePGE *pge, uint16_t msg_num, uint16_t counter) c
 }
 
 void Game::pge_loadForCurrentLevel(uint16_t idx) {
-	emu_printf("Game::pge_loadForCurrentLevel() %p\n", &_pgeLive[idx]);
+//	emu_printf("Game::pge_loadForCurrentLevel() %p\n", &_pgeLive[idx]);
 
 	LivePGE *live_pge = &_pgeLive[idx];
 	InitPGE *init_pge = &_res._pgeInit[idx];
@@ -95,7 +78,7 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 	live_pge->anim_seq = 0;
 	live_pge->room_location = init_pge->init_room;
 
-	emu_printf("Game::pge_loadForCurrentLevel() room %d\n", init_pge->init_room);
+//	emu_printf("Game::pge_loadForCurrentLevel() room %d\n", init_pge->init_room);
 
 	live_pge->life = init_pge->life;
 	if (_skillLevel >= 2 && init_pge->object_type == 10) {
@@ -135,8 +118,12 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 			++i;
 			++obj;
 		}
-emu_printf("assert(i %d < on->num_objects %d)obj %p live %p\n", i, on->objects,live_pge);		
 		assert(i < on->num_objects);
+		/*if(i >= on->num_objects)
+		{
+			emu_printf("assert(i %d < on->num_objects %d)obj %p live %p hwram_screen %p hwram %p\n", i, on->num_objects, on->objects, live_pge,hwram_screen, hwram);		
+			return;
+		}*/
 		live_pge->first_obj_number = i;
 		pge_setupDefaultAnim(live_pge);
 	}

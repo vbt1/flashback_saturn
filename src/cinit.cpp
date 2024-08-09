@@ -11,6 +11,11 @@ extern "C" {
 #include <stdarg.h>
 #include <string.h>
 void *memset4_fast(void *, long, size_t);
+void *malloc(size_t);
+extern Uint8 *hwram_screen;
+extern Uint8 *hwram_ptr;
+extern Uint8 *hwram;
+extern unsigned int end1;
 }
 
 #include 	"saturn_print.h"
@@ -64,9 +69,16 @@ int	main( void )
 	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
 //	slSetSprTVMode(TV_320x224); // Init SGL
 
-//	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
+	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM_START, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
+	
+	hwram = (Uint8 *)malloc(end1);//(282344);
+	end1  += (int)hwram;
+	emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
+	hwram_ptr = (unsigned char *)hwram;
+	hwram_screen=hwram_ptr;
+	hwram_ptr+=45000;	
 //	slTVOff();
 //	
 	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);

@@ -50,8 +50,6 @@ extern Uint8 *save_current_lwram;
 #define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
 extern "C" {
 extern CdcStat  statdata;
-}
-
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
@@ -60,6 +58,9 @@ extern Uint32 position_vram_aft_monster;
 //extern Uint8 *current_dram;
 extern Uint8 *current_dram2;
 extern unsigned int end1;
+}
+
+
 
 #ifdef HEAP_WALK
 extern Uint32  end;
@@ -131,9 +132,6 @@ void heapWalk(void)
 }
 #endif
 
-#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
-#define LOW_WORK_RAM_SIZE 0x100000
-
 static SAVE_BUFFER sbuf;
 static Uint8 rle_buf[SAV_BUFSIZE];
 extern "C" {
@@ -190,9 +188,9 @@ void Game::run() {
 	_res.load_TEXT();
 
 	switch (_res._type) {
-	case kResourceTypeDOS:
+	/*case kResourceTypeDOS:
 		_res.load("FB_TXT", Resource::OT_FNT);
-		break;
+		break;*/
 	case kResourceTypeMac:
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
@@ -201,8 +199,8 @@ _vid.setTextPalette();
 _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
-		hwram_screen=hwram_ptr;
-		hwram_ptr+=45000;
+//		hwram_screen=hwram_ptr;
+//		hwram_ptr+=45000;
 
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
@@ -211,7 +209,7 @@ _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		break;
 	}
 
-hwram = (uint8_t *)hwram_ptr;
+//hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION
 //emu_printf("handleProtectionScreen\n");
@@ -1503,11 +1501,7 @@ void Game::drawPiege(AnimBufferState *state) {
 //emu_printf("MAC_drawSprite 3 monster\n");
 // vbt : gerer le cas du sprite pas en vram !!!!
 			const int frame = _res.MAC_getMonsterFrame(pge->anim_number);
-#ifndef PRELOAD_MONSTERS
 			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
-#else
-			_vid.MAC_drawSprite(state->x, state->y, _res._monster, frame, pge->anim_number, (pge->flags & 2) != 0, _eraseBackground);
-#endif
 		}
 		break;
 	}
@@ -1768,13 +1762,14 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 	if (_curMonsterNum != mList[1]) {
 		_curMonsterNum = mList[1];
 		switch (_res._type) {
-		case kResourceTypeDOS: {
+/*		case kResourceTypeDOS: {
 				const char *name = _monsterNames[0][_curMonsterNum];
 				_res.load(name, Resource::OT_SPRM);
 //				_res.load_SPR_OFF(name, _res._sprm);
 //				_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
 			}
 			break;
+*/
 		case kResourceTypeMac: {
 				Color palette[512];
 				_cut._stop=true; // vbt bidouille pour relancer la piste audio
@@ -1829,6 +1824,7 @@ emu_printf("loadLevelData\n");
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
 	switch (_res._type) {
+#if 0		
 	case kResourceTypeDOS:
 		_res.load(lvl->name, Resource::OT_MBK);
 		_res.load(lvl->name, Resource::OT_CT);
@@ -1848,6 +1844,7 @@ emu_printf("loadLevelData\n");
 		_res.load(lvl->name2, Resource::OT_ANI);
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
+#endif
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram+45000;
@@ -1980,74 +1977,67 @@ emu_printf("loadLevelData\n");
 			}
 			mList += 2;
 		}
-#endif
 
+		const int count = READ_BE_UINT16(_res._spc+2);
 
+		for (unsigned int j = 0; j < count;j++)
+		{
+			const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
 
+			if (dataPtr) {
+				DecodeBuffer buf{};
+				buf.w = READ_BE_UINT16(dataPtr + 2);
+				buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
+				buf.ptr = hwram_ptr;
+				buf.setPixel = _vid.MAC_setPixel;//4Bpp;
+				memset(buf.ptr,0,buf.w*buf.h);
 
-#if 1
-	const int count = READ_BE_UINT16(_res._spc+2);
+				_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
 
-	for (unsigned int j = 0; j < count;j++)
-	{
-		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
+				SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
 
-		if (dataPtr) {
-			DecodeBuffer buf{};
-			buf.w = READ_BE_UINT16(dataPtr + 2);
-			buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
-			buf.ptr = hwram_ptr;
-			buf.setPixel = _vid.MAC_setPixel;//4Bpp;
-			memset(buf.ptr,0,buf.w*buf.h);
+				sprData->size   = (buf.h/8)<<8|buf.w;
+				sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
+				sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+				sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-			_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
+				buf.x  = 80 - sprData->x;
+				buf.y  = 80 - sprData->y;
 
-			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
+				buf.w =  sprData->size & 0xFF;
+				buf.h = (sprData->size>>8)*8;
 
-			sprData->size   = (buf.h/8)<<8|buf.w;
-			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
-			sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
-			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+				size_t dataSize = (buf.w * buf.h);
+				if ((position_vram + dataSize) <= VRAM_MAX)
+				{
+					TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+					sprData->cgaddr = (int)tx.CGadr;
+					memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
+					position_vram += dataSize;
+					position_vram_aft_monster = position_vram;
+				}
+				else
+				{
+					memcpy(current_dram2, (void *)buf.ptr, dataSize);
+					sprData->cgaddr = (int)current_dram2;
+					current_dram2 += SAT_ALIGN(dataSize);
+				}
+	/*
+				_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 
-			buf.x  = 80 - sprData->x;
-			buf.y  = 80 - sprData->y;
+				if(position_vram>VRAM_MAX+0x10000)
+					position_vram = position_vram_aft_monster; // vbt on repart des monsters										
+				
+											
+				char toto[60];
+				sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
+				_vid.drawString(toto, 4, 60, 0xE7);
 
-			buf.w =  sprData->size & 0xFF;
-			buf.h = (sprData->size>>8)*8;
-
-			size_t dataSize = (buf.w * buf.h);
-			if ((position_vram + dataSize) <= VRAM_MAX)
-			{
-				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-				sprData->cgaddr = (int)tx.CGadr;
-				memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
-				position_vram += dataSize;
-				position_vram_aft_monster = position_vram;
+				_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+				memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+	*/
 			}
-			else
-			{
-				memcpy(current_dram2, (void *)buf.ptr, dataSize);
-				sprData->cgaddr = (int)current_dram2;
-				current_dram2 += SAT_ALIGN(dataSize);
-			}
-/*
-			_vid.SAT_displaySprite(*sprData, buf,_res._monster);
-
-			if(position_vram>VRAM_MAX+0x10000)
-				position_vram = position_vram_aft_monster; // vbt on repart des monsters										
-			
-										
-			char toto[60];
-			sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
-			_vid.drawString(toto, 4, 60, 0xE7);
-
-			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-*/
 		}
-//		slSynch();
-
-	}
 
 ///////////////////////////////////////////////////
 #endif
@@ -2072,22 +2062,7 @@ emu_printf("clearBankData\n");
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
-/* /// vbt : pour afficher les bgs	
-slScrAutoDisp(NBG0ON|NBG1ON|SPRON);	
-	for (int i = _currentRoom;i <  _currentRoom+n;i++)
-	{
-		_vid.MAC_decodeMap(_currentLevel, i);
-			char toto[60];
-			sprintf(toto,"room %02d",i);
-			_vid.drawString(toto, 4, 60, 0xE7);
 
-			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);		
-		slSynch();
-	}
-	slScrAutoDisp(NBG1ON|SPRON);
-emu_printf("pge_loadForCurrentLevel %d\n",n);	
-*/
 	while (n--) {
 //emu_printf("pge_loadForCurrentLevel %d\n",n);		
 		pge_loadForCurrentLevel(n);
@@ -2325,6 +2300,9 @@ void Game::handleInventory() {
 			if (_stub->_pi.enter) {
 				_stub->_pi.enter = false;
 				display_score = !display_score;
+			}
+			if (_stub->_pi.escape) {
+				_stub->_pi.escape = false;
 			}
 //			slSynch();
 		}
@@ -2672,7 +2650,6 @@ void Game::clearSaveSlots(uint8 level) {
 }
 
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
-	if(stateNum==2)
 //	emu_printf("AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p\n", stateNum, x, y, dataPtr, pge);
 	assert(stateNum < 4);
 	AnimBufferState *state = _states[stateNum];

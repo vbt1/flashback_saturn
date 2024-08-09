@@ -11,8 +11,7 @@ extern "C"
 #include <string.h>	
 //extern TEXTURE tex_spr[4];
 extern Uint8 *hwram_screen;
-extern Uint8 *current_lwram;
-extern Uint8 *save_current_lwram;
+
 void *memset4_fast(void *, long, size_t);
 }
 #include "mod_player.h"
@@ -1198,10 +1197,10 @@ bool Cutscene::load(uint16_t cutName) {
 	
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	switch (_res->_type) {
-	case kResourceTypeDOS:
+	/*case kResourceTypeDOS:
 		_res->load(name, Resource::OT_CMD);
 		_res->load(name, Resource::OT_POL);
-		break;
+		break;*/
 	case kResourceTypeMac:
 		_res->MAC_loadCutscene(name);
 		break;
@@ -1336,7 +1335,6 @@ void Cutscene::playCredits() {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-		//emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
 		_creditsSequence = false;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;

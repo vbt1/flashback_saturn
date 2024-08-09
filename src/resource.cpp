@@ -565,7 +565,7 @@ void Resource::unload(int objType) {
 		break;
 	}
 }
-
+/*
 void Resource::load(const char *objName, int objType, const char *ext) {
 	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
@@ -764,6 +764,7 @@ emu_printf("_aba->loadEntry\n");
 	}
 	f.close();
 }
+*/
 void Resource::load_CT(File *pf) {
 //	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
@@ -879,7 +880,7 @@ void Resource::load_MAP(File *f) {
 	}
 #endif
 }
-
+/*
 void Resource::load_OBJ(File *f) {
 	debug(DBG_RES, "Resource::load_OBJ()");
 
@@ -937,7 +938,7 @@ void Resource::load_OBJ(File *f) {
 		_objectNodesMap[i] = prevNode;
 	}
 }
-
+*/
 void Resource::free_OBJ() {
 //	emu_printf("Resource::free_OBJ()\n");
 	ObjectNode *prevNode = 0;
@@ -1009,7 +1010,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 #if 0
 			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
 #else
-//emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
+emu_printf("current_lwram1 size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
 #endif			
@@ -1024,7 +1025,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 #if 0
 			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
-//emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
+//emu_printf("current_lwram2 %p\n", current_lwram);	
 			on->objects = (Object *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(Object) * on->num_objects);
 #endif
@@ -1491,26 +1492,15 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
-//	emu_printf("Resource::decodeResourceMacData '%d'\n",entry->dataOffset);	
-//	assert(entry);
+	emu_printf("Resource::decodeResourceMacData '%p %d'\n",entry,entry->dataOffset);	
+	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
-	if(hwram==NULL)
-	{
-		hwram = (Uint8 *)malloc(end1);//(282344);
-		end1  += (int)hwram;
-		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
-		hwram_ptr = (unsigned char *)hwram;
-	}
-//	else
-//	//emu_printf("hwram2 %d %s\n", decodedSize, name);
-
-
 	uint8_t *data = 0;
 	if (decompressLzss) {
-emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
+//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
@@ -1519,12 +1509,13 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 
 		if(strncmp("Movie", entry->name, 5) == 0)
 		{
+emu_printf("current_lwram3 %p\n", current_lwram);			
 			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
 		}
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
 		|| strncmp("intro", entry->name, 5) == 0 
-		|| strncmp("logo", entry->name, 5) == 0 
+		|| strncmp("logo", entry->name, 4) == 0 
 		|| strncmp("espion", entry->name, 5) == 0 
 		)
 		{
@@ -1544,12 +1535,9 @@ emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 			else
 			{
 //				emu_printf("sat_malloc2 %s\n", entry->name);
-#ifdef WITH_MEM_MALLOC
-				data = (uint8_t *)sat_malloc(_resourceMacDataSize);
-#else
+emu_printf("current_lwram4 %p\n", current_lwram);
 				data = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(_resourceMacDataSize);
-#endif
 			}
 		}
 
@@ -1977,6 +1965,7 @@ static void stringLowerCase(char *p) {
 void Resource::MAC_unloadCutscene() {
 	current_lwram = (uint8_t *)save_current_lwram;
 	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
+emu_printf("current_lwram3 %p\n", current_lwram);	
 	sat_free(_pol);
 	_pol = 0;
 	sat_free(_cmd);
