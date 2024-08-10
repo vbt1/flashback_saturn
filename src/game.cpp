@@ -536,7 +536,7 @@ heapWalk();
 		}*/
 		changeLevel();
 		_pge_opGunVar = 0;
-//emu_printf("vbt playmusic chg lvl\n");
+emu_printf("vbt playmusic chg lvl\n");
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
 	}
@@ -552,6 +552,7 @@ heapWalk();
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
 		_mix.pauseMusic();
+		emu_printf("vbt level map2\n");
 			loadLevelMap();
 			_loadMap = false;
 //			_vid.fullRefresh();
@@ -1806,7 +1807,7 @@ static bool isMetro(int level, int room) {
 }
 */
 void Game::loadLevelMap() {
-//	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
 	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
 	switch (_res._type) {
@@ -1849,13 +1850,15 @@ emu_printf("loadLevelData\n");
 //emu_printf("MAC_unloadLevelData\n");
 	hwram_ptr = hwram+45000;
 //	hwram_screen = NULL;
-	position_vram = position_vram_aft_monster; // vbt on repart des monsters
+//	position_vram = position_vram_aft_monster; // vbt on repart des monsters
+	position_vram = position_vram_aft_monster = 0; // vbt correction
+	current_dram2=(Uint8 *)0x22600000;
 //	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //heapWalk();		
 
 //	sat_free(_res._monster);
 //emu_printf("_res._spc %p\n",_res._spc);	
-	sat_free(_res._spc);
+	sat_free(_res._spc); // on ne vire pas
 	sat_free(_res._ani);
 	_res.MAC_unloadLevelData();
 //	sat_free(_res._icn);// icones du menu à ne pas vider
@@ -1877,9 +1880,6 @@ emu_printf("loadLevelData\n");
 
 /*********************************/
 
-//Uint8 *current_dram=(Uint8 *)0x22400000;
-//		memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
-//		_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
 #ifdef PRELOAD_MONSTERS
 		_curMonsterNum = 0xFFFF;
 
@@ -1977,74 +1977,68 @@ emu_printf("loadLevelData\n");
 			}
 			mList += 2;
 		}
-#endif
+		const int count = READ_BE_UINT16(_res._spc+2);
 
+		for (unsigned int j = 0; j < count;j++)
+		{
+			const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
 
+			if (dataPtr) {
+				DecodeBuffer buf{};
+				buf.w = READ_BE_UINT16(dataPtr + 2);
+				buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
+				buf.ptr = hwram_ptr;
+				buf.setPixel = _vid.MAC_setPixel;//4Bpp;
+				memset(buf.ptr,0,buf.w*buf.h);
 
+				_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
 
-#if 1
-	const int count = READ_BE_UINT16(_res._spc+2);
+				SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
 
-	for (unsigned int j = 0; j < count;j++)
-	{
-		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
+				sprData->size   = (buf.h/8)<<8|buf.w;
+				sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
+				sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+				sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-		if (dataPtr) {
-			DecodeBuffer buf{};
-			buf.w = READ_BE_UINT16(dataPtr + 2);
-			buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
-			buf.ptr = hwram_ptr;
-			buf.setPixel = _vid.MAC_setPixel;//4Bpp;
-			memset(buf.ptr,0,buf.w*buf.h);
+				buf.x  = 80 - sprData->x;
+				buf.y  = 80 - sprData->y;
 
-			_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
+				buf.w =  sprData->size & 0xFF;
+				buf.h = (sprData->size>>8)*8;
 
-			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
+				size_t dataSize = (buf.w * buf.h);
+				if ((position_vram + dataSize) <= VRAM_MAX)
+				{
+					TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+					sprData->cgaddr = (int)tx.CGadr;
+					memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
+					position_vram += dataSize;
+					position_vram_aft_monster = position_vram;
+				}
+				else
+				{
+					memcpy(current_dram2, (void *)buf.ptr, dataSize);
+					sprData->cgaddr = (int)current_dram2;
+					current_dram2 += SAT_ALIGN(dataSize);
+				}
+	/*
+				_vid.SAT_displaySprite(*sprData, buf,_res._monster);
 
-			sprData->size   = (buf.h/8)<<8|buf.w;
-			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
-			sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
-			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+				if(position_vram>VRAM_MAX+0x10000)
+					position_vram = position_vram_aft_monster; // vbt on repart des monsters										
+				
+											
+				char toto[60];
+				sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
+				_vid.drawString(toto, 4, 60, 0xE7);
 
-			buf.x  = 80 - sprData->x;
-			buf.y  = 80 - sprData->y;
-
-			buf.w =  sprData->size & 0xFF;
-			buf.h = (sprData->size>>8)*8;
-
-			size_t dataSize = (buf.w * buf.h);
-			if ((position_vram + dataSize) <= VRAM_MAX)
-			{
-				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-				sprData->cgaddr = (int)tx.CGadr;
-				memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
-				position_vram += dataSize;
-				position_vram_aft_monster = position_vram;
+				_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+				memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+	*/
 			}
-			else
-			{
-				memcpy(current_dram2, (void *)buf.ptr, dataSize);
-				sprData->cgaddr = (int)current_dram2;
-				current_dram2 += SAT_ALIGN(dataSize);
-			}
-/*
-			_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+	//		slSynch();
 
-			if(position_vram>VRAM_MAX+0x10000)
-				position_vram = position_vram_aft_monster; // vbt on repart des monsters										
-			
-										
-			char toto[60];
-			sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
-			_vid.drawString(toto, 4, 60, 0xE7);
-
-			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-*/
 		}
-//		slSynch();
-
-	}
 
 ///////////////////////////////////////////////////
 #endif
@@ -2069,7 +2063,8 @@ emu_printf("clearBankData\n");
 
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
-/* /// vbt : pour afficher les bgs	
+ /// vbt : pour afficher les bgs	
+ /*
 slScrAutoDisp(NBG0ON|NBG1ON|SPRON);	
 	for (int i = _currentRoom;i <  _currentRoom+n;i++)
 	{
@@ -2187,6 +2182,7 @@ void Game::changeLevel() {
 	_vid.fadeOut();
 //	clearStateRewind();
 	loadLevelData();
+emu_printf("vbt levelmap 1\n");	
 	loadLevelMap();
 	_vid.setPalette0xF();
 	_vid.setTextPalette();
