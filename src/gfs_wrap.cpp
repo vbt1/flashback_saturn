@@ -21,7 +21,7 @@ int	 strncasecmp(const char *, const char *, size_t) __pure;
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 13)
+#define CACHE_SIZE (SECTOR_SIZE * 8)
 
 static char satpath[25];
 //static char current_path[15][16];
@@ -355,7 +355,11 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 
 	switch(whence) {
 		case SEEK_SET:
-			if(offset < 0 || offset >= stream->f_size) return -1;
+			if(offset < 0 || offset >= stream->f_size)
+			{
+				emu_printf("SEEK_SET failed !\n");
+				return -1;
+			}
 			stream->f_seek_pos = offset;
 			
 			break;
@@ -416,7 +420,7 @@ emu_printf("fully_cached\n");
 		Uint32 end_offset;
 
 partial_cache:
-//emu_printf("partial_cache\n"); tout est en partial cache .....
+//emu_printf("partial_cache\n"); //tout est en partial cache .....
 		end_offset = cache_offset + CACHE_SIZE;
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
@@ -440,14 +444,15 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-emu_printf("skip_bytes\n");		
+emu_printf("skip_bytes\n");
 		read_buffer = (Uint8*)current_lwram;
 
-//emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);		
+emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);		
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 //		sat_free(read_buffer);
 	} else {
+emu_printf("no skip\n");
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 
