@@ -15,13 +15,13 @@ extern "C" {
 extern Uint8 *current_lwram;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
-
+//Uint8* cache = NULL; // vbt : after frontlayer
 }
 
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 8)
+#define CACHE_SIZE (SECTOR_SIZE * 40)
 
 static char satpath[25];
 //static char current_path[15][16];
@@ -29,7 +29,7 @@ static char satpath[25];
 
 static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
-//static Uint8* cache = (((Uint8*)PCM_ADDR) + PCM_SIZE);
+//static Uint8* cache = (uint8_t *)22440000; // vbt : after frontlayer
 
 static Uint8  fully_cached = 0; // If file is cached from start to finish
 static Uint32 cache_offset = 0;
@@ -113,7 +113,7 @@ void init_GFS() { //Initialize GFS system
 	}
 	current_path[idx][0] = '/';
 */	dir_depth = 0;
-
+//	cache=(Uint8 *)22400000;
 	memset4_fast(cache, 0, CACHE_SIZE);
 }
 
@@ -227,7 +227,7 @@ GFS_FILE *sat_fopen(const char *path) {
 
 		if((current_cached != fp->file_hash) && (fp->f_size < CACHE_SIZE)) {
 			current_cached = fp->file_hash;
-//					emu_printf("GFS_Seek1\n");			
+//					emu_printf("GFS_Seek1 %d\n",fsize);
 			Sint32 tot_sectors;
 			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 			tot_sectors = GFS_ByteToSct(fp->fid, fp->f_size);
@@ -235,15 +235,15 @@ GFS_FILE *sat_fopen(const char *path) {
 
 			fully_cached = 1;
 			cache_offset = 0;
-//					emu_printf("GFS_Fread1\n");
+//					emu_printf("GFS_Fread1 in cache\n");
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
-//					emu_printf("GFS_Seek2\n");			
+//					emu_printf("GFS_Seek2 read partly file\n");
 			Sint32 tot_sectors;
 			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 			tot_sectors = GFS_ByteToSct(fp->fid, CACHE_SIZE);
-			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);			
+			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
 
 			fully_cached = 0;
 			cache_offset = 0;
@@ -411,7 +411,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	Uint32 dataToRead = MIN(request_block, remaining_data);
 
 	if((stream->file_hash == current_cached) && fully_cached) {
-emu_printf("fully_cached\n");		
+//emu_printf("fully_cached\n");
 		memcpy(ptr, cache + stream->f_seek_pos, dataToRead);	
 		stream->f_seek_pos += dataToRead;
 		
@@ -429,7 +429,7 @@ partial_cache:
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;
 		} else if ((((stream->f_seek_pos + dataToRead) >= end_offset) || (stream->f_seek_pos < cache_offset))) {
-			//fprintf_saturn(stdout, "cache 0x%.8X - 0x%.8X req 0x%.8X", cache_offset, end_offset, stream->f_seek_pos);
+//			emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
 			start_sector = (stream->f_seek_pos)/SECTOR_SIZE;
 			skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE;
 			tot_bytes = CACHE_SIZE;
@@ -444,15 +444,17 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-emu_printf("skip_bytes\n");
+//emu_printf("skip_bytes %p size %d\n",current_lwram,tot_bytes);
 		read_buffer = (Uint8*)current_lwram;
-
-emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);		
+//		read_buffer = (Uint8*)22440000;
+//		read_buffer = (Uint8*)&cache[CACHE_SIZE];
+//		read_buffer = (Uint8*)sat_malloc(tot_bytes);
+//emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 //		sat_free(read_buffer);
 	} else {
-emu_printf("no skip\n");
+//emu_printf("no skip\n");
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 

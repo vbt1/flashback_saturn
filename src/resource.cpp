@@ -37,7 +37,7 @@ void *calloc (size_t, size_t);
 #include "game.h"
 
 extern Uint8 vceEnabled;
-extern Uint8 *current_dram;
+//extern Uint8 *current_dram;
 uint8_t * save_current_lwram;
 
 Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
@@ -52,13 +52,13 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 //#ifdef WITH_MEM_MALLOC
 #if 1
-//	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
-	_scratchBuffer = (uint8_t *)current_dram;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+//	_scratchBuffer = (uint8_t *)current_dram;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 #else
 //emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
-	_scratchBuffer = (uint8_t *)current_lwram;
-	current_lwram += kScratchBufferSize;
+//	_scratchBuffer = (uint8_t *)current_lwram;
+//	current_lwram += kScratchBufferSize;
 #endif
 	
 //	if (!_scratchBuffer) {
@@ -1479,7 +1479,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-//		emu_printf("decodeResourceMacData 1       \n");	
+//		emu_printf("decodeResourceMacData 1       %s\n",name);	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
 		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
@@ -1492,11 +1492,12 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
-	emu_printf("Resource::decodeResourceMacData '%d %p'\n",entry->dataOffset, entry);	
+//	emu_printf("Resource::decodeResourceMacData 'seek %d entry %p file %p'\n",_mac->_dataOffset + entry->dataOffset, entry,_mac->_f);	
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
+//	emu_printf("Resource::readUint32BE\n");
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+//emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
 	if(hwram==NULL)
 	{

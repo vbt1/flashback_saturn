@@ -45,8 +45,9 @@ int	main( void )
 	for( dst = (Uint8 *)SystemWork, i = 0;i < SystemSize; i++) {
 		*dst = 0;
 	}
+
 	init_GFS(); // Initialize GFS system
-//	CartRAM_init(0);
+
 	int id = CartRAM_init(0);
     if(id!=0x5c)
     {

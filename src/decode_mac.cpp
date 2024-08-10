@@ -14,7 +14,7 @@ extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 extern unsigned int end1;
-Uint8 *current_dram=(Uint8 *)0x22440000;
+//Uint8 *current_dram=(Uint8 *)0x22440000;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
 }
 
