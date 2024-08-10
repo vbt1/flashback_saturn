@@ -43,8 +43,8 @@ struct stdFile : File_impl {
 	}
 	void close() {
 		if (_fp) {
-			sat_fclose(_fp);
-			_fp = 0;
+//			sat_fclose(_fp);
+//			_fp = 0;
 		}
 	}
 	uint32_t size() {
@@ -55,9 +55,13 @@ struct stdFile : File_impl {
 		return sz;
 	}
 	void seek(int32_t off) {
+emu_printf("seek %d %p\n", off,_fp);	
 		if (_fp) {
+emu_printf("fp opened\n");
 			sat_fseek(_fp, off, SEEK_SET);
 		}
+else
+emu_printf("fp closed\n");	
 	}
 	void read(void *ptr, uint32_t len) {
 		if (_fp) {
@@ -149,15 +153,25 @@ uint32_t File::readUint32LE() {
 }
 
 uint16_t File::readUint16BE() {
-	uint8_t hi = readByte();
+/*	uint8_t hi = readByte();
 	uint8_t lo = readByte();
 	return (hi << 8) | lo;
+*/
+	uint16_t value;
+	read(&value, 2);
+//	emu_printf("readUint16BE %04X\n",value);		
+	return value;
 }
 
 uint32_t File::readUint32BE() {
-	uint16_t hi = readUint16BE();
+/*	uint16_t hi = readUint16BE();
 	uint16_t lo = readUint16BE();
-	return (hi << 16) | lo;
+emu_printf("readUint32BE %04X\n",(hi << 16) | lo);	
+	return (hi << 16) | lo;*/
+	uint32_t value;
+	read(&value, 4);
+//emu_printf("readUint32BE %04X\n",value);		
+	return value;
 }
 
 void File::write(void *ptr, uint32_t len) {
