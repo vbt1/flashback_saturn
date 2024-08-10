@@ -43,8 +43,8 @@ struct stdFile : File_impl {
 	}
 	void close() {
 		if (_fp) {
-//			sat_fclose(_fp);
-//			_fp = 0;
+			sat_fclose(_fp);
+			_fp = 0;
 		}
 	}
 	uint32_t size() {
@@ -55,13 +55,9 @@ struct stdFile : File_impl {
 		return sz;
 	}
 	void seek(int32_t off) {
-emu_printf("seek %d %p\n", off,_fp);	
 		if (_fp) {
-emu_printf("fp opened\n");
 			sat_fseek(_fp, off, SEEK_SET);
 		}
-else
-emu_printf("fp closed\n");	
 	}
 	void read(void *ptr, uint32_t len) {
 		if (_fp) {

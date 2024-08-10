@@ -420,6 +420,9 @@ struct Game {
 	bool loadGameState(uint8 slot);
 	void saveState(SAVE_BUFFER *sbuf);
 	void loadState(SAVE_BUFFER *sbuf);
+
+	void SAT_preloadMonsters();
+	void SAT_preloadSpc();
 };
 
 #endif // __GAME_H__

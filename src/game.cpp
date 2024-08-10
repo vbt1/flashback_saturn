@@ -313,11 +313,9 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 //			clearStateRewind();
-		//slPrint("loadLevelData1",slLocate(3,13));
-		emu_printf("loadLevelData\n");		
 			loadLevelData();
-		//slPrint("resetGameState",slLocate(3,13));
-emu_printf("resetGameState\n");		
+
+		
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -505,6 +503,7 @@ heapWalk();
 					} else {
 //					clearStateRewind();
 					loadLevelData();
+// vbt : si on continue voir comment éviter de recharger les ennemis
 					resetGameState();
 				}
 			}
@@ -1821,7 +1820,6 @@ void Game::loadLevelMap() {
 }
 
 void Game::loadLevelData() {
-emu_printf("loadLevelData\n");	
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
 	switch (_res._type) {
@@ -1848,210 +1846,44 @@ emu_printf("loadLevelData\n");
 #endif
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
-	hwram_ptr = hwram+45000;
-//	hwram_screen = NULL;
-//	position_vram = position_vram_aft_monster; // vbt on repart des monsters
-	position_vram = position_vram_aft_monster = 0; // vbt correction
-	current_dram2=(Uint8 *)0x22600000;
-//	memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
+		hwram_ptr = hwram+45000;
+//		hwram_screen = NULL;
+//		position_vram = position_vram_aft_monster; // vbt on repart des monsters
+		position_vram = position_vram_aft_monster = 0; // vbt correction
+		current_dram2=(Uint8 *)0x22600000;
+//		memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //heapWalk();		
 
-//	sat_free(_res._monster);
-//emu_printf("_res._spc %p\n",_res._spc);	
-	sat_free(_res._spc); // on ne vire pas
-	sat_free(_res._ani);
-	_res.MAC_unloadLevelData();
-//	sat_free(_res._icn);// icones du menu à ne pas vider
+//		sat_free(_res._monster);
+//		emu_printf("_res._spc %p\n",_res._spc);	
+		sat_free(_res._spc); // on ne vire pas
+		sat_free(_res._ani);
+		_res.MAC_unloadLevelData();
+//		sat_free(_res._icn);// icones du menu à ne pas vider
 
-	sat_free(_res._spr1);
-	sat_free(_res._cmd);
-	sat_free(_res._pol);
-	sat_free(_res._cine_off);
-//	sat_free(_res._cine_txt);
+		sat_free(_res._spr1);
+		sat_free(_res._cmd);
+		sat_free(_res._pol);
+		sat_free(_res._cine_off);
+//		sat_free(_res._cine_txt);
 /*
-	for (int i = 0; i < _res._numSfx; ++i) {
-		sat_free(_res._sfxList[i].data);
-	}
-	sat_free(_res._sfxList);
+		for (int i = 0; i < _res._numSfx; ++i) {
+			sat_free(_res._sfxList[i].data);
+		}
+		sat_free(_res._sfxList);
 */
-	_vid.drawString("Loading Please wait", 20, 40, 0xE7);
-	
+		_vid.drawString("Loading Please wait", 20, 40, 0xE7);
+		slScrAutoDisp(NBG1ON);	
 		_res.MAC_loadLevelData(_currentLevel);
-
-/*********************************/
-
-#ifdef PRELOAD_MONSTERS
-		_curMonsterNum = 0xFFFF;
-
-		const uint8_t *mList = _monsterListLevels[_currentLevel];
-		
-		while (*mList!=0xFF)
-		{
-			_curMonsterFrame = mList[0];
-			
-			if (_curMonsterNum != mList[1]) 
-			{
-				_curMonsterNum = mList[1];
-
-				static const struct {
-					const char *id;
-					const char *name;
-					int index;
-				} data[] = {
-					{ "junky", "Junky",0x22F},			//			0x22F, 0x28D, // junky - 94
-					{ "mercenai", "Mercenary",0x2EA},	//			0x2EA, 0x385, // mercenai - 156
-					{ "replican", "Replicant",0x387},	//			0x387, 0x42F, // replican - 169
-					{ "glue", "Alien",0x430},			//			0x430, 0x4E8, // glue - 185
-					{ 0, 0,0}
-				};
-
-				sat_free(_res._monster);
-				_res._monster = 0;
-				for (int i = 0; data[i].id; ++i) 
-				{
-					if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) 
-					{
-						_res._monster = _res.decodeResourceMacData(data[i].name, true);
-						const int count = READ_BE_UINT16(_res._monster+2);
-
-						for (unsigned int j = 0; j < count;j++)
-						{
-							const uint8_t *dataPtr = _res.MAC_getImageData(_res._monster, j);
-
-							if (dataPtr) {
-								DecodeBuffer buf{};
-								buf.w = READ_BE_UINT16(dataPtr + 2);
-								buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
-								buf.ptr = hwram_screen;
-								buf.setPixel = _vid.MAC_setPixel4Bpp;
-								memset(buf.ptr,0,buf.w*buf.h);
-
-								_res.MAC_decodeImageData(_res._monster, j, &buf, 0xff);
-
-								SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[data[i].index + j];
-
-								sprData->size   = (buf.h/8)<<8|buf.w;
-								sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
-								sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
-								sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
-
-								buf.x  = 80 - sprData->x;
-								buf.y  = 80 - sprData->y;
-
-								buf.w =  sprData->size & 0xFF;
-								buf.h = (sprData->size>>8)*8;
-
-								size_t dataSize = (buf.w * buf.h) / 2;
-								if ((position_vram + dataSize) <= VRAM_MAX) 
-								{
-									TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-									sprData->cgaddr = (int)tx.CGadr;
-									memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
-									position_vram += dataSize;
-									position_vram_aft_monster = position_vram;
-								}
-								else
-								{
-									memcpy(current_dram2, (void *)buf.ptr, dataSize);
-									sprData->cgaddr = (int)current_dram2;
-									current_dram2 += SAT_ALIGN(dataSize);
-								}
-/*
-								_vid.SAT_displaySprite(*sprData, buf,_res._monster);
-
-								if(position_vram>VRAM_MAX+0x10000)
-									position_vram = position_vram_aft_monster; // vbt on repart des monsters
-								
-								sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w,buf.h);
-*/
-							}
-//							_vid.drawString(toto, 4, 60, 0xE7);
-//							_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-//							memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);	
-
-//							slSynch();
-						}
-						break; // Break out of the loop once the monster is found and processed.
-					}
-				}
-			}
-			mList += 2;
-		}
-		const int count = READ_BE_UINT16(_res._spc+2);
-
-		for (unsigned int j = 0; j < count;j++)
-		{
-			const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
-
-			if (dataPtr) {
-				DecodeBuffer buf{};
-				buf.w = READ_BE_UINT16(dataPtr + 2);
-				buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
-				buf.ptr = hwram_ptr;
-				buf.setPixel = _vid.MAC_setPixel;//4Bpp;
-				memset(buf.ptr,0,buf.w*buf.h);
-
-				_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
-
-				SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
-
-				sprData->size   = (buf.h/8)<<8|buf.w;
-				sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
-				sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
-				sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
-
-				buf.x  = 80 - sprData->x;
-				buf.y  = 80 - sprData->y;
-
-				buf.w =  sprData->size & 0xFF;
-				buf.h = (sprData->size>>8)*8;
-
-				size_t dataSize = (buf.w * buf.h);
-				if ((position_vram + dataSize) <= VRAM_MAX)
-				{
-					TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-					sprData->cgaddr = (int)tx.CGadr;
-					memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
-					position_vram += dataSize;
-					position_vram_aft_monster = position_vram;
-				}
-				else
-				{
-					memcpy(current_dram2, (void *)buf.ptr, dataSize);
-					sprData->cgaddr = (int)current_dram2;
-					current_dram2 += SAT_ALIGN(dataSize);
-				}
-	/*
-				_vid.SAT_displaySprite(*sprData, buf,_res._monster);
-
-				if(position_vram>VRAM_MAX+0x10000)
-					position_vram = position_vram_aft_monster; // vbt on repart des monsters										
-				
-											
-				char toto[60];
-				sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
-				_vid.drawString(toto, 4, 60, 0xE7);
-
-				_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-				memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-	*/
-			}
-	//		slSynch();
-
-		}
-
-///////////////////////////////////////////////////
-#endif
-
-
-/*********************************/		
+		SAT_preloadMonsters();
+		SAT_preloadSpc();
+		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 		break;
 	}
 	_cut._id = lvl->cutscene_id;
 
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
-emu_printf("clearBankData\n");
 	_res.clearBankData();
 	_printLevelCodeCounter = 150;
 
@@ -2081,7 +1913,6 @@ slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 emu_printf("pge_loadForCurrentLevel %d\n",n);	
 */
 	while (n--) {
-//emu_printf("pge_loadForCurrentLevel %d\n",n);		
 		pge_loadForCurrentLevel(n);
 	}
 /*
@@ -2182,7 +2013,6 @@ void Game::changeLevel() {
 	_vid.fadeOut();
 //	clearStateRewind();
 	loadLevelData();
-emu_printf("vbt levelmap 1\n");	
 	loadLevelMap();
 	_vid.setPalette0xF();
 	_vid.setTextPalette();
@@ -2681,3 +2511,166 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 	++_states[stateNum];
 }
 
+void Game::SAT_preloadMonsters()
+{
+	_curMonsterNum = 0xFFFF;
+
+	const uint8_t *mList = _monsterListLevels[_currentLevel];
+
+	while (*mList!=0xFF)
+	{
+		_curMonsterFrame = mList[0];
+
+		if (_curMonsterNum != mList[1]) 
+		{
+			_curMonsterNum = mList[1];
+
+			static const struct {
+				const char *id;
+				const char *name;
+				int index;
+			} data[] = {
+				{ "junky", "Junky",0x22F},			//			0x22F, 0x28D, // junky - 94
+				{ "mercenai", "Mercenary",0x2EA},	//			0x2EA, 0x385, // mercenai - 156
+				{ "replican", "Replicant",0x387},	//			0x387, 0x42F, // replican - 169
+				{ "glue", "Alien",0x430},			//			0x430, 0x4E8, // glue - 185
+				{ 0, 0,0}
+			};
+
+			sat_free(_res._monster);
+			_res._monster = 0;
+			for (int i = 0; data[i].id; ++i) 
+			{
+				if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) 
+				{
+					_res._monster = _res.decodeResourceMacData(data[i].name, true);
+					const int count = READ_BE_UINT16(_res._monster+2);
+
+					for (unsigned int j = 0; j < count;j++)
+					{
+						const uint8_t *dataPtr = _res.MAC_getImageData(_res._monster, j);
+
+						if (dataPtr) {
+							DecodeBuffer buf{};
+							buf.w = READ_BE_UINT16(dataPtr + 2);
+							buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
+							buf.ptr = hwram_screen;
+							buf.setPixel = _vid.MAC_setPixel4Bpp;
+							memset(buf.ptr,0,buf.w*buf.h);
+
+							_res.MAC_decodeImageData(_res._monster, j, &buf, 0xff);
+
+							SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[data[i].index + j];
+
+							sprData->size   = (buf.h/8)<<8|buf.w;
+							sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
+							sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+							sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+
+							buf.x  = 80 - sprData->x;
+							buf.y  = 80 - sprData->y;
+
+							buf.w =  sprData->size & 0xFF;
+							buf.h = (sprData->size>>8)*8;
+
+							size_t dataSize = (buf.w * buf.h) / 2;
+							if ((position_vram + dataSize) <= VRAM_MAX) 
+							{
+								TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+								sprData->cgaddr = (int)tx.CGadr;
+								memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
+								position_vram += dataSize;
+								position_vram_aft_monster = position_vram;
+							}
+							else
+							{
+								memcpy(current_dram2, (void *)buf.ptr, dataSize);
+								sprData->cgaddr = (int)current_dram2;
+								current_dram2 += SAT_ALIGN(dataSize);
+							}
+/*
+							_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+
+							if(position_vram>VRAM_MAX+0x10000)
+								position_vram = position_vram_aft_monster; // vbt on repart des monsters
+
+							sprintf(toto,"%s %03d/%03d 0x%06x %d %d",data[i].id,j,count, current_lwram, buf.w,buf.h);
+*/
+						}
+//							_vid.drawString(toto, 4, 60, 0xE7);
+//							_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+//							memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+
+//							slSynch();
+					}
+					break; // Break out of the loop once the monster is found and processed.
+				}
+			}
+		}
+		mList += 2;
+	}
+}
+
+void Game::SAT_preloadSpc()
+{
+	const int count = READ_BE_UINT16(_res._spc+2);
+
+	for (unsigned int j = 0; j < count;j++)
+	{
+		const uint8_t *dataPtr = _res.MAC_getImageData(_res._spc, j);
+
+		if (dataPtr) {
+			DecodeBuffer buf{};
+			buf.w = READ_BE_UINT16(dataPtr + 2);
+			buf.h = (READ_BE_UINT16(dataPtr)+7) & ~7;
+			buf.ptr = hwram_ptr;
+			buf.setPixel = _vid.MAC_setPixel;//4Bpp;
+			memset(buf.ptr,0,buf.w*buf.h);
+
+			_res.MAC_decodeImageData(_res._spc, j, &buf, 0xff);
+
+			SAT_sprite *sprData = (SAT_sprite *)&_res._sprData[_res.NUM_SPRITES + j];
+
+			sprData->size   = (buf.h/8)<<8|buf.w;
+			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h-READ_BE_UINT16(dataPtr)));
+			sprData->x	  	= (int16_t)READ_BE_UINT16(dataPtr + 4);
+			sprData->y	  	= (int16_t)READ_BE_UINT16(dataPtr + 6);
+
+			buf.x  = 80 - sprData->x;
+			buf.y  = 80 - sprData->y;
+
+			buf.w =  sprData->size & 0xFF;
+			buf.h = (sprData->size>>8)*8;
+
+			size_t dataSize = (buf.w * buf.h);
+			if ((position_vram + dataSize) <= VRAM_MAX)
+			{
+				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+				sprData->cgaddr = (int)tx.CGadr;
+				memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
+				position_vram += dataSize;
+				position_vram_aft_monster = position_vram;
+			}
+			else
+			{
+				memcpy(current_dram2, (void *)buf.ptr, dataSize);
+				sprData->cgaddr = (int)current_dram2;
+				current_dram2 += SAT_ALIGN(dataSize);
+			}
+/*
+			_vid.SAT_displaySprite(*sprData, buf,_res._monster);
+
+			if(position_vram>VRAM_MAX+0x10000)
+				position_vram = position_vram_aft_monster; // vbt on repart des monsters
+
+			char toto[60];
+			sprintf(toto,"%03d %p %p %p %d %d",j, hwram_ptr, current_lwram, current_dram2, buf.w,buf.h);
+			_vid.drawString(toto, 4, 60, 0xE7);
+
+			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+*/
+		}
+//		slSynch();
+	}
+}
