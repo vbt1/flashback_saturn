@@ -1872,8 +1872,12 @@ void Game::loadLevelData() {
 		}
 		sat_free(_res._sfxList);
 */
+		_vid.setTextPalette();
 		_vid.drawString("Loading Please wait", 20, 40, 0xE7);
-		slScrAutoDisp(NBG1ON);	
+		slScrAutoDisp(NBG1ON);
+		slSynch();
+		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
+
 		_res.MAC_loadLevelData(_currentLevel);
 		SAT_preloadMonsters();
 		SAT_preloadSpc();
