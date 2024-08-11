@@ -764,7 +764,7 @@ emu_printf("_aba->loadEntry\n");
 	}
 	f.close();
 }
-*/
+
 void Resource::load_CT(File *pf) {
 //	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
@@ -880,7 +880,7 @@ void Resource::load_MAP(File *f) {
 	}
 #endif
 }
-/*
+
 void Resource::load_OBJ(File *f) {
 	debug(DBG_RES, "Resource::load_OBJ()");
 
@@ -1479,7 +1479,10 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-//		emu_printf("decodeResourceMacData 1       %s\n",name);	
+
+if(strstr(name,"Icons")   != NULL)
+		emu_printf("decodeResourceMacData 1       %s ",name);	
+	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
 		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
@@ -1488,6 +1491,8 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 		_resourceMacDataSize = 0;
 //		emu_printf("Resource '%s' not found\n", name);
 	}
+if(strstr(name,"Icons")   != NULL)
+		emu_printf("%p\n",data);
 	return data;
 }
 
@@ -1934,6 +1939,7 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
+//if (ptr !=_perso && ptr!=_spc && ptr != _monster)
 //emu_printf("MAC_getImageData basePtr %p offset %02x %p %p\n",ptr,0,ptr + i * 4,current_lwram);
 	
 	const uint8_t *basePtr = ptr;
@@ -1941,7 +1947,7 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 	ptr += 2;
 	if(sig != 0xC211)
 	{
-//emu_printf("MAC_getImageData bad sig\n");		
+emu_printf("MAC_getImageData bad sig %x %p\n",sig,ptr);		
 		return NULL;
 	}
 	const int count = READ_BE_UINT16(ptr);
@@ -1949,6 +1955,7 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 	
 	if (!(i < count))
 	{
+emu_printf("!(i < count)\n");		
 		return NULL;
 	}
 	ptr += 4;

@@ -689,7 +689,7 @@ static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
 
 void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
-//emu_printf("MAC_drawFG\n");
+//emu_printf("MAC_drawFG %p %d %p\n",data,frame,dataPtr);
 	if (dataPtr) {
 		DecodeBuffer buf{};
 		buf.w  = buf.pitch = _w;

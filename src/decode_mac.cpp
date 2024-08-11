@@ -63,7 +63,7 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 			{
 				if (((int)hwram_ptr)+SAT_ALIGN(decodedSize)<end1)
 				{
-	//				emu_printf("hwram2 %d %s\n", decodedSize, name);
+//					emu_printf("hwram2 %d %s\n", decodedSize, name);
 					dst = (uint8_t *)hwram_ptr;
 					hwram_ptr += SAT_ALIGN(decodedSize);
 				}
@@ -71,7 +71,7 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 				{
 					dst = (uint8_t *)current_lwram;
 					current_lwram += SAT_ALIGN(decodedSize);
-					emu_printf("lwram_new %d %p %s\n", decodedSize, current_lwram, name);
+//					emu_printf("lwram_new %d %p %s\n", decodedSize, current_lwram, name);
 				}
 			}
 		}
