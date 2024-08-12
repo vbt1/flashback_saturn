@@ -1191,7 +1191,7 @@ void Cutscene::mainLoop(uint16_t num) {
 }
 
 bool Cutscene::load(uint16_t cutName) {
-////emu_printf(" Cutscene::load %x \n", cutName);	
+emu_printf(" Cutscene::load %x \n", cutName);	
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;

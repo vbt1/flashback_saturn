@@ -489,7 +489,7 @@ heapWalk();
 			if (!handleContinueAbort()) {
 //				memset(_vid._frontLayer,0x00,512*400);
 //				_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-				_stub->_pi.enter = false
+				_stub->_pi.enter = false;
 				playCutscene(0x41);
 				_endLoop = true;
 			} else {
@@ -1145,7 +1145,8 @@ void Game::drawLevelTexts() {
 			const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
 //			char toto [256];
 //			memcpy(&toto[1],str,*str);
-//	emu_printf("drawLevelTexts %s\n",toto);			
+//	emu_printf("drawLevelTexts %s\n",toto);
+			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			drawString(str, 176, 26, 0xE6, true);
 		
 			if (icon_num == 2) {
@@ -1158,9 +1159,9 @@ void Game::drawLevelTexts() {
 	}
 	else
 	{
-		memset4_fast(&_vid._frontLayer[52*_vid._w], 0x00,32*_vid._w);
+		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
 	}
-	_stub->copyRect(0, 52, _vid._w, 32, _vid._frontLayer, _vid._w);
+	_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
 	_saveStateCompleted = false;
 }
 
@@ -1180,10 +1181,11 @@ void Game::drawStoryTexts() {
 		const uint8_t *str = _res.getGameString(_textToDisplay);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
+		int yPos = 0;
 		while (!_stub->_pi.quit) {
 			memset(_vid._frontLayer, 0x00, 512*224);			
 //			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
-			int yPos = 26;
+			yPos = 26;
 			if (_res._type == kResourceTypeMac) {
 				if (textSegmentsCount == 0) {
 					textSegmentsCount = *str++;
@@ -1257,7 +1259,7 @@ void Game::drawStoryTexts() {
 */
 //			_vid.updateScreen();
 			textSpeechSegment++;
-			_stub->copyRect(0, 0, _vid._w, 224, _vid._frontLayer, _vid._w);
+			_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);
 			
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
@@ -1284,9 +1286,11 @@ void Game::drawStoryTexts() {
 				++str;
 			}
 		}
-		memset(_vid._frontLayer, 0x00, 512*224);
-		_stub->copyRect(0, 0, _vid._w, 224, _vid._frontLayer, _vid._w);
+		memset(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*2);    // vbt : inutile pour la fin d'un message de plus d'une ligne
+		_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
+		_stub->_pi.backspace = false;
+		_stub->_pi.quit = false;
 	}
 }
 

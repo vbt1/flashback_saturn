@@ -91,7 +91,7 @@ Resource::~Resource() {
 	sat_free(_fnt);
 	sat_free(_icn);
 //	sat_free(_tab);
-	sat_free(_spc);
+//	sat_free(_spc);
 	sat_free(_spr1);
 	sat_free(_scratchBuffer);
 	sat_free(_cmd);
