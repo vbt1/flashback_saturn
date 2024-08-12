@@ -1228,7 +1228,6 @@ void Cutscene::unload() {
 		break;
 	case kResourceTypeMac:
 		if (_id != 0x3D)
-			_id = 0xFFFF; // vbt : ajout
 		_res->MAC_unloadCutscene();
 		break;
 	}
@@ -1265,6 +1264,7 @@ void Cutscene::unload() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
+		_id = 0xFFFF; // vbt : ajout
 	}
 	slTVOn();
 }
