@@ -1811,80 +1811,72 @@ void Resource::MAC_copyClut16(Color *clut, uint8_t dest, uint8_t src) {
 }	
 
 void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
-	const int num = _macLevelNumbers[level][0] - '1';
-	int offset = _macLevelColorOffsets[num];
-	if (level == 1) {
-		switch (room) {
-		case 27:
-		case 28:
-		case 29:
-		case 30:
-		case 35:
-		case 36:
-		case 37:
-		case 45:
-		case 46:
-			offset = 32;
-			break;
-		}
-	}
+    const int num = _macLevelNumbers[level][0] - '1';
+    int offset = _macLevelColorOffsets[num];
 
-	for (int i = 0; i < 4; ++i) {
-		MAC_copyClut16(clut, i, offset + i);
-//if(i==0)
-		MAC_copyClut16(clut, 8 + i, offset + i);  // palette front layer
-	}
+    // Special case for certain rooms in level 1
+    if (level == 1) {
+        if ((room >= 27 && room <= 30) || (room >= 35 && room <= 37) || room == 45 || room == 46) {
+            offset = 32;
+        }
+    }
 
-	Color tmp[256];
-	memcpy(tmp,clut,256*sizeof(Color));
+    // Unroll loops to reduce loop overhead
+    MAC_copyClut16(clut, 0, offset + 0);
+    MAC_copyClut16(clut, 1, offset + 1);
+    MAC_copyClut16(clut, 2, offset + 2);
+    MAC_copyClut16(clut, 3, offset + 3);
 
-	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,126,127,
-										158,159,174,175,190,191,206,207,222,223,238,239,254,255};
-// on recase les palettes de fg sur 4à7 (ex palettes de sprites
-	MAC_copyClut16(clut, 4+0, offset + 0);
-	MAC_copyClut16(clut, 4+1, offset + 1);
-	MAC_copyClut16(clut, 4+2, offset + 2);
-	MAC_copyClut16(clut, 4+3, offset + 3);
+    MAC_copyClut16(clut, 8, offset + 0);
+    MAC_copyClut16(clut, 9, offset + 1);
+    MAC_copyClut16(clut, 10, offset + 2);
+    MAC_copyClut16(clut, 11, offset + 3);
 
-	MAC_copyClut16(clut, 16+0, offset + 0);
-	MAC_copyClut16(clut, 16+1, offset + 1);
-	MAC_copyClut16(clut, 16+2, offset + 2);
-	MAC_copyClut16(clut, 16+3, offset + 3);
+    // Copy CLUT into a local buffer (memory-mapped I/O typically requires careful handling)
+    Color tmp[256];
+    for (int i = 0; i < 256; i++) {
+        tmp[i] = clut[i];
+    }
 
-	MAC_copyClut16(clut, 16+8, offset + 0);
-	MAC_copyClut16(clut, 16+9, offset + 1);
-	MAC_copyClut16(clut, 16+10, offset + 2);
-	MAC_copyClut16(clut, 16+11, offset + 3);
+    // Unroll loop for foreground palette rearrangement
+    MAC_copyClut16(clut, 4, offset + 0);
+    MAC_copyClut16(clut, 5, offset + 1);
+    MAC_copyClut16(clut, 6, offset + 2);
+    MAC_copyClut16(clut, 7, offset + 3);
 
-//	MAC_copyClut16(clut, 4, 0x30);  // palette perso principal inutile ? surtout ne pas mettre
-	MAC_copyClut16(clut, 16+4, 0x30);  // palette perso principal
-// 5 is monster palette
+    MAC_copyClut16(clut, 16, offset + 0);
+    MAC_copyClut16(clut, 17, offset + 1);
+    MAC_copyClut16(clut, 18, offset + 2);
+    MAC_copyClut16(clut, 19, offset + 3);
+/*  // vbt : à remettre ?
+    MAC_copyClut16(clut, 24, offset + 0);
+    MAC_copyClut16(clut, 25, offset + 1);
+    MAC_copyClut16(clut, 26, offset + 2);
+    MAC_copyClut16(clut, 27, offset + 3);
+*/
+    // Copy and clear specific CLUTs
+    MAC_copyClut16(clut,  0x14, 0x30);  // palette for the main character
+    MAC_clearClut16(clut, 0x16);       // clear unused palette
 
-//	MAC_clearClut16(clut, 6); // ne pas mettre à vérifier
-	MAC_clearClut16(clut, 16+6);
+    MAC_copyClut16(clut, 0x1A, _macLevelColorOffsets[0] + 2);
+    MAC_copyClut16(clut, 0x0C, 0x37);  // icons
+    MAC_copyClut16(clut, 0x0D, 0x38);
 
-//	MAC_copyClut16(clut, 0xA, _macLevelColorOffsets[0] + 2);  // inventory pour fg
-	MAC_copyClut16(clut, 16+0xA, _macLevelColorOffsets[0] + 2);  // icons
+    MAC_copyClut16(clut, 0x1C, 0x37);  // icons
+    MAC_copyClut16(clut, 0x1D, 0x38);
 
-	MAC_copyClut16(clut, 0xC, 0x37);
-	MAC_copyClut16(clut, 0xD, 0x38);
+    // Unroll LUT-based color swap loop
+    static const unsigned char lut[32] = {
+        14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
+        126, 127, 158, 159, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239, 254, 255
+    };
 
-	MAC_copyClut16(clut, 16+0xC, 0x37);
-	MAC_copyClut16(clut, 16+0xD, 0x38);
+    for (int i = 0; i < 32; ++i) {
+        int lut_index = lut[i];
+        clut[lut_index] = tmp[128 + i];
+        clut[128 + i] = tmp[lut_index];
+    }
 
-	int j=0;
-
-	for(int i=128;i<160;i++)
-	{
-		clut[lut[j]].r = tmp[i].r;  //14->128
-		clut[lut[j]].g = tmp[i].g;  //15->129
-		clut[lut[j]].b = tmp[i].b;	//30->130
-		
-		clut[i].r = tmp[lut[j]].r; //128->14
-		clut[i].g = tmp[lut[j]].g; //129->15
-		clut[i].b = tmp[lut[j]].b; //130->30
-		j++;
-	}
 /*	
 	// background
 	setPaletteSlotBE(0x0, _mapPalSlot1);

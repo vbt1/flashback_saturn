@@ -4,7 +4,7 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 //#define SLAVE_SOUND 1
-#define SUBTITLE_SPRITE 1
+//#define SUBTITLE_SPRITE 1
 extern "C"
 {
 #include <sl_def.h>	
@@ -1235,7 +1235,6 @@ void Cutscene::unload() {
 	
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
-#ifdef SUBTITLE_SPRITE
 		SPRITE user_sprite;
 		user_sprite.CTRL= FUNC_End;
 		user_sprite.PMOD=0;
@@ -1252,10 +1251,20 @@ void Cutscene::unload() {
 
 		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 		slSynch();
-#else
+#ifndef SUBTITLE_SPRITE
 		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
 		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 #endif
+		Color clut[512];
+
+		_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
+		_res->MAC_copyClut16(clut, 0x1D, 0x38);
+
+		const int baseColor = 12 * 16 + 256;
+		for (int i = 0; i < 32; ++i) {
+			int color = baseColor + i;
+			_stub->setPaletteEntry(color, &clut[color]);
+		}
 	}
 	slTVOn();
 }
