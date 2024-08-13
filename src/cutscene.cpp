@@ -226,7 +226,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 #else
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
 //emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
-	memset(&_vid->_frontLayer[y*_vid->_w],0x00,512*(440-y));
+//	memset(&_vid->_frontLayer[y*_vid->_w],0x00,512*(440-y)); // vbt : à voir
 	int len = 0;
 	if (p != _textBuf && _res->isMac()) {
 		len = *p++;
@@ -256,10 +256,14 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	if (textJustify != kTextJustifyLeft) {
 		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 	}
+	
+//memset(&_vid->_frontLayer[yPos*2*_vid->_w],0x03,512*16); // vbt : à voir	
+	
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
 			yPos += Video::CHAR_H;
 			xPos = x;
+//memset(&_vid->_frontLayer[yPos*2*_vid->_w],0x03,512*16); // vbt : à voir			
 			if (textJustify != kTextJustifyLeft) {
 				xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 			}
@@ -268,6 +272,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
+//	emu_printf("char %c\n",p[i]);			
 			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i], 0);
 			xPos += Video::CHAR_W;
 		}
@@ -275,9 +280,11 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 }
 #endif
 void Cutscene::clearBackPage() {
-//emu_printf("clearBackPage\n");		
+//	emu_printf("clearBackPage1 %d\n",_clearScreen);	
 	if (_clearScreen == 0) {
 		memcpy(_backPage, _auxPage, IMG_SIZE);
+		
+		memset4_fast(&_vid->_frontLayer[100*_vid->_w],0x00,512*272);
 //		memset(_backPage, 0x00, IMG_SIZE);
 	} else {
 		memset4_fast(_backPage, 0xC0, IMG_SIZE);
@@ -506,7 +513,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-emu_printf("Cutscene::op_drawCaptionText()\n");		
+//emu_printf("Cutscene::op_drawCaptionText()\n");		
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
@@ -995,7 +1002,7 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 }
 */
 void Cutscene::op_copyScreen() {
-	//emu_printf("Cutscene::op_copyScreen()\n");
+//	emu_printf("Cutscene::op_copyScreen()\n");
 	_creditsSlowText = true;
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
@@ -1031,7 +1038,7 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-////emu_printf("Cutscene::op_drawTextAtPos()\n");
+//	emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
@@ -1139,7 +1146,7 @@ void Cutscene::mainLoop(uint16_t num) {
 	}
 	if (_id != 0x4A && !_creditsSequence) {
 //		_ply->play(_musicTableDOS[_id],0);
-//emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
+emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 		_mix.playMusic(_musicTableDOS[_id]);
 	}
 	if(_id == 0x4A)
@@ -1150,6 +1157,8 @@ void Cutscene::mainLoop(uint16_t num) {
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
 	int offset = 0;
+if(_id != 41 /*&& _id != 40*/)
+{
 	if (_res->isMac()) {
 		// const int count = READ_BE_UINT16(p);
 		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
@@ -1159,6 +1168,15 @@ void Cutscene::mainLoop(uint16_t num) {
 		}
 		_baseOffset = (READ_BE_UINT16(p) + 1) * 2;
 	}
+}
+else
+{
+	if (num != 0 && _id == 41 ) {
+		offset = READ_BE_UINT16(p + 2 + num * 2);
+	}
+	const int count = READ_BE_UINT16(p);
+	_baseOffset = (count + 1) * 2;
+}
 	_varKey = 0;
 	_cmdPtr = _cmdPtrBak = p + _baseOffset + offset;
 	_polPtr = getPolygonData();
@@ -1173,9 +1191,10 @@ void Cutscene::mainLoop(uint16_t num) {
 		}
 		op >>= 2;
 		if (op >= NUM_OPCODES) {
+//			emu_printf("Invalid cutscene opcode = 0x%02X\n", op);
 			continue;
 		}
-//			//emu_printf("VBT cutmainLoop k op %d\n",op);
+//emu_printf("VBT cutmainLoop k op %d\n",op);
 		(this->*_opcodeTable[op])();
 		_stub->processEvents();
 		if (_stub->_pi.backspace) {
@@ -1408,7 +1427,7 @@ void Cutscene::play() {
 				}
 			}
 		} else*/
-		if (cutName != 0xFFFF && _id != 8) {
+		if (cutName != 0xFFFF && _id != 8 && _id != 23) {
 			if (load(cutName)) {
 				mainLoop(cutOff);
 				unload();
