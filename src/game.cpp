@@ -489,13 +489,13 @@ heapWalk();
 			if (!handleContinueAbort()) {
 //				memset(_vid._frontLayer,0x00,512*400);
 //				_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-				_stub->_pi.enter = false;
+//				_stub->_pi.enter = false;
 				playCutscene(0x41);
 				_endLoop = true;
 			} else {
 //					memset(_vid._frontLayer,0x00,512*400);
 //					_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-					_stub->_pi.enter = false;
+//					_stub->_pi.enter = false;
 					if (_validSaveState) {
 						if (!loadGameState(0)) {
 							return;
@@ -591,8 +591,8 @@ emu_printf("vbt playmusic chg lvl\n");
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
 		handleInventory();
-		_stub->_pi.backspace = false;
-		_stub->_pi.quit = false;
+//		_stub->_pi.backspace = false;
+//		_stub->_pi.quit = false;
 	}
 	if (_stub->_pi.escape) {
 		_stub->_pi.escape = false;
@@ -611,8 +611,8 @@ emu_printf("vbt playmusic chg lvl\n");
 			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 	
 		_cut._stop = false;
-		_stub->_pi.backspace = false;
-		_stub->_pi.quit = false;
+//		_stub->_pi.backspace = false;
+//		_stub->_pi.quit = false;
 	}
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
@@ -929,7 +929,7 @@ bool Game::handleConfigPanel() {
 		}
 		break;
 	}
-	_stub->_pi.quit = false;
+//	_stub->_pi.quit = false;
 
 	_menu._charVar3 = 0xE4;
 	_menu._charVar4 = 0xE5;
@@ -2161,9 +2161,9 @@ void Game::handleInventory() {
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}
-			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
+/*			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
 				_stub->_pi.escape = false;
-			}
+			}*/
 //			slSynch();
 		}
 		memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?

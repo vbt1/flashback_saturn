@@ -347,7 +347,12 @@ static void drawPolygonHelper2(int32 &x, int16 &y, int32 &step, int16 *&pts, int
 
 void Graphics::drawPolygon(uint8 color, bool hasAlpha, const Point *pts, uint8 numPts) {
 //	emu_printf("Graphics::drawPolygon(%d,%d,x%d,y%d,%d)\n",color,hasAlpha,pts->x,pts->y,numPts);
-	assert(numPts * 4 < 0x100);
+//	assert(numPts * 4 < 0x100);
+	if(numPts * 4 >= 0x100)
+	{
+		emu_printf("Graphics::drawPolygon(%d,%d,x%d,y%d,%d)\n",color,hasAlpha,pts->x,pts->y,numPts);
+		return;
+	}
 
 	int16 *apts1 = &_areaPoints[AREA_POINTS_SIZE];
 	int16 *apts2 = &_areaPoints[AREA_POINTS_SIZE + numPts * 2];

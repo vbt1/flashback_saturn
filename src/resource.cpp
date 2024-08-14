@@ -363,32 +363,32 @@ void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 	}
 	error("Cannot load '%s'", _entryName);
 }
-*/
+
 static const char *getCineName(Language lang, ResourceType type) {
 	switch (lang) {
 	case LANG_FR:
 		return "FR_";
-/*	case LANG_DE:
+	case LANG_DE:
 		return "GER";
 	case LANG_SP:
 		return "SPA";
 	case LANG_IT:
-		return "ITA";*/
+		return "ITA";
 	case LANG_EN:
 	default:
 		return "ENG";
 	}
 }
-
+*/
 void Resource::load_CINE() {
-	const char *prefix = getCineName(_lang, _type);
-	emu_printf("Resource::load_CINE('%s')\n", prefix);
+//	const char *prefix = getCineName(_lang, _type);
+//	emu_printf("Resource::load_CINE('%s')\n", prefix);
 
 //	File f;
 			
 	switch (_type) {
-	case kResourceTypeDOS:
-/*
+/*	case kResourceTypeDOS:
+
 		if (_cine_off == 0) {
 			snprintf(_entryName, sizeof(_entryName), "%sCINE.BIN", prefix);
 			if (!f.open(_entryName, _dataPath, "rb")) {
@@ -1461,18 +1461,22 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 }
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
-//		emu_printf("decodeResourceMacText        \n");
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
+		
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
+		emu_printf("decodeResourceMacText1 %s found\n", buf);
 		return decodeResourceMacData(entry, false);
 	} else { // CD version
+		emu_printf("decodeResourceMacText1 %s not found\n", buf);
 		if (strcmp(name, "Flashback") == 0) {
 			name = "Game";
 		}
 		const char *language = (_lang == LANG_FR) ? "French" : "English";
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
+		
+		emu_printf("decodeResourceMacText2 %s\n", buf);
 		return decodeResourceMacData(buf, false);
 	}
 }
@@ -1526,7 +1530,9 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 		if(strncmp("Movie", entry->name, 5) == 0)
 		{
-			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
+//			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
+			data = (uint8_t *)current_lwram;
+			current_lwram += SAT_ALIGN(_resourceMacDataSize);
 		}
 		else if(strcmp("Flashback colors", entry->name) == 0 
 		|| strncmp("Title", entry->name, 5) == 0  
