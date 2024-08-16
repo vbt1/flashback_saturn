@@ -97,6 +97,7 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 	}
 //	emu_printf("inf %d sup %d\n",a,b);
 //	emu_printf("dst %p\n",dst);
+
 	return dst;
 }
 
@@ -137,29 +138,29 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                     carry = bits & 1;
                     bits >>= 1;
                 }
+
                 if (!carry) {
-					uint8_t color = (*src++) & mask;
-					
-					if (mask != 0xff) {
-						if (color >= 128) {
-							color = lut[color & 0x1f];
-						} else {
-							switch (color) {
-								case 14:
-									color = 128;
-									break;
-								case 15:
-									color = 129;
-									break;
-								case 30:
-									color = 130;
-									break;
-								case 31:
-									color = 131;
-									break;
-							}
+                    uint8_t color;
+					if(*src>=128)
+					color = (*src++) & mask;
+					else
+					color = (*src++);
+
+					if(mask!=0xff)
+					{
+						if(color >= 128 && color < 160)
+						{
+							color = lut[color&0x1f];
+						}
+						else
+						{
+							if(color==14)	color=128;
+							if(color==15)	color=129;
+							if(color==30)	color=130;
+							if(color==31)	color=131;
 						}
 					}
+
                     window[cursor++] = color;
                     *tmp_ptr++ = color;
 

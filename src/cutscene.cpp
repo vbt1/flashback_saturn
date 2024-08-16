@@ -1121,7 +1121,7 @@ void Cutscene::op_handleKeys() {
 		n = READ_BE_UINT16(_cmdPtr + n * 2 + 2);
 	}
 // vbt : remis de l'ancienne version
-	if((_id != 41 /*&& _id != 40 && _id != 69*/))
+	if((_id != 41 && _id != 42 /*&& _id != 40 && _id != 69*/))
 	if (_res->isMac()) {
 		_cmdPtr = getCommandData();
 		_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
@@ -1164,7 +1164,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
 	int offset = 0;
-if(_id != 41 /*&& _id != 40 &&_id != 69*/)
+if(_id != 41 && _id != 42 /*&& _id != 40 &&_id != 69*/)
 {
 	if (_res->isMac()) {
 		// const int count = READ_BE_UINT16(p);
