@@ -41,10 +41,10 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 //	_layerSize = _w * _h;
-emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
+emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
 	Uint32 *DRAM0 = (Uint32 *)0x22400000;
-	_frontLayer = (uint8 *)DRAM0; //sat_malloc(_w * _h);
-//	_frontLayer = (uint8 *)current_lwram; //sat_malloc(_w * _h);
+	_frontLayer = (uint8 *)DRAM0;
+//	_frontLayer = (uint8 *)current_lwram;
 //	current_lwram+=_w * _h;
 
 	memset(&_frontLayer[0], 0, _w * _h);
@@ -55,15 +55,6 @@ emu_printf("_frontLayer = (uint8 *)sat_malloc(%d) \n",_w * _h);
 	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE - 480*70);//+ TEXT1_RAM_VDP2);
 	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE - 480*140);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
-	
-	//_tempLayer = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-//	memset(_tempLayer, 0, GAMESCREEN_W * GAMESCREEN_H);
-//	_tempLayer2 = (uint8 *)sat_malloc(GAMESCREEN_W * GAMESCREEN_H);
-//	memset(_tempLayer2, 0, GAMESCREEN_W * GAMESCREEN_H);
-	//_screenBlocks = (uint8 *)sat_malloc((GAMESCREEN_W / SCREENBLOCK_W) * (GAMESCREEN_H / SCREENBLOCK_H));
-//	_screenBlocks = (uint8 *)std_malloc((_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H)); //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
-//		emu_printf("_screenBlocks %d %p\n", (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H), _screenBlocks);
-//	memset(_screenBlocks, 0, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 	
 	_fullRefresh = true;
 //	_shakeOffset = 0;
@@ -249,79 +240,7 @@ void Video::setPalette0xF() {
 		_stub->setPaletteEntry(0xF0 + i, &c);
 	}
 }
-/*
-void Video::copyLevelMap(uint16 room) {
-	//	debug(DBG_VIDEO, "Video::copyLevelMap(%d)", room);
-	assert(room < 0x40);
-#ifdef _RAMCART_
-	int32 off = READ_LE_UINT32(_res->_map + room * 6);
-#else
-	File f;
-	f.open(_res->_mapFilename, "./", "wb");
-	f.seek(room * 6);
 
-	int32 off = f.readUint32LE();
-#endif
-	if (off == 0) {
-		error("Invalid room %d", room);
-	}
-	bool packed = true;
-	if (off < 0) {
-		off = -off;
-		packed = false;
-	}
-#ifdef _RAMCART_
-	const uint8 *p = _res->_map + off;
-	_mapPalSlot1 = *p++;
-	_mapPalSlot2 = *p++;
-	_mapPalSlot3 = *p++;
-	_mapPalSlot4 = *p++;
-#else
-	f.seek(off);
-	_mapPalSlot1 = f.readByte();
-	_mapPalSlot2 = f.readByte();
-	_mapPalSlot3 = f.readByte();
-	_mapPalSlot4 = f.readByte();
-#endif
-	if (packed) {
-		uint8 *vid = _frontLayer;
-		for (int i = 0; i < 4; ++i) {
-#ifdef _RAMCART_
-			uint16 sz = READ_LE_UINT16(p); p += 2;
-			decodeLevelMap(sz, p, _res->_memBuf); p += sz;
-#else
-			uint16 sz = f.readUint16LE();
-			uint8 *tmpbuf = (uint8*)sat_malloc(sz);
-			f.read(tmpbuf, sz);
-			decodeLevelMap(sz, tmpbuf, _res->_scratchBuffer);
-			sat_free(tmpbuf);
-#endif
-			memcpy(vid, _res->_scratchBuffer, 256 * 56);
-			vid += 256 * 56;
-		}
-	} else {
-		for (int i = 0; i < 4; ++i) {
-			for (int y = 0; y < 224; ++y) {
-				for (int x = 0; x < 64; ++x) {
-#ifdef _RAMCART_
-					_frontLayer[i + x * 4 + 256 * y] = p[256 * 56 * i + x + 64 * y];
-#else
-					f.seek(256 * 56 * i + x + 64 * y);
-					uint8 dat = f.readByte();
-					_frontLayer[i + x * 4 + 256 * y] = dat;
-#endif
-
-				}
-			}
-		}
-	}
-//	memcpy(_backLayer, _frontLayer, Video::GAMESCREEN_W * Video::GAMESCREEN_H);
-
-#ifdef _RAMCART_
-	f.close();
-#endif
-}
-*/
 void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
 	//	debug(DBG_VIDEO, "Video::decodeLevelMap() sz = 0x%X", sz);
 	const uint8 *end = src + sz;

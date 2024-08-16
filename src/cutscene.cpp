@@ -903,7 +903,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 }
 
 void Cutscene::op_drawShapeScaleRotate() {
-//	debug(DBG_CUT, "Cutscene::op_drawShapeScaleRotate()");
+//	emu_printf("Cutscene::op_drawShapeScaleRotate()\n");
 
 	_shape_count = 0;
 
@@ -1120,6 +1120,13 @@ void Cutscene::op_handleKeys() {
 		_cmdPtr = getCommandData();
 		n = READ_BE_UINT16(_cmdPtr + n * 2 + 2);
 	}
+// vbt : remis de l'ancienne version
+	if((_id != 41 /*&& _id != 40 && _id != 69*/))
+	if (_res->isMac()) {
+		_cmdPtr = getCommandData();
+		_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
+		n = 0;
+	}
 
 	_cmdPtr = _cmdPtrBak = getCommandData() + n + _baseOffset;
 }
@@ -1157,7 +1164,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
 	int offset = 0;
-if(_id != 41 /*&& _id != 40*/)
+if(_id != 41 /*&& _id != 40 &&_id != 69*/)
 {
 	if (_res->isMac()) {
 		// const int count = READ_BE_UINT16(p);
@@ -1171,7 +1178,7 @@ if(_id != 41 /*&& _id != 40*/)
 }
 else
 {
-	if (num != 0 && _id == 41 ) {
+	if (num != 0 /*&& (_id == 41 || _id == 69)*/ ) {
 		offset = READ_BE_UINT16(p + 2 + num * 2);
 	}
 	const int count = READ_BE_UINT16(p);
@@ -1246,7 +1253,7 @@ void Cutscene::unload() {
 		_res->unload(Resource::OT_POL);
 		break;
 	case kResourceTypeMac:
-		if (_id != 0x3D)
+		if (_id != 0x3D)// && _id != 40 && _id != 69)
 		_res->MAC_unloadCutscene();
 		break;
 	}
@@ -1283,7 +1290,7 @@ void Cutscene::unload() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
-		_id = 0xFFFF; // vbt : ajout
+//		_id = 0xFFFF; // vbt : ajout
 	}
 	slTVOn();
 }
@@ -1372,7 +1379,7 @@ void Cutscene::play() {
 		uint16_t cutOff  = offsets[_id * 2 + 1];
 		if (cutName == 0xFFFF) {
 			switch (_id) {
-			case 3: // keys
+/*			case 3: // keys
 				//if (g_options.play_carte_cutscene) 
 				{
 					cutName = 2; // CARTE
@@ -1399,15 +1406,16 @@ void Cutscene::play() {
 				//if (g_options.play_metro_cutscene) 
 				{
 					cutName = 14; // METRO
-				}
+				}*/
 				break;
 			case 46: // Level 2 terminal card mission
 				break;
 			default:
-				warning("Unknown cutscene %d", _id);
+				emu_printf("Unknown cutscene %d\n", _id);
 				break;
 			}
 		}
+		
 		if (_patchedOffsetsTable) {
 			for (int i = 0; _patchedOffsetsTable[i] != 255; i += 3) {
 				if (_patchedOffsetsTable[i] == _id) {
@@ -1427,7 +1435,7 @@ void Cutscene::play() {
 				}
 			}
 		} else*/
-		if (cutName != 0xFFFF && _id != 8 && _id != 23) {
+		if (cutName != 0xFFFF /*&& _id != 8 && _id != 23*/) {
 			if (load(cutName)) {
 				mainLoop(cutOff);
 				unload();
@@ -1440,7 +1448,7 @@ void Cutscene::play() {
 //		_vid->fullRefresh();
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 
-		if (_id != 0x3D) {
+		if (_id != 0x3D  /*&& _id != 40  && _id != 69*/) {
 			_id = 0xFFFF;
 		}
 	}

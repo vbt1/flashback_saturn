@@ -30,7 +30,7 @@ ResourceAba::~ResourceAba() {
 static int compareAbaEntry(const void *a, const void *b) {
 	return strcasecmp(((const ResourceAbaEntry *)a)->name, ((const ResourceAbaEntry *)b)->name);
 }
-
+/*
 void ResourceAba::readEntries(const char *aba) {
 	assert(_filesCount < 3);
 	if (_f[_filesCount].open(aba, _dataPath, "rb")) {
@@ -66,7 +66,7 @@ void ResourceAba::readEntries(const char *aba) {
 		++_filesCount;
 	}
 }
-
+*/
 const ResourceAbaEntry *ResourceAba::findEntry(const char *name) const {
 	ResourceAbaEntry tmp;
 	strcpy(tmp.name, name);
@@ -82,10 +82,10 @@ uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 		}
 		
 		uint8_t *tmp = (uint8_t *)sat_malloc(e->compressedSize);
-emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);			
+emu_printf("ResourceAba::loadEntry sat_malloc: %d %p fid %d\n",e->compressedSize,tmp,e->fileIndex);			
 
 		if (!tmp) {
-//			emu_printf("Failed to allocate %d bytes\n", e->compressedSize);
+			emu_printf("Failed to allocate %d bytes\n", e->compressedSize);
 			return 0;
 		}
 		_f[e->fileIndex].seek(e->offset);
@@ -95,13 +95,13 @@ emu_printf("ResourceAba::loadEntry sat_malloc:  %p %d\n",e->compressedSize,tmp);
 		} else {
 			dst = (uint8_t *)sat_malloc(e->size);
 			if (!dst) {
-//				emu_printf("Failed to allocate %d bytes\n", e->size);
+				emu_printf("Failed to allocate %d bytes\n", e->size);
 				sat_free(tmp);
 				return 0;
 			}
 			const bool ret = bytekiller_unpack(dst, e->size, tmp, e->compressedSize);
 			if (!ret) {
-//				emu_printf("Bad CRC for '%s'\n", name);
+				emu_printf("Bad CRC for '%s'\n", name);
 			}
 emu_printf("ResourceAba::loadEntry: sat_free  %p\n",tmp);			
 			sat_free(tmp);

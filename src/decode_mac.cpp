@@ -97,12 +97,6 @@ emu_printf("lzss %s %05d\n", name, decodedSize);
 	}
 //	emu_printf("inf %d sup %d\n",a,b);
 //	emu_printf("dst %p\n",dst);
-	/*
-	if(count != decodedSize)  // vbt ne pas toucher
-	{
-//		emu_printf("count != decodedSize  %d %d\n", count, decodedSize);
-		return dst;		
-	}*/
 	return dst;
 }
 
