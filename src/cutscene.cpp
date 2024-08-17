@@ -1120,12 +1120,13 @@ void Cutscene::op_handleKeys() {
 		_cmdPtr = getCommandData();
 		n = READ_BE_UINT16(_cmdPtr + n * 2 + 2);
 	}
-// vbt : remis de l'ancienne version
-	if((_id != 41 && _id != 42 /*&& _id != 40 && _id != 69*/))
-	if (_res->isMac()) {
-		_cmdPtr = getCommandData();
-		_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
-		n = 0;
+// vbt : remis de l'ancienne version, mettre 45 uniquement ici   // quoi faire pour la 69
+	if (!(_id >= 37 && _id <= 42) && _id != 45 && _id != 69) {
+		if (_res->isMac()) {
+			_cmdPtr = getCommandData();
+			_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
+			n = 0;
+		}
 	}
 
 	_cmdPtr = _cmdPtrBak = getCommandData() + n + _baseOffset;
@@ -1164,26 +1165,17 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
 	int offset = 0;
-if(_id != 41 && _id != 42 /*&& _id != 40 &&_id != 69*/)
-{
-	if (_res->isMac()) {
-		// const int count = READ_BE_UINT16(p);
-		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
-	} else {
+// vbt : obligatoire - ne pas mettre 45	
+// à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
+	if (_id >= 37 && _id <= 42 || _id == 69) {
 		if (num != 0) {
 			offset = READ_BE_UINT16(p + 2 + num * 2);
 		}
 		_baseOffset = (READ_BE_UINT16(p) + 1) * 2;
+	} else {
+		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
 	}
-}
-else
-{
-	if (num != 0 /*&& (_id == 41 || _id == 69)*/ ) {
-		offset = READ_BE_UINT16(p + 2 + num * 2);
-	}
-	const int count = READ_BE_UINT16(p);
-	_baseOffset = (count + 1) * 2;
-}
+	
 	_varKey = 0;
 	_cmdPtr = _cmdPtrBak = p + _baseOffset + offset;
 	_polPtr = getPolygonData();
