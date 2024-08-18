@@ -1913,13 +1913,11 @@ slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 	for (int i = _currentRoom;i <  _currentRoom+n;i++)
 	{
 		_vid.MAC_decodeMap(_currentLevel, i);
-			char toto[60];
-			sprintf(toto,"room %02d",i);
-			_vid.drawString(toto, 4, 60, 0xE7);
+		char str[60];
+		sprintf(str,"room %02d",i);
+		_vid.drawString(str, 4, 60, 0xE7);
 
-			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);		
-		slSynch();
+		_vid.SAT_displayPalette();
 	}
 	slScrAutoDisp(NBG1ON|SPRON);
 emu_printf("pge_loadForCurrentLevel %d\n",n);	

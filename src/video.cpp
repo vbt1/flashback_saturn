@@ -762,3 +762,28 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
 #endif
+
+void Video::SAT_displayPalette()
+{
+	unsigned char* vram_base = (unsigned char*)VDP2_VRAM_A0 + 0x4800;
+	unsigned int k = 0;
+
+	for (int j = 0; j < 4; j++) {
+		unsigned char* vram = vram_base + j * 8 * 512;  // Start position for this iteration
+
+		for (int i = 0; i < 64; i++) {
+			unsigned char value = i + k;
+
+			for (int n = 0; n < 8; n++) {
+				memset(vram, value, 8);  // Set 8 bytes at once
+				vram += 512;  // Move to the next line
+			}
+
+			vram -= (8 * 512 - 8);  // Adjust position for the next block of 8 lines
+		}
+
+		k += 64;
+	}
+	_stub->copyRect(0, 20, _w, 16, _frontLayer, _w);
+	memset4_fast(&_frontLayer[40 * _w], 0x00, _w * _h);
+}

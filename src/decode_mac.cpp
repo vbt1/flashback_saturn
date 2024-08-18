@@ -112,8 +112,9 @@ inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
     static const short kBits = 12;
     static const short kMask = (1 << kBits) - 1;
-	static const unsigned char lut[32]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,126,127,
-										158,159,174,175,190,191,206,207,222,223,238,239,254,255};
+
+	static const unsigned char lut[30]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
+										126,127,254,255,174,175,190,191,206,207,222,223,238,239};
     unsigned short cursor = 0;
     short bits = 1;
     uint8_t count = 0;
@@ -140,15 +141,11 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                 }
 
                 if (!carry) {
-                    uint8_t color;
-					if(*src>=128)
-					color = (*src++) & mask;
-					else
-					color = (*src++);
+                    uint8_t color = *src++;
 
 					if(mask!=0xff)
 					{
-						if(color >= 128 && color < 160)
+						if(color >= 128 && color < 158)
 						{
 							color = lut[color&0x1f];
 						}
@@ -158,6 +155,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 							if(color==15)	color=129;
 							if(color==30)	color=130;
 							if(color==31)	color=131;
+							if(color==160)	color=14;   // sans masque le masque
+							if(color==161)	color=15;
+							if(color==190)	color=150;   // si on enleve le masque
+							if(color==191)	color=151;
 						}
 					}
 
