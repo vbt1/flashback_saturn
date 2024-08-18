@@ -345,6 +345,12 @@ void Game::displayTitleScreenMac(int num) {
 	const int w = 512;
 	int h = 384;
 	int clutBaseColor = 0;
+
+// vbt : on force la couleur 255
+	Color c;
+	c.r = c.g = c.b = 0;
+	_stub->setPaletteEntry(255, &c);
+
 	switch (num) {
 	case Menu::kMacTitleScreen_MacPlay:
 		break;
@@ -623,7 +629,7 @@ emu_printf("vbt playmusic chg lvl\n");
 		}
 	}*/
 //emu_printf("Game::mainLoop slSynch\n");
-	_vid.SAT_displayPalette();
+//	_vid.SAT_displayPalette();
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 
