@@ -1862,7 +1862,7 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 */
     // Copy and clear specific CLUTs
     MAC_copyClut16(clut,  0x14, 0x30);  // palette for the main character
-    MAC_clearClut16(clut, 0x16);       // clear unused palette
+//    MAC_clearClut16(clut, 0x16);       // clear unused palette
 
     MAC_copyClut16(clut, 0x1A, _macLevelColorOffsets[0] + 2);
     MAC_copyClut16(clut, 0x0C, 0x37);  // icons
@@ -1872,68 +1872,14 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     MAC_copyClut16(clut, 0x1D, 0x38);
 
     // Unroll LUT-based color swap loop
-    static const unsigned char lut[32] = {
-        14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
-        126, 127, 158, 159, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239, 254, 255
-    };
+	static const unsigned char lut[30]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
+										126,127,254,255,174,175,190,191,206,207,222,223,238,239};
 
-    for (int i = 0; i < 32; ++i) {
+    for (int i = 0; i < 30; ++i) {
         int lut_index = lut[i];
         clut[lut_index] = tmp[128 + i];
         clut[128 + i] = tmp[lut_index];
     }
-
-/*	
-	// background
-	setPaletteSlotBE(0x0, _mapPalSlot1);
-	// objects
-	setPaletteSlotBE(0x1, _mapPalSlot2);
-	setPaletteSlotBE(0x2, _mapPalSlot3);
-	setPaletteSlotBE(0x3, _mapPalSlot4);
-	// conrad
-	if (_unkPalSlot1 == _mapPalSlot3) {
-		setPaletteSlotLE(4, _conradPal1);
-	} else {
-		setPaletteSlotLE(4, _conradPal2);
-	}
-	// slot 5 is monster palette
-	// foreground
-	setPaletteSlotBE(0x8, _mapPalSlot1);
-	setPaletteSlotBE(0x9, _mapPalSlot2);
-	// inventory
-	setPaletteSlotBE(0xA, _unkPalSlot2);
-	setPaletteSlotBE(0xB, _mapPalSlot4);
-*/
-/*
-	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
-	if (_unkPalSlot2 == 0) {
-		_unkPalSlot2 = _mapPalSlot3;
-	}
-	if (_unkPalSlot1 == 0) {
-		_unkPalSlot1 = _mapPalSlot3;
-	}
-	// background
-	setPaletteSlotBE(0x0, _mapPalSlot1);
-	// objects
-	setPaletteSlotBE(0x1, _mapPalSlot2);
-	setPaletteSlotBE(0x2, _mapPalSlot3);
-	setPaletteSlotBE(0x3, _mapPalSlot4);
-	// conrad
-	if (_unkPalSlot1 == _mapPalSlot3) {
-		setPaletteSlotLE(4, _conradPal1);
-	} else {
-		setPaletteSlotLE(4, _conradPal2);
-	}
-	// slot 5 is monster palette
-	// foreground
-	setPaletteSlotBE(0x8, _mapPalSlot1);
-	setPaletteSlotBE(0x9, _mapPalSlot2);
-	// inventory
-	setPaletteSlotBE(0xA, _unkPalSlot2);
-	setPaletteSlotBE(0xB, _mapPalSlot4);
-	// slots 0xC and 0xD are cutscene palettes
-	setTextPalette();
-*/
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {

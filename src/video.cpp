@@ -513,9 +513,11 @@ void Video::MAC_decodeMap(int level, int room) {
 	for (int j = 0; j < 16; ++j) {
 // vbt : vérifier les impacts, gène les couleurs du niveau 1	
 // couleur des textes	
+#if 0
 		if (/*j == 5 || j == 7 ||*/ j == 14 || j == 15) {
 			continue;
 		}
+#endif
 		for (int i = 0; i < 16; ++i) {
 			const int color = j * 16 + i;
 			_stub->setPaletteEntry(color, &roomPalette[color]);

@@ -623,41 +623,8 @@ emu_printf("vbt playmusic chg lvl\n");
 		}
 	}*/
 //emu_printf("Game::mainLoop slSynch\n");
-//		emu_printf("slsynch 24\n");
-
-/*
-unsigned char *vram=(unsigned char *)VDP2_VRAM_A0+0x1000;
-	int k=0;
-	for(int j=0;j<4;j++)
-	{
-		for(int i=0;i<64;i++)
-		{
-
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram[0]=i+k;		vram[1]=i+k;		vram[2]=i+k;		vram[3]=i+k;		vram[4]=i+k;		vram[5]=i+k;		vram[6]=i+k;		vram[7]=i+k;
-		vram+=512;
-		vram-=((8*512)-8);
-		}
-		vram=(unsigned char *)VDP2_VRAM_A0+0x1000+((j+1)*512*8);
-		k+=64;
-	}
-*/
-//	slSynch();
-//	while(1);
-		slSynch();  // vbt : permet l'affichage de sprites, le principal
+	_vid.SAT_displayPalette();
+	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 
 void Game::updateTiming() {
