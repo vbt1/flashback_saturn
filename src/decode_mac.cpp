@@ -151,14 +151,17 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 						}
 						else
 						{
-							if(color==14)	color=128;
-							if(color==15)	color=129;
-							if(color==30)	color=130;
-							if(color==31)	color=131;
-							if(color==160)	color=14;   // sans masque le masque
-							if(color==161)	color=15;
-							if(color==190)	color=150;   // si on enleve le masque
-							if(color==191)	color=151;
+						   switch (color) 
+						   {
+								case 14:  color = 128; break;
+								case 15:  color = 129; break;
+								case 30:  color = 130; break;
+								case 31:  color = 131; break;
+								case 160: color = 14;  break;  // sans masque le masque
+								case 161: color = 15;  break;
+								case 190: color = 150; break;  // si on enleve le masque
+								case 191: color = 151; break;
+							}
 						}
 					}
 

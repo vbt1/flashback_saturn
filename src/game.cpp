@@ -971,6 +971,7 @@ bool Game::handleConfigPanel() {
 			break;
 		}
 	}
+	slSynch();
 	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
 	_vid.fullRefresh();	
 	
