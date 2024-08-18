@@ -510,22 +510,21 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
+
 	for (int j = 0; j < 16; ++j) {
-// vbt : vérifier les impacts, gène les couleurs du niveau 1	
-// couleur des textes	
-#if 0
-		if (/*j == 5 || j == 7 ||*/ j == 14 || j == 15) {
-			continue;
-		}
-#endif
-		for (int i = 0; i < 16; ++i) {
+		bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
+		int start = specialTextColor ? 14 : 0;
+		int end = specialTextColor ? 16 : 16;
+
+		for (int i = start; i < end; ++i) {
 			const int color = j * 16 + i;
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
-//vbt ajout	
+
+//vbt ajout pour sprites	
 	for (int j = 0; j < 16; ++j) {
-		if (j == 5 || j == 7 || j == 14 || j == 15) {
+		if (j == 5 || j == 7 || j == 14 || j == 15) { // utile uniquement si on affiche les textes en sprite
 			continue;
 		}
 		for (int i = 0; i < 16; ++i) {

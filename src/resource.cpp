@@ -1845,10 +1845,10 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     }
 
     // Unroll loop for foreground palette rearrangement
-    MAC_copyClut16(clut, 4, offset + 0);
-    MAC_copyClut16(clut, 5, offset + 1);
-    MAC_copyClut16(clut, 6, offset + 2);
-    MAC_copyClut16(clut, 7, offset + 3);
+//    MAC_copyClut16(clut, 4, offset + 0); palette du perso
+//    MAC_copyClut16(clut, 5, offset + 1);
+//    MAC_copyClut16(clut, 6, offset + 2);
+//    MAC_copyClut16(clut, 7, offset + 3);
 
     MAC_copyClut16(clut, 16, offset + 0);
     MAC_copyClut16(clut, 17, offset + 1);
