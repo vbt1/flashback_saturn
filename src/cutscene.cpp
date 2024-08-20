@@ -256,14 +256,14 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	if (textJustify != kTextJustifyLeft) {
 		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 	}
-	
-//memset(&_vid->_frontLayer[yPos*2*_vid->_w],0x03,512*16); // vbt : à voir	
-	
+
+	memset4_fast(&_vid->_frontLayer[yPos*2*_vid->_w],0x00,512*48); // vbt : à voir
+
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (isNewLineChar(p[i], _res)) {
 			yPos += Video::CHAR_H;
 			xPos = x;
-//memset(&_vid->_frontLayer[yPos*2*_vid->_w],0x03,512*16); // vbt : à voir			
+			memset4_fast(&_vid->_frontLayer[yPos*2*_vid->_w],0x00,512*48); // vbt : à voir
 			if (textJustify != kTextJustifyLeft) {
 				xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 			}
@@ -284,15 +284,16 @@ void Cutscene::clearBackPage() {
 	if (_clearScreen == 0) {
 		memcpy(_backPage, _auxPage, IMG_SIZE);
 		
-		memset4_fast(&_vid->_frontLayer[100*_vid->_w],0x00,512*272);
+
 //		memset(_backPage, 0x00, IMG_SIZE);
 	} else {
+		memset4_fast(&_vid->_frontLayer[100*_vid->_w],0x00,512*304);
 		memset4_fast(_backPage, 0xC0, IMG_SIZE);
 	}
 }
 
 void Cutscene::drawCreditsText() {
-emu_printf("drawCreditsText\n");	
+emu_printf("drawCreditsText\n");
 	if (_creditsKeepText) {
 		if (_creditsSlowText) {
 			return;
@@ -1121,7 +1122,7 @@ void Cutscene::op_handleKeys() {
 		n = READ_BE_UINT16(_cmdPtr + n * 2 + 2);
 	}
 // vbt : remis de l'ancienne version, mettre 45 uniquement ici   // quoi faire pour la 69
-	if (!(_id >= 37 && _id <= 42) && _id != 45 && _id != 69) {
+	if (!(_id >= 37 && _id <= 42) && _id != 45 && _id != 69 && _id != 59) {
 		if (_res->isMac()) {
 			_cmdPtr = getCommandData();
 			_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
@@ -1167,7 +1168,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	int offset = 0;
 // vbt : obligatoire - ne pas mettre 45	
 // à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
-	if (_id >= 37 && _id <= 42 || _id == 69) {
+	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59) {
 		if (num != 0) {
 			offset = READ_BE_UINT16(p + 2 + num * 2);
 		}

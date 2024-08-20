@@ -200,7 +200,7 @@ _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
 		hwram_screen=hwram_ptr;
-		hwram_ptr+=46000;
+		hwram_ptr+=48000;
 
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
@@ -655,7 +655,7 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
-	if (_cut._id != 0xFFFF && _cut._id != 8) {
+	if (_cut._id != 0xFFFF && _cut._id != 8 && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 && _cut._id != 30 && _cut._id != 31) {
 //		_sfxPly.stop(); // vbt à voir
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
@@ -757,12 +757,7 @@ void Game::playCutscene(int id) {
 		if(_mix._musicTrack==2)
 			_mix.stopMusic();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-/*		slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
-		slScrWindow0(63 , 0 , 574 , 479 );
-		slScrWindowModeNbg0(win0_IN);*/
-//emu_printf("Game::playCutscene slSynch %d %d\n", _mix._musicTrack);
-//		slSynch();  // vbt : permet l'affichage de sprites
-	}	
+	}
 }
 
 void Game::inp_handleSpecialKeys() {
@@ -1828,7 +1823,7 @@ void Game::loadLevelData() {
 #endif
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
-		hwram_ptr = hwram+46000;
+		hwram_ptr = hwram+48000;
 //		hwram_screen = NULL;
 //		position_vram = position_vram_aft_monster; // vbt on repart des monsters
 		position_vram = position_vram_aft_monster = 0; // vbt correction

@@ -98,6 +98,7 @@ extern void emu_printf(const char *format, ...);
 
 void emu_printf(const char *format, ...)
 {
+#if 0	
    static char emu_printf_buffer[128];
    char *s = emu_printf_buffer;
    volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);
@@ -109,6 +110,7 @@ void emu_printf(const char *format, ...)
 
    while (*s)
       *addr = (uint8_t)*s++;
+#endif  
 }
 
 #define CARTRAM_ID_NONE     0
