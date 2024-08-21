@@ -286,37 +286,17 @@ void SystemStub_SDL::setOverscanColor(uint8 i) {
 }
 
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
-	buf += y * pitch + x; // Get to data...
+	// Calculate initial source and destination pointers
+	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
+	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + y * pitch + x);
 
-//	emu_printf("copyRect(%d,%d,%d,%d,%p,%d)\n",x,y,w,h,buf,pitch);
-	
-/*
-	if(buf==(uint8_t *)VDP2_VRAM_B0)
-	{
-		ptr = (uint8*)(VDP2_VRAM_A0 + (y * 512) + x);
-		for (idx = 0; idx < h; idx++) {
-			memcpy((uint8*)ptr, (uint8*)buf, w);
-			buf+=pitch;
-			ptr+=512;
-	
-//		DMA_ScuMemCopy((uint8*)(VDP2_VRAM_A0 + ((idx + y) * 512) + x), (uint8*)(buf + (idx * pitch)), w);
-//		SCU_DMAWait();
-		}
-	}
-	else*/
-	uint8 *ptr = (uint8*)(VDP2_VRAM_A0 + (y * pitch) + x);
-	if (x==0)
-		memcpyl((uint8*)ptr,(uint8*)buf,w*h);
-	else
-	{
-		for (uint16_t idx = 0; idx < h; idx++) {
-	//		DMA_ScuMemCopy((uint8*)ptr, (uint8*)buf, w);
-			memcpyl((uint8*)ptr, (uint8*)buf, w);
-
-	//			slDMACopy((uint8*)buf, (uint8*)ptr, w);
-			buf+=pitch;
-			ptr+=pitch;			
-	//		SCU_DMAWait();
+	if (x == 0) {
+		memcpyl(dstPtr, srcPtr, w * h);
+	} else {
+		for (uint16 idx = 0; idx < h; ++idx) {
+			DMA_ScuMemCopy(dstPtr, srcPtr, w);
+			srcPtr += pitch;
+			dstPtr += pitch;
 		}
 	}
 }

@@ -571,7 +571,7 @@ emu_printf("vbt playmusic chg lvl\n");
 			}
 			else
 			{
-//slPrint("playMusic",slLocate(3,13));				
+//slPrint("playMusic",slLocate(3,13));
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 			}
 		}
@@ -972,7 +972,7 @@ bool Game::handleConfigPanel() {
 			break;
 		}
 	}
-	slSynch();
+	slSynch(); // vire les sprites
 	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
 	_vid.fullRefresh();	
 	
@@ -1255,8 +1255,8 @@ void Game::drawStoryTexts() {
 				++str;
 			}
 		}
-		memset(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*2);    // vbt : inutile pour la fin d'un message de plus d'une ligne
-		_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);
+		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*3);    // vbt : inutile pour la fin d'un message de plus d'une ligne
+		_stub->copyRect(0, 51, _vid._w, yPos*3, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
@@ -2076,7 +2076,7 @@ void Game::handleInventory() {
 				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 158, 0xE5);
 				snprintf(buf, sizeof(buf), "%s:%s", _res.getMenuString(LocaleData::LI_06_LEVEL), _res.getMenuString(LocaleData::LI_13_EASY + _skillLevel));
 				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 166, 0xE5);
-				if (0) { // if the protection screen code was not properly cracked...
+				/*if (0) { // if the protection screen code was not properly cracked...
 					static const uint8_t kCrackerText[17] = {
 						0x19, 0x08, 0x1B, 0x19, 0x11, 0x1F, 0x08, 0x67, 0x18,
 						0x16, 0x1B, 0x13, 0x08, 0x1F, 0x1B, 0x0F, 0x5A
@@ -2085,7 +2085,7 @@ void Game::handleInventory() {
 						buf[i] = kCrackerText[i] ^ 0x5A;
 					}
 					_vid.drawString(buf, 65, 193, 0xE4);
-				}
+				}*/
 			}
 			_vid._fullRefresh = true; // vbt ajout
 			_vid.updateScreen();
@@ -2128,9 +2128,9 @@ void Game::handleInventory() {
 				_stub->_pi.enter = false;
 				display_score = !display_score;
 			}
-/*			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
+			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
 				_stub->_pi.escape = false;
-			}*/
+			}
 //			slSynch();
 		}
 		memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?

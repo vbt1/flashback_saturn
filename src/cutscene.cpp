@@ -293,7 +293,7 @@ void Cutscene::clearBackPage() {
 }
 
 void Cutscene::drawCreditsText() {
-emu_printf("drawCreditsText\n");
+//emu_printf("drawCreditsText\n");
 	if (_creditsKeepText) {
 		if (_creditsSlowText) {
 			return;

@@ -26,7 +26,7 @@ Uint8 *current_dram2=(Uint8 *)0x22600000;
 
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
-emu_printf("lzss %s %05d\n", name, decodedSize);
+//emu_printf("lzss %s %05d\n", name, decodedSize);
 	decodedSize = f.readUint32BE();
 	
 	uint8_t *dst;
