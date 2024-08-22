@@ -319,6 +319,8 @@ struct Resource {
 	void MAC_loadCutsceneText();
 	void MAC_loadCreditsText();
 	void MAC_loadSounds();
+	void process_commands();
+	void process_polygons(const char *cutscene);
 
 	int MAC_getPersoFrame(int anim) const {
 		static const int16_t data[] = {

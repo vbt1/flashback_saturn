@@ -1,4 +1,5 @@
 #define PRELOAD_MONSTERS 1
+#define USE_SLAVE 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -145,7 +146,7 @@ void Resource::setLanguage(Language lang) {
 		load_CINE();
 	}
 }
-
+/*
 bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
@@ -156,7 +157,7 @@ bool Resource::fileExists(const char *filename) {
 	}
 	return false;
 }
-
+*/
 void Resource::clearLevelRes() {
 emu_printf("vbt clearLevelRes\n");
 
@@ -276,7 +277,7 @@ emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);
 		error("Can't open '%s'", _entryName);
 	}
 }
-*/
+
 void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 //	debug(DBG_RES, "Resource::load_MAP_menu('%s')", fileName);
 	static const int kMenuMapSize = 0x3800 * 4;
@@ -307,7 +308,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 	}
 	error("Cannot load '%s'", _entryName);
 }
-
+*/
 void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 //	emu_printf("Resource::load_PAL_menu('%s')\n", fileName);
 	sprintf(_entryName, "%s.PAL", fileName);
@@ -1466,17 +1467,17 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
-		emu_printf("decodeResourceMacText1 %s found\n", buf);
+//		emu_printf("decodeResourceMacText1 %s found\n", buf);
 		return decodeResourceMacData(entry, false);
 	} else { // CD version
-		emu_printf("decodeResourceMacText1 %s not found\n", buf);
+//		emu_printf("decodeResourceMacText1 %s not found\n", buf);
 		if (strcmp(name, "Flashback") == 0) {
 			name = "Game";
 		}
 		const char *language = (_lang == LANG_FR) ? "French" : "English";
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
 		
-		emu_printf("decodeResourceMacText2 %s\n", buf);
+//		emu_printf("decodeResourceMacText2 %s\n", buf);
 		return decodeResourceMacData(buf, false);
 	}
 }
@@ -1484,19 +1485,19 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
 
-if(strstr(name,"Icons")   != NULL)
-		emu_printf("decodeResourceMacData 1       %s ",name);	
+//if(strstr(name,"Icons")   != NULL)
+//		emu_printf("decodeResourceMacData 1       %s ",name);	
 	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
-		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
+//		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
 //		emu_printf("Resource '%s' not found\n", name);
 	}
-if(strstr(name,"Icons")   != NULL)
-		emu_printf("%p\n",data);
+//if(strstr(name,"Icons")   != NULL)
+//		emu_printf("%p\n",data);
 	return data;
 }
 
@@ -1934,6 +1935,61 @@ void Resource::MAC_unloadCutscene() {
 	_cine_txt = 0;
 }
 
+
+#ifdef USE_SLAVE
+volatile bool slave_done_flag = false;
+
+void wait_for_slave()
+{
+    // Busy wait for the slave ready flag to be true
+    // Notice that a "cache through" read is being performed on the slave ready flag
+    // This means that the shared variable is accessed directly from RAM, never being
+    // cached into CPU cache memory. Alternatively, we could perform a cache purge
+    // before accessing the variable, but that is a costlier operation that should be avoided if possible.
+    // A cache through read is done by adding "0x20000000" to the address of the variable you want
+    // and casting it to a volatile type.
+    while (!*((volatile bool *)(&slave_done_flag + 0x20000000)));
+
+    // Resetting the slave done flag to false for the next operation
+    slave_done_flag = false;
+}
+
+char *cut=NULL;
+
+void Resource::process_commands()
+{
+	char name[32];
+	snprintf(name, sizeof(name), "%s movie", cut, current_lwram);
+	stringLowerCase(name);
+//	emu_printf("MAC_loadCutscene2 %s\n",name);	
+	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
+	if (!cmdEntry) {
+		current_lwram = (uint8_t *)save_current_lwram;
+		return;
+	}
+
+	_cmd = decodeResourceMacData(cmdEntry, true);
+    
+    // Signal that the slave has completed its work
+    slave_done_flag = true;
+}
+
+void Resource::process_polygons(const char *cutscene)
+{
+	char name[32];
+	snprintf(name, sizeof(name), "%s polygons", cutscene);
+	stringLowerCase(name);
+	const ResourceMacEntry *polEntry = _mac->findEntry(name);
+	if (!polEntry) {
+		current_lwram = (uint8_t *)save_current_lwram;		
+		return;
+	}
+	_pol = decodeResourceMacData(polEntry, true);
+}
+
+#endif
+
+
 void Resource::MAC_loadCutscene(const char *cutscene) {
 	slTVOff();
 	slSynch();
@@ -1941,6 +1997,24 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 //	MAC_unloadCutscene();
 	char name[32];
 	save_current_lwram = (uint8_t *)current_lwram;
+	
+
+#ifdef USE_SLAVE
+	cut = (char *)cutscene;
+    // Process the second half of the array on the slave CPU
+    slSlaveFunc(this->process_commands, NULL);
+
+    // Process the first half of the array on the Master CPU
+    process_polygons(cutscene);
+
+    // Waiting for the slave to finish before continuing
+    wait_for_slave();
+
+    // Clear the Master CPU cache otherwise the updated values by the Slave might not be seen by the Master
+    slCashPurge();
+
+
+#else
 // vbt :  paraléliser les décodages !!!
 	snprintf(name, sizeof(name), "%s movie", cutscene, current_lwram);
 	stringLowerCase(name);
@@ -1950,6 +2024,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		current_lwram = (uint8_t *)save_current_lwram;
 		return;
 	}
+
 	_cmd = decodeResourceMacData(cmdEntry, true);
 
 	snprintf(name, sizeof(name), "%s polygons", cutscene);
@@ -1960,6 +2035,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		return;
 	}
 	_pol = decodeResourceMacData(polEntry, true);
+#endif
 	slTVOn();
 }
 

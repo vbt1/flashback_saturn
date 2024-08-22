@@ -26,11 +26,11 @@ ResourceAba::ResourceAba(FileSystem *fs)
 ResourceAba::~ResourceAba() {
 	sat_free(_entries);
 }
-
+/*
 static int compareAbaEntry(const void *a, const void *b) {
 	return strcasecmp(((const ResourceAbaEntry *)a)->name, ((const ResourceAbaEntry *)b)->name);
 }
-/*
+
 void ResourceAba::readEntries(const char *aba) {
 	assert(_filesCount < 3);
 	if (_f[_filesCount].open(aba, _dataPath, "rb")) {

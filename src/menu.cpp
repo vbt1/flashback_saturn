@@ -105,7 +105,7 @@ void Menu::drawString2(const char *str, int16_t y, int16_t x) {
 //	_vid->markBlockAsDirty(x * w, y * h, len * w, h, _vid->_layerScale);
 }
 
-
+/*
 void Menu::loadPicture(const char *prefix) {
 //	emu_printf( "Menu::loadPicture('%s')\n", prefix);
 	static const int kPictureW = 256;
@@ -149,7 +149,7 @@ void Menu::handleInfoScreen() {
 		}
 	} while (!_stub->_pi.quit);
 }
-/*
+
 void Menu::handleSkillScreen() {
 //	debug(DBG_MENU, "Menu::handleSkillScreen()");
 	static const uint8_t colors[3][3] = {
@@ -268,7 +268,7 @@ bool Menu::handlePasswordScreen() {
 	} while (!_stub->_pi.quit);
 	return false;
 }
-*/
+
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	_vid->fadeOut();
@@ -396,8 +396,8 @@ void Menu::handleTitleScreen() {
 		Language lang;
 		const uint8_t *bitmap16x12;
 	} languages[] = {
-		{ LANG_EN, NULL /*_flagEn16x12*/ },
-		{ LANG_FR, NULL /*_flagFr16x12*/ },
+		{ LANG_EN, NULL  },
+		{ LANG_FR, NULL  },
 		{ LANG_DE, NULL },
 		{ LANG_SP, NULL },
 		{ LANG_IT, NULL },
@@ -526,7 +526,7 @@ void Menu::handleTitleScreen() {
 		_stub->processEvents();
 	}
 }
-/*
+
 const char *Menu::getLevelPassword(int level, int skill) const {
 	switch (_res->_type) {
 

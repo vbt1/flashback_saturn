@@ -200,7 +200,7 @@ _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
 		hwram_screen=hwram_ptr;
-		hwram_ptr+=48000;
+		hwram_ptr+=49000;
 
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
@@ -255,19 +255,20 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		break;
 	}
 */
-	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
+//	bool presentMenu = true; //((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
-		if (presentMenu) {
+//		if (presentMenu) 
+		{
 //			_mix.playMusic(1); // vbt : à remplacer
 			
 			switch (_res._type) {
 			case kResourceTypeDOS:
-				_menu.handleTitleScreen();
+				/*_menu.handleTitleScreen();
 				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _stub->_pi.quit) {
 					_stub->_pi.quit = true;
 					break;
 				}
-				/*if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
+				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 					_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
 					const char *fn = _demoInputs[_demoBin].name;
 					_res.load_DEM(fn);
@@ -1823,7 +1824,7 @@ void Game::loadLevelData() {
 #endif
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
-		hwram_ptr = hwram+48000;
+		hwram_ptr = hwram+49000;
 //		hwram_screen = NULL;
 //		position_vram = position_vram_aft_monster; // vbt on repart des monsters
 		position_vram = position_vram_aft_monster = 0; // vbt correction
