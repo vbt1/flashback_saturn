@@ -202,7 +202,7 @@ void Video::setPaletteSlotBE(int palSlot, int palNum) {
 		_stub->setPaletteEntry(palSlot * 0x10 + i, &c);
 	}
 }
-*/
+
 void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 	//	debug(DBG_VIDEO, "Video::setPaletteSlotLE()");
 	for (int i = 0; i < 16; ++i) {
@@ -214,17 +214,18 @@ void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 		_stub->setPaletteEntry(palSlot * 0x10 + i, &c);
 	}
 }
-
+*/
 void Video::setTextPalette() {
 	//	debug(DBG_VIDEO, "Video::setTextPalette()");
 	const uint8 *p = _textPal;
-	for (int i = 0; i < 16; ++i) {
+	for (int i = 0; i < 16; ++i) { // vbt : à faire plus tard, mettre les 2 dernieres couleurs
 		uint16 color = READ_LE_UINT16(p); p += 2;
 		Color c;
 		c.b = (color & 0x00F) << 2;
 		c.g = (color & 0x0F0) >> 2;
 		c.r = (color & 0xF00) >> 6;
-		_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : front palette
+		if(i < 14)
+			_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : front palette
 		_stub->setPaletteEntry(256+0xE0 + i, &c);  // vbt : sprite palette
 	}
 }

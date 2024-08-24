@@ -743,7 +743,12 @@ void Game::playCutscene(int id) {
 			Color palette[32];
 			_res.MAC_copyClut16(palette, 0, 0x37);
 			_res.MAC_copyClut16(palette, 1, 0x38);
-			for (int i = 0; i < 32; ++i) {
+//			for (int i = 0; i < 32; ++i) {
+			for (int i = 0; i < 14; ++i) { // vbt on n'écrase pas les 2 couleurs de priorité
+				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
+			}
+
+			for (int i = 16; i < 30; ++i) { // vbt on n'écrase pas les 2 couleurs de priorité
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
