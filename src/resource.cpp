@@ -1,5 +1,5 @@
 #define PRELOAD_MONSTERS 1
-#define USE_SLAVE 1
+//#define USE_SLAVE 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -27,6 +27,7 @@ void	*malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 void *calloc (size_t, size_t);
+	static void process_cmd();
 }
 #include "saturn_print.h"
 
@@ -308,7 +309,7 @@ void Resource::load_MAP_menu(const char *fileName, uint8_t *dstPtr) {
 	}
 	error("Cannot load '%s'", _entryName);
 }
-*/
+
 void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 //	emu_printf("Resource::load_PAL_menu('%s')\n", fileName);
 	sprintf(_entryName, "%s.PAL", fileName);
@@ -326,7 +327,7 @@ void Resource::load_PAL_menu(const char *fileName, uint8 *dstPtr) {
 		error("Can't open '%s'", _entryName);
 	}
 }
-/*
+
 void Resource::load_SPR_OFF(const char *fileName, uint8_t *sprData) {
 //	debug(DBG_RES, "Resource::load_SPR_OFF('%s')", fileName);
 	snprintf(_entryName, sizeof(_entryName), "%s.OFF", fileName);
@@ -1875,7 +1876,9 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     // Unroll LUT-based color swap loop
 	static const unsigned char lut[30]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
 										126,127,254,255,174,175,190,191,206,207,222,223,238,239};
-
+	clut[69].r = 255;
+	clut[69].g = 255;
+	clut[69].b = 255;
     for (int i = 0; i < 30; ++i) {
         int lut_index = lut[i];
         clut[lut_index] = tmp[128 + i];
@@ -1955,19 +1958,28 @@ void wait_for_slave()
 }
 
 char *cut=NULL;
+static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 
+static void process_cmd()
+{
+	emu_printf("process_cmd\n");
+	tingyInstance->process_commands();
+	slave_done_flag = true;
+	emu_printf("end process_cmd\n");
+}
 
 void Resource::process_commands()
 {
+		emu_printf("process_commands\n");
 	char name[32];
 	snprintf(name, sizeof(name), "%s movie", cut, current_lwram);
 	stringLowerCase(name);
-//	emu_printf("MAC_loadCutscene2 %s\n",name);	
+	emu_printf("MAC_loadCutscene2 %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
 	if (!cmdEntry) {
 		current_lwram = (uint8_t *)save_current_lwram;
 		return;
 	}
-
+emu_printf("decodeResourceMacData\n");
 	_cmd = decodeResourceMacData(cmdEntry, true);
     
     // Signal that the slave has completed its work
@@ -1976,6 +1988,7 @@ void Resource::process_commands()
 
 void Resource::process_polygons(const char *cutscene)
 {
+		emu_printf("process_polygons\n");	
 	char name[32];
 	snprintf(name, sizeof(name), "%s polygons", cutscene);
 	stringLowerCase(name);
@@ -2002,14 +2015,17 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 #ifdef USE_SLAVE
 	cut = (char *)cutscene;
     // Process the second half of the array on the slave CPU
-    slSlaveFunc(this->process_commands, NULL);
+		emu_printf("slSlaveFunc\n");	
 
+    slSlaveFunc(process_cmd, NULL);
+		emu_printf("process_polygons2\n");
     // Process the first half of the array on the Master CPU
     process_polygons(cutscene);
+		emu_printf("wait_for_slave\n");
 
     // Waiting for the slave to finish before continuing
     wait_for_slave();
-
+		emu_printf("slCashPurge\n");
     // Clear the Master CPU cache otherwise the updated values by the Slave might not be seen by the Master
     slCashPurge();
 

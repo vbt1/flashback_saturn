@@ -747,10 +747,14 @@ void Game::playCutscene(int id) {
 			for (int i = 0; i < 14; ++i) { // vbt on n'écrase pas les 2 couleurs de priorité
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
+			_stub->setPaletteEntry(64, &palette[14]);
+			_stub->setPaletteEntry(65, &palette[15]);
 
 			for (int i = 16; i < 30; ++i) { // vbt on n'écrase pas les 2 couleurs de priorité
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
+			_stub->setPaletteEntry(66, &palette[31]);
+			_stub->setPaletteEntry(67, &palette[32]);
 		}
 		if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
@@ -837,8 +841,11 @@ bool Game::handleConfigPanel() {
 	static const int w = 17;
 	static const int h = 12;
 
+//	_vid._charShadowColor = 0xE2;
+//	_vid._charFrontColor = 0xEE;
+//	_vid._charTransparentColor = 0xFF;
 	_vid._charShadowColor = 0xE2;
-	_vid._charFrontColor = 0xEE;
+	_vid._charFrontColor = 69;  // couleur prise // 238
 	_vid._charTransparentColor = 0xFF;
 
 	// the panel background is drawn using special characters from FB_TXT.FNT
@@ -922,7 +929,8 @@ bool Game::handleConfigPanel() {
 		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
-		_menu.drawString(buf, y + 10, 9, 1);
+//		_menu.drawString(buf, y + 10, 9, 1);
+		_menu.drawString(buf, y + 10, 9, 69);
 //		_vid.updateScreen();
 		
 			_stub->copyRect(0, 160, 400, 286, _vid._frontLayer, _vid._w);

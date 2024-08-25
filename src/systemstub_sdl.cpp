@@ -251,13 +251,11 @@ void SystemStub_SDL::destroy() {
 void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 	assert(colors <= 256);
 	for (int i = 0; i < colors; ++i) {
-		uint8 c[3];
-		for (int j = 0; j < 3; ++j) {
-			uint8 col = palette[i * 3 + j];
-			//c[j] =  (col << 2) | (col & 3);
-			c[j] = col;
-		}
-		_pal[i] = ((c[2] >> 3) << 10) | ((c[1] >> 3) << 5) | (c[0] >> 3) | RGB_Flag; // BGR for saturn
+		uint8 r = palette[i * 3];
+		uint8 g = palette[i * 3 + 1];
+		uint8 b = palette[i * 3 + 2];
+
+		_pal[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn
 	}
 	
 }
