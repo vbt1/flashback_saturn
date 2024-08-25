@@ -767,6 +767,26 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 }
 #endif
 
+void Video::SAT_cleanSprites()
+{
+	SPRITE user_sprite;
+	user_sprite.CTRL= FUNC_End;
+	user_sprite.PMOD=0;
+	user_sprite.SRCA=0;
+	user_sprite.COLR=0;
+
+	user_sprite.SIZE=0;
+	user_sprite.XA=0;
+	user_sprite.YA=0;
+
+	user_sprite.XB=0;
+	user_sprite.YB=0;
+	user_sprite.GRDA=0;
+
+	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	slSynch();
+}
+
 void Video::SAT_displayPalette()
 {
 	unsigned char* vram_base = (unsigned char*)VDP2_VRAM_A0 + 0x4800;

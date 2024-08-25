@@ -1253,22 +1253,7 @@ void Cutscene::unload() {
 	
 	if (_res->isMac() && _id != 0x48 && _id != 0x49)
 	{
-		SPRITE user_sprite;
-		user_sprite.CTRL= FUNC_End;
-		user_sprite.PMOD=0;
-		user_sprite.SRCA=0;
-		user_sprite.COLR=0;
-
-		user_sprite.SIZE=0;
-		user_sprite.XA=0;
-		user_sprite.YA=0;
-
-		user_sprite.XB=0;
-		user_sprite.YB=0;
-		user_sprite.GRDA=0;
-
-		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-		slSynch();
+		_vid->SAT_cleanSprites();
 #ifndef SUBTITLE_SPRITE
 		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
 		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);

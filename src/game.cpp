@@ -329,11 +329,19 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 					_endLoop = true;
 				}
 			}
+//			slTVOff();
+			_vid._fullRefresh = true;
+			memset4_fast(_vid._frontLayer,0x00,_vid._w*_vid._h);
+			_vid.updateScreen();
+			_vid.SAT_cleanSprites();
+//on vide l'écran et les sprites
+
 			// flush inputs
 			_stub->_pi.dirMask = 0;
 			_stub->_pi.enter = false;
 			_stub->_pi.space = false;
 			_stub->_pi.shift = false;
+			slTVOn();
 		}
 	}
 
@@ -910,14 +918,13 @@ bool Game::handleConfigPanel() {
 		}
 		break;
 	}
-//	_stub->_pi.quit = false;
+	_stub->_pi.quit = false;
 
 	_menu._charVar3 = 0xE4;
 	_menu._charVar4 = 0xE5;
 	_menu._charVar1 = 0xE2;
 	_menu._charVar2 = 0xEE;
 
-	_vid.fullRefresh();
 	enum { MENU_ITEM_ABORT = 1, MENU_ITEM_LOAD = 2, MENU_ITEM_SAVE = 3 };
 	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
@@ -931,12 +938,9 @@ bool Game::handleConfigPanel() {
 		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
 //		_menu.drawString(buf, y + 10, 9, 1);
 		_menu.drawString(buf, y + 10, 9, 69);
-//		_vid.updateScreen();
 		
-			_stub->copyRect(0, 160, 400, 286, _vid._frontLayer, _vid._w);
-			_stub->updateScreen(0);		
-		
-//		_vid.fullRefresh();
+		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
+		_stub->updateScreen(0);
 		_stub->sleep(80);
 //		inp_update();
 
@@ -986,10 +990,14 @@ bool Game::handleConfigPanel() {
 			break;
 		}
 	}
-	slSynch(); // vire les sprites
-	memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
-	_vid.fullRefresh();	
-	
+	_stub->_pi.quit = false;
+
+	if (current != MENU_ITEM_ABORT)
+	{
+		memset4_fast(&_vid._frontLayer[160*512],0x00,_vid._w*208);
+		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
+		_stub->updateScreen(0);
+	}
 	return (current == MENU_ITEM_ABORT);
 }
 
@@ -1062,9 +1070,9 @@ bool Game::handleContinueAbort() {
 		if (_stub->_pi.enter) {
 			_vid._layerScale=2;
 			_stub->_pi.enter = false;
-			memset(_vid._frontLayer,0x00,_vid._w*_vid._h);
+			memset4_fast(_vid._frontLayer,0x00,_vid._w*_vid._h);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-			slSynch(); // vire le sprite bg
+			_vid.SAT_cleanSprites();
 			return (current_color == 0);
 		}
 //		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
@@ -1089,7 +1097,7 @@ bool Game::handleContinueAbort() {
 		_stub->sleep(100);
 		--timeout;
 	}
-	memset(_vid._frontLayer,0x00,512*400);
+	memset4_fast(_vid._frontLayer,0x00,512*400);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	return false;
 }
@@ -2148,7 +2156,7 @@ void Game::handleInventory() {
 //			slSynch();
 		}
 		// vbt : n'efface que le menu
-		memset(&_vid._frontLayer[280*512],0x00, _vid._w*144);
+		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);
 		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 		_stub->_pi.backspace = false;

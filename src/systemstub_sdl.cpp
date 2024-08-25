@@ -289,7 +289,8 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + y * pitch + x);
 
 	if (x == 0) {
-		memcpyl(dstPtr, srcPtr, w * h);
+//		memcpyl(dstPtr, srcPtr, w * h);
+		DMA_ScuMemCopy(dstPtr, srcPtr, w * h);
 	} else {
 		for (uint16 idx = 0; idx < h; ++idx) {
 			DMA_ScuMemCopy(dstPtr, srcPtr, w);
@@ -300,8 +301,8 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 }
 
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
-//	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 2);  // vbt à remettre
-	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 4);  // vbt à remettre
+	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 4);  // vbt à remettre
+//	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 4);  // vbt à remettre
 //	memcpy((void*)(CRAM_BANK + 1024), (void*)_pal+512, 256 * 2);  // vbt à remettre
 //	memset((void*)(CRAM_BANK), 0x84, 256 * 2);  // vbt à remettre
 //	memset((void*)(CRAM_BANK+1024), 0x84, 256 * 8);  // vbt à remettre
