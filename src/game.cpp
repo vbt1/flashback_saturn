@@ -2101,8 +2101,8 @@ void Game::handleInventory() {
 					_vid.drawString(buf, 65, 193, 0xE4);
 				}*/
 			}
-			_vid._fullRefresh = true; // vbt ajout
-			_vid.updateScreen();
+			_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
+			_stub->updateScreen(0);
 			_stub->sleep(80);
 //			inp_update();
 
@@ -2147,8 +2147,10 @@ void Game::handleInventory() {
 			}
 //			slSynch();
 		}
-		memset(_vid._frontLayer,0x00,_vid.GAMESCREEN_W * _vid.GAMESCREEN_H * 4); // vbt à intégrer dans // _vid.fullRefresh() ?
-		_vid.fullRefresh();
+		// vbt : n'efface que le menu
+		memset(&_vid._frontLayer[280*512],0x00, _vid._w*144);
+		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
+		_stub->updateScreen(0);
 		_stub->_pi.backspace = false;
 		if (selected_pge) {
 			pge_setCurrentInventoryObject(selected_pge);
