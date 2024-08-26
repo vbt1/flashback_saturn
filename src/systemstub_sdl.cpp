@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 //#define SLAVE_SOUND 1
-//#define SOUND 1
+#define SOUND 1
 extern "C" {
 #include <string.h>	
 #include <sgl.h>
@@ -178,7 +178,6 @@ struct SystemStub_SDL : SystemStub {
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(uint8 shakeOffset);
-	virtual void SAT_updatePalette();
 //	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
@@ -303,16 +302,6 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 4);  // vbt à remettre
 //	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 4);  // vbt à remettre
-//	memcpy((void*)(CRAM_BANK + 1024), (void*)_pal+512, 256 * 2);  // vbt à remettre
-//	memset((void*)(CRAM_BANK), 0x84, 256 * 2);  // vbt à remettre
-//	memset((void*)(CRAM_BANK+1024), 0x84, 256 * 8);  // vbt à remettre
-}
-
-
-void SystemStub_SDL::SAT_updatePalette()
-{
-//	memcpy((void*)(CRAM_BANK + 512 + 384), (void*)_pal+384, 32 * 2);  // vbt à remettre	
-//	slTransferEntry((void*)_pal+384, (void*)(CRAM_BANK + 512+384), 32 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {
@@ -613,13 +602,13 @@ void SystemStub_SDL::load_audio_driver(void) {
 
 
 	if(drv_file == NULL) 
-		error("Unable to load sound driver");
+		emu_printf("Unable to load sound driver\n");
 
 	sat_fseek(drv_file, 0, SEEK_END);
 	drv_size = sat_ftell(drv_file);
 	sat_fseek(drv_file, 0, SEEK_SET);
 
-#define	SDDRV_ADDR	0x60D0000
+#define	SDDRV_ADDR	0x00200000
 
 	sddrvstsk = (uint8*)SDDRV_ADDR;
 
@@ -720,7 +709,7 @@ void vblIn (void) {
 	sys->processEvents();
 	sys->updateScreen(0);
 	// Pcm elaboration...
-/*
+
 	PCM_VblIn();	
 
 	// PCM Tasks
@@ -730,7 +719,7 @@ void vblIn (void) {
 	// Fill and play the audio
 	if(audioEnabled)
 		fill_play_audio();
-*/
+
 	timeTick();
 
 	/*if(counter == 20) {

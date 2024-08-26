@@ -2073,7 +2073,7 @@ void Resource::MAC_loadSounds() {
 		-1, 57
 	};
 	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)calloc(_numSfx, sizeof(SoundFx));
+	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
 	if (!_sfxList) {
 		return;
 	}
