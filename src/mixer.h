@@ -91,7 +91,7 @@ int resampleLinear(T *sample, int pos, int step, int fracBits) {
 	out += (sample->getPCM(inputPos + 1) - out) * inputFrac >> fracBits;
 	return out;
 }
-
+/*
 template <class T>
 int resample3Pt(T *sample, int pos, int step, int fracBits) {
 	const int inputPos = pos >> fracBits;
@@ -101,5 +101,6 @@ int resample3Pt(T *sample, int pos, int step, int fracBits) {
 	out += sample->getPCM(inputPos + ((inputFrac + (step >> 1)) >> fracBits)) >> 2;
 	return out;
 }
+*/
 
 #endif // __MIXER_H__

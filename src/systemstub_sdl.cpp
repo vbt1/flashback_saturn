@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-//#define SLAVE_SOUND 1
+#define SLAVE_SOUND 1
 #define SOUND 1
 extern "C" {
 #include <string.h>	
@@ -125,7 +125,7 @@ static PcmHn pcm[2];
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
 static Mixer *mix = NULL;
-static volatile Uint8 audioEnabled = 0;
+static volatile Uint8 audioEnabled = 1;
 
 /* CDDA */
 
@@ -141,16 +141,16 @@ static SystemStub *sys = NULL;
 static volatile Uint32 ticker = 0;
 static volatile	Uint8  tick_wrap = 0;
 
-static Uint8 firstSoundRun = 1;
-
 /* FUNCTIONS */
 #ifdef SOUND
+static Uint8 firstSoundRun = 1;
+static Uint8 runningSlave = 0;
 static PcmHn createHandle(int bufno);
 static void play_manage_buffers(void);
+static void fill_buffer_slot(void);
 void fill_play_audio(void);
 void sat_restart_audio(void);
 #endif
-static void fill_buffer_slot(void);
 void vblIn(void); // This is run at each vblnk-in
 uint8 isNTSC(void);
 
@@ -158,7 +158,7 @@ uint8 isNTSC(void);
 struct SystemStub_SDL : SystemStub {
 	enum {
 		MAX_BLIT_RECTS = 200,
-		SOUND_SAMPLE_RATE = 22050,
+		SOUND_SAMPLE_RATE = 11025,
 		JOYSTICK_COMMIT_VALUE = 3200
 	};
 
@@ -459,7 +459,7 @@ void SystemStub_SDL::lockMutex(void *mutex) {
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))++;
 #else
 //	while(mtx->access > 0) asm("nop");
-//	mtx->access++;
+	mtx->access++;
 #endif
 	return;
 }
@@ -470,7 +470,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 #ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
 #else
-//	mtx->access--;
+	mtx->access--;
 #endif
 	return;
 }
@@ -709,7 +709,7 @@ void vblIn (void) {
 	sys->processEvents();
 	sys->updateScreen(0);
 	// Pcm elaboration...
-
+#ifdef SOUND
 	PCM_VblIn();	
 
 	// PCM Tasks
@@ -718,8 +718,13 @@ void vblIn (void) {
 
 	// Fill and play the audio
 	if(audioEnabled)
+	{
+//		emu_printf("audio 1\n");
 		fill_play_audio();
-
+	}
+//	else
+//		emu_printf("audio 0\n");
+#endif
 	timeTick();
 
 	/*if(counter == 20) {
@@ -740,20 +745,19 @@ uint8 isNTSC (void) {
 void fill_play_audio(void) {
 //emu_printf("SystemStub_SDL::fill_play_audio\n");
 #ifdef SLAVE_SOUND
-	if ((*(volatile Uint8 *)0xfffffe11 & 0x80) == 0x80 || firstSoundRun) {
-		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
-		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
+//	if ((*(volatile Uint8 *)0xfffffe11 & 0x80) == 0x80 || firstSoundRun) {
+//		*(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
+//		*(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 		//CSH_AllClr();
+//		slCashPurge();
+//		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  // vbt à remettre
+		slSlaveFunc(fill_buffer_slot, NULL);
 
-		SPR_RunSlaveSH((PARA_RTN*)fill_buffer_slot, NULL);  // vbt à remettre
+//		firstSoundRun = 0;
+//	}
 #else
-	if (firstSoundRun || buffer_filled[0] == 1 || buffer_filled[1] == 1) 
-	{
-		fill_buffer_slot();
+	fill_buffer_slot();
 #endif
-		firstSoundRun = 0;
-		//slSlaveFunc(fill_buffer_slot, NULL);
-	}
 
 	play_manage_buffers(); // If ready, queue a buffer for playing
 
@@ -803,7 +807,7 @@ static PcmHn createHandle(int bufNo) {
 void sat_restart_audio(void) {
 	//fprintf_saturn(stdout, "restart audio");
 	int idx;
-//emu_printf("restart audio\n");
+emu_printf("restart audio\n");
 	// Stop pcm playing and clean up handles.
 	PCM_Stop(pcm[0]);
 	PCM_Stop(pcm[1]);
@@ -829,10 +833,7 @@ void sat_restart_audio(void) {
 	PCM_Start(pcm[0]); 
 	PCM_EntryNext(pcm[1]); 
 #ifdef SLAVE_SOUND
-	SPR_InitSlaveSH();
-#endif	
 	firstSoundRun = 1;
-#ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(curBuf) = 0;
 #else
 	curBuf = 0;
@@ -842,15 +843,18 @@ void sat_restart_audio(void) {
 #endif
 void fill_buffer_slot(void) {
 	//slCashPurge();
-//emu_printf("fill_buffer_slot\n");
 	// Prepare the indexes of next slot/buffers.
 #ifdef SLAVE_SOUND
-	CSH_AllClr();	
+//emu_printf("fill_buffer_slot slave\n");
+//	slCashPurge();
 	Uint8 nextBuf = (*(Uint8*)OPEN_CSH_VAR(curBuf) + 1) % 2;
 	Uint8 nextSlot = (*(Uint8*)OPEN_CSH_VAR(curSlot) + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = *(Uint8*)OPEN_CSH_VAR(curBuf);
 	Uint8 workingSlot = *(Uint8*)OPEN_CSH_VAR(curSlot);
+	
+	*(Uint8*)OPEN_CSH_VAR(runningSlave) = 1;
 #else
+emu_printf("fill_buffer_slot master\n");	
 	Uint8 nextBuf = (curBuf + 1) % 2;
 	Uint8 nextSlot = (curSlot + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = curBuf;
@@ -858,11 +862,12 @@ void fill_buffer_slot(void) {
 #endif
 	// Avoid running if other parts of the program are in the critical section...
 	SatMutex* mtx = (SatMutex*)(mix->_mutex);
-//emu_printf("buff %d access %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));	
 #ifdef SLAVE_SOUND	
+//emu_printf("buff %d access %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));	
 	if(!(*(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer])) && !(*(Uint8*)OPEN_CSH_VAR(mtx->access))) {
 #else
-	if(!(buffer_filled[workingBuffer]) /*&& !(mtx->access)*/) 
+//emu_printf("buff %d access %d\n", buffer_filled[workingBuffer],mtx->access);	
+	if(!(buffer_filled[workingBuffer]) && !(mtx->access)) 
 	{
 #endif
 //emu_printf("  -> slave mixing %d %d\n", *(Uint8*)OPEN_CSH_VAR(buffer_filled[workingBuffer]),(*(Uint8*)OPEN_CSH_VAR(mtx->access)));
@@ -886,7 +891,9 @@ void fill_buffer_slot(void) {
 		curSlot = nextSlot;
 #endif
 	}
-
+#ifdef SLAVE_SOUND
+	*(Uint8*)OPEN_CSH_VAR(runningSlave) = 0;
+#endif
 	return;
 }
 #ifdef SOUND
@@ -919,21 +926,25 @@ void play_manage_buffers(void) {
 			counter++;
 		} else {
 #ifdef SLAVE_SOUND			
-			SPR_WaitEndSlaveSH(); // vbt à remettre
+emu_printf("issue 1\n");
+//			SPR_WaitEndSlaveSH(); // vbt à remettre
+//			wait_slave();
+			while(!(*(volatile Uint8*)OPEN_CSH_VAR(runningSlave)));
 #endif			
 			sat_restart_audio();
 			counter = 0;
 			curPlyBuf = 0;
 		}
 	}
-
+/*
 	// If audio gets stuck... restart it
 	if((PCM_GetPlayStatus(pcm[0]) == PCM_STAT_PLAY_END) || (PCM_GetPlayStatus(pcm[1]) == PCM_STAT_PLAY_END)) {
+emu_printf("issue 2\n");
 		sat_restart_audio();
 		counter = 0;
 		curPlyBuf = 0;
 	}
-
+*/
 	return;
 }
 #endif

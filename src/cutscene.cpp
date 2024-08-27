@@ -3,7 +3,6 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
-//#define SLAVE_SOUND 1
 //#define SUBTITLE_SPRITE 1
 extern "C"
 {
@@ -24,9 +23,10 @@ void *memset4_fast(void *, long, size_t);
 
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
-
+//extern volatile Uint8 audioEnabled;
+/*
 static void scalePoints(Point *pt, int count, int scale) {
-	scale = 1; //vbt force la valeur
+//	scale = 1; //vbt force la valeur
 	return;
 	if (scale != 1) {
 		while (count-- > 0) {
@@ -36,7 +36,7 @@ static void scalePoints(Point *pt, int count, int scale) {
 		}
 	}
 }
-
+*/
 Cutscene::Cutscene(Resource *res, SystemStub *stub, Video *vid)
 	: _mix(stub), _res(res), _stub(stub), _vid(vid) {
 	_patchedOffsetsTable = 0;
@@ -102,6 +102,7 @@ void Cutscene::updateScreen() {
 _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à remettre
 #endif
 // vbt : déplacement de la synchro ici
+//emu_printf("slsynch Cutscene::updateScreen()\n");
 	slSynch(); // obligatoire
 	updatePalette();
 	SWAP(_frontPage, _backPage);
@@ -109,7 +110,7 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à reme
 	memset((uint8_t *)_vid->_txt2Layer,0, 480*70);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
 #else
-	_stub->copyRect(0, 96, 480, _vid->_h-96, _vid->_frontLayer, _vid->_w);
+	_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 #endif
 }
 
@@ -420,13 +421,13 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 		pt.y = READ_BE_UINT16(data) + y; data += 2;
 		uint16_t rx = READ_BE_UINT16(data); data += 2;
 		uint16_t ry = READ_BE_UINT16(data); data += 2;
-		scalePoints(&pt, 1, _vid->_layerScale);
+		//scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &pt, rx, ry);
 	} else if (numVertices == 0) {
 		Point pt;
 		pt.x = READ_BE_UINT16(data) + x; data += 2;
 		pt.y = READ_BE_UINT16(data) + y; data += 2;
-		scalePoints(&pt, 1, _vid->_layerScale);
+		//scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawPoint(_primitiveColor, &pt);
 	} else {
 		Point *pt = _vertices;
@@ -451,7 +452,7 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 				++pt;
 			}
 		}
-		scalePoints(_vertices, numVertices, _vid->_layerScale);
+		//scalePoints(_vertices, numVertices, _vid->_layerScale);
 		_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices);
 	}
 }
@@ -608,7 +609,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		po.y = _vertices[0].y + e + _shape_iy;
 		int16_t rx = _vertices[0].x - _vertices[2].x;
 		int16_t ry = _vertices[0].y - _vertices[1].y;
-		scalePoints(&po, 1, _vid->_layerScale);
+		//scalePoints(&po, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &po, rx, ry);
 	} else if (numVertices == 0) {
 		Point pt;
@@ -631,7 +632,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		_shape_prev_y = _shape_cur_y;
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
-		scalePoints(&pt, 1, _vid->_layerScale);
+		//scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawPoint(_primitiveColor, &pt);
 	} else {
 		Point *pt = _vertices;
@@ -677,7 +678,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		_shape_prev_y = _shape_cur_y;
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
-		scalePoints(_vertices, numVertices, _vid->_layerScale);
+		//scalePoints(_vertices, numVertices, _vid->_layerScale);
 		_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices);
 	}
 }
@@ -792,7 +793,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		po.y = _vertices[0].y + e + _shape_iy;
 		int16_t rx = _vertices[0].x - _vertices[2].x;
 		int16_t ry = _vertices[0].y - _vertices[1].y;
-		scalePoints(&po, 1, _vid->_layerScale);
+		//scalePoints(&po, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &po, rx, ry);
 	} else if (numVertices == 0) {
 		Point pt;
@@ -819,7 +820,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		_shape_prev_y = _shape_cur_y;
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
-		scalePoints(&pt, 1, _vid->_layerScale);
+		//scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawPoint(_primitiveColor, &pt);
 	} else {
 		int16_t x, y, a, shape_last_x, shape_last_y;
@@ -898,7 +899,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		_shape_prev_y = _shape_cur_y;
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
-		scalePoints(_vertices, numVertices + 1, _vid->_layerScale);
+		//scalePoints(_vertices, numVertices + 1, _vid->_layerScale);
 		_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices + 1);
 	}
 }
@@ -1214,6 +1215,8 @@ emu_printf(" Cutscene::load %x \n", cutName);
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
+
+	//audioEnabled = 0;
 	
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	switch (_res->_type) {
@@ -1270,6 +1273,7 @@ void Cutscene::unload() {
 		}
 //		_id = 0xFFFF; // vbt : ajout
 	}
+	//audioEnabled = 1;
 	slTVOn();
 }
 
@@ -1456,14 +1460,14 @@ void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, con
 			Point pt;
 			pt.x = x + ix;
 			pt.y = y + iy;
-			scalePoints(&pt, 1, _vid->_layerScale);
+			//scalePoints(&pt, 1, _vid->_layerScale);
 			_gfx.drawEllipse(color, false, &pt, rx, ry);
 		} else {
 			for (int i = 0; i < verticesCount; ++i) {
 				_vertices[i].x = x + (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 				_vertices[i].y = y + (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 			}
-			scalePoints(_vertices, verticesCount, _vid->_layerScale);
+			//scalePoints(_vertices, verticesCount, _vid->_layerScale);
 			_gfx.drawPolygon(color, false, _vertices, verticesCount);
 		}
 	}

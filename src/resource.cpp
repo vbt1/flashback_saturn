@@ -1806,8 +1806,6 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	uint8_t *ptr = decodeResourceMacData(name, true);
 
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
-//slDynamicFrame(ON);
-//slSynch();
 }
 
 void Resource::MAC_clearClut16(Color *clut, uint8_t dest) {

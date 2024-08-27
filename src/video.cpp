@@ -4,7 +4,6 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
-//#define SLAVE_SOUND 1 
 extern "C"
 {
 #include <sl_def.h>	
@@ -743,7 +742,7 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
 
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
-#ifndef SLAVE_SOUND
+
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
     SPRITE user_sprite;
@@ -765,7 +764,6 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
-#endif
 
 void Video::SAT_cleanSprites()
 {

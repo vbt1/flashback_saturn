@@ -1,5 +1,3 @@
-//#define SLAVE_SOUND 1
-
 extern "C" {
 //#include	<sgl.h>
 #include 	<sl_def.h>
@@ -53,8 +51,8 @@ int	main( void )
     {
 		slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL		
 		slTVOn();
-		slPrint("No ram cart found",slLocate(10,12));
-		slPrint("Please insert 4Mb",slLocate(10,14));
+		slPrint((char*)"No ram cart found",slLocate(10,12));
+		slPrint((char*)"Please insert 4Mb",slLocate(10,14));
 //		emu_printf("id %x\n",id);
 		slSynch();
 		while(1);
@@ -83,10 +81,6 @@ int	main( void )
 	cdUnlock(); // Unlock the cd drive
 #endif
 //	DMA_ScuInit(); // Init for SCU DMA
-#ifdef SLAVE_SOUND
-
-	SPR_InitSlaveSH();
-#endif
 	/* Application Call */
 	ss_main();
 
@@ -98,7 +92,7 @@ extern void emu_printf(const char *format, ...);
 
 void emu_printf(const char *format, ...)
 {
-#if 0
+#if 1
    static char emu_printf_buffer[128];
    char *s = emu_printf_buffer;
    volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);

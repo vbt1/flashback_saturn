@@ -47,15 +47,16 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 	 }
 	else
 	{
-		if(strstr(name,"Room") != NULL || strstr(name,"polygons")   != NULL)
+		if(strstr(name,"Room") != NULL)
+//		if(strstr(name,"Room") != NULL || strstr(name,"polygons")   != NULL)
 		{
 			//emu_printf("hwram1 %d %s\n", decodedSize, name);
 			dst = (uint8_t *)hwram_screen;
 		}
 		else
 		{
-//			if(strstr(name,"polygons")   != NULL || strstr(name,"movie") != NULL)
-			if(strstr(name,"movie") != NULL)
+			if(strstr(name,"polygons")   != NULL || strstr(name,"movie") != NULL)
+//			if(strstr(name,"movie") != NULL)
 			{
 				dst = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(decodedSize);

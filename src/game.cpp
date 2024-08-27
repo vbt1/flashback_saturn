@@ -6,7 +6,6 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 //#define HEAP_WALK 1
- //#define SLAVE_SOUND 1
 extern "C" {
 	#include 	<string.h>
 	#include <stdio.h>
@@ -36,6 +35,8 @@ extern Uint8 *current_lwram;
 //extern Uint8 *current_dram;
 extern Uint8 *save_current_lwram;
 }
+extern void sat_restart_audio(void);
+//extern volatile Uint8 audioEnabled;
 #include "saturn_print.h"
 #include "lz.h"
 
@@ -523,6 +524,7 @@ heapWalk();
 				}
 			}
 			slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+//emu_printf("slsynch Game::mainLoop()\n");		
 			slSynch();
 			return;
 		}
@@ -568,10 +570,10 @@ emu_printf("vbt playmusic chg lvl\n");
 		_mix.pauseMusic();
 			loadLevelMap();
 			_loadMap = false;
-//			_vid.fullRefresh();
-			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//			_stub->updateScreen(0);
-//	_vid.updateScreen();
+			//audioEnabled = 0;
+			sat_restart_audio();
+//			_mix.stopAll();
+			_mix.init();
 
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			{
@@ -626,6 +628,7 @@ emu_printf("vbt playmusic chg lvl\n");
 			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 	
 		_cut._stop = false;
+		//audioEnabled = 1;
 //		_stub->_pi.backspace = false;
 //		_stub->_pi.quit = false;
 	}
@@ -639,6 +642,7 @@ emu_printf("vbt playmusic chg lvl\n");
 	}*/
 //emu_printf("Game::mainLoop slSynch\n");
 //	_vid.SAT_displayPalette();
+//emu_printf("slsynch Game::mainLoop() 2\n");			
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 
@@ -655,9 +659,6 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
-#ifdef SLAVE_SOUND	// vbt : pas de video si on utilise le slave pour l'audio
-	return;
-#endif
 //emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram);
 //		return;   // vbt : pour ne pas lire les videos
 
@@ -1029,10 +1030,11 @@ bool Game::handleContinueAbort() {
 		sprintf(textBuf, "SCORE  %08lu", _score);
 		_vid.drawString(textBuf, 90, 180, 0xE3);
 
-#ifndef SLAVE_SOUND
+
 		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
+//emu_printf("slsynch Game::handleContinueAbort()\n");					
 		slSynch();
-#endif
+
 		if (_res.isMac()) {
 
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
@@ -1819,6 +1821,7 @@ void Game::loadLevelMap() {
 }
 
 void Game::loadLevelData() {
+	//audioEnabled = 0;
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
 	switch (_res._type) {
@@ -1874,7 +1877,8 @@ void Game::loadLevelData() {
 		_vid.setTextPalette();
 		_vid.drawString("Loading Please wait", 20, 40, 0xE7);
 		slScrAutoDisp(NBG1ON);
-		slSynch();
+//emu_printf("slsynch Game::loadLevelData()\n");							
+//		slSynch();
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
 		_res.MAC_loadLevelData(_currentLevel);
@@ -1950,6 +1954,7 @@ emu_printf("pge_resetMessages\n");
 */
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
+	//audioEnabled = 1;	
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
