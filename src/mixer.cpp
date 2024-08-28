@@ -32,7 +32,7 @@ void Mixer::init() {
 	_mutex = _stub->createMutex();
 //slPrint((char *)"mix.startAudio    ",slLocate(10,12));	
 //slSynch();
-	_stub->startAudio(Mixer::mixCallback, this);
+//	_stub->startAudio(Mixer::mixCallback, this);
 //slPrint((char *)"mix.started Audio    ",slLocate(10,12));	
 }
 
@@ -241,32 +241,6 @@ void Mixer::stopMusic() {
 	}
 */	
 }
-void Mixer::mix(int8 *buf, int len) {
-//emu_printf(" Mixer::mix\n");
-	//MutexStack(_stub, _mutex);
-	memset(buf, 0, len);
-	if (_premixHook) {
-		if (!_premixHook(_premixHookData, buf, len)) {
-			_premixHook = 0;
-			_premixHookData = 0;
-		}
-	}
-
-	for (uint8 i = 0; i < NUM_CHANNELS; ++i) {
-		MixerChannel *ch = &_channels[i];
-		if (ch->active) {
-			for (int pos = 0; pos < len; ++pos) {
-				if ((ch->chunkPos >> FRAC_BITS) >= (ch->chunk.len - 1)) {
-					ch->active = false;
-					break;
-				}
-				int out = resampleLinear(&ch->chunk, ch->chunkPos, ch->chunkInc, FRAC_BITS);
-				addclamp(buf[pos], out * ch->volume / Mixer::MAX_VOLUME);
-				ch->chunkPos += ch->chunkInc;
-			}
-		}
-	}
-}
 
 void Mixer::addclamp(int8& a, int b) {
 	int add = a + b;
@@ -277,7 +251,8 @@ void Mixer::addclamp(int8& a, int b) {
 	}
 	a = add;
 }
-
+/*
 void Mixer::mixCallback(void *param, uint8 *buf, int len) {
 	((Mixer *)param)->mix((int8 *)buf, len);
 }
+*/

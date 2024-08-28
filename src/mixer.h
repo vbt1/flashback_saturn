@@ -77,10 +77,10 @@ struct Mixer {
 	void unpauseMusic(void);
 	void stopMusic();
 	uint32 getSampleRate() const;
-	void mix(int8 *buf, int len);
+//	void mix(int8 *buf, int len);
 
 	static void addclamp(int8 &a, int b);
-	static void mixCallback(void *param, uint8 *buf, int len);
+//	static void mixCallback(void *param, uint8 *buf, int len);
 };
 
 template <class T>
