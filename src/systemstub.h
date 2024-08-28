@@ -92,7 +92,7 @@ struct SystemStub {
 	virtual void stopAudio() = 0;
 	virtual uint32 getOutputSampleRate() = 0;
 
-	virtual void *createMutex() = 0;
+//	virtual void *createMutex() = 0;
 	virtual void destroyMutex(void *mutex) = 0;
 	virtual void lockMutex(void *mutex) = 0;
 	virtual void unlockMutex(void *mutex) = 0;

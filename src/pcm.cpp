@@ -73,13 +73,16 @@ void snd_init()
 
    // Turn on Sound CPU again
    smpc_smc_sndon_call();
+   
+    volatile uint16_t *control = (uint16_t *)0x25b00400;
+    control[0] = 0x20f; // master vol  vbt : pour volume et 4mb   
 	emu_printf("snd_init done\n");   
 }
 
 void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
 {
-    volatile uint16_t *control = (uint16_t *)0x25b00400;
-    control[0] = 0x20f; // master vol  vbt : pour volume et 4mb
+//    volatile uint16_t *control = (uint16_t *)0x25b00400;
+//    control[0] = 0x207; // master vol  vbt : pour volume et 4mb
                     /*
                         // setp dma to sound memory
                         cpu_dmac_cfg_t cfg = {
@@ -147,6 +150,7 @@ void pcm_sample_start(pcm_sample_t *s)
     // start playback
     slot->kyonb = 1;
     slot->kyonex = 1;
+	asm("nop");
 }
 
 void pcm_sample_stop(pcm_sample_t *s)
@@ -155,12 +159,17 @@ void pcm_sample_stop(pcm_sample_t *s)
     // stop playback
     slot->kyonb = 0;
     slot->kyonex = 0;
+	
+    slot->sa = 0;
+    slot->lsa = 0;
+    slot->lea = 0;
+	asm("nop");
 }
 
 void pcm_sample_set_loop(pcm_sample_t *s, pcm_sample_loop_t loop)
 {
     scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
-    slot->lpctl = 1;
+    slot->lpctl = loop;
 }
 
 #define SMPC_REG_SF             *((volatile uint8_t *)0x20100063)

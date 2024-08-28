@@ -29,7 +29,7 @@ void Mixer::init() {
 	memset(_channels, 0, sizeof(_channels));
 	_premixHook = 0;
 //slPrint((char *)"mix.createMutex    ",slLocate(10,12));		
-	_mutex = _stub->createMutex();
+//	_mutex = _stub->createMutex();
 //slPrint((char *)"mix.startAudio    ",slLocate(10,12));	
 //slSynch();
 //	_stub->startAudio(Mixer::mixCallback, this);
@@ -48,31 +48,6 @@ void Mixer::setPremixHook(PremixHook premixHook, void *userData) {
 	MutexStack(_stub, _mutex);
 	_premixHook = premixHook;
 	_premixHookData = userData;
-}
-
-void Mixer::play(const MixerChunk *mc, uint16 freq, uint8 volume) {
-	//emu_printf("Mixer::play(%d, %d)\n", freq, volume);
-	MutexStack(_stub, _mutex);
-	MixerChannel *ch = 0;
-	for (int i = 0; i < NUM_CHANNELS; ++i) {
-		MixerChannel *cur = &_channels[i];
-		if (cur->active) {
-			if (cur->chunk.data == mc->data) {
-				cur->chunkPos = 0;
-				return;
-			}
-		} else {
-			ch = cur;
-			break;
-		}
-	}
-	if (ch) {
-		ch->active = true;
-		ch->volume = volume;
-		ch->chunk = *mc;
-		ch->chunkPos = 0;
-		ch->chunkInc = (freq << FRAC_BITS) / _stub->getOutputSampleRate();
-	}
 }
 
 uint32 Mixer::getSampleRate() const {

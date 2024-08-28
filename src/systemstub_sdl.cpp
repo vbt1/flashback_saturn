@@ -186,7 +186,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void startAudio(AudioCallback callback, void *param);
 	virtual void stopAudio();
 	virtual uint32 getOutputSampleRate();
-	virtual void *createMutex();
+//	virtual void *createMutex();
 	virtual void destroyMutex(void *mutex);
 	virtual void lockMutex(void *mutex);
 	virtual void unlockMutex(void *mutex);
@@ -436,7 +436,7 @@ void SystemStub_SDL::stopAudio() {
 uint32 SystemStub_SDL::getOutputSampleRate() {
 	return SOUND_SAMPLE_RATE;
 }
-
+/*
 void *SystemStub_SDL::createMutex() {
 //emu_printf("SystemStub_SDL::createMutex\n");	
 	SatMutex *mtx = (SatMutex*)malloc(sizeof(SatMutex));
@@ -447,7 +447,7 @@ void *SystemStub_SDL::createMutex() {
 #endif
 	return mtx;
 }
-
+*/
 void SystemStub_SDL::destroyMutex(void *mutex) {
 	sat_free(mutex);
 	return;
