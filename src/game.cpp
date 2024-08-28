@@ -16,6 +16,8 @@ extern "C" {
 #include <sega_per.h>
 #include <sega_gfs.h> 
 //#include <sega_spr.h>
+#include "pcm.h"
+#include "scsp.h"
 #include "sat_mem_checker.h"
 void	*malloc(size_t);
 #define	BUP_LIB_ADDRESS		(*(volatile Uint32 *)(0x6000350+8))
@@ -163,7 +165,7 @@ static Uint32 getFreeSaveBlocks(void) {
 
 Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang)
 	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
-	_mix(stub), _res(dataPath, ver, lang), _sfxPly(&_mix), _vid(&_res, stub),
+	_mix(stub), _res(dataPath, ver, lang), /*_sfxPly(&_mix),*/ _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
 	_inp_demPos = 0;
@@ -181,11 +183,12 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 void Game::run() {
 
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
-
+emu_printf("_randSeed\n");
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram	
+emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
-
+emu_printf("_res.load_TEXT\n");
 	_res.load_TEXT();
 
 	switch (_res._type) {
@@ -345,7 +348,6 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			slTVOn();
 		}
 	}
-
 	_res.free_TEXT();
 	_mix.free();
 	_stub->destroy();
@@ -571,9 +573,9 @@ emu_printf("vbt playmusic chg lvl\n");
 			loadLevelMap();
 			_loadMap = false;
 			//audioEnabled = 0;
-			sat_restart_audio();
-//			_mix.stopAll();
-			_mix.init();
+ // vbt à mettre si slave reduit les plantages
+//			sat_restart_audio();
+//			_mix.init();
 
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			{
@@ -1986,16 +1988,39 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < _res._numSfx) {
 		SoundFx *sfx = &_res._sfxList[num];
 		if (sfx->data) {
-			MixerChunk mc;
-			mc.data = sfx->data;
-			mc.len = sfx->len;
-			_mix.play(&mc, 6000, Mixer::MAX_VOLUME >> softVol);
+		emu_printf("play sound %02d/%d\n",num,_res._numSfx);			
+//			MixerChunk mc;
+//			mc.data = sfx->data;
+//			mc.len = sfx->len;
+//			_mix.play(&mc, 6000, Mixer::MAX_VOLUME >> softVol);
+
+	volatile scsp_dbg_reg *dbg_reg = (scsp_dbg_reg *)get_scsp_dbg_reg();
+	unsigned int i;
+	for(i=0;i<16;i++)
+	{
+		dbg_reg->mslc= i;
+		asm("nop");
+		asm("nop");
+		asm("nop");
+		if(dbg_reg->ca==0)
+			break;
+	}
+			uint32_t address = (uint32_t)sfx->data;
+			pcm_sample_t pcm = {.addr = address, .slot = i, .bit = pcm_sample_8bit};
+			pcm_prepare_sample(&pcm, sfx->len);
+//			pcm_sample_set_samplerate(&pcm, sfx->freq);
+			pcm_sample_set_samplerate(&pcm, 6000);
+			pcm_sample_set_loop(&pcm, pcm_sample_loop_no_loop);
+			pcm_sample_start(&pcm);
+
 		}
 	} else if (num == 66) {
 		// open/close inventory (DOS)
 	} else if (num >= 68 && num <= 75) {
+		emu_printf("play sfx %d\n",num);
+		
 		// in-game music
-		_sfxPly.play(num);
+//		_sfxPly.play(num);
 // 		_mix.playMusic(num); // vbt ࠶oir entre les 2		
 	} else if (num == 76) {
 		// metro

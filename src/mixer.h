@@ -86,10 +86,14 @@ struct Mixer {
 template <class T>
 int resampleLinear(T *sample, int pos, int step, int fracBits) {
 	const int inputPos = pos >> fracBits;
+#if 1
 	const int inputFrac = (1 << fracBits) - 1;
 	int out = sample->getPCM(inputPos);
 	out += (sample->getPCM(inputPos + 1) - out) * inputFrac >> fracBits;
 	return out;
+#else
+	return sample->getPCM(inputPos);
+#endif
 }
 /*
 template <class T>

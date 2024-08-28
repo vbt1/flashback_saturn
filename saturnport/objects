@@ -13,19 +13,19 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/resource_mac.cpp \
 		$(SRCDIR)/resource_aba.cpp \
 		$(SRCDIR)/decode_mac.cpp \
-		$(SRCDIR)/sfx_player.cpp \
 		$(SRCDIR)/staticres.cpp \
 		$(SRCDIR)/systemstub_sdl.cpp \
 		$(SRCDIR)/util.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \
 		$(SRCDIR)/lz.cpp \
-		$(SRCDIR)/cinit.cpp
+		$(SRCDIR)/cinit.cpp \
+		$(SRCDIR)/pcm.cpp
 
 SYSOBJS = $(SRCDIR)/workarea.o $(SRCDIR)/low.o
 OBJS = $(SRCS:.cpp=.o)
 LIBS = C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_gfs2.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_mem.a \
- $(SGLLDR)/sega_pcm.a $(SGLLDR)/sega_snd.a $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a 
+$(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a 
 
 #L:\saturn\SBL6\SEGALIB\LIB\vbtelf4
 

@@ -251,7 +251,7 @@ void Mixer::mix(int8 *buf, int len) {
 			_premixHookData = 0;
 		}
 	}
-//	emu_printf(" Mixer::mix %d %d %d bef\n",_channels[0].chunkPos,_channels[0].chunkInc,_channels[0].chunk.len);
+
 	for (uint8 i = 0; i < NUM_CHANNELS; ++i) {
 		MixerChannel *ch = &_channels[i];
 		if (ch->active) {
@@ -260,16 +260,12 @@ void Mixer::mix(int8 *buf, int len) {
 					ch->active = false;
 					break;
 				}
-//	emu_printf(" Mixer::mix %d %d %d len %d during1\n",_channels[0].chunkPos,_channels[0].chunkInc,_channels[0].chunk.len,len);				
-
 				int out = resampleLinear(&ch->chunk, ch->chunkPos, ch->chunkInc, FRAC_BITS);
 				addclamp(buf[pos], out * ch->volume / Mixer::MAX_VOLUME);
-//	emu_printf(" Mixer::mix %d %d %d len %d during2\n",_channels[0].chunkPos,_channels[0].chunkInc,_channels[0].chunk.len,len);				
 				ch->chunkPos += ch->chunkInc;
 			}
 		}
 	}
-//	emu_printf(" Mixer::mix %d %d %d after\n",_channels[0].chunkPos,_channels[0].chunkInc,_channels[0].chunk.len);
 }
 
 void Mixer::addclamp(int8& a, int b) {

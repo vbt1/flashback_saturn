@@ -12,6 +12,8 @@ extern "C"
 #include <sl_def.h>
 	#include 	<stdio.h>	
 	#include 	<string.h>	
+#include "pcm.h"	
+#include "scsp.h"	
 //#include <sega_mem.h>
 
 
@@ -27,7 +29,8 @@ void	*malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 void *calloc (size_t, size_t);
-	static void process_cmd();
+static void process_cmd();
+//extern Uint8 *current_dram2;
 }
 #include "saturn_print.h"
 
@@ -54,6 +57,8 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 //#ifdef WITH_MEM_MALLOC
 #if 1
+emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
+
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 //	_scratchBuffer = (uint8_t *)current_dram;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
@@ -130,8 +135,10 @@ void Resource::init() {
 	//if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
 		{
 	//		f.close();
+emu_printf("new ResourceMac\n");
 			_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 		}
+emu_printf("_mac->load\n");
 		_mac->load();
 		break;
 	}
@@ -1118,7 +1125,7 @@ void Resource::decodePGE(const uint8_t *p, int size) {
 		pge->text_num = _readUint16(p); p += 2;
 	}
 }
-
+/*
 void Resource::load_ANI(File *f) {
 //	debug(DBG_RES, "Resource::load_ANI()");
 	const int size = f->size();
@@ -1211,7 +1218,7 @@ emu_printf("Resource::load_CMP()\n");
 	}
 	sat_free(tmp);
 }
-/*
+
 void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
 	*buf = 0;
 	int offset = _voicesOffsetsTable[num];
@@ -1254,7 +1261,7 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 		}
 	}
 }
-*/
+
 static void normalizeSPL(SoundFx *sfx) {
 	static const int kGain = 2;
 
@@ -1287,8 +1294,8 @@ void Resource::load_SPL(File *f) {
 		debug(DBG_RES, "sfx=%d size=%d", i, size);
 		assert(size != 0 && (size & 1) == 0);
 		if (i == 64) {
-	/*		warning("Skipping sound #%d (%s) size %d", i, _splNames[i], size);
-			f->seek(offset + size);*/
+	//		warning("Skipping sound #%d (%s) size %d", i, _splNames[i], size);
+	//		f->seek(offset + size);
 		}  else {
 			_sfxList[i].offset = offset;
 			_sfxList[i].freq = kPaulaFreq / 650;
@@ -1354,7 +1361,7 @@ void Resource::load_BNQ(File *f) {
 		f->read(_bnq, len);
 	}
 }
-
+*/
 void Resource::load_SPM(File *f) {
 /* // vbt version pc on verra plus tard	
 	static const int kPersoDatSize = 178647;
@@ -2078,6 +2085,8 @@ void Resource::MAC_loadSounds() {
 	static const int kHeaderSize = 0x24;
 	const int soundType = _mac->_sndIndex;
 	assert(soundType != -1);
+	uint8_t *p = (uint8_t *)0x25A08000;
+	
 	for (int i = 0; i < NUM_SFXS; ++i) {
 		const int num = table[i];
 		if (num != -1) {
@@ -2089,8 +2098,9 @@ void Resource::MAC_loadSounds() {
 			uint8_t buf[kHeaderSize];
 			_mac->_f.read(buf, kHeaderSize);
 			dataSize -= kHeaderSize;
-			uint8_t *p = (uint8_t *)sat_malloc(dataSize);
-			if (p) {
+//			uint8_t *p = (uint8_t *)sat_malloc(dataSize);
+
+//			if (p) {
 				_mac->_f.read(p, dataSize);
 				for (int j = 0; j < dataSize; ++j) {
 					p[j] ^= 0x80;
@@ -2098,8 +2108,66 @@ void Resource::MAC_loadSounds() {
 				_sfxList[i].len = READ_BE_UINT32(buf + 0x12);
 				_sfxList[i].freq = READ_BE_UINT16(buf + 0x16);
 				_sfxList[i].data = p;
-				emu_printf("sfx #%d len %d datasize %d freq %d\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq);
-			}
+				emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
+//			}
+/*
+	volatile scsp_dbg_reg *dbg_reg = (scsp_dbg_reg *)get_scsp_dbg_reg();
+
+	uint32_t address = (uint32_t)_sfxList[i].data;
+    pcm_sample_t hadoken = {.addr = address, .slot = 0, .bit = pcm_sample_8bit};
+    pcm_prepare_sample(&hadoken, _sfxList[i].len);
+    pcm_sample_set_samplerate(&hadoken, _sfxList[i].freq);
+//    pcm_sample_set_loop(&hadoken, pcm_sample_loop_no_loop);
+    pcm_sample_set_loop(&hadoken, pcm_sample_loop_loop);
+    pcm_sample_start(&hadoken);	
+
+	slSynch();
+
+
+	do
+	{
+		emu_printf("playing sound %02d\n");
+		
+	}
+	while(dbg_reg->ca!=0);
+*/
+
+/*
+
+typedef struct
+{
+    uint32_t addr;
+    int slot;
+    pcm_sample_b_t bit;
+} pcm_sample_t;
+*/
+			p += SAT_ALIGN(dataSize);
 		}
 	}
+	/*
+	int i = 18;
+	uint32_t address = (uint32_t)_sfxList[i].data;
+    pcm_sample_t hadoken = {.addr = address, .slot = 1, .bit = pcm_sample_8bit};
+    pcm_prepare_sample(&hadoken, _sfxList[i].len);
+    pcm_sample_set_samplerate(&hadoken, _sfxList[i].freq);
+//    pcm_sample_set_loop(&hadoken, pcm_sample_loop_no_loop);
+    pcm_sample_set_loop(&hadoken, pcm_sample_loop_loop);
+    pcm_sample_start(&hadoken);	
+//	sfx #18 len 22794 datasize 22796 freq 7714 addr 0x25a16b68
+	
+	
+	volatile scsp_dbg_reg *dbg_reg = (scsp_dbg_reg *)get_scsp_dbg_reg();
+//static volatile Uint8  *adr_com_block = (Uint8 *)(((Uint8 *)0x25a00000) + (*((volatile Uint32 *)((((Uint8 *)0x25a00000) + 0x400) + (0x04)))));
+
+dbg_reg->mslc= 2;
+
+slSynch();
+while(1)
+{
+	emu_printf("%02x %02x\n",dbg_reg->raw[0]>>3,dbg_reg->raw[0]&7);
+}	
+*/
+//$408 1111 1222 2334 4444 1:MSLC monitor slot 2:CA call address 3:SGC Slot phase 4:EG Slot envelope
+	
+	
 }

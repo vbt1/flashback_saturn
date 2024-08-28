@@ -90,7 +90,7 @@ struct Game {
 	Menu _menu;
 	Mixer _mix;
 	Resource _res;
-	SfxPlayer _sfxPly;
+//	SfxPlayer _sfxPly;
 	Video _vid;
 	SystemStub *_stub;
 	const char *_savePath;

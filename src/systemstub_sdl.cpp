@@ -15,8 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-#define SLAVE_SOUND 1
-#define SOUND 1
+//#define SLAVE_SOUND 1
+//#define SOUND 1
 extern "C" {
 #include <string.h>	
 #include <sgl.h>
@@ -34,9 +34,10 @@ extern "C" {
 #include "sat_mem_checker.h"
 #include "cdtoc.h"
 void	*malloc(size_t);
+//void CSH_AllClr(void);
 //extern TEXTURE tex_spr[4];
 }
-
+extern void snd_init();
 //extern void emu_printf(const char *format, ...);
 
 #include "sys.h"
@@ -158,7 +159,7 @@ uint8 isNTSC(void);
 struct SystemStub_SDL : SystemStub {
 	enum {
 		MAX_BLIT_RECTS = 200,
-		SOUND_SAMPLE_RATE = 11025,
+		SOUND_SAMPLE_RATE = 8400,
 		JOYSTICK_COMMIT_VALUE = 3200
 	};
 
@@ -589,6 +590,7 @@ void SystemStub_SDL::setup_input (void) {
 }
 
 void SystemStub_SDL::load_audio_driver(void) {
+/*
 	SndIniDt snd_init;
 	Uint8 sound_map[] = {0xff , 0xff};
 	
@@ -621,7 +623,8 @@ void SystemStub_SDL::load_audio_driver(void) {
 	SND_INI_ARA_SZ(snd_init) 	= sizeof(sound_map);
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
-memset((void *)SDDRV_ADDR,0x00,drv_size);
+memset((void *)SDDRV_ADDR,0x00,drv_size);*/
+	snd_init();
 	return;
 }
 
@@ -785,7 +788,7 @@ static PcmHn createHandle(int bufNo) {
 	PCM_INFO_FILE_SIZE(&info) = SND_BUFFER_SIZE * SND_BUF_SLOTS;
 	PCM_INFO_CHANNEL(&info) = 1; // Mono
 	PCM_INFO_SAMPLING_BIT(&info) = 8; // 8 bits
-	PCM_INFO_SAMPLING_RATE(&info) = 11025; // 11025hz
+	PCM_INFO_SAMPLING_RATE(&info) = 8400; // 11025hz
 	PCM_INFO_SAMPLE_FILE(&info) = SND_BUFFER_SIZE * SND_BUF_SLOTS; // Number of samples in the file
 
 	pcm = PCM_CreateMemHandle(&para); // Prepare the handle
@@ -842,7 +845,7 @@ emu_printf("restart audio\n");
 }
 #endif
 void fill_buffer_slot(void) {
-	//slCashPurge();
+//	CSH_AllClr();
 	// Prepare the indexes of next slot/buffers.
 #ifdef SLAVE_SOUND
 //emu_printf("fill_buffer_slot slave\n");
@@ -854,7 +857,7 @@ void fill_buffer_slot(void) {
 	
 	*(Uint8*)OPEN_CSH_VAR(runningSlave) = 1;
 #else
-emu_printf("fill_buffer_slot master\n");	
+//emu_printf("fill_buffer_slot master\n");	
 	Uint8 nextBuf = (curBuf + 1) % 2;
 	Uint8 nextSlot = (curSlot + 1) % SND_BUF_SLOTS;
 	Uint8 workingBuffer = curBuf;
@@ -936,7 +939,7 @@ emu_printf("issue 1\n");
 			curPlyBuf = 0;
 		}
 	}
-/*
+
 	// If audio gets stuck... restart it
 	if((PCM_GetPlayStatus(pcm[0]) == PCM_STAT_PLAY_END) || (PCM_GetPlayStatus(pcm[1]) == PCM_STAT_PLAY_END)) {
 emu_printf("issue 2\n");
@@ -944,7 +947,7 @@ emu_printf("issue 2\n");
 		counter = 0;
 		curPlyBuf = 0;
 	}
-*/
+
 	return;
 }
 #endif

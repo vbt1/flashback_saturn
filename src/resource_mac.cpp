@@ -26,8 +26,9 @@ ResourceMac::ResourceMac(const char *filePath, const char *dataPath)
 	: _dataOffset(0), _types(0), _entries(0), _sndIndex(-1) {
 	memset(&_map, 0, sizeof(_map));
 //	_f.open(filePath, "rb", fs);
-//emu_printf("_f.open\n");
+emu_printf("_f.open\n");
 	_f.open(filePath, dataPath, "rb");
+emu_printf("_f.open\n");
 }
 
 ResourceMac::~ResourceMac() {

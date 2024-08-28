@@ -25,9 +25,8 @@
 
 #undef sleep 
 
-//#define SLAVE_SOUND 1
-#define PCM_ADDR ((void*)0x25a20000)
-#define PCM_SIZE (4096L*8)
+//#define PCM_ADDR ((void*)0x25a20000)
+//#define PCM_SIZE (4096L*8)
 
 int  cdUnlock(void); // CD Drive unlocker, when loading game through PAR
 
@@ -70,7 +69,6 @@ struct PlayerInput {
 
 struct SystemStub {
 	typedef void (*AudioCallback)(void *param, uint8 *stream, int len);
-
 	PlayerInput _pi;
 
 	virtual ~SystemStub() {}
@@ -89,7 +87,7 @@ struct SystemStub {
 	virtual void processEvents() = 0;
 	virtual void sleep(uint32 duration) = 0;
 	virtual uint32 getTimeStamp() = 0;
-
+	
 	virtual void startAudio(AudioCallback callback, void *param) = 0;
 	virtual void stopAudio() = 0;
 	virtual uint32 getOutputSampleRate() = 0;
@@ -98,7 +96,7 @@ struct SystemStub {
 	virtual void destroyMutex(void *mutex) = 0;
 	virtual void lockMutex(void *mutex) = 0;
 	virtual void unlockMutex(void *mutex) = 0;
-
+	
 	virtual void setPalette(uint8 *palette, uint16 colors) = 0;
 	virtual void setup_input (void) = 0;
 };
@@ -115,7 +113,6 @@ struct MutexStack {
 		_stub->unlockMutex(_mutex);
 	}
 };
-
 extern SystemStub *SystemStub_SDL_create();
 
 #endif // __SYSTEMSTUB_H__
