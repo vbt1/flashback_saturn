@@ -38,28 +38,19 @@ void Mixer::init() {
 
 void Mixer::free() {
 //	setPremixHook(0, 0);
-	stopAll();
+	//stopAll();
 	_stub->stopAudio();
 	_stub->destroyMutex(_mutex);
 }
 
 void Mixer::setPremixHook(PremixHook premixHook, void *userData) {
 	debug(DBG_SND, "Mixer::setPremixHook()");
-	MutexStack(_stub, _mutex);
 	_premixHook = premixHook;
 	_premixHookData = userData;
 }
 
 uint32 Mixer::getSampleRate() const {
 	return _stub->getOutputSampleRate();
-}
-
-void Mixer::stopAll() {
-	debug(DBG_SND, "Mixer::stopAll()");
-	MutexStack(_stub, _mutex);
-	for (uint8 i = 0; i < NUM_CHANNELS; ++i) {
-		_channels[i].active = false;
-	}
 }
 
 void Mixer::pauseMusic(void)

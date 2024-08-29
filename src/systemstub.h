@@ -101,18 +101,6 @@ struct SystemStub {
 	virtual void setup_input (void) = 0;
 };
 
-struct MutexStack {
-	SystemStub *_stub;
-	void *_mutex;
-
-	MutexStack(SystemStub *stub, void *mutex)
-		: _stub(stub), _mutex(mutex) {
-		_stub->lockMutex(_mutex);
-	}
-	~MutexStack() {
-		_stub->unlockMutex(_mutex);
-	}
-};
 extern SystemStub *SystemStub_SDL_create();
 
 #endif // __SYSTEMSTUB_H__

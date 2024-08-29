@@ -81,28 +81,6 @@ void snd_init()
 
 void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
 {
-//    volatile uint16_t *control = (uint16_t *)0x25b00400;
-//    control[0] = 0x207; // master vol  vbt : pour volume et 4mb
-                    /*
-                        // setp dma to sound memory
-                        cpu_dmac_cfg_t cfg = {
-                            .channel = 0,
-                            .src_mode = CPU_DMAC_SOURCE_INCREMENT,
-                            .dst = SCSP_RAM + s->addr,
-                            .dst_mode = CPU_DMAC_DESTINATION_INCREMENT,
-                            .src = data,
-                            .len = sz,
-                            .stride = CPU_DMAC_STRIDE_1_BYTE,
-                            .bus_mode = CPU_DMAC_BUS_MODE_BURST,
-                            .ihr = NULL,
-                            .ihr_work = NULL};
-                
-                        cpu_dmac_channel_wait(0);
-                        cpu_dmac_channel_config_set(&cfg);
-                        cpu_dmac_channel_start(0);
-                    */
-//    memcpy((void *)(SCSP_RAM + s->addr), data, sz);
-
     // fill slot
     volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
 	asm("nop");
@@ -124,9 +102,7 @@ void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
     // volume & pan
     slot->disdl = 7;
     slot->dipan = 0;
-
-    // wait dma copy
-    // cpu_dmac_channel_wait(0);
+	asm("nop");
 }
 
 void pcm_sample_set_samplerate(pcm_sample_t *s, uint32_t samplerate)
@@ -156,11 +132,7 @@ void pcm_sample_start(pcm_sample_t *s)
 
     // start playback
     slot->kyonb = 1;
-	asm("nop");
     slot->kyonex = 1;
-	asm("nop");
-	asm("nop");
-	asm("nop");
 	asm("nop");
 }
 
@@ -176,12 +148,16 @@ void pcm_sample_stop(pcm_sample_t *s)
     slot->lsa = 0;
     slot->lea = 0;
 	asm("nop");
+
 }
 
 void pcm_sample_set_loop(pcm_sample_t *s, pcm_sample_loop_t loop)
 {
     volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+	asm("nop");
     slot->lpctl = loop;
+	asm("nop");
+
 }
 
 #define SMPC_REG_SF             *((volatile uint8_t *)0x20100063)

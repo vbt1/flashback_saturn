@@ -2085,7 +2085,7 @@ void Resource::MAC_loadSounds() {
 	static const int kHeaderSize = 0x24;
 	const int soundType = _mac->_sndIndex;
 	assert(soundType != -1);
-	uint8_t *p = (uint8_t *)0x25A08000;
+	uint8_t *p = (uint8_t *)0x25A04000;
 	
 	for (int i = 0; i < NUM_SFXS; ++i) {
 		const int num = table[i];
