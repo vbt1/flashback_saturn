@@ -105,11 +105,12 @@ void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
 
     // fill slot
     volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+	asm("nop");
 
     // setup sample
     slot->pcm8b = s->bit & 1;
 	
-	emu_printf("s->addr-SCSP_RAM %06x\n",s->addr-SCSP_RAM);
+	emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d\n",s->addr-SCSP_RAM,slot->pcm8b);
 	
     slot->sa = s->addr-SCSP_RAM;
     slot->lsa = 0;
@@ -130,7 +131,9 @@ void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
 
 void pcm_sample_set_samplerate(pcm_sample_t *s, uint32_t samplerate)
 {
-    scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+	asm("nop");
+	
     int octr;
     int shiftr;
     int fnsr;
@@ -142,20 +145,29 @@ void pcm_sample_set_samplerate(pcm_sample_t *s, uint32_t samplerate)
     // frequency
     slot->oct = (-octr) & 0xf;
     slot->fns = fnsr;
+	asm("nop");
+
 }
 
 void pcm_sample_start(pcm_sample_t *s)
 {
-    scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+	asm("nop");
+
     // start playback
     slot->kyonb = 1;
+	asm("nop");
     slot->kyonex = 1;
+	asm("nop");
+	asm("nop");
+	asm("nop");
 	asm("nop");
 }
 
 void pcm_sample_stop(pcm_sample_t *s)
 {
-    scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+	asm("nop");
     // stop playback
     slot->kyonb = 0;
     slot->kyonex = 0;
@@ -168,7 +180,7 @@ void pcm_sample_stop(pcm_sample_t *s)
 
 void pcm_sample_set_loop(pcm_sample_t *s, pcm_sample_loop_t loop)
 {
-    scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
     slot->lpctl = loop;
 }
 

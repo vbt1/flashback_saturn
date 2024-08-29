@@ -1984,6 +1984,8 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 //	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
+int channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,00,0,0,0};
+
 void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < _res._numSfx) {
 		SoundFx *sfx = &_res._sfxList[num];
@@ -1994,24 +1996,57 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 //			mc.len = sfx->len;
 //			_mix.play(&mc, 6000, Mixer::MAX_VOLUME >> softVol);
 
-	unsigned int i=0;
+	int i=0;
 
 	volatile scsp_dbg_reg *dbg_reg = (scsp_dbg_reg *)get_scsp_dbg_reg();
 
-	for(i=0;i<4;i++)
+	for(i=0;i<16;i++)
 	{
 		dbg_reg->mslc= i;
 		asm("nop");
 		asm("nop");
 		asm("nop");
 		asm("nop");
-		if(dbg_reg->ca==0)
-			break;
-	}
-		dbg_reg->mslc= 0;
+volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(i);		
 		asm("nop");
-		emu_printf("play sound %02d/%d on channel %02d\n",num,_res._numSfx,i);				
-	
+		asm("nop");
+    slot->kyonb = 0;		
+		asm("nop");
+		slot->kyonex = 0;
+		asm("nop");
+		asm("nop");
+//		slSynch();
+		emu_printf("slot %d addr %x lea %x len %d chan %d ca %d\n",i,slot->sa,slot->lea,channel_len[i],
+		dbg_reg->raw[0]>>5,dbg_reg->ca);
+
+		if((dbg_reg->ca)*4096>=channel_len[i])
+		{
+			break;
+		}
+	}
+	if(i>15)
+	{
+			i=0;
+			memset(channel_len,0,16);
+	}
+
+//		dbg_reg->mslc= 0;
+		asm("nop");
+//		dbg_reg->ca=0;
+		asm("nop");
+		asm("nop");
+		asm("nop");
+		asm("nop");
+		asm("nop");
+		asm("nop");
+		asm("nop");
+
+		asm("nop");
+		emu_printf("play sound %02d/%d on channel %02d ca = %d len %d raw %02x\n",num,_res._numSfx,i,dbg_reg->ca*4096,sfx->len,dbg_reg->raw[0]&0x1f);				
+
+			channel_len[i] = sfx->len;
+
+
 			uint32_t address = (uint32_t)sfx->data;
 			pcm_sample_t pcm = {.addr = address, .slot = i, .bit = pcm_sample_8bit};
 //		pcm_sample_stop(&pcm);

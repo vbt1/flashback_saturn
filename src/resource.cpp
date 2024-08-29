@@ -2141,7 +2141,7 @@ typedef struct
     pcm_sample_b_t bit;
 } pcm_sample_t;
 */
-			p += (dataSize);
+			p += SAT_ALIGN(dataSize);
 		}
 	}
 	/*

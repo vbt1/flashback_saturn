@@ -93,13 +93,13 @@ typedef union scsp_common_reg
 typedef union scsp_dbg_reg
 {
         uint16_t raw[1];
-        uint16_t raw8[2];		
+//        uint16_t raw8[2];		
         struct
         {		
         uint16_t mslc : 5;
         uint16_t ca : 3;
         uint16_t toto : 8;
-        uint8_t _end[4];		
+//        uint8_t _end[4];		
         } __attribute__((packed));		
 } 
 __attribute__((aligned(16)))
