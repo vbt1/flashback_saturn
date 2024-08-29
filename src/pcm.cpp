@@ -76,7 +76,7 @@ void snd_init()
    
     volatile uint16_t *control = (uint16_t *)0x25b00400;
     control[0] = 0x20f; // master vol  vbt : pour volume et 4mb   
-	emu_printf("snd_init done\n");   
+//	emu_printf("snd_init done\n");   
 }
 
 void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
@@ -87,8 +87,7 @@ void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
 
     // setup sample
     slot->pcm8b = s->bit & 1;
-	
-	emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d\n",s->addr-SCSP_RAM,slot->pcm8b);
+//	emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d\n",s->addr-SCSP_RAM,slot->pcm8b);
 	
     slot->sa = s->addr-SCSP_RAM;
     slot->lsa = 0;

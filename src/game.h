@@ -25,7 +25,7 @@
 #include "mixer.h"
 #include "mod_player.h"
 #include "resource.h"
-#include "sfx_player.h"
+//#include "sfx_player.h"
 #include "video.h"
 #include "saturn_print.h"
 

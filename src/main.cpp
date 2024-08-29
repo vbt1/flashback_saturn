@@ -62,7 +62,7 @@ Uint8 *current_lwram = (Uint8 *)VBT_L_START;
 Uint8 *save_lwram = NULL;
 Uint32 position_vram = 0;
 Uint32 position_vram_aft_monster = 0;
-unsigned int end1 = 534000;//-16384;//538624;
+unsigned int end1 = 564000;//-16384;//538624;
 
 void ss_main(void) {
 	const int version = detectVersion("/");

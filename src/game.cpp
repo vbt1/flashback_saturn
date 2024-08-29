@@ -1269,6 +1269,7 @@ void Game::drawStoryTexts() {
 				sat_free(voiceSegmentData);
 			}
 */			
+			_stub->_pi.quit = false;
 			_stub->_pi.backspace = false;
 			if (_res._type == kResourceTypeMac) {
 				if (textSpeechSegment == textSegmentsCount) {
@@ -2029,7 +2030,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	} else if (num == 66) {
 		// open/close inventory (DOS)
 	} else if (num >= 68 && num <= 75) {
-		emu_printf("play sfx %d\n",num);
+//		emu_printf("play sfx %d\n",num);
 		
 		// in-game music
 //		_sfxPly.play(num);
