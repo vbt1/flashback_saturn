@@ -1465,14 +1465,14 @@ void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 					break;
 				}
 				switch (_res._type) {
-				case kResourceTypeDOS:
+				/*case kResourceTypeDOS:
 					if (!(state->dataPtr[-2] & 0x80)) {
 //						_vid.PC_decodeSpm(state->dataPtr, _res._scratchBuffer); // vbt à  remettre
 						drawCharacter(_res._scratchBuffer, state->x, state->y, state->h, state->w, pge->flags);
 					} else {
 						drawCharacter(state->dataPtr, state->x, state->y, state->h, state->w, pge->flags);
 					}
-					break;
+					break;*/
 				case kResourceTypeMac:
 					drawPiege(state);
 					break;
@@ -1535,12 +1535,14 @@ void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flag
 		assert(0); // different graphics format
 		break;
 	}
-	for (int i = 0; i < count; ++i) {
+	/*for (int i = 0; i < count; ++i) {
 		drawObjectFrame(data, dataPtr, posx, posy, flags);
 		dataPtr += 4;
-	}
+	}*/
 }
+/*
 void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
+
 	const uint8_t *src = bankDataPtr + dataPtr[0] * 32;
 
 	int16_t sprite_y = y + dataPtr[2];
@@ -1741,7 +1743,7 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 	}
 //	_vid.markBlockAsDirty(pos_x, pos_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
-
+*/
 int Game::loadMonsterSprites(LivePGE *pge) {
 //	debug(DBG_GAME, "Game::loadMonsterSprites()");
 	InitPGE *init_pge = pge->init_PGE;
@@ -1991,26 +1993,22 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < _res._numSfx) {
 		SoundFx *sfx = &_res._sfxList[num];
 		if (sfx->data) {
-//		emu_printf("play sound %02d/%d\n",num,_res._numSfx);			
+//		emu_printf("play sound %02d/%d\n",num,_res._numSfx);
+			const int volume = Mixer::MAX_VOLUME >> (2 * softVol);
 
 			int i=0;
 
 			for(i=0;i<16;i++)
 			{
-				volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(i);
-
-				slot->kyonb = 0;
-				slot->kyonex = 0;
-				slot->sa = 0;
-				slot->lsa = 0;
-				slot->lea = 0;
-				asm("nop");
-		//		emu_printf("slot %d addr %x lea %x len %d \n",i,slot->sa, slot->lea,channel_len[i]);
-
+				pcm_sample_stop(i);
 				if(channel_len[i]==0)	break;
 			}
 			if(i>15)
 			{
+				/*volatile scsp_slot_regs_t *slot1 = (scsp_slot_regs_t *)get_scsp_slot(i-1);
+				slot1->kyonb = 0;
+				slot1->kyonex = 0;
+				asm("nop");	*/			
 				i=0;
 				memset(channel_len,0,16*sizeof(int));
 			}
@@ -2019,13 +2017,13 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 			channel_len[i] = sfx->len;
 
 			uint32_t address = (uint32_t)sfx->data;
-			pcm_sample_t pcm = {.addr = address, .slot = i, .bit = pcm_sample_8bit};
+			pcm_sample_t pcm = {.addr = address, .vol = volume, .bit = pcm_sample_8bit};
 //		pcm_sample_stop(&pcm);
-			pcm_prepare_sample(&pcm, sfx->len);
+			pcm_prepare_sample(&pcm, i, sfx->len);
 //			pcm_sample_set_samplerate(&pcm, sfx->freq);
-			pcm_sample_set_samplerate(&pcm, 6000);
-			pcm_sample_set_loop(&pcm, pcm_sample_loop_no_loop);
-			pcm_sample_start(&pcm);
+			pcm_sample_set_samplerate(i, 6000);
+			pcm_sample_set_loop(i, pcm_sample_loop_no_loop);
+			pcm_sample_start(i);
 		}
 	} else if (num == 66) {
 		// open/close inventory (DOS)

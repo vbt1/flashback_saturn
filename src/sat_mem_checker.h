@@ -16,6 +16,7 @@ char *sat_strdup(const char *s);
 void memcpyl(void *, void *, int);
 void *memset4_fast(void *, long, size_t);
 #define SAT_ALIGN(a) ((a+3)&~3)
+#define SAT_ALIGN8(a) ((a+15)&~15)
 
 
 #define LOW_WORK_RAM_START 0x00280000 // Beginning of LOW WORK RAM (1Mb)

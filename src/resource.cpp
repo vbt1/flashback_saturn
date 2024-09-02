@@ -2098,76 +2098,21 @@ void Resource::MAC_loadSounds() {
 			uint8_t buf[kHeaderSize];
 			_mac->_f.read(buf, kHeaderSize);
 			dataSize -= kHeaderSize;
-//			uint8_t *p = (uint8_t *)sat_malloc(dataSize);
 
-//			if (p) {
-				_mac->_f.read(p, dataSize);
-				for (int j = 0; j < dataSize; ++j) {
-					p[j] ^= 0x80;
-				}
-				_sfxList[i].len = READ_BE_UINT32(buf + 0x12);
-				_sfxList[i].freq = READ_BE_UINT16(buf + 0x16);
-				_sfxList[i].data = p;
-				emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
-//			}
-/*
-	volatile scsp_dbg_reg *dbg_reg = (scsp_dbg_reg *)get_scsp_dbg_reg();
-
-	uint32_t address = (uint32_t)_sfxList[i].data;
-    pcm_sample_t hadoken = {.addr = address, .slot = 0, .bit = pcm_sample_8bit};
-    pcm_prepare_sample(&hadoken, _sfxList[i].len);
-    pcm_sample_set_samplerate(&hadoken, _sfxList[i].freq);
-//    pcm_sample_set_loop(&hadoken, pcm_sample_loop_no_loop);
-    pcm_sample_set_loop(&hadoken, pcm_sample_loop_loop);
-    pcm_sample_start(&hadoken);	
-
-	slSynch();
-
-
-	do
-	{
-		emu_printf("playing sound %02d\n");
+			_mac->_f.read(p, dataSize);
+			for (int j = 0; j < dataSize; ++j) {
+				p[j] ^= 0x80;
+			}
+			_sfxList[i].len = READ_BE_UINT32(buf + 0x12);
+			_sfxList[i].freq = READ_BE_UINT16(buf + 0x16);
+			_sfxList[i].data = p;
+			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
 		
-	}
-	while(dbg_reg->ca!=0);
-*/
-
-/*
-
-typedef struct
-{
-    uint32_t addr;
-    int slot;
-    pcm_sample_b_t bit;
-} pcm_sample_t;
-*/
-			p += SAT_ALIGN(dataSize);
+/*			if(dataSize<0x900)
+			p += 0x900;
+			else*/
+			p += SAT_ALIGN8(dataSize);
 		}
 	}
-	/*
-	int i = 18;
-	uint32_t address = (uint32_t)_sfxList[i].data;
-    pcm_sample_t hadoken = {.addr = address, .slot = 1, .bit = pcm_sample_8bit};
-    pcm_prepare_sample(&hadoken, _sfxList[i].len);
-    pcm_sample_set_samplerate(&hadoken, _sfxList[i].freq);
-//    pcm_sample_set_loop(&hadoken, pcm_sample_loop_no_loop);
-    pcm_sample_set_loop(&hadoken, pcm_sample_loop_loop);
-    pcm_sample_start(&hadoken);	
-//	sfx #18 len 22794 datasize 22796 freq 7714 addr 0x25a16b68
-	
-	
-	volatile scsp_dbg_reg *dbg_reg = (scsp_dbg_reg *)get_scsp_dbg_reg();
-//static volatile Uint8  *adr_com_block = (Uint8 *)(((Uint8 *)0x25a00000) + (*((volatile Uint32 *)((((Uint8 *)0x25a00000) + 0x400) + (0x04)))));
-
-dbg_reg->mslc= 2;
-
-slSynch();
-while(1)
-{
-	emu_printf("%02x %02x\n",dbg_reg->raw[0]>>3,dbg_reg->raw[0]&7);
-}	
-*/
-//$408 1111 1222 2334 4444 1:MSLC monitor slot 2:CA call address 3:SGC Slot phase 4:EG Slot envelope
-	
-	
 }
+

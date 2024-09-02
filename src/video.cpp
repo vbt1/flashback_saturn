@@ -292,6 +292,7 @@ void Video::setLevelPalettes() {
 	setTextPalette();
 }
 */
+/*
 void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
 //	emu_printf("Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
 	while (h--) {
@@ -369,7 +370,7 @@ void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 		dst += 256;
 	}
 }
-
+*/
 void Video::drawChar(uint8 c, int16 y, int16 x) {
 //	emu_printf("Video::drawChar(0x%X, %d, %d)\n", c, y, x);
 	y *= 8;

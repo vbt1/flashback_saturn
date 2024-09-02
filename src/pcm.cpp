@@ -79,10 +79,10 @@ void snd_init()
 //	emu_printf("snd_init done\n");   
 }
 
-void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
+void pcm_prepare_sample(pcm_sample_t *s, uint8_t chan, size_t sz)
 {
     // fill slot
-    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(chan);
 	asm("nop");
 
     // setup sample
@@ -99,14 +99,14 @@ void pcm_prepare_sample(pcm_sample_t *s, size_t sz)
 
     // slot->sdir = 1;
     // volume & pan
-    slot->disdl = 7;
+    slot->disdl = s->vol;
     slot->dipan = 0;
 	asm("nop");
 }
 
-void pcm_sample_set_samplerate(pcm_sample_t *s, uint32_t samplerate)
+void pcm_sample_set_samplerate(uint8_t chan, uint32_t samplerate)
 {
-    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(chan);
 	asm("nop");
 	
     int octr;
@@ -124,35 +124,36 @@ void pcm_sample_set_samplerate(pcm_sample_t *s, uint32_t samplerate)
 
 }
 
-void pcm_sample_start(pcm_sample_t *s)
+void pcm_sample_start(uint8_t chan)
 {
-    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(chan);
 	asm("nop");
 
     // start playback
     slot->kyonb = 1;
     slot->kyonex = 1;
 	asm("nop");
+	emu_printf("slot %d addr %x len %x vol %d\n",chan,slot->sa, slot->lea+1,slot->disdl);
 }
 
-void pcm_sample_stop(pcm_sample_t *s)
+void pcm_sample_stop(uint8_t chan)
 {
-    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(chan);
 	asm("nop");
     // stop playback
     slot->kyonb = 0;
     slot->kyonex = 0;
 	
-    slot->sa = 0;
-    slot->lsa = 0;
-    slot->lea = 0;
+//    slot->sa = 0;
+//    slot->lsa = 0;
+//    slot->lea = 0;
 	asm("nop");
 
 }
 
-void pcm_sample_set_loop(pcm_sample_t *s, pcm_sample_loop_t loop)
+void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop)
 {
-    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(s->slot);
+    volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(chan);
 	asm("nop");
     slot->lpctl = loop;
 	asm("nop");

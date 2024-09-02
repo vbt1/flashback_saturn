@@ -1236,18 +1236,11 @@ emu_printf(" Cutscene::load %x \n", cutName);
 	if(!loaded)
 		unload();
 
-	
 	emu_printf("stop all\n");
 	for (unsigned int i = 0;i < 4; i++)
 	{
-		pcm_sample_t s;
-		s.slot = i;
-		pcm_sample_stop(&s);
-		asm("nop");
-		asm("nop");
-		asm("nop");
+		pcm_sample_stop(i);
 	}
-	
 	
 	return loaded;
 }

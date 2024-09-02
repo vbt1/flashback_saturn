@@ -17,14 +17,15 @@ typedef enum
 typedef struct
 {
     uint32_t addr;
-    int slot;
+//    int slot;
+	uint8_t vol;
     pcm_sample_b_t bit;
 } pcm_sample_t;
 
-void pcm_prepare_sample(pcm_sample_t *s, size_t sz);
-void pcm_sample_set_samplerate(pcm_sample_t *pcm, uint32_t sr);
-void pcm_sample_start(pcm_sample_t *pcm);
-void pcm_sample_stop(pcm_sample_t *pcm);
-void pcm_sample_set_loop(pcm_sample_t *pcm, pcm_sample_loop_t loop);
+void pcm_prepare_sample(pcm_sample_t *s, uint8_t chan, size_t sz);
+void pcm_sample_set_samplerate(uint8_t chan, uint32_t sr);
+void pcm_sample_start(uint8_t chan);
+void pcm_sample_stop(uint8_t chan);
+void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop);
 
 void fm_test();
