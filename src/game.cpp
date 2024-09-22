@@ -1997,12 +1997,25 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 			const int volume = Mixer::MAX_VOLUME >> (2 * softVol);
 
 			int i=0;
-
+// vbtvbt
+// 16 & 17 pour cdda
 			for(i=0;i<16;i++)
 			{
-				pcm_sample_stop(i);
-				if(channel_len[i]==0)	break;
+//				if(i==16 || i==17)
+//					continue;
+				
+//				pcm_sample_stop(i);
+				if(channel_len[i]==0)
+				{
+					if(i<15)
+					pcm_sample_stop(i+1);
+					else
+					pcm_sample_stop(0);
+						
+					break;
+				}
 			}
+
 			if(i>15)
 			{
 				/*volatile scsp_slot_regs_t *slot1 = (scsp_slot_regs_t *)get_scsp_slot(i-1);
@@ -2011,6 +2024,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 				asm("nop");	*/			
 				i=0;
 				memset(channel_len,0,16*sizeof(int));
+//				memset(&channel_len[17],0,14*sizeof(int));
 			}
 
 //			emu_printf("play sound %02d/%d on channel %02d len %d\n",num,_res._numSfx,i,sfx->len);

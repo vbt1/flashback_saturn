@@ -95,6 +95,7 @@ void pcm_prepare_sample(pcm_sample_t *s, uint8_t chan, size_t sz)
 
     // why 31 ?
     slot->attack_rate = 31;
+    slot->decay_l = 31;
     slot->release_r = 31;
 
     // slot->sdir = 1;
