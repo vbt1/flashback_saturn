@@ -55,7 +55,9 @@ struct stdFile : File_impl {
 		return sz;
 	}
 	void seek(int32_t off) {
+		emu_printf("seek\n");
 		if (_fp) {
+			emu_printf("sat_seek\n");
 			sat_fseek(_fp, off, SEEK_SET);
 		}
 	}

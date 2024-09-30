@@ -36,6 +36,7 @@ void	*malloc(size_t);
 extern Uint8 *current_lwram;
 //extern Uint8 *current_dram;
 extern Uint8 *save_current_lwram;
+extern Uint8 *soundAddr;
 }
 extern void sat_restart_audio(void);
 //extern volatile Uint8 audioEnabled;
@@ -1245,13 +1246,24 @@ void Game::drawStoryTexts() {
 					yPos += 8;
 				}
 			}
-/*			uint8_t *voiceSegmentData = 0;
+			uint8_t *voiceSegmentData = 0;
 			uint32_t voiceSegmentLen = 0;
+			emu_printf("load_VCE %d\n",_textToDisplay);
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+
 			if (voiceSegmentData) {
-				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
+				uint32_t address = (uint32_t)soundAddr;
+				emu_printf("load_VCE num %d len %d segment %d addr %x %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address,voiceSegmentData);
+				pcm_sample_t pcm = {.addr = address, .vol = Mixer::MAX_VOLUME, .bit = pcm_sample_8bit};
+				pcm_sample_stop(18);
+				pcm_prepare_sample(&pcm, 18, voiceSegmentLen);
+	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
+				pcm_sample_set_samplerate(0, 32000);
+				pcm_sample_set_loop(18, pcm_sample_loop_no_loop);
+				pcm_sample_start(18);
+//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
-*/
+
 //			_vid.updateScreen();
 			textSpeechSegment++;
 			_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);

@@ -128,8 +128,8 @@ GFS_FILE *sat_fopen(const char *path) {
 	return NULL; // nothing to do...
 	}
 	Uint16 idx;
-	static GFS_FILE fp[1];
-
+//	static GFS_FILE fp[1];
+	GFS_FILE *fp = NULL;
 	idx = 0;
 	if (path[idx] == '\0')
 	{
@@ -198,7 +198,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
 	{
-//emu_printf("%s \n",path_token);		
+emu_printf("%s \n",path_token);		
 //slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
 	}
@@ -209,12 +209,12 @@ GFS_FILE *sat_fopen(const char *path) {
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 		
 		// Encapsulate the file data
-//emu_printf("sat_malloc in sat_fopen %s ",path_token);			
-//		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
+emu_printf("sat_malloc in sat_fopen %s fid %d\n",path_token, fid);
+		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
 //emu_printf("%p ***\n",fp);		
-//		if (fp == NULL) {
-//			emu_printf("fp == NULL\n");
-//			return NULL;}
+		if (fp == NULL) {
+			emu_printf("fp == NULL\n");
+			return NULL;}
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
 //slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));	
@@ -235,7 +235,7 @@ GFS_FILE *sat_fopen(const char *path) {
 
 			fully_cached = 1;
 			cache_offset = 0;
-//					emu_printf("GFS_Fread1 in cache\n");
+					emu_printf("GFS_Fread1 in cache\n");
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
@@ -247,10 +247,12 @@ GFS_FILE *sat_fopen(const char *path) {
 
 			fully_cached = 0;
 			cache_offset = 0;
-//					emu_printf("GFS_Fread2\n");	
+					emu_printf("GFS_Fread2 fid %d size %d cache %d\n", fid, fsize, CACHE_SIZE);	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}
 	}
+	else
+		emu_printf("file not opened\n");
 
 	// Now... get back to the roots!
 	//back_to_root();
@@ -345,7 +347,7 @@ char *sat_match(const char *path) {
 int sat_fclose(GFS_FILE* fp) {
 emu_printf("sat_free in sat_fclose\n");	
 	GFS_Close(fp->fid);
-//	sat_free(fp);
+	sat_free(fp);
 
 	return 0; // always ok :-)
 }

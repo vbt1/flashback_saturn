@@ -21,6 +21,7 @@ extern "C"
 
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
+extern Uint8 *soundAddr;
 extern unsigned int end1;
 extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
@@ -1218,7 +1219,7 @@ emu_printf("Resource::load_CMP()\n");
 	}
 	sat_free(tmp);
 }
-
+*/
 void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
 	*buf = 0;
 	int offset = _voicesOffsetsTable[num];
@@ -1228,9 +1229,12 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 		int count = *p++;
 		if (segment < count) {
 			File f;
+emu_printf("segment %d < count %d\n",segment, count);			
 			if (vceEnabled && f.open("VOICE.VCE", _dataPath, "rb")) {
+emu_printf("reading VOICE.VCE\n");
 				int voiceSize = p[segment] * 2048 / 5;
-				uint8_t *voiceBuf = (uint8_t *)sat_malloc(voiceSize);
+//				uint8_t *voiceBuf = (uint8_t *)sat_malloc(voiceSize);
+				uint8_t *voiceBuf = (uint8_t *)soundAddr;
 				if (voiceBuf) {
 					uint8_t *dst = voiceBuf;
 					offset += 0x2000;
@@ -1245,23 +1249,30 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 									if (v & 0x80) {
 										v = -(v & 0x7F);
 									}
+//									emu_printf("value %01x\n",(v & 0xFF));
 									*dst++ = (uint8_t)(v & 0xFF);
 								}
 							}
 							offset += 0x2000 + 2048;
 						}
 						if (s == segment) {
+							emu_printf("segment done %d\n",segment);							
 							break;
 						}
 					}
 					*buf = voiceBuf;
 					*bufSize = voiceSize;
 				}
+				else
+					emu_printf("no voiceBuf\n");
+				f.close();
 			}
+			else
+				emu_printf("file voice not opened\n");
 		}
 	}
 }
-
+/*
 static void normalizeSPL(SoundFx *sfx) {
 	static const int kGain = 2;
 
@@ -2106,7 +2117,7 @@ void Resource::MAC_loadSounds() {
 			_sfxList[i].len = READ_BE_UINT32(buf + 0x12);
 			_sfxList[i].freq = READ_BE_UINT16(buf + 0x16);
 			_sfxList[i].data = p;
-			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
+//			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
 		
 /*			if(dataSize<0x900)
 			p += 0x900;
@@ -2114,5 +2125,6 @@ void Resource::MAC_loadSounds() {
 			p += SAT_ALIGN8(dataSize);
 		}
 	}
+	soundAddr = p;
 }
 

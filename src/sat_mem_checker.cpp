@@ -98,7 +98,7 @@ void sat_free(void *ptr) {
 	
 	if((ptr >= VBT_L_START) && (ptr < (volatile void *)LOW_WORK_RAM_START))
 	{
-		emu_printf("NO FREE: addr: %p\n", ptr);
+//		emu_printf("NO FREE: addr: %p\n", ptr);
 		ptr = NULL;
 	}	
 	else

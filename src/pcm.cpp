@@ -134,7 +134,7 @@ void pcm_sample_start(uint8_t chan)
     slot->kyonb = 1;
     slot->kyonex = 1;
 	asm("nop");
-	emu_printf("slot %d addr %x len %x vol %d\n",chan,slot->sa, slot->lea+1,slot->disdl);
+//	emu_printf("slot %d addr %x len %x vol %d\n",chan,slot->sa, slot->lea+1,slot->disdl);
 }
 
 void pcm_sample_stop(uint8_t chan)
