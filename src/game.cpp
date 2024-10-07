@@ -1248,9 +1248,11 @@ void Game::drawStoryTexts() {
 			}
 			uint8_t *voiceSegmentData = 0;
 			uint32_t voiceSegmentLen = 0;
+//			_textToDisplay=0;
 			emu_printf("load_VCE %d\n",_textToDisplay);
-			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+//			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
 
+//			if (voiceSegmentData) {
 			if (voiceSegmentData) {
 				uint32_t address = (uint32_t)soundAddr;
 				emu_printf("load_VCE num %d len %d segment %d addr %x %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address,voiceSegmentData);

@@ -55,11 +55,13 @@ struct stdFile : File_impl {
 		return sz;
 	}
 	void seek(int32_t off) {
-		emu_printf("seek\n");
+//		emu_printf("seek\n");
 		if (_fp) {
-			emu_printf("sat_seek\n");
+//			emu_printf("sat_seek\n");
 			sat_fseek(_fp, off, SEEK_SET);
 		}
+		else
+			emu_printf("ERROR no fp seek \n");		
 	}
 	void read(void *ptr, uint32_t len) {
 		if (_fp) {
@@ -68,6 +70,8 @@ struct stdFile : File_impl {
 				_ioErr = true;
 			}
 		}
+		else
+			emu_printf("ERROR no fp read \n");
 	}
 	void write(void *ptr, uint32_t len) {
 		if (_fp) {

@@ -10,6 +10,8 @@
 extern "C"
 {
 #include <sl_def.h>
+#include <sega_gfs.h>
+
 	#include 	<stdio.h>	
 	#include 	<string.h>	
 #include "pcm.h"	
@@ -1230,11 +1232,16 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 		if (segment < count) {
 			File f;
 emu_printf("segment %d < count %d\n",segment, count);			
-			if (vceEnabled && f.open("VOICE.VCE", _dataPath, "rb")) {
+//			if (vceEnabled && f.open("VOICE.VCE", _dataPath, "rb")) {
+			if (vceEnabled) {
+				f.open("VOICE.VCE", _dataPath, "rb");
+//emu_printf("reading VOICE.VCE real size %d data %d\n",f.size(),f.readByte());
 emu_printf("reading VOICE.VCE\n");
+//			GfsFile *gfs = GFS_Open((Sint32)8);
+
 				int voiceSize = p[segment] * 2048 / 5;
-//				uint8_t *voiceBuf = (uint8_t *)sat_malloc(voiceSize);
-				uint8_t *voiceBuf = (uint8_t *)soundAddr;
+				uint8_t *voiceBuf = (uint8_t *)sat_malloc(voiceSize);
+//				uint8_t *voiceBuf = (uint8_t *)soundAddr;
 				if (voiceBuf) {
 					uint8_t *dst = voiceBuf;
 					offset += 0x2000;
@@ -1243,6 +1250,8 @@ emu_printf("reading VOICE.VCE\n");
 						for (int i = 0; i < len / (0x2000 + 2048); ++i) {
 							if (s == segment) {
 								f.seek(offset);
+//								sat_fseek(gfs, offset, SEEK_SET);
+
 								int n = 2048;
 								while (n--) {
 									int v = f.readByte();
