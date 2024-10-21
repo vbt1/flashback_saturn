@@ -13,9 +13,14 @@ extern "C" {
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
 extern Uint8 *current_lwram;
+extern Uint8 *soundAddr;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
 //Uint8* cache = NULL; // vbt : after frontlayer
+GfsDirTbl gfsDirTbl;
+GfsDirName gfsDirName[DIR_MAX];
+Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];     
+Sint32 gfsDirN;
 }
 
 #include "saturn_print.h"
@@ -35,10 +40,7 @@ static Uint8  fully_cached = 0; // If file is cached from start to finish
 static Uint32 cache_offset = 0;
 
 // Used for initialization and such
-GfsDirTbl gfsDirTbl;
-GfsDirName gfsDirName[DIR_MAX];
-Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];     
-Sint32 gfsDirN;
+
 
 Uint8 dir_depth = 0;
 
@@ -209,7 +211,7 @@ emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 		
 		// Encapsulate the file data
-emu_printf("sat_malloc in sat_fopen %s fid %d\n",path_token, fid);
+//emu_printf("sat_malloc in sat_fopen %s fid %d\n",path_token, fid);
 //		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
 //emu_printf("%p ***\n",fp);		
 //		if (fp == NULL) {
@@ -237,6 +239,7 @@ emu_printf("sat_malloc in sat_fopen %s fid %d\n",path_token, fid);
 			cache_offset = 0;
 					emu_printf("GFS_Fread1 in cache\n");
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
+//			GFS_Close(fp->fid);			
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
 //					emu_printf("GFS_Seek2 read partly file\n");
@@ -249,6 +252,8 @@ emu_printf("sat_malloc in sat_fopen %s fid %d\n",path_token, fid);
 			cache_offset = 0;
 					emu_printf("GFS_Fread2 fid %d size %d cache %d\n", fid, fsize, CACHE_SIZE);	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
+			
+//			GFS_Close(fp->fid);
 		}
 	}
 	else
@@ -346,7 +351,7 @@ char *sat_match(const char *path) {
 
 int sat_fclose(GFS_FILE* fp) {
 //emu_printf("sat_free in sat_fclose\n");	
-//	GFS_Close(fp->fid);
+	GFS_Close(fp->fid);
 //	sat_free(fp);
 
 	return 0; // always ok :-)
@@ -406,6 +411,16 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	tot_bytes = (nmemb * size) + skip_bytes;
 
 	tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
+/*	
+	if(soundAddr==ptr)
+	{
+		emu_printf("we catch read in sound ram!!!\n");
+		tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
+		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
+		return readBytes;
+	}
+*/	
+	
 	if(tot_sectors < 0) return 0;
 
 	Uint32 remaining_data, request_block;
@@ -444,7 +459,7 @@ inram=1;
 			tot_bytes = CACHE_SIZE;
 			tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
 //			if(stream->f_size>10000000)
-			if(0)
+			/*if(0)
 			{
 			GfsFile *gfs = GFS_Open((Sint32)8);
 			emu_printf("tot_sectors %x fid %d start_sector %d id %d\n",tot_sectors,gfs,start_sector,GFS_NameToId((Sint8*)"VOICE.VCE"));
@@ -453,7 +468,7 @@ inram=1;
 			GFS_Load(GFS_NameToId((Sint8*)"VOICE.VCE"), 0, cache, tot_bytes);
 			GFS_Close(gfs);
 			}
-			else
+			else*/
 			{
 			GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
 			readBytes = GFS_Fread(stream->fid, tot_sectors, (Uint8*)cache, tot_bytes);

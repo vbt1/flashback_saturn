@@ -1249,15 +1249,20 @@ void Game::drawStoryTexts() {
 			uint8_t *voiceSegmentData = 0;
 			uint32_t voiceSegmentLen = 0;
 //			_textToDisplay=0;
-			emu_printf("load_VCE %d\n",_textToDisplay);
-//			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+_mix.pauseMusic();
+//_mix.stopMusic();
+pcm_sample_stop(18);
+emu_printf("pause music \n");
+			emu_printf("load_VCE %d nb seg %d\n",_textToDisplay,textSegmentsCount);
+			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
 
 //			if (voiceSegmentData) {
-			if (voiceSegmentData) {
+//			if (voiceSegmentData) 
+			{
 				uint32_t address = (uint32_t)soundAddr;
-				emu_printf("load_VCE num %d len %d segment %d addr %x %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address,voiceSegmentData);
+				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
 				pcm_sample_t pcm = {.addr = address, .vol = Mixer::MAX_VOLUME, .bit = pcm_sample_8bit};
-				pcm_sample_stop(18);
+
 				pcm_prepare_sample(&pcm, 18, voiceSegmentLen);
 	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
 				pcm_sample_set_samplerate(0, 32000);
@@ -1286,7 +1291,7 @@ void Game::drawStoryTexts() {
 			_stub->_pi.quit = false;
 			_stub->_pi.backspace = false;
 			if (_res._type == kResourceTypeMac) {
-				if (textSpeechSegment == textSegmentsCount) {
+				if (textSpeechSegment >= textSegmentsCount) {
 					break;
 				}
 			} else {
@@ -1301,6 +1306,7 @@ void Game::drawStoryTexts() {
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
+_mix.pauseMusic();		
 	}
 }
 

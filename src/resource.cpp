@@ -11,6 +11,7 @@ extern "C"
 {
 #include <sl_def.h>
 #include <sega_gfs.h>
+#include <gfs_def.h>
 
 	#include 	<stdio.h>	
 	#include 	<string.h>	
@@ -20,7 +21,7 @@ extern "C"
 
 
 #include "sat_mem_checker.h"
-
+#include "gfs_wrap.h"
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *soundAddr;
@@ -31,9 +32,12 @@ extern Uint8 *current_lwram;
 void	*malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
+extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)]; 
 void *calloc (size_t, size_t);
+
 static void process_cmd();
 //extern Uint8 *current_dram2;
+void init_GFS();
 }
 #include "saturn_print.h"
 
@@ -1222,7 +1226,97 @@ emu_printf("Resource::load_CMP()\n");
 	sat_free(tmp);
 }
 */
+Sint32 GetFileSize(int file_id)
+{
+#ifndef ACTION_REPLAY	
+	GfsHn gfs;
+	Sint32	lastsize;
+    
+    gfs = GFS_Open(file_id);
+	GFS_GetFileInfo(gfs,(Sint32*)&file_id,(Sint32*)NULL,&lastsize,NULL);
+    GFS_Close(gfs);
+	return lastsize;	  
+#else
+    return 300;
+#endif	
+}
+
+
 void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
+	
+#if 1	
+	
+
+
+//uint8_t *voiceBuf = (uint8_t *)soundAddr;
+char filename[50];
+sprintf(filename,"%d_%d.PCM",num,segment);
+//init_GFS();
+/*
+			File f;
+			if (f.open(filename, _dataPath, "rb")) {
+				int len = 80000;//f.size();
+				f.read(soundAddr, len);
+				f.close();
+			}
+
+*/
+
+   GfsSvr      *svr;
+    Sint32      i, stat = GFS_SVR_COMPLETED;
+
+    svr = &MNG_SVR((GfsMng *)gfsLibWork);
+emu_printf("SVR_NFILE(svr)1 %d \n",SVR_NFILE(svr));
+emu_printf("MNG_TRANS(mng)1 %d \n",MNG_TRANS((GfsMng *)gfsLibWork));
+emu_printf("MNG_FILE(mng)1 %d \n",MNG_FILE((GfsMng *)gfsLibWork));
+
+GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+
+int fid=GFS_NameToId((Sint8 *)filename);
+Sint32 filesize=GetFileSize(fid);
+
+#if 0
+emu_printf("SVR_NFILE(svr)2 %d \n",SVR_NFILE(svr));
+
+emu_printf("%s %d %d %p\n",filename,filesize,fid,soundAddr);
+uint32_t address = (uint32_t)soundAddr;
+*bufSize=filesize;
+
+GfsHn gfid = GFS_Open(fid);
+emu_printf("SVR_NFILE(svr)3 %d \n",SVR_NFILE(svr));
+
+GFS_SetTmode(gfid, GFS_TMODE_SCU);
+GFS_GetFileInfo(gfid, NULL, NULL, &filesize, NULL);
+
+		Sint32 tot_sectors;
+			GFS_Seek(gfid, 0, GFS_SEEK_SET);
+			tot_sectors = GFS_ByteToSct(gfid, filesize);
+/*
+Sint32 err = GFS_NwFread(gfid, tot_sectors, soundAddr, filesize);
+//Sint32 err = GFS_NwExecOne(gfid);
+
+    GfsTrans    *trn;
+   trn = &GFS_FILE_TRANS(gfid);
+
+emu_printf("GFS_TRN_WP(trn) %d err %x\n",GFS_TRN_WP(trn),err);
+
+int result = 0;
+*/
+int result = GFS_Fread(gfid, tot_sectors, (Uint8*)soundAddr, filesize);
+emu_printf("SVR_NFILE(svr)4 %d \n",SVR_NFILE(svr));
+
+GFS_Close(gfid);
+
+emu_printf("real read %d %x tot_sectors %d\n",result,address,tot_sectors);
+#else
+int result = GFS_Load(fid,0,(void *)soundAddr,filesize);
+
+emu_printf("real read %d %x\n",result,soundAddr);
+#endif
+
+
+
+#else
 	*buf = 0;
 	int offset = _voicesOffsetsTable[num];
 	if (offset != 0xFFFF) {
@@ -1280,6 +1374,7 @@ emu_printf("reading VOICE.VCE\n");
 				emu_printf("file voice not opened\n");
 		}
 	}
+#endif
 }
 /*
 static void normalizeSPL(SoundFx *sfx) {
