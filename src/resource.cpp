@@ -1266,8 +1266,8 @@ sprintf(filename,"%d_%d.PCM",num,segment);
     Sint32      i, stat = GFS_SVR_COMPLETED;
 
     svr = &MNG_SVR((GfsMng *)gfsLibWork);
-emu_printf("SVR_NFILE(svr)1 %d \n",SVR_NFILE(svr));
-emu_printf("MNG_TRANS(mng)1 %d \n",MNG_TRANS((GfsMng *)gfsLibWork));
+//emu_printf("SVR_NFILE(svr)1 %d \n",SVR_NFILE(svr));
+//emu_printf("MNG_TRANS(mng)1 %d \n",MNG_TRANS((GfsMng *)gfsLibWork));
 emu_printf("MNG_FILE(mng)1 %d \n",MNG_FILE((GfsMng *)gfsLibWork));
 
 GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
@@ -1314,6 +1314,7 @@ int result = GFS_Load(fid,0,(void *)soundAddr,filesize);
 emu_printf("real read %d %x\n",result,soundAddr);
 #endif
 
+_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");		
 
 
 #else

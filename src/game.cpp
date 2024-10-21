@@ -1265,7 +1265,7 @@ emu_printf("pause music \n");
 
 				pcm_prepare_sample(&pcm, 18, voiceSegmentLen);
 	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
-				pcm_sample_set_samplerate(0, 32000);
+				pcm_sample_set_samplerate(18, 32000);
 				pcm_sample_set_loop(18, pcm_sample_loop_no_loop);
 				pcm_sample_start(18);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
@@ -1306,7 +1306,8 @@ emu_printf("pause music \n");
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
-_mix.pauseMusic();		
+pcm_sample_stop(18);
+_mix.unpauseMusic();
 	}
 }
 
