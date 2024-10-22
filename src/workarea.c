@@ -4,7 +4,7 @@
 /*                                                                         */
 /*-------------------------------------------------------------------------*/
 //extern "C" {
-#include	"sl_def.h"
+#include	<SL_DEF.H>
 //} 
 /*---- [1.This part must not be modified] ---------------------------------*/
 #define		SystemWork		0x060ffc00			/* System Variable         */
