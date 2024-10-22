@@ -18,15 +18,16 @@
 //#define SLAVE_SOUND 1
 //#define SOUND 1
 extern "C" {
+#include <sl_def.h>
 #include <string.h>	
 #include <sgl.h>
-#include <sl_def.h>
+
 //#include <sega_mem.h>
 #include <sega_int.h>
 #ifdef SOUND
 #include <sega_pcm.h>
 #endif
-#include <sega_snd.h>
+//#include <sega_snd.h>
 //#include "sega_csh.h"
 //#include "sega_spr.h"
 #include <sega_sys.h>
