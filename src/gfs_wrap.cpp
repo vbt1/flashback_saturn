@@ -26,7 +26,7 @@ Sint32 gfsDirN;
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 40)
+#define CACHE_SIZE (SECTOR_SIZE * 30)
 
 static char satpath[25];
 //static char current_path[15][16];
@@ -443,15 +443,15 @@ partial_cache:
 //emu_printf("partial_cache\n"); //tout est en partial cache .....
 		end_offset = cache_offset + CACHE_SIZE;
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
-			if(!inram)
-			emu_printf("in ram\n"); 
+//			if(!inram)
+//			emu_printf("in ram\n"); 
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
 inram=1;
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;
 		} else if ((((stream->f_seek_pos + dataToRead) >= end_offset) || (stream->f_seek_pos < cache_offset))) {
-			emu_printf("not in ram\n");
+//			emu_printf("not in ram\n");
 			inram=0;
 //			emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
 			start_sector = (stream->f_seek_pos)/SECTOR_SIZE;
@@ -474,7 +474,7 @@ inram=1;
 			readBytes = GFS_Fread(stream->fid, tot_sectors, (Uint8*)cache, tot_bytes);
 			}
 //			GFS_Close(stream->fid);			
-			emu_printf("readBytes %d\n",readBytes);				
+//			emu_printf("readBytes %d\n",readBytes);				
 			cache_offset = start_sector * SECTOR_SIZE;//stream->f_seek_pos;
 
 			goto partial_cache;

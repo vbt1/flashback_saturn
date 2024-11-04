@@ -87,11 +87,12 @@ void pcm_prepare_sample(pcm_sample_t *s, uint8_t chan, size_t sz)
 
     // setup sample
     slot->pcm8b = s->bit & 1;
-//	emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d\n",s->addr-SCSP_RAM,slot->pcm8b);
 	
     slot->sa = s->addr-SCSP_RAM;
     slot->lsa = 0;
     slot->lea = (sz / s->bit) - 1;
+
+//	emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d sz %d slot->lea %x\n",s->addr-SCSP_RAM,slot->pcm8b,sz,slot->lea);
 
     // why 31 ?
     slot->attack_rate = 31;

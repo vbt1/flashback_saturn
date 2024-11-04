@@ -107,10 +107,10 @@ struct Resource {
 	};
 
 	static const uint16_t _voicesOffsetsTable[];
-	static const uint32_t _spmOffsetsTable[];
-	static const char *_splNames[];
-	static const uint8_t _gameSavedSoundData[];
-	static const uint16_t _gameSavedSoundLen;
+//	static const uint32_t _spmOffsetsTable[];
+//	static const char *_splNames[];
+//	static const uint8_t _gameSavedSoundData[];
+//	static const uint16_t _gameSavedSoundLen;
 
 	ResourceType _type;
 	Language _lang;
@@ -128,7 +128,7 @@ struct Resource {
 //	uint8_t *_tab;
 	uint8_t *_spc;
 	uint16_t _numSpc;
-	uint8_t _rp[74];
+//	uint8_t _rp[74];
 	uint8_t *_pal;
 	uint8_t *_ani;
 	uint8_t *_tbn;

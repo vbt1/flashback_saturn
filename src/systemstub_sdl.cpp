@@ -712,23 +712,6 @@ void vblIn (void) {
 	// Process input
 	sys->processEvents();
 	sys->updateScreen(0);
-	// Pcm elaboration...
-#ifdef SOUND
-	PCM_VblIn();	
-
-	// PCM Tasks
-	PCM_Task(pcm[0]);
-	PCM_Task(pcm[1]);
-
-	// Fill and play the audio
-	if(audioEnabled)
-	{
-//		emu_printf("audio 1\n");
-		fill_play_audio();
-	}
-//	else
-//		emu_printf("audio 0\n");
-#endif
 	timeTick();
 
 	/*if(counter == 20) {

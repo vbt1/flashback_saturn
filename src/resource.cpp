@@ -1243,100 +1243,37 @@ Sint32 GetFileSize(int file_id)
 
 
 void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
-	
-#if 1	
-	
-
-
-//uint8_t *voiceBuf = (uint8_t *)soundAddr;
-char filename[50];
-sprintf(filename,"%d_%d.PCM",num,segment);
-//init_GFS();
-/*
-			File f;
-			if (f.open(filename, _dataPath, "rb")) {
-				int len = 80000;//f.size();
-				f.read(soundAddr, len);
-				f.close();
-			}
-
-*/
-
-   GfsSvr      *svr;
-    Sint32      i, stat = GFS_SVR_COMPLETED;
-
-    svr = &MNG_SVR((GfsMng *)gfsLibWork);
-//emu_printf("SVR_NFILE(svr)1 %d \n",SVR_NFILE(svr));
-//emu_printf("MNG_TRANS(mng)1 %d \n",MNG_TRANS((GfsMng *)gfsLibWork));
-emu_printf("MNG_FILE(mng)1 %d \n",MNG_FILE((GfsMng *)gfsLibWork));
-
-GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
-
-int fid=GFS_NameToId((Sint8 *)filename);
-Sint32 filesize=GetFileSize(fid);
-
-#if 0
-emu_printf("SVR_NFILE(svr)2 %d \n",SVR_NFILE(svr));
-
-emu_printf("%s %d %d %p\n",filename,filesize,fid,soundAddr);
-uint32_t address = (uint32_t)soundAddr;
-*bufSize=filesize;
-
-GfsHn gfid = GFS_Open(fid);
-emu_printf("SVR_NFILE(svr)3 %d \n",SVR_NFILE(svr));
-
-GFS_SetTmode(gfid, GFS_TMODE_SCU);
-GFS_GetFileInfo(gfid, NULL, NULL, &filesize, NULL);
-
-		Sint32 tot_sectors;
-			GFS_Seek(gfid, 0, GFS_SEEK_SET);
-			tot_sectors = GFS_ByteToSct(gfid, filesize);
-/*
-Sint32 err = GFS_NwFread(gfid, tot_sectors, soundAddr, filesize);
-//Sint32 err = GFS_NwExecOne(gfid);
-
-    GfsTrans    *trn;
-   trn = &GFS_FILE_TRANS(gfid);
-
-emu_printf("GFS_TRN_WP(trn) %d err %x\n",GFS_TRN_WP(trn),err);
-
-int result = 0;
-*/
-int result = GFS_Fread(gfid, tot_sectors, (Uint8*)soundAddr, filesize);
-emu_printf("SVR_NFILE(svr)4 %d \n",SVR_NFILE(svr));
-
-GFS_Close(gfid);
-
-emu_printf("real read %d %x tot_sectors %d\n",result,address,tot_sectors);
-#else
-int result = GFS_Load(fid,0,(void *)soundAddr,filesize);
-
-emu_printf("real read %d %x\n",result,soundAddr);
-#endif
-
-_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");		
-
-
-#else
 	*buf = 0;
+
 	int offset = _voicesOffsetsTable[num];
-	if (offset != 0xFFFF) {
+	if (offset != 0xFFFF) 
+	{
+	// vbt : on ferme le fichier Mac
+		GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
+		GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+#if 1
+		char filename[50];
+		sprintf(filename,"%d_%d.PCM",num,segment);
+		
+		int fid=GFS_NameToId((Sint8 *)filename);
+		Sint32 filesize=GetFileSize(fid);
+		*bufSize=filesize;
+	// version lecture pcm
+
+		GFS_Load(fid,0,(void *)soundAddr,filesize);
+#else		
 		const uint16_t *p = _voicesOffsetsTable + offset / 2;
 		offset = (*p++) * 2048;
 		int count = *p++;
 		if (segment < count) {
 			File f;
-emu_printf("segment %d < count %d\n",segment, count);			
-//			if (vceEnabled && f.open("VOICE.VCE", _dataPath, "rb")) {
 			if (vceEnabled) {
 				f.open("VOICE.VCE", _dataPath, "rb");
-//emu_printf("reading VOICE.VCE real size %d data %d\n",f.size(),f.readByte());
-emu_printf("reading VOICE.VCE\n");
+//emu_printf("reading VOICE.VCE\n");
 //			GfsFile *gfs = GFS_Open((Sint32)8);
 
 				int voiceSize = p[segment] * 2048 / 5;
-				uint8_t *voiceBuf = (uint8_t *)sat_malloc(voiceSize);
-//				uint8_t *voiceBuf = (uint8_t *)soundAddr;
+				uint8_t *voiceBuf = (uint8_t *)soundAddr;
 				if (voiceBuf) {
 					uint8_t *dst = voiceBuf;
 					offset += 0x2000;
@@ -1345,7 +1282,6 @@ emu_printf("reading VOICE.VCE\n");
 						for (int i = 0; i < len / (0x2000 + 2048); ++i) {
 							if (s == segment) {
 								f.seek(offset);
-//								sat_fseek(gfs, offset, SEEK_SET);
 
 								int n = 2048;
 								while (n--) {
@@ -1353,29 +1289,25 @@ emu_printf("reading VOICE.VCE\n");
 									if (v & 0x80) {
 										v = -(v & 0x7F);
 									}
-//									emu_printf("value %01x\n",(v & 0xFF));
 									*dst++ = (uint8_t)(v & 0xFF);
 								}
 							}
 							offset += 0x2000 + 2048;
 						}
 						if (s == segment) {
-							emu_printf("segment done %d\n",segment);							
 							break;
 						}
 					}
 					*buf = voiceBuf;
 					*bufSize = voiceSize;
 				}
-				else
-					emu_printf("no voiceBuf\n");
 				f.close();
 			}
-			else
-				emu_printf("file voice not opened\n");
 		}
-	}
 #endif
+emu_printf("vbt : reopening main file\n");
+		_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
+	}
 }
 /*
 static void normalizeSPL(SoundFx *sfx) {

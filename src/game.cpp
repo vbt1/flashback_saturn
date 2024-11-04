@@ -1173,7 +1173,9 @@ static int getLineLength(const uint8_t *str) {
 void Game::drawStoryTexts() {
 	
 	if (_textToDisplay != 0xFFFF) {
+int pcmid=18;		
 		uint8_t textColor = 0xE8;
+//	_textToDisplay=29;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
@@ -1251,27 +1253,28 @@ void Game::drawStoryTexts() {
 //			_textToDisplay=0;
 _mix.pauseMusic();
 //_mix.stopMusic();
-pcm_sample_stop(18);
-emu_printf("pause music \n");
-			emu_printf("load_VCE %d nb seg %d\n",_textToDisplay,textSegmentsCount);
-			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+//pcm_sample_stop(pcmid);
+//emu_printf("pause music \n");
+			_res.load_VCE(_textToDisplay, textSpeechSegment, &voiceSegmentData, &voiceSegmentLen);
+			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
 
 //			if (voiceSegmentData) {
-//			if (voiceSegmentData) 
+			if (voiceSegmentLen) 
 			{
 				uint32_t address = (uint32_t)soundAddr;
-				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
+//				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
 				pcm_sample_t pcm = {.addr = address, .vol = Mixer::MAX_VOLUME, .bit = pcm_sample_8bit};
-
-				pcm_prepare_sample(&pcm, 18, voiceSegmentLen);
+emu_printf("vbt play sample!!! at %x size %d\n",address, voiceSegmentLen);
+				pcm_prepare_sample(&pcm, pcmid, voiceSegmentLen);
 	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
-				pcm_sample_set_samplerate(18, 32000);
-				pcm_sample_set_loop(18, pcm_sample_loop_no_loop);
-				pcm_sample_start(18);
+				pcm_sample_set_samplerate(pcmid, 11035);
+				pcm_sample_set_loop(pcmid, pcm_sample_loop_no_loop);
+				pcm_sample_start(pcmid);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
 
 //			_vid.updateScreen();
+			pcmid++;
 			textSpeechSegment++;
 			_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);
 			
@@ -1302,11 +1305,14 @@ emu_printf("pause music \n");
 			}
 		}
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*3);    // vbt : inutile pour la fin d'un message de plus d'une ligne
-		_stub->copyRect(0, 51, _vid._w, yPos*3, _vid._frontLayer, _vid._w);
+		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
-pcm_sample_stop(18);
+
+		for(unsigned int i =0;i<textSpeechSegment;i++)
+			pcm_sample_stop(i+18);
+
 _mix.unpauseMusic();
 	}
 }
@@ -1509,9 +1515,9 @@ void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 void Game::drawPiege(AnimBufferState *state) {
 	LivePGE *pge = state->pge;
 	switch (_res._type) {
-	case kResourceTypeDOS:
-		drawObject(state->dataPtr, state->x, state->y, pge->flags);
-		break;
+//	case kResourceTypeDOS:
+//		drawObject(state->dataPtr, state->x, state->y, pge->flags);
+//		break;
 	case kResourceTypeMac:
 		if (pge->flags & 8) {
 //emu_printf("MAC_drawSprite1\n");			
@@ -1531,7 +1537,7 @@ void Game::drawPiege(AnimBufferState *state) {
 		break;
 	}
 }
-
+/*
 void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
 	assert(dataPtr[0] < 0x4A);
 	uint8_t slot = _res._rp[dataPtr[0]];
@@ -1556,11 +1562,12 @@ void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flag
 		assert(0); // different graphics format
 		break;
 	}
-	/*for (int i = 0; i < count; ++i) {
+	for (int i = 0; i < count; ++i) {
 		drawObjectFrame(data, dataPtr, posx, posy, flags);
 		dataPtr += 4;
-	}*/
+	}
 }
+*/
 /*
 void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
 
