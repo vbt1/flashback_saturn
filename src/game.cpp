@@ -1181,7 +1181,7 @@ int pcmid=18;
 		int textSegmentsCount = 0;
 		int yPos = 0;
 		while (!_stub->_pi.quit) {
-			memset(_vid._frontLayer, 0x00, 512*224);			
+			memset(_vid._frontLayer, 0x00, 512*224);
 //			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
 			yPos = 26;
 			if (_res._type == kResourceTypeMac) {
@@ -1255,16 +1255,16 @@ _mix.pauseMusic();
 //_mix.stopMusic();
 //pcm_sample_stop(pcmid);
 //emu_printf("pause music \n");
-			_res.load_VCE(_textToDisplay, textSpeechSegment, &voiceSegmentData, &voiceSegmentLen);
-			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
-
+			volatile scsp_dbg_reg_t *dbg_reg = (scsp_dbg_reg_t *)get_scsp_dbg_reg();
+			dbg_reg->mslc= pcmid;
+			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+//			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
 //			if (voiceSegmentData) {
 			if (voiceSegmentLen) 
 			{
 				uint32_t address = (uint32_t)soundAddr;
 //				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
 				pcm_sample_t pcm = {.addr = address, .vol = Mixer::MAX_VOLUME, .bit = pcm_sample_8bit};
-emu_printf("vbt play sample!!! at %x size %d\n",address, voiceSegmentLen);
 				pcm_prepare_sample(&pcm, pcmid, voiceSegmentLen);
 	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
 				pcm_sample_set_samplerate(pcmid, 11035);
@@ -1272,19 +1272,29 @@ emu_printf("vbt play sample!!! at %x size %d\n",address, voiceSegmentLen);
 				pcm_sample_start(pcmid);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
-
-//			_vid.updateScreen();
-			pcmid++;
-			textSpeechSegment++;
+//			emu_printf("start play slot %d ca %04x sa %04x lsa %04x lea %04x\n",dbg_reg->mslc, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 			_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);
-			
+
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
 				}*/
-//				inp_update();
+				if((dbg_reg->ca+1)*4096>voiceSegmentLen)
+				{
+//				emu_printf("end play slot %d ca %04x sa %04x lsa %04x lea %04x\n",dbg_reg->mslc, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+					_stub->sleep(160);
+					pcm_sample_stop(pcmid);
+					break;
+				}
+				if(_stub->_pi.backspace || _stub->_pi.quit)
+				{
+					pcm_sample_stop(pcmid);
+				}
+//				emu_printf("playing slot %d ca %04x sa %04x lsa %04x lea %04x\n",dbg_reg->mslc, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 				_stub->sleep(80);
 			}
+//emu_printf("pcm_sample_stop\n");
+			pcmid++;
 
 /*			if (voiceSegmentData) {
 				_mix.stopAll();
@@ -1304,7 +1314,7 @@ emu_printf("vbt play sample!!! at %x size %d\n",address, voiceSegmentLen);
 				++str;
 			}
 		}
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*3);    // vbt : inutile pour la fin d'un message de plus d'une ligne
+		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;

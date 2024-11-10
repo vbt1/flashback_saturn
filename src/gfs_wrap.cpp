@@ -200,7 +200,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
 	{
-emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));		
+//emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));
 //slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
 	}
