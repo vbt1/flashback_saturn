@@ -144,7 +144,7 @@ void pcm_sample_stop(uint8_t chan)
 	asm("nop");
     // stop playback
     slot->kyonb = 0;
-    slot->kyonex = 0;
+    slot->kyonex |= 1;
 }
 
 void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop)
