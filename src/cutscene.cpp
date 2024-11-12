@@ -1285,17 +1285,13 @@ void Cutscene::unload() {
 }
 
 void Cutscene::prepare() {
-//	_frontPage = _vid->_frontLayer;
 	_frontPage = (uint8_t *)_res->_scratchBuffer;
 	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
 	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
 slTVOff();
 	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
 	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
-//	memset4_fast((uint8_t *)(SpriteVRAM + cgaddress + (position_vram_aft_monster)), 0x00, IMG_SIZE);
-//	memset4_fast((uint8_t *)(SpriteVRAM + BACK_RAM_VDP2 + (position_vram_aft_monster)), 0x00, IMG_SIZE);
-//	memset4_fast((uint8_t *)(SpriteVRAM + AUX_RAM_VDP2 + (position_vram_aft_monster)), 0x00, IMG_SIZE);	
-emu_printf("prepare cutscene\n");	
+//emu_printf("prepare cutscene\n");	
 	memset4_fast(_auxPage, 0x00, IMG_SIZE);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
@@ -1319,7 +1315,6 @@ emu_printf("prepare cutscene\n");
 	const int sy = y;// * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
 	slScrAutoDisp(NBG1ON|SPRON); // vbt à remettre
-//	slScrAutoDisp(SPRON); // vbt à remettre
 	slTVOn();
 }
 

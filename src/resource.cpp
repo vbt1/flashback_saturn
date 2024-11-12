@@ -1668,7 +1668,6 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 	ptr += 6; // seed+flags
 	_clutSize = READ_BE_UINT16(ptr); ptr += 2;
-emu_printf("_clutSize %d\n",_clutSize);	
 	assert(_clutSize < kClutSize);
 	for (int i = 0; i < _clutSize; ++i) {
 		const int index = READ_BE_UINT16(ptr); ptr += 2;

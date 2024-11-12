@@ -1,6 +1,7 @@
 #define PRELOAD_MONSTERS 1
 //#define COLOR_4BPP 1
 #define VRAM_MAX 0x65000
+#define PCM_VOICE 18
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -266,9 +267,9 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 		{
 //			_mix.playMusic(1); // vbt : à remplacer
 			
-			switch (_res._type) {
+/*			switch (_res._type) {
 			case kResourceTypeDOS:
-				/*_menu.handleTitleScreen();
+				_menu.handleTitleScreen();
 				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _stub->_pi.quit) {
 					_stub->_pi.quit = true;
 					break;
@@ -287,12 +288,12 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 					_demoBin = -1;
 					_skillLevel = _menu._skill;
 					_currentLevel = _menu._level;
-				}*/
+				}
 				break;
-			case kResourceTypeMac:
+			case kResourceTypeMac:*/
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
-				break;
-			}
+/*				break;
+			}*/
 		//slPrint("_mix.stopMusic",slLocate(3,13));			
 			_mix.stopMusic(); // vbt à remettre
 		}
@@ -363,7 +364,8 @@ void Game::displayTitleScreenMac(int num) {
 	Color c;
 	c.r = c.g = c.b = 0;
 	_stub->setPaletteEntry(255, &c);
-
+// vbt : la couleur 0 est transparente et affiche du noir !!!
+	slScrTransparent(NBG1ON);
 	switch (num) {
 	case Menu::kMacTitleScreen_MacPlay:
 		break;
@@ -394,7 +396,7 @@ void Game::displayTitleScreenMac(int num) {
 		for (int j = 0; j < 16; ++j) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
 		}
-	}
+	}/*
 	if (num == Menu::kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		_res.MAC_copyClut16(palette, 0, 56);
@@ -408,8 +410,10 @@ void Game::displayTitleScreenMac(int num) {
 		Color c;
 		c.r = c.g = c.b = 0;
 		_stub->setPaletteEntry(0, &c);
-	} else if (num == Menu::kMacTitleScreen_Flashback) {
-		_vid.setTextPalette();
+	} else if (num == Menu::kMacTitleScreen_Flashback) 
+	*/
+	{
+//		_vid.setTextPalette(); // vbt : on enleve corrige le orange manquant sur le titre
 		_vid._charShadowColor = 0xE0;
 		_mix.playMusic(1); // vbt : déplacé, musique du menu
 	}
@@ -457,6 +461,7 @@ void Game::displayTitleScreenMac(int num) {
 		}
 		_stub->sleep(30);
 	}
+	slScrTransparent(!NBG1ON);
 }
 
 void Game::resetGameState() {
@@ -1173,7 +1178,6 @@ static int getLineLength(const uint8_t *str) {
 void Game::drawStoryTexts() {
 	
 	if (_textToDisplay != 0xFFFF) {
-int pcmid=18;		
 		uint8_t textColor = 0xE8;
 //	_textToDisplay=29;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
@@ -1217,9 +1221,9 @@ int pcmid=18;
 					str = next + 1;
 					len -= lineLength + 1;
 				}
-			} else {
+			}/* else {
 				if (*str == 0xFF) {
-				/*	if (_res._lang == LANG_JP) {
+					if (_res._lang == LANG_JP) {
 						switch (str[1]) {
 						case 0:
 							textColor = 0xE9;
@@ -1232,7 +1236,7 @@ int pcmid=18;
 							break;
 						}
 						str += 2;
-					} else*/ {
+					} else {
 						textColor = str[1];
 						// str[2] is an unused color (possibly the shadow)
 						str += 3;
@@ -1247,16 +1251,17 @@ int pcmid=18;
 					++str;
 					yPos += 8;
 				}
-			}
+			}*/
 			uint8_t *voiceSegmentData = 0;
 			uint32_t voiceSegmentLen = 0;
+			uint32_t next = 0;
 //			_textToDisplay=0;
-_mix.pauseMusic();
-//_mix.stopMusic();
-//pcm_sample_stop(pcmid);
-//emu_printf("pause music \n");
+			_mix.pauseMusic();
+			//_mix.stopMusic();
+			pcm_sample_stop(PCM_VOICE);
+			volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(PCM_VOICE);
 			volatile scsp_dbg_reg_t *dbg_reg = (scsp_dbg_reg_t *)get_scsp_dbg_reg();
-			dbg_reg->mslc= pcmid;
+			dbg_reg->mslc= PCM_VOICE;
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
 //			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
 //			if (voiceSegmentData) {
@@ -1265,42 +1270,46 @@ _mix.pauseMusic();
 				uint32_t address = (uint32_t)soundAddr;
 //				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
 				pcm_sample_t pcm = {.addr = address, .vol = Mixer::MAX_VOLUME, .bit = pcm_sample_8bit};
-				pcm_prepare_sample(&pcm, pcmid, voiceSegmentLen);
+				pcm_prepare_sample(&pcm, PCM_VOICE, voiceSegmentLen);
 	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
-				pcm_sample_set_samplerate(pcmid, 11035);
-				pcm_sample_set_loop(pcmid, pcm_sample_loop_no_loop);
-				pcm_sample_start(pcmid);
+				pcm_sample_set_samplerate(PCM_VOICE, 11035);
+				pcm_sample_set_loop(PCM_VOICE, pcm_sample_loop_no_loop);
+				pcm_sample_start(PCM_VOICE);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
-//			emu_printf("start play slot %d ca %04x sa %04x lsa %04x lea %04x\n",dbg_reg->mslc, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
-			_stub->copyRect(0, 51, _vid._w, yPos*2, _vid._frontLayer, _vid._w);
+char toto[100];
+sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+_vid.drawString(toto, 1, 78, 0xE7);
+			emu_printf("start play slot %d ca %04x pcm size %d sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,voiceSegmentLen,slot->sa,slot->lsa,slot->lea);
+			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
 				}*/
-				if((dbg_reg->ca+1)*4096>voiceSegmentLen)
+//sprintf(toto,"%06d %06d %d", (dbg_reg->ca+1)*4096,voiceSegmentLen-1,((dbg_reg->ca+1)*4096>=voiceSegmentLen-1));
+//_vid.drawString(toto, 1, 70, 0xE7);
+//emu_printf("(dbg_reg->ca+1)*4096 %d voiceSegmentLen %d comp %d\n",(dbg_reg->ca+1)*4096,voiceSegmentLen,((dbg_reg->ca+1)*4096>=voiceSegmentLen-1));
+				if((dbg_reg->ca+1)*4096>=voiceSegmentLen-1
+				|| (next>=voiceSegmentLen-1 && dbg_reg->ca==0))
 				{
-//				emu_printf("end play slot %d ca %04x sa %04x lsa %04x lea %04x\n",dbg_reg->mslc, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
-					_stub->sleep(160);
-					pcm_sample_stop(pcmid);
+sprintf(toto,"end ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+_vid.drawString(toto, 1, 88, 0xE7);
+				emu_printf("end play slot %d ca %04x sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+				_stub->sleep(2000);
+//					_stub->sleep(160);
+					pcm_sample_stop(PCM_VOICE);
 					break;
 				}
-				if(_stub->_pi.backspace || _stub->_pi.quit)
-				{
-					pcm_sample_stop(pcmid);
-				}
-//				emu_printf("playing slot %d ca %04x sa %04x lsa %04x lea %04x\n",dbg_reg->mslc, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+				next=(dbg_reg->ca+2)*4096;
 				_stub->sleep(80);
 			}
-//emu_printf("pcm_sample_stop\n");
-			pcmid++;
 
-/*			if (voiceSegmentData) {
-				_mix.stopAll();
-				sat_free(voiceSegmentData);
+			if (voiceSegmentLen) {
+				pcm_sample_stop(PCM_VOICE);
+//				_mix.stopAll();
+//				sat_free(voiceSegmentData);
 			}
-*/			
 			_stub->_pi.quit = false;
 			_stub->_pi.backspace = false;
 			if (_res._type == kResourceTypeMac) {
@@ -1320,10 +1329,7 @@ _mix.pauseMusic();
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
 
-		for(unsigned int i =0;i<textSpeechSegment;i++)
-			pcm_sample_stop(i+18);
-
-_mix.unpauseMusic();
+		_mix.unpauseMusic();
 	}
 }
 

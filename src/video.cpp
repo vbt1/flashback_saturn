@@ -61,14 +61,14 @@ emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
 	_charTransparentColor = 0;
 	_charShadowColor = 0;
 	//_drawChar = 0;
-	switch (_res->_type) {
+/*	switch (_res->_type) {
 	case kResourceTypeDOS:
 		_drawChar = &Video::PC_drawStringChar;
 		break;
-	case kResourceTypeMac:
+	case kResourceTypeMac:*/
 		_drawChar = &Video::MAC_drawStringChar;
-		break;
-	}
+/*		break;
+	}*/
 }
 
 Video::~Video() {
@@ -408,7 +408,7 @@ void Video::drawChar(uint8 c, int16 y, int16 x) {
 		dst += 256 - 8;
 	}
 }
-
+/*
 void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
 	dst += y * pitch + x;
 //	assert(chr >= 32);
@@ -432,7 +432,7 @@ void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8
 		dst += pitch - CHAR_W;
 	}
 }
-
+*/
 static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
