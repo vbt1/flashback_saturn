@@ -1277,12 +1277,13 @@ void Game::drawStoryTexts() {
 				pcm_sample_start(PCM_VOICE);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
+/*
 char toto[100];
 sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 _vid.drawString(toto, 1, 78, 0xE7);
 			emu_printf("start play slot %d ca %04x pcm size %d sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,voiceSegmentLen,slot->sa,slot->lsa,slot->lea);
 			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
-
+*/
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
@@ -1293,11 +1294,12 @@ _vid.drawString(toto, 1, 78, 0xE7);
 				if((dbg_reg->ca+1)*4096>=voiceSegmentLen-1
 				|| (next>=voiceSegmentLen-1 && dbg_reg->ca==0))
 				{
+/*
 sprintf(toto,"end ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 _vid.drawString(toto, 1, 88, 0xE7);
 				emu_printf("end play slot %d ca %04x sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 				_stub->sleep(2000);
-//					_stub->sleep(160);
+*/
 					pcm_sample_stop(PCM_VOICE);
 					break;
 				}
