@@ -756,10 +756,11 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
     user_sprite.XB = x + (w << 1);
     user_sprite.YB = y + (h << 1);
     user_sprite.GRDA = 0;
-    user_sprite.SRCA = (0x10000 - (IMG_SIZE / 8));
 
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
-    const uint8_t* bufferOffset = _res->_scratchBuffer + (front ? 0 : IMG_SIZE);
+//    const uint8_t* bufferOffset = _res->_scratchBuffer + (front ? 0 : IMG_SIZE);
+    const uint8_t* bufferOffset = (front ? hwram_screen : _res->_scratchBuffer);
+	user_sprite.SRCA = spriteVramOffset / 8;
 
     memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, h * w);
 

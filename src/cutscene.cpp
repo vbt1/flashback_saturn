@@ -14,6 +14,7 @@ extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 void *memset4_fast(void *, long, size_t);
+Uint8 transferAux=0;
 }
 #include "mod_player.h"
 #include "resource.h"
@@ -96,8 +97,56 @@ void Cutscene::updatePalette() {
 }
 
 void Cutscene::updateScreen() {
-	sync(_frameDelay - 1);
-	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
+//	sync(_frameDelay - 1);
+	SWAP(_frontPage, _backPage);
+
+//	updatePalette();
+//	_vid->SAT_displayCutscene(_frontPage==_res->_scratchBuffer,0, 0, 128, 240);
+
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+    user_sprite.COLR = 0x1C0;
+    user_sprite.SIZE = (240 / 8) << 8 | 128;
+
+    user_sprite.CTRL = FUNC_Sprite | _ZmCC;
+    user_sprite.XA = 0;
+    user_sprite.YA = 0;
+    user_sprite.XB = 0 + (240 << 1);
+    user_sprite.YB = 0 + (128 << 1);
+	
+    user_sprite.GRDA = 0;
+	size_t spriteVramOffset = 0x80000 - (IMG_SIZE/2);
+	
+	if (transferAux)
+	{
+//		emu_printf("update_aux\n");
+//		memcpyl((void *)(SpriteVRAM + spriteVramOffset), _auxPage, 240*64);
+		slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), 240 * 64);
+		transferAux=0;
+	}
+
+	user_sprite.SRCA = spriteVramOffset / 8;
+    slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+
+    user_sprite.COLR = 0x1D0;
+	
+	spriteVramOffset = 0x80000 - IMG_SIZE - (_frontPage==_res->_scratchBuffer)? (IMG_SIZE/2):0;
+	user_sprite.SRCA = spriteVramOffset / 8;
+//	memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, IMG_SIZE);
+
+    unsigned int i;
+    uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
+    uint8_t *back = (uint8_t *)_frontPage;
+    
+    // Unroll the loop by processing 4 elements at a time
+    for (i = 0; i < IMG_SIZE; i += 8) {
+        // Process 4 pairs of bytes (i, i+1), (i+2, i+3), (i+4, i+5), (i+6, i+7)
+        aux[i / 2]     = (back[i + 1] & 0x0F) | (back[i] << 4);
+        aux[(i / 2) + 1] = (back[i + 3] & 0x0F) | (back[i + 2] << 4);
+        aux[(i / 2) + 2] = (back[i + 5] & 0x0F) | (back[i + 4] << 4);
+        aux[(i / 2) + 3] = (back[i + 7] & 0x0F) | (back[i + 6] << 4);
+    }
+    slSetSprite(&user_sprite, toFIXED2(240));
 
 #ifdef SUBTITLE_SPRITE
 _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à remettre
@@ -105,8 +154,9 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à reme
 // vbt : déplacement de la synchro ici
 //emu_printf("slsynch Cutscene::updateScreen()\n");
 	slSynch(); // obligatoire
+//	if(_frontPage==_res->_scratchBuffer)
 	updatePalette();
-	SWAP(_frontPage, _backPage);
+//	SWAP(_frontPage, _backPage);
 #ifdef SUBTITLE_SPRITE
 	memset((uint8_t *)_vid->_txt2Layer,0, 480*70);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
@@ -283,14 +333,17 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 #endif
 void Cutscene::clearBackPage() {
 //	emu_printf("clearBackPage1 %d\n",_clearScreen);	
+	memset4_fast(_backPage, 0, IMG_SIZE);
 	if (_clearScreen == 0) {
-		memcpy(_backPage, _auxPage, IMG_SIZE);
-		
+//		memcpy(_backPage, _auxPage, IMG_SIZE);
+//		memset4_fast(_backPage, 0xC0, IMG_SIZE);		
+
+//memset4_fast((void *)(SpriteVRAM + spriteVramOffset), _backPage, 240*128);
 
 //		memset(_backPage, 0x00, IMG_SIZE);
 	} else {
 		memset4_fast(&_vid->_frontLayer[100*_vid->_w],0x00,512*304);
-		memset4_fast(_backPage, 0xC0, IMG_SIZE);
+//		memset4_fast(_backPage, 0xC0, IMG_SIZE);
 	}
 }
 
@@ -495,7 +548,26 @@ void Cutscene::op_drawShape() {
 		drawShape(primitiveVertices, x + dx, y + dy);
 	}
 	if (_clearScreen != 0) {
-		memcpy(_auxPage, _backPage, IMG_SIZE);
+//emu_printf("copy bg in aux\n");
+//		memcpy(_auxPage, _backPage, IMG_SIZE);
+		
+    unsigned int i;
+    uint8_t *back = _backPage;  // Use pointers to avoid array indexing overhead
+    uint8_t *aux = _auxPage;
+    
+    // Unroll the loop by processing 4 elements at a time
+    for (i = 0; i < IMG_SIZE; i += 8) {
+        // Process 4 pairs of bytes (i, i+1), (i+2, i+3), (i+4, i+5), (i+6, i+7)
+        aux[i / 2]     = (back[i + 1] & 0x0F) | (back[i] << 4);
+        aux[(i / 2) + 1] = (back[i + 3] & 0x0F) | (back[i + 2] << 4);
+        aux[(i / 2) + 2] = (back[i + 5] & 0x0F) | (back[i + 4] << 4);
+        aux[(i / 2) + 3] = (back[i + 7] & 0x0F) | (back[i + 6] << 4);
+    }
+
+//    const size_t spriteVramOffset = 0x80000 - IMG_SIZE*2;
+//    const uint8_t* bufferOffset = _auxPage;
+		transferAux=1;
+//    memcpy((void *)(SpriteVRAM + spriteVramOffset), _backPage, 240*128);		
 	}
 }
 
@@ -1235,13 +1307,13 @@ emu_printf(" Cutscene::load %x \n", cutName);
 
 	if(!loaded)
 		unload();
-
+/*
 	emu_printf("stop all\n");
 	for (unsigned int i = 0;i < 4; i++)
 	{
 		pcm_sample_stop(i);
 	}
-	
+*/	
 	return loaded;
 }
 
@@ -1285,14 +1357,17 @@ void Cutscene::unload() {
 }
 
 void Cutscene::prepare() {
-	_frontPage = (uint8_t *)_res->_scratchBuffer;
-	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
-	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
+//	_frontPage = (uint8_t *)_res->_scratchBuffer;
+//	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
+//	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
+	_frontPage = (uint8_t *)hwram_screen;
+	_backPage = (uint8_t *)_res->_scratchBuffer;
+	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
 	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
 	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
 //emu_printf("prepare cutscene\n");	
-	memset4_fast(_auxPage, 0x00, IMG_SIZE);
+	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
 #ifdef SUBTITLE_SPRITE	
