@@ -1038,10 +1038,10 @@ bool Game::handleContinueAbort() {
 		sprintf(textBuf, "SCORE  %08lu", _score);
 		_vid.drawString(textBuf, 90, 180, 0xE3);
 
-
-		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
-//emu_printf("slsynch Game::handleContinueAbort()\n");					
-		slSynch();
+//emu_printf("SAT_displayCutscene\n");
+//		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
+//emu_printf("slsynch Game::handleContinueAbort()\n");
+//		slSynch();
 
 		if (_res.isMac()) {
 

@@ -509,6 +509,8 @@ void Video::MAC_decodeMap(int level, int room) {
 	buf.h = _h;
 	buf.setPixel = Video::MAC_setPixel;
 
+	SAT_cleanSprites(); // vbt : ajout
+	slTVOff();
 	_res->MAC_loadLevelRoom(level, room, &buf);
 
 	Color roomPalette[512];
@@ -743,7 +745,7 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
 
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
-
+/*
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
     SPRITE user_sprite;
@@ -766,7 +768,7 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
-
+*/
 void Video::SAT_cleanSprites()
 {
 	SPRITE user_sprite;

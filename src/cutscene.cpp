@@ -116,7 +116,7 @@ void Cutscene::updateScreen() {
 	
     user_sprite.GRDA = 0;
 	size_t spriteVramOffset = 0x80000 - (IMG_SIZE/2);
-	
+
 	if (transferAux)
 	{
 //		emu_printf("update_aux\n");
@@ -130,7 +130,7 @@ void Cutscene::updateScreen() {
 
     user_sprite.COLR = 0x1D0;
 	
-	spriteVramOffset = 0x80000 - IMG_SIZE - (_frontPage==_res->_scratchBuffer)? (IMG_SIZE/2):0;
+	spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage==_res->_scratchBuffer)? (IMG_SIZE/2):0);
 	user_sprite.SRCA = spriteVramOffset / 8;
 //	memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, IMG_SIZE);
 
@@ -466,7 +466,7 @@ void Cutscene::op_waitForSync() {
 }
 
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
-//	//emu_printf("Cutscene::drawShape()\n");
+//emu_printf("Cutscene::drawShape()1\n");
 	_gfx.setLayer(_backPage, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
@@ -512,7 +512,7 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 }
 
 void Cutscene::op_drawShape() {
-//	//emu_printf("Cutscene::op_drawShape() clearscreen %d\n",_clearScreen);
+//emu_printf("Cutscene::op_drawShape()2 %d\n",_clearScreen);
 
 	int16_t x = 0;
 	int16_t y = 0;
