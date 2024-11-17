@@ -128,7 +128,7 @@ emu_printf("_mac->load\n");
 		break;
 	}
 }
-
+/*
 void Resource::setLanguage(Language lang) {
 	if (_lang != lang) {
 		_lang = lang;
@@ -139,7 +139,7 @@ void Resource::setLanguage(Language lang) {
 		load_CINE();
 	}
 }
-/*
+
 bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {

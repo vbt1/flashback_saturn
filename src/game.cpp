@@ -206,7 +206,7 @@ _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
 		hwram_screen=hwram_ptr;
-		hwram_ptr+=49000;
+		hwram_ptr+=50000;
 
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
@@ -1282,8 +1282,9 @@ char toto[100];
 sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 _vid.drawString(toto, 1, 78, 0xE7);
 			emu_printf("start play slot %d ca %04x pcm size %d sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,voiceSegmentLen,slot->sa,slot->lsa,slot->lea);
-			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 */
+			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
+
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
