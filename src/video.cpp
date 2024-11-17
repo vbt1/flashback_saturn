@@ -788,7 +788,7 @@ void Video::SAT_cleanSprites()
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 	slSynch();
 }
-
+/*
 void Video::SAT_displayPalette()
 {
 	unsigned char* vram_base = (unsigned char*)VDP2_VRAM_A0 + 0x4800;
@@ -813,3 +813,4 @@ void Video::SAT_displayPalette()
 	_stub->copyRect(0, 20, _w, 16, _frontLayer, _w);
 	memset4_fast(&_frontLayer[40 * _w], 0x00, _w * _h);
 }
+*/

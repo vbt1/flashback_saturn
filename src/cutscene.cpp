@@ -10,7 +10,6 @@ extern "C"
 #include <sl_def.h>	
 #include <string.h>	
 #include "pcm.h"
-//extern TEXTURE tex_spr[4];
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
@@ -66,7 +65,6 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-//emu_printf("delay %d duration %d real duration %d\n",delay,frameDelay * (1000 / frameHz), pause);
 	
 	if (pause > 0) {
 		_stub->sleep(pause);
@@ -97,7 +95,6 @@ void Cutscene::updatePalette() {
 			c.r = ((color & 0xF00) >> 6) | t;
 			c.g = ((color & 0x0F0) >> 2) | t;
 			c.b = ((color & 0x00F) << 2) | t;
-//			_stub->setPaletteEntry(0xC0 + i, &c);
 			_stub->setPaletteEntry(0x1C0 + i, &c);
 		}
 		_newPal = false;
@@ -105,12 +102,7 @@ void Cutscene::updatePalette() {
 }
 
 void Cutscene::updateScreen() {
-	
-//	_vid->SAT_displayPalette();
 	sync(_frameDelay - 1);
-/*	updatePalette();
-	_stub->updateScreen(0);
-	*/
 	SWAP(_frontPage, _backPage);
 
     SPRITE user_sprite;
@@ -121,7 +113,6 @@ void Cutscene::updateScreen() {
     user_sprite.CTRL = FUNC_Sprite | _ZmCC;
     user_sprite.XA = 0;
     user_sprite.YA = 0;
-//    user_sprite.YA = -128;
     user_sprite.XB = 0 + (240 << 1);
     user_sprite.YB = 0 + (128 << 1);
 	
@@ -130,27 +121,14 @@ void Cutscene::updateScreen() {
 
 	if (transferAux)
 	{
-//		memcpyl((void *)(SpriteVRAM + spriteVramOffset), _auxPage, 240*64);
 		slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), 240 * 64);
-//		memset(_auxPage,0x00, 240 * 64);
-//		user_sprite.SRCA = spriteVramOffset / 8;
-//		slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 	}
 	user_sprite.SRCA = spriteVramOffset / 8;
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 
-//    user_sprite.YA = 0;
-	/*
-	if(transferAux)
-	{
-//		transferAux=0;
-		user_sprite.COLR = 0x1C0;
-	}
-	else*/
-		user_sprite.COLR = 0x1D0; // vbt mauvaise palette
+	user_sprite.COLR = 0x1D0; // vbt mauvaise palette
 	spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage==_res->_scratchBuffer)? (IMG_SIZE/2):0);
 	user_sprite.SRCA = spriteVramOffset / 8;
-//	memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, IMG_SIZE);
 
     unsigned int i;
     uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
@@ -172,22 +150,16 @@ void Cutscene::updateScreen() {
 #ifdef SUBTITLE_SPRITE
 _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à remettre
 #endif
-// vbt : déplacement de la synchro ici
-//emu_printf("slsynch Cutscene::updateScreen()\n");
 	slSynch();
 	updatePalette();
-//	_stub->updateScreen(0);
 
-//	if(_frontPage==_res->_scratchBuffer)
-//	updatePalette();
 #ifdef SUBTITLE_SPRITE
 	memset((uint8_t *)_vid->_txt2Layer,0, 480*70);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
 	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
 #else
 	_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 #endif
-//	_stub->updateScreen(0); // vbt : obligatoire
-		transferAux=0;
+	transferAux=0;
 }
 
 #if 0
@@ -312,10 +284,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			++len;
 		}
 	}
-//	char toto[100];
-//	memcpy(toto,p, len);
-//	emu_printf("text %s\n",toto);
-	
+
 	Video::drawCharFunc dcf = _vid->_drawChar;
 	const uint8_t *fnt = /*(_res->_lang == LANG_JP) ? Video::_font8Jp :*/ _res->_fnt;
 	uint16_t lastSep = 0;
@@ -349,7 +318,6 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
-//	emu_printf("char %c\n",p[i]);			
 			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i], 0);
 			xPos += Video::CHAR_W;
 		}
@@ -577,9 +545,6 @@ emu_printf("copy bg in aux\n");
 			aux[(i / 2) + 2] = (back[i + 5] & 0x0F) | (back[i + 4] << 4);
 			aux[(i / 2) + 3] = (back[i + 7] & 0x0F) | (back[i + 6] << 4);
 		}
-
-//    const size_t spriteVramOffset = 0x80000 - IMG_SIZE*2;
-//    const uint8_t* bufferOffset = _auxPage;
 		clearBackPage();
 		transferAux=1;
 //    memcpy((void *)(SpriteVRAM + spriteVramOffset), _backPage, 240*128);		
