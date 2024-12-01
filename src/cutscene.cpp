@@ -25,6 +25,7 @@ Uint8 transferAux=0;
 
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
+extern void vblIn();
 //extern volatile Uint8 audioEnabled;
 /*
 static void scalePoints(Point *pt, int count, int scale) {
@@ -1271,17 +1272,16 @@ emu_printf(" Cutscene::load %x \n", cutName);
 		return 0;
 
 	//audioEnabled = 0;
-	
 	const char *name = _namesTableDOS[cutName & 0xFF];
-	switch (_res->_type) {
-	/*case kResourceTypeDOS:
+	/*switch (_res->_type) {
+	case kResourceTypeDOS:
 		_res->load(name, Resource::OT_CMD);
 		_res->load(name, Resource::OT_POL);
-		break;*/
-	case kResourceTypeMac:
-		_res->MAC_loadCutscene(name);
 		break;
-	}
+	case kResourceTypeMac:*/
+		_res->MAC_loadCutscene(name);
+/*		break;
+	}*/
 	_res->load_CINE();
 	bool loaded = (_res->_cmd && _res->_pol);
 ////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));

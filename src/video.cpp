@@ -629,22 +629,22 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 	}
 }
 
-void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip, bool eraseBackground) {
+void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip) {
 //emu_printf("MAC_drawSprite %p %p anim_number %d\n",data,_res->_monster,anim_number);	
 
 	DecodeBuffer buf{};
 	buf.xflip = xflip;
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
-
-	if(data == _res->_monster || data == _res->_spc)
-	{
 		const int index = (data == _res->_monster) ? anim_number : _res->NUM_SPRITES + frame;
 		const SAT_sprite spriteData = _res->_sprData[index];
 		
+	if(data == _res->_monster || (data == _res->_spc && spriteData.cgaddr < 0x10000))
+	{
 //		emu_printf("frame %s %d no copy\n", (data == _res->_monster) ? "monster" : "spc", frame);
 		buf.w = spriteData.size & 0xFF;
 		buf.h = (spriteData.size >> 8) * 8;
+
         buf.x += (buf.xflip ? spriteData.x_flip : -spriteData.x);
 		buf.y -= spriteData.y;
 		
@@ -661,13 +661,12 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			buf.ptr = hwram_screen;
 			buf.setPixel = (data == _res->_perso) ? MAC_setPixel4Bpp : MAC_setPixel;
 			size_t dataSize = SAT_ALIGN((data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h);
-
 			fixOffsetDecodeBuffer(&buf, dataPtr);
 			memset(buf.ptr, 0x00, dataSize);
 
-			// emu_printf("perso frame %d index %d w %d h %d\n", frame, frame - 0x22F, buf.w, buf.h);
+			emu_printf("copie 1 frame %d copy %d %d %p\n", frame, buf.w, buf.h, data);
 
-			if(position_vram+(dataSize)>VRAM_MAX+0x12000)
+			if(position_vram+(dataSize)>VRAM_MAX+0x18000)
 			{
 				position_vram = position_vram_aft_monster;
 			}
@@ -677,15 +676,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 			_res->_sprData[anim_number].cgaddr = tx.CGadr;
 			_res->_sprData[anim_number].size = (buf.h / 8) << 8 | buf.w;
-
-			memcpy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
-			position_vram += dataSize;
+			DMA_ScuMemCopy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
+//			slTransferEntry( (void *)buf.ptr, (void *)(SpriteVRAM + (tx.CGadr << 3)), dataSize);
+			position_vram += SAT_ALIGN(dataSize);
 
 			SAT_displaySprite(_res->_sprData[anim_number], buf, data);
 		}
 //emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w,buf.h);
 	}
-
 }
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
@@ -724,27 +722,10 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     user_sprite.YA = buf.y - 224;
     user_sprite.GRDA = 0;
 	
-//	if(user_sprite.XA>255) return;
-//	if(user_sprite.XA<-256) return;	
-
-    if (spr.cgaddr < 0x10000) {
-        user_sprite.SRCA = spr.cgaddr;
-    } else {
-
-        size_t dataSize = SAT_ALIGN((data == _res->_spc) ? buf.w * buf.h : (buf.w * buf.h) / 2);
-
-		if(position_vram+dataSize>VRAM_MAX+0x12000)
-		{
-			position_vram = position_vram_aft_monster;
-		}
-		TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-	    position_vram += dataSize;
-		memcpy((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spr.cgaddr, dataSize);
-        user_sprite.SRCA = tx.CGadr;
-    }
-
+    user_sprite.SRCA = spr.cgaddr;
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
+
 /*
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {

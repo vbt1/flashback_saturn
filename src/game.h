@@ -112,7 +112,7 @@ struct Game {
 	uint16_t _curMonsterNum;
 	uint8_t _blinkingConradCounter;
 	uint16_t _textToDisplay;
-	bool _eraseBackground;
+//	bool _eraseBackground;
 	AnimBufferState _animBuffer0State[41];
 	AnimBufferState _animBuffer1State[6]; // Conrad
 	AnimBufferState _animBuffer2State[42];
