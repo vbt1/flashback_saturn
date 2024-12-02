@@ -91,6 +91,7 @@ struct Level {
 struct SAT_sprite {
 	uint32_t cgaddr;
 	uint16_t size;
+//	uint16_t id;
 	int16_t x_flip;
 	int16_t x;
 	int16_t y;

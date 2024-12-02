@@ -531,7 +531,7 @@ void Cutscene::op_drawShape() {
 		drawShape(primitiveVertices, x + dx, y + dy);
 	}
 	if (_clearScreen != 0) {
-emu_printf("copy bg in aux\n");
+//emu_printf("copy bg in aux\n");
 //		memcpy(_auxPage, _backPage, IMG_SIZE);
 		
 		unsigned int i;

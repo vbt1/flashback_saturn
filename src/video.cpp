@@ -637,9 +637,9 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
 		const int index = (data == _res->_monster) ? anim_number : _res->NUM_SPRITES + frame;
-		const SAT_sprite spriteData = _res->_sprData[index];
+		SAT_sprite spriteData = _res->_sprData[index];
 		
-	if(data == _res->_monster || (data == _res->_spc && spriteData.cgaddr < 0x10000))
+	if(data == _res->_monster || (data == _res->_spc))
 	{
 //		emu_printf("frame %s %d no copy\n", (data == _res->_monster) ? "monster" : "spc", frame);
 		buf.w = spriteData.size & 0xFF;
@@ -647,8 +647,28 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
         buf.x += (buf.xflip ? spriteData.x_flip : -spriteData.x);
 		buf.y -= spriteData.y;
+		int oldcgaddr = spriteData.cgaddr;
+
+		if( buf.x >= 512)
+			return;
+
+		if(spriteData.cgaddr > 0x10000)
+		{
+			size_t dataSize = SAT_ALIGN(buf.w * buf.h);
+
+			if(position_vram+(dataSize)>VRAM_MAX+0x1A000)
+			{
+				position_vram = position_vram_aft_monster;
+			}
+			TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
+			DMA_ScuMemCopy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)spriteData.cgaddr, dataSize);
+			spriteData.cgaddr = tx.CGadr;
+//			slTransferEntry( (void *)buf.ptr, (void *)(SpriteVRAM + (tx.CGadr << 3)), dataSize);
+			position_vram += SAT_ALIGN(dataSize);
+		}
 		
 		SAT_displaySprite(spriteData, buf, data);
+		spriteData.cgaddr = oldcgaddr;
 	}	
 	else
 	{
@@ -663,10 +683,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			size_t dataSize = SAT_ALIGN((data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h);
 			fixOffsetDecodeBuffer(&buf, dataPtr);
 			memset(buf.ptr, 0x00, dataSize);
-
+/*
+if(0) //frame==577)
+{
+	buf.setPixel = MAC_setPixel4Bpp;
+	dataSize = SAT_ALIGN((buf.w * buf.h) / 2);
 			emu_printf("copie 1 frame %d copy %d %d %p\n", frame, buf.w, buf.h, data);
-
-			if(position_vram+(dataSize)>VRAM_MAX+0x18000)
+}*/
+			if(position_vram+(dataSize)>VRAM_MAX+0x1A000)
 			{
 				position_vram = position_vram_aft_monster;
 			}
@@ -710,7 +734,13 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     } else if (data == _res->_perso) {
         user_sprite.COLR = 64;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    } else {
+    } 
+/*	else if (spr.id>=530 && spr.id <=610)
+	{
+        user_sprite.COLR = 0*16;
+        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;		
+	}*/
+	else {
         user_sprite.COLR = 0;
         user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
     }

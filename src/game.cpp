@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
-//#define COLOR_4BPP 1
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
+//#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -2631,23 +2631,31 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			buf.setPixel = setPixelFunc;
 			memset(buf.ptr, 0, buf.w * buf.h);
 
-			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
-
 			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
+
+#ifdef DEBUG
+if(j>=530 && j<=610)
+{
+	sprData->id = j;
+	buf.setPixel = _vid.MAC_setPixel4Bpp;
+}
+else
+{
+	buf.setPixel = setPixelFunc;
+}
+#endif
+			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
 			sprData->size = (buf.h / 8) << 8 | buf.w;
 			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
 			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-//			buf.x = 80 - sprData->x;
-//			buf.y = 80 - sprData->y;
-
 			buf.w = sprData->size & 0xFF;
 			buf.h = (sprData->size >> 8) * 8;
 
-			size_t dataSize = (buf.w * buf.h) / (setPixelFunc == _vid.MAC_setPixel4Bpp ? 2 : 1);
-			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==128  || buf.h==352) {
+			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / (buf.setPixel == _vid.MAC_setPixel4Bpp ? 2 : 1));
+			if ((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352) {
 				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
 				sprData->cgaddr = (int)tx.CGadr;
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
@@ -2657,8 +2665,31 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			else {
 				DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
 				sprData->cgaddr = (int)current_dram2;
-				current_dram2 += SAT_ALIGN(dataSize);
+				current_dram2 += dataSize;
 			}
+#ifdef DEBUG			
+			buf.x = 200 - sprData->x;
+			buf.y = 240 - sprData->y;
+
+			char debug_info[60];
+			sprintf(debug_info,"%03d/%03d 0x%08x %d %d",j,count-1, sprData->cgaddr, buf.w,buf.h);
+			_vid.drawString(debug_info, 4, 60, 0xE7);
+
+			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
+			int oldcgaddr = sprData->cgaddr;
+
+			if (!((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352))
+			{
+				DMA_ScuMemCopy((void*)SpriteVRAM+0x75000,(void*)sprData->cgaddr,dataSize);
+				sprData->cgaddr = (int)(0x75000/8);
+			}
+
+			_vid.SAT_displaySprite(*sprData, buf,spriteData);
+			sprData->cgaddr=oldcgaddr;
+			
+			slSynch();
+#endif
 		}
 	}
 }
@@ -2691,6 +2722,16 @@ void Game::SAT_preloadMonsters() {
 			for (int i = 0; data[i].id; ++i) {
 				if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) {
 					_res._monster = _res.decodeResourceMacData(data[i].name, true);
+#ifdef DEBUG					
+					Color palette[512];
+					// on l'appelle juste pour la palette				
+					_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+					static const int kMonsterPalette = 5;
+					for (int i = 0; i < 16; ++i) {
+						const int color = 256 + kMonsterPalette * 16 + i;
+						_stub->setPaletteEntry(color, &palette[color]);
+					}
+#endif					
 					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen, _vid.MAC_setPixel4Bpp);
 					break; // Break out of the loop once the monster is found and processed.
 				}
@@ -2701,5 +2742,15 @@ void Game::SAT_preloadMonsters() {
 }
 
 void Game::SAT_preloadSpc() {
-	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_ptr, _vid.MAC_setPixel);
+#ifdef DEBUG
+		Color clut[512];
+		_res.MAC_setupRoomClut(_currentLevel, _currentRoom, clut);		
+
+		const int baseColor = 256;
+		for (int i = 0; i < 256; ++i) {
+			int color = baseColor + i;
+			_stub->setPaletteEntry(color, &clut[color]);
+		}
+#endif
+	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);
 }
