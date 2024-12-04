@@ -9,7 +9,6 @@ extern "C"
 #include <sl_def.h>	
 #include <string.h>	
 #include "pcm.h"
-//extern TEXTURE tex_spr[4];
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
