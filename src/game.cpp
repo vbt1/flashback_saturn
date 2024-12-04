@@ -2615,7 +2615,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			buf.ptr = destPtr;
 			buf.setPixel = setPixelFunc;
 			memset(buf.ptr, 0, buf.w * buf.h);
-
+xxxxxxxxxxxxxxxxx
 			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
 			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
