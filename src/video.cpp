@@ -636,8 +636,8 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 	buf.xflip = xflip;
 	buf.x  = x * _layerScale;
 	buf.y  = y * _layerScale;
-	const int index = (data == _res->_spc) ? _res->NUM_SPRITES + frame : anim_number;
-	SAT_sprite spriteData = _res->_sprData[index];
+		const int index = (data == _res->_monster) ? anim_number : _res->NUM_SPRITES + frame;
+		SAT_sprite spriteData = _res->_sprData[index];
 		
 	if(data == _res->_monster || (data == _res->_spc))
 	{
@@ -683,21 +683,28 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			size_t dataSize = SAT_ALIGN((data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h);
 			fixOffsetDecodeBuffer(&buf, dataPtr);
 			memset(buf.ptr, 0x00, dataSize);
-			_res->MAC_decodeImageData(data, frame, &buf, 0xff);			
-
+/*
+if(0) //frame==577)
+{
+	buf.setPixel = MAC_setPixel4Bpp;
+	dataSize = SAT_ALIGN((buf.w * buf.h) / 2);
+			emu_printf("copie 1 frame %d copy %d %d %p\n", frame, buf.w, buf.h, data);
+}*/
 			if(position_vram+(dataSize)>VRAM_MAX+0x1A000)
 			{
 				position_vram = position_vram_aft_monster;
 			}
 
 			TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-			spriteData.cgaddr = tx.CGadr;
-			spriteData.size = (buf.h / 8) << 8 | buf.w;
+
+			_res->MAC_decodeImageData(data, frame, &buf, 0xff);
+			_res->_sprData[anim_number].cgaddr = tx.CGadr;
+			_res->_sprData[anim_number].size = (buf.h / 8) << 8 | buf.w;
 			DMA_ScuMemCopy((void *)(SpriteVRAM + (tx.CGadr << 3)), (void *)buf.ptr, dataSize);
 //			slTransferEntry( (void *)buf.ptr, (void *)(SpriteVRAM + (tx.CGadr << 3)), dataSize);
 			position_vram += SAT_ALIGN(dataSize);
 
-			SAT_displaySprite(spriteData, buf, data);
+			SAT_displaySprite(_res->_sprData[anim_number], buf, data);
 		}
 //emu_printf("frame monster %d index %d w %d h %d\n",frame,frame-0x22F,buf.w,buf.h);
 	}
@@ -727,7 +734,13 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     } else if (data == _res->_perso) {
         user_sprite.COLR = 64;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    } else {
+    } 
+/*	else if (spr.id>=530 && spr.id <=610)
+	{
+        user_sprite.COLR = 0*16;
+        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;		
+	}*/
+	else {
         user_sprite.COLR = 0;
         user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
     }
@@ -743,6 +756,7 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
 
+/*
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
     SPRITE user_sprite;
@@ -755,16 +769,17 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
     user_sprite.XB = x + (w << 1);
     user_sprite.YB = y + (h << 1);
     user_sprite.GRDA = 0;
-    user_sprite.SRCA = (0x10000 - (IMG_SIZE / 8));
 
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
-    const uint8_t* bufferOffset = _res->_scratchBuffer + (front ? 0 : IMG_SIZE);
+//    const uint8_t* bufferOffset = _res->_scratchBuffer + (front ? 0 : IMG_SIZE);
+    const uint8_t* bufferOffset = (front ? hwram_screen : _res->_scratchBuffer);
+	user_sprite.SRCA = spriteVramOffset / 8;
 
     memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, h * w);
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
-
+*/
 void Video::SAT_cleanSprites()
 {
 	SPRITE user_sprite;
