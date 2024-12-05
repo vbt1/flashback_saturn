@@ -2625,34 +2625,23 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 
 		if (dataPtr) {
 			DecodeBuffer buf{};
-			buf.w = READ_BE_UINT16(dataPtr + 2);
+			buf.w = READ_BE_UINT16(dataPtr + 2) & 0xff;
 			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptr = destPtr;
 			buf.setPixel = setPixelFunc;
 			memset(buf.ptr, 0, buf.w * buf.h);
 
-			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
-
-#ifdef DEBUG
-if(j>=530 && j<=610)
-{
-	sprData->id = j;
-	buf.setPixel = _vid.MAC_setPixel4Bpp;
-}
-else
-{
-	buf.setPixel = setPixelFunc;
-}
-#endif
 			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
+
+			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
 
 			sprData->size = (buf.h / 8) << 8 | buf.w;
 			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
 			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-			buf.w = sprData->size & 0xFF;
-			buf.h = (sprData->size >> 8) * 8;
+//			buf.w = sprData->size & 0xFF;
+//			buf.h = (sprData->size >> 8) * 8;
 
 			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / (buf.setPixel == _vid.MAC_setPixel4Bpp ? 2 : 1));
 			if ((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352) {
