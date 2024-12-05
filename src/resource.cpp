@@ -62,38 +62,17 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
 	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
 
-//#ifdef WITH_MEM_MALLOC
-#if 1
-emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
+//emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 //	_scratchBuffer = (uint8_t *)current_dram;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
-emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
-#else
-//emu_printf("_scratchBuffer current_lwram size %d %p\n",kScratchBufferSize, current_lwram);
-//	_scratchBuffer = (uint8_t *)current_lwram;
-//	current_lwram += kScratchBufferSize;
-#endif
-	
-//	if (!_scratchBuffer) {
-//		error("Unable to allocate temporary memory buffer");
-//	}
+//emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 	static const int kBankDataSize = 0x7000;
 
-
-//#ifdef WITH_MEM_MALLOC
-#if 0
-emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);
-	_bankData = (uint8_t *)sat_malloc(kBankDataSize);
-#else
-emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
+	emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 	_bankData = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(kBankDataSize);
-#endif
 
-	if (!_bankData) {
-		error("Unable to allocate bank data buffer");
-	}
 	_bankDataTail = _bankData + kBankDataSize;
 	clearBankData();
 }
@@ -107,7 +86,6 @@ Resource::~Resource() {
 //	sat_free(_tab);
 //	sat_free(_spc);
 	sat_free(_spr1);
-	sat_free(_scratchBuffer);
 	sat_free(_cmd);
 	sat_free(_pol);
 	sat_free(_cine_off);
@@ -150,7 +128,7 @@ emu_printf("_mac->load\n");
 		break;
 	}
 }
-
+/*
 void Resource::setLanguage(Language lang) {
 	if (_lang != lang) {
 		_lang = lang;
@@ -161,7 +139,7 @@ void Resource::setLanguage(Language lang) {
 		load_CINE();
 	}
 }
-/*
+
 bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
@@ -1305,7 +1283,7 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 			}
 		}
 #endif
-emu_printf("vbt : reopening main file\n");
+//emu_printf("vbt : reopening main file\n");
 		_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
 	}
 }
@@ -1668,7 +1646,6 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 	ptr += 6; // seed+flags
 	_clutSize = READ_BE_UINT16(ptr); ptr += 2;
-emu_printf("_clutSize %d\n",_clutSize);	
 	assert(_clutSize < kClutSize);
 	for (int i = 0; i < _clutSize; ++i) {
 		const int index = READ_BE_UINT16(ptr); ptr += 2;
@@ -1738,12 +1715,6 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 #ifndef PRELOAD_MONSTERS
 			_monster = decodeResourceMacData(data[i].name, true);
 #endif
-//			if(_monster==NULL)
-//			{
-//emu_printf("%s not loaded\n",data[i].name);
-//				return;
-//			}
-//			emu_printf("MAC_loadMonsterData %s %p \n",name,_monster);
 			MAC_copyClut16(clut, 16+5, data[i].index);
 			break;
 		}
@@ -1766,14 +1737,14 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 
 void Resource::MAC_unloadLevelData() {
 
-	emu_printf("unload _ani %p\n",_ani);	
-	sat_free(_ani); // vbt est dans scratchbuff
 //	emu_printf("unload _ani %p\n",_ani);	
+	sat_free(_ani); // vbt est dans scratchbuff
+//	emu_printf("unload _ani %p\n",_ani);
 	_ani = 0;
 	ObjectNode *prevNode = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevNode != _objectNodesMap[i]) {
-	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);			
+//	emu_printf("unload _objectNodesMap[%d] %p\n",i,_objectNodesMap[i]);
 			sat_free(_objectNodesMap[i]);
 			prevNode = _objectNodesMap[i];
 		}
@@ -1833,24 +1804,16 @@ emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
-	//slPrint("sat_free2",slLocate(3,13));	
 	sat_free(ptr);
-//emu_printf(" .SPC\n");
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 emu_printf("MAC_loadLevelData %s\n", name);		
 	_spc = decodeResourceMacData(name, true);
-	
-//emu_printf(" .TBN\n");
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
 emu_printf("MAC_loadLevelData %s\n", name);	
 	_tbn = decodeResourceMacText(name, "names");
-//emu_printf(" .Flashback text _tbn %p\n",_tbn);
-	//slPrint("Flashback strings",slLocate(3,13));
 	_str = decodeResourceMacText("Flashback", "strings");
-	//slPrint("end MAC_loadLevelData",slLocate(3,13));	
-//emu_printf(" .Flashback strings _str %p\n",_str);	
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
@@ -2014,15 +1977,12 @@ char *cut=NULL;
 static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 
 static void process_cmd()
 {
-	emu_printf("process_cmd\n");
 	tingyInstance->process_commands();
 	slave_done_flag = true;
-	emu_printf("end process_cmd\n");
 }
 
 void Resource::process_commands()
 {
-		emu_printf("process_commands\n");
 	char name[32];
 	snprintf(name, sizeof(name), "%s movie", cut, current_lwram);
 	stringLowerCase(name);
@@ -2032,9 +1992,7 @@ void Resource::process_commands()
 		current_lwram = (uint8_t *)save_current_lwram;
 		return;
 	}
-emu_printf("decodeResourceMacData\n");
 	_cmd = decodeResourceMacData(cmdEntry, true);
-    
     // Signal that the slave has completed its work
     slave_done_flag = true;
 }

@@ -124,7 +124,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     static uint8_t window[(3 << kBits)] __attribute__ ((aligned (4)));
     uint8_t *tmp_ptr = (uint8_t *)window + 4096;
 
-	slTVOff();
+//	slTVOff(); on le fait bien avant
 
     for (unsigned short y = 0; y < h; ++y) {
         unsigned short x = 0;

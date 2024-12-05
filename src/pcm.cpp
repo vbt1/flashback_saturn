@@ -144,13 +144,7 @@ void pcm_sample_stop(uint8_t chan)
 	asm("nop");
     // stop playback
     slot->kyonb = 0;
-    slot->kyonex = 0;
-	
-//    slot->sa = 0;
-//    slot->lsa = 0;
-//    slot->lea = 0;
-	asm("nop");
-
+    slot->kyonex |= 1;
 }
 
 void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop)
@@ -159,7 +153,6 @@ void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop)
 	asm("nop");
     slot->lpctl = loop;
 	asm("nop");
-
 }
 
 #define SMPC_REG_SF             *((volatile uint8_t *)0x20100063)

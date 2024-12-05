@@ -35,8 +35,6 @@ extern "C" {
 #include "sat_mem_checker.h"
 #include "cdtoc.h"
 void	*malloc(size_t);
-//void CSH_AllClr(void);
-//extern TEXTURE tex_spr[4];
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
@@ -713,12 +711,6 @@ void vblIn (void) {
 	sys->processEvents();
 	sys->updateScreen(0);
 	timeTick();
-
-	/*if(counter == 20) {
-		sys->setup_input();
-		counter = 0;
-	}*/
-
 	//counter++;
 }
 

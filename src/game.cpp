@@ -1,5 +1,4 @@
 #define PRELOAD_MONSTERS 1
-//#define COLOR_4BPP 1
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
 //#define DEBUG 1
@@ -40,6 +39,7 @@ extern Uint8 *save_current_lwram;
 extern Uint8 *soundAddr;
 }
 extern void sat_restart_audio(void);
+
 //extern volatile Uint8 audioEnabled;
 #include "saturn_print.h"
 #include "lz.h"
@@ -269,7 +269,7 @@ _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			
 /*			switch (_res._type) {
 			case kResourceTypeDOS:
-				/*_menu.handleTitleScreen();
+				_menu.handleTitleScreen();
 				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _stub->_pi.quit) {
 					_stub->_pi.quit = true;
 					break;
@@ -1036,10 +1036,10 @@ bool Game::handleContinueAbort() {
 		sprintf(textBuf, "SCORE  %08lu", _score);
 		_vid.drawString(textBuf, 90, 180, 0xE3);
 
-
-		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
-//emu_printf("slsynch Game::handleContinueAbort()\n");					
-		slSynch();
+//emu_printf("SAT_displayCutscene\n");
+//		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
+//emu_printf("slsynch Game::handleContinueAbort()\n");
+//		slSynch();
 
 		if (_res.isMac()) {
 
@@ -1261,8 +1261,7 @@ void Game::drawStoryTexts() {
 			volatile scsp_dbg_reg_t *dbg_reg = (scsp_dbg_reg_t *)get_scsp_dbg_reg();
 			dbg_reg->mslc= PCM_VOICE;
 			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
-			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
-
+//			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
 //			if (voiceSegmentData) {
 			if (voiceSegmentLen) 
 			{
@@ -1276,16 +1275,30 @@ void Game::drawStoryTexts() {
 				pcm_sample_start(PCM_VOICE);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
-
+/*
+char toto[100];
+sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+_vid.drawString(toto, 1, 78, 0xE7);
+			emu_printf("start play slot %d ca %04x pcm size %d sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,voiceSegmentLen,slot->sa,slot->lsa,slot->lea);
+*/
 			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
 				}*/
+//sprintf(toto,"%06d %06d %d", (dbg_reg->ca+1)*4096,voiceSegmentLen-1,((dbg_reg->ca+1)*4096>=voiceSegmentLen-1));
+//_vid.drawString(toto, 1, 70, 0xE7);
+//emu_printf("(dbg_reg->ca+1)*4096 %d voiceSegmentLen %d comp %d\n",(dbg_reg->ca+1)*4096,voiceSegmentLen,((dbg_reg->ca+1)*4096>=voiceSegmentLen-1));
 				if((dbg_reg->ca+1)*4096>=voiceSegmentLen-1
 				|| (next>=voiceSegmentLen-1 && dbg_reg->ca==0))
 				{
+/*
+sprintf(toto,"end ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+_vid.drawString(toto, 1, 88, 0xE7);
+				emu_printf("end play slot %d ca %04x sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
+				_stub->sleep(2000);
+*/
 					pcm_sample_stop(PCM_VOICE);
 					break;
 				}
@@ -1295,6 +1308,8 @@ void Game::drawStoryTexts() {
 
 			if (voiceSegmentLen) {
 				pcm_sample_stop(PCM_VOICE);
+//				_mix.stopAll();
+//				sat_free(voiceSegmentData);
 			}
 			_stub->_pi.quit = false;
 			_stub->_pi.backspace = false;
@@ -2610,23 +2625,34 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 
 		if (dataPtr) {
 			DecodeBuffer buf{};
-			buf.w = READ_BE_UINT16(dataPtr + 2) & 0xff;
+			buf.w = READ_BE_UINT16(dataPtr + 2);
 			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptr = destPtr;
 			buf.setPixel = setPixelFunc;
 			memset(buf.ptr, 0, buf.w * buf.h);
-xxxxxxxxxxxxxxxxx
-			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
 			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
+
+#ifdef DEBUG
+if(j>=530 && j<=610)
+{
+	sprData->id = j;
+	buf.setPixel = _vid.MAC_setPixel4Bpp;
+}
+else
+{
+	buf.setPixel = setPixelFunc;
+}
+#endif
+			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
 			sprData->size = (buf.h / 8) << 8 | buf.w;
 			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
 			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-//			buf.w = sprData->size & 0xFF;
-//			buf.h = (sprData->size >> 8) * 8;
+			buf.w = sprData->size & 0xFF;
+			buf.h = (sprData->size >> 8) * 8;
 
 			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / (buf.setPixel == _vid.MAC_setPixel4Bpp ? 2 : 1));
 			if ((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352) {

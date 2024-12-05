@@ -13,7 +13,6 @@ extern "C" {
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
 extern Uint8 *current_lwram;
-extern Uint8 *soundAddr;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
 //Uint8* cache = NULL; // vbt : after frontlayer
@@ -26,7 +25,7 @@ Sint32 gfsDirN;
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 30)
+#define CACHE_SIZE (SECTOR_SIZE * 40)
 
 static char satpath[25];
 //static char current_path[15][16];
@@ -131,7 +130,6 @@ GFS_FILE *sat_fopen(const char *path) {
 	}
 	Uint16 idx;
 	static GFS_FILE fp[1];
-//	GFS_FILE *fp = NULL;
 	idx = 0;
 	if (path[idx] == '\0')
 	{
@@ -200,7 +198,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
 	{
-emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));		
+//emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));
 //slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
 	}
@@ -237,9 +235,8 @@ emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));
 
 			fully_cached = 1;
 			cache_offset = 0;
-					emu_printf("GFS_Fread1 in cache\n");
+//					emu_printf("GFS_Fread1 in cache\n");
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
-//			GFS_Close(fp->fid);			
 		} else if ((current_cached != fp->file_hash) && (fp->f_size >= CACHE_SIZE)) {
 			current_cached = fp->file_hash;
 //					emu_printf("GFS_Seek2 read partly file\n");
@@ -250,15 +247,10 @@ emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));
 
 			fully_cached = 0;
 			cache_offset = 0;
-					emu_printf("GFS_Fread2 fid %d size %d cache %d\n", fid, fsize, CACHE_SIZE);	
+//					emu_printf("GFS_Fread2 fid %d size %d cache %d\n", fid, fsize, CACHE_SIZE);	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
-			
-//			GFS_Close(fp->fid);
 		}
 	}
-	else
-		emu_printf("file not opened\n");
-
 	// Now... get back to the roots!
 	//back_to_root();
 	return fp;
@@ -364,7 +356,7 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 		case SEEK_SET:
 			if(offset < 0 || offset >= stream->f_size)
 			{
-				emu_printf("SEEK_SET failed !\n");
+//				emu_printf("SEEK_SET failed !\n");
 				return -1;
 			}
 			stream->f_seek_pos = offset;
@@ -390,11 +382,7 @@ long sat_ftell(GFS_FILE *stream) {
 
 	return stream->f_seek_pos;
 }
-int inram=0;
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
-	
-//	emu_printf("fread file %d\n",stream->fid);
-	
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;
 
@@ -411,16 +399,6 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	tot_bytes = (nmemb * size) + skip_bytes;
 
 	tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
-/*	
-	if(soundAddr==ptr)
-	{
-		emu_printf("we catch read in sound ram!!!\n");
-		tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
-		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
-		return readBytes;
-	}
-*/	
-	
 	if(tot_sectors < 0) return 0;
 
 	Uint32 remaining_data, request_block;
@@ -443,38 +421,18 @@ partial_cache:
 //emu_printf("partial_cache\n"); //tout est en partial cache .....
 		end_offset = cache_offset + CACHE_SIZE;
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
-//			if(!inram)
-//			emu_printf("in ram\n"); 
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
-inram=1;
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;
 		} else if ((((stream->f_seek_pos + dataToRead) >= end_offset) || (stream->f_seek_pos < cache_offset))) {
-//			emu_printf("not in ram\n");
-			inram=0;
 //			emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
 			start_sector = (stream->f_seek_pos)/SECTOR_SIZE;
 			skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE;
 			tot_bytes = CACHE_SIZE;
 			tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
-//			if(stream->f_size>10000000)
-			/*if(0)
-			{
-			GfsFile *gfs = GFS_Open((Sint32)8);
-			emu_printf("tot_sectors %x fid %d start_sector %d id %d\n",tot_sectors,gfs,start_sector,GFS_NameToId((Sint8*)"VOICE.VCE"));
-			GFS_Seek(gfs, start_sector, GFS_SEEK_SET);
-			readBytes = GFS_Fread(gfs, tot_sectors, (Uint8*)cache, tot_bytes);
-			GFS_Load(GFS_NameToId((Sint8*)"VOICE.VCE"), 0, cache, tot_bytes);
-			GFS_Close(gfs);
-			}
-			else*/
-			{
 			GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
 			readBytes = GFS_Fread(stream->fid, tot_sectors, (Uint8*)cache, tot_bytes);
-			}
-//			GFS_Close(stream->fid);			
-//			emu_printf("readBytes %d\n",readBytes);				
 			cache_offset = start_sector * SECTOR_SIZE;//stream->f_seek_pos;
 
 			goto partial_cache;
@@ -482,7 +440,7 @@ inram=1;
 	}
 
 	if(skip_bytes) {
-emu_printf("skip_bytes %p size %d\n",current_lwram,tot_bytes);
+//emu_printf("skip_bytes %p size %d\n",current_lwram,tot_bytes);
 		read_buffer = (Uint8*)current_lwram;
 //		read_buffer = (Uint8*)22440000;
 //		read_buffer = (Uint8*)&cache[CACHE_SIZE];
@@ -492,7 +450,7 @@ emu_printf("skip_bytes %p size %d\n",current_lwram,tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 //		sat_free(read_buffer);
 	} else {
-emu_printf("no skip\n");
+//emu_printf("no skip\n");
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 

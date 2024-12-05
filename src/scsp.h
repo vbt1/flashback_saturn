@@ -97,8 +97,8 @@ typedef union scsp_dbg_reg
         struct
         {		
         uint16_t mslc : 5;
-        uint16_t ca : 3;
-        uint16_t toto : 8;
+        uint16_t ca : 4;
+        uint16_t toto : 7;
 //        uint8_t _end[4];		
         } __attribute__((packed));		
 } 
