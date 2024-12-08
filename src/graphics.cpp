@@ -27,14 +27,7 @@ void Graphics::drawPoint(uint8 color, const Point *pt) {
 //	debug(DBG_VIDEO, "Graphics::drawPoint() col=0x%X x=%d, y=%d", color, pt->x, pt->y);
 	if (pt->x >= 0 && pt->x < _crw && pt->y >= 0 && pt->y < _crh) {
 		*(_layer + (pt->y + _cry) * VIDEO_PITCH + pt->x + _crx) = color;
-/*
-	if(pt->x&1)
-		*(_layer + (pt->y + _cry) * VIDEO_PITCH + (pt->x + _crx)/2) |= color&0xf;
-	else
-		*(_layer + (pt->y + _cry) * VIDEO_PITCH + (pt->x + _crx)/2) = (color<<4);
-*/
 	}
-//	xxxxxxxxxxxxxxxxxxxxx
 }
 
 void Graphics::drawLine(uint8 color, const Point *pt1, const Point *pt2) {

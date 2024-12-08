@@ -2,6 +2,10 @@
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
 //#define DEBUG 1
+#define FRTH 0xfffffe12
+#define FRTL 0xfffffe13
+#define READ_FRT() ((((Uint16) *((Uint8 *) FRTH)) << 8) | ((Uint16) *((Uint8 *) FRTL)))
+
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -16,6 +20,7 @@ extern "C" {
 #include <sega_bup.h>
 #include <sega_per.h>
 #include <sega_gfs.h> 
+#include <sega_tim.h> 
 //#include <sega_spr.h>
 #include "pcm.h"
 #include "scsp.h"
@@ -903,22 +908,22 @@ bool Game::handleConfigPanel() {
 		break;*/
 	case kResourceTypeMac:
 		// top-left rounded corner
-		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x81,0);
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x81);
 		// top-right rounded corner
-		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x82,0);
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x82);
 		// bottom-left rounded corner
-		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x83,0);
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x83);
 		// bottom-right rounded corner
-		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x84,0);
+		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x84);
 		// horizontal lines
 		for (int i = 1; i < w; ++i) {
-			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + i), Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x85,0);
-			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + i), Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x88,0);
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + i), Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x85);
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + i), Video::CHAR_H * (y + h), _res._fnt, _vid._charFrontColor, 0x88);
 		}
 		// vertical lines
 		for (int i = 1; i < h; ++i) {
-			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * (y + i), _res._fnt, _vid._charFrontColor, 0x86,0);
-			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * (y + i), _res._fnt, _vid._charFrontColor, 0x87,0);
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * (y + i), _res._fnt, _vid._charFrontColor, 0x86);
+			_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * (x + w), Video::CHAR_H * (y + i), _res._fnt, _vid._charFrontColor, 0x87);
 			for (int j = 1; j < w; ++j) {
 				_vid.fillRect(Video::CHAR_W * (x + j), Video::CHAR_H * (y + i), Video::CHAR_W, Video::CHAR_H, 0xE2);
 			}
@@ -2619,42 +2624,33 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer* buf, int x, int y, uint8_t color)) 
 {
 	const int count = READ_BE_UINT16(spriteData + 2);
-
+	DecodeBuffer buf{};
+	if( setPixelFunc == _vid.MAC_setPixel4Bpp)
+		buf.type = 1;
+	buf.setPixel = setPixelFunc;
+			
 	for (unsigned int j = 0; j < count; j++) {
 		const uint8_t* dataPtr = _res.MAC_getImageData(spriteData, j);
 
 		if (dataPtr) {
-			DecodeBuffer buf{};
-			buf.w = READ_BE_UINT16(dataPtr + 2);
+			buf.w = READ_BE_UINT16(dataPtr + 2) & 0xff;
 			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptr = destPtr;
-			buf.setPixel = setPixelFunc;
 			memset(buf.ptr, 0, buf.w * buf.h);
 
-			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
-
-#ifdef DEBUG
-if(j>=530 && j<=610)
-{
-	sprData->id = j;
-	buf.setPixel = _vid.MAC_setPixel4Bpp;
-}
-else
-{
-	buf.setPixel = setPixelFunc;
-}
-#endif
 			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
+
+			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
 
 			sprData->size = (buf.h / 8) << 8 | buf.w;
 			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
 			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
 
-			buf.w = sprData->size & 0xFF;
-			buf.h = (sprData->size >> 8) * 8;
+//			buf.w = sprData->size & 0xFF;
+//			buf.h = (sprData->size >> 8) * 8;
 
-			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / (buf.setPixel == _vid.MAC_setPixel4Bpp ? 2 : 1));
+			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / ((buf.type==1) ? 2 : 1));
 			if ((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352) {
 				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
 				sprData->cgaddr = (int)tx.CGadr;
@@ -2698,7 +2694,10 @@ void Game::SAT_preloadMonsters() {
 	_curMonsterNum = 0xFFFF;
 
 	const uint8_t* mList = _monsterListLevels[_currentLevel];
-
+//#ifdef DEBUG
+	TIM_FRT_SET_16(0);
+	unsigned int s = READ_FRT();
+//#endif
 	while (*mList != 0xFF) {
 		_curMonsterFrame = mList[0];
 
@@ -2731,14 +2730,20 @@ void Game::SAT_preloadMonsters() {
 						const int color = 256 + kMonsterPalette * 16 + i;
 						_stub->setPaletteEntry(color, &palette[color]);
 					}
-#endif					
+#endif
+				
 					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen, _vid.MAC_setPixel4Bpp);
+
 					break; // Break out of the loop once the monster is found and processed.
 				}
 			}
 		}
 		mList += 2;
 	}
+//#ifdef DEBUG
+	unsigned int e = READ_FRT();
+	emu_printf("--duration ennemies : %d\n",e-s);
+//#endif
 }
 
 void Game::SAT_preloadSpc() {
@@ -2751,6 +2756,19 @@ void Game::SAT_preloadSpc() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
+
+//		Uint8	*t = PER_GET_TIM();
+//		char my_date[60];
+//		sprintf(my_date,"%02x%02x/%02d/%02x %02x-%02x-%02x",t[6],t[5],t[4] & 0x0F,t[3],t[2],t[1],t[0] );
+//		emu_printf("%s\n",my_date,84*3,220,2,8,9,0);
 #endif
+	TIM_FRT_SET_16(0);
+	unsigned int s = READ_FRT();
+//#endif
 	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);
+
+//#ifdef DEBUG
+	unsigned int e = READ_FRT();
+	emu_printf("--duration spc : %d\n",e-s);
+//#endif
 }

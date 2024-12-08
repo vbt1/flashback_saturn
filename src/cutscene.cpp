@@ -319,7 +319,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
-			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i], 0);
+			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
 			xPos += Video::CHAR_W;
 		}
 	}
