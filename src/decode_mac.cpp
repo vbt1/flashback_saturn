@@ -113,9 +113,18 @@ inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
     static const short kBits = 12;
     static const short kMask = (1 << kBits) - 1;
-
-	static const unsigned char lut[30]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
-										126,127,254,255,174,175,190,191,206,207,222,223,238,239};
+    static unsigned char remap[256];
+    static bool remap_initialized = false;
+    if (!remap_initialized) {
+        memset(remap, 0, sizeof(remap));
+        for (unsigned char i = 0; i < 30; ++i) {
+            remap[128 + i] = (unsigned char[]){14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
+                                              126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239}[i];
+        }
+        remap[14] = 128; remap[15] = 129; remap[30] = 130; remap[31] = 131;
+        remap[160] = 14; remap[161] = 15; remap[190] = 150; remap[191] = 151;
+        remap_initialized = true;
+    }
     unsigned short cursor = 0;
     short bits = 1;
     uint8_t count = 0;
@@ -145,25 +154,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 
 					if(mask!=0xff) // cas ecran niveau
 					{
-						if(color >= 128 && color < 158)
-						{
-							color = lut[color&0x1f];
-						}
-						else
-						{
-						   switch (color) 
-						   {
-								case 14:  color = 128; break;
-								case 15:  color = 129; break;
-								case 30:  color = 130; break;
-								case 31:  color = 131; break;
-								case 160: color = 14;  break;  // sans masque le masque
-								case 161: color = 15;  break;
-								case 190: color = 150; break;  // si on enleve le masque
-								case 191: color = 151; break;
-                                default: break; // No change
-							}
-						}
+                        color = remap[color] ? remap[color] : color;
 					}
 
                     window[cursor++] = color;
