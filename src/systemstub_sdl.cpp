@@ -182,6 +182,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
 	virtual uint32 getTimeStamp();
+	virtual void initTimeStamp();
 	virtual void startAudio(AudioCallback callback, void *param);
 	virtual void stopAudio();
 	virtual uint32 getOutputSampleRate();
@@ -390,6 +391,10 @@ void SystemStub_SDL::sleep(uint32 duration) {
 
 uint32 SystemStub_SDL::getTimeStamp() {
 	return ticker;
+}
+
+void SystemStub_SDL::initTimeStamp() {
+	ticker = 0;
 }
 
 void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {

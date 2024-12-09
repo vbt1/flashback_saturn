@@ -436,21 +436,19 @@ void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8
 static uint8_t _MAC_fontFrontColor;
 static uint8_t _MAC_fontShadowColor;
 
-void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
 //	emu_printf("Video::MAC_drawStringChar\n");	
 	DecodeBuffer buf{};
 	buf.ptr = dst;
 	buf.w = _w;
 	buf.pitch = pitch;
+	buf.type = 2; // obligatoire
 	buf.h = _h;
 	buf.x = x * _layerScale;
 	buf.y = y * _layerScale;
 	
 //	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-	if (is4Bpp)
-		buf.setPixel = Video::MAC_setPixelFont4Bpp;
-	else
-		buf.setPixel = Video::MAC_setPixelFont;
+	buf.setPixel = Video::MAC_setPixelFont;
 	_MAC_fontFrontColor = color;
 	_MAC_fontShadowColor = _charShadowColor;
 //	assert(chr >= 32);
@@ -469,7 +467,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c, 0);
+		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
 		++len;
 	}
 	_stub->copyRect(x, (y<<1), _w, 16, _frontLayer, _w);	
@@ -496,7 +494,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color) {
 	const uint8_t *fnt = _res->_fnt;
 	for (int i = 0; i < len; ++i) {
-		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i], 0);
+		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H , GAMESCREEN_W * GAMESCREEN_H * 4);
 }
@@ -511,8 +509,12 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
+	_stub->initTimeStamp();
+	unsigned int s = _stub->getTimeStamp();	
 	_res->MAC_loadLevelRoom(level, room, &buf);
-
+	unsigned int e = _stub->getTimeStamp();
+	emu_printf("--duration background : %d\n",e-s);
+	
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 
@@ -540,7 +542,8 @@ void Video::MAC_decodeMap(int level, int room) {
 }
 
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = (y-buf->y) * (buf->h>>1) + ((x>>1)-(buf->x>>1));	
+//	const int offset = (y-buf->y) * (buf->h>>1) + ((x>>1)-(buf->x>>1));	
+	const int offset = y * (buf->h>>1) + (x>>1);	
 	if(x&1)
 		buf->ptr[offset] |= (color&0x0f);
 	else
@@ -550,16 +553,22 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 }
 
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = (y-buf->y) * buf->h + (x-buf->x);	
+//	const int offset = (y-buf->y) * buf->h + (x-buf->x);	
+	const int offset = y * buf->h + x;	
 	buf->ptr[offset] = color;
 }
 
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	y += buf->y;
+	x += buf->x;
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
 }
 
 void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	y += buf->y;
+	x += buf->x;	
+	buf->type = 2; // obligatoire
 	const int offset = y * buf->pitch + x;
 	switch (color) {
 	case 0xC0:
@@ -570,7 +579,7 @@ void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 		break;
 	}
 }
-
+/*
 void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 
 	const int offset2 = y * buf->pitch/2 + x/2;
@@ -592,7 +601,7 @@ void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color)
 	else
 		buf->ptr[offset2] = (col<<4);
 }
-
+*/
 
 void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 	uint8_t *p = _frontLayer + y * _layerScale * _w + x * _layerScale;
@@ -624,6 +633,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 //		fixOffsetDecodeBuffer(&buf, dataPtr);
 
 		buf.setPixel = MAC_setPixelFG;
+		buf.type	 = 2;
 		buf.ptr      = _frontLayer;
 		_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 	}
@@ -668,9 +678,23 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
             buf.w = READ_BE_UINT16(dataPtr + 2) & 0xff;
             buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
             buf.ptr = hwram_screen;
-            buf.setPixel = (data == _res->_perso) ? MAC_setPixel4Bpp : MAC_setPixel;
-            size_t dataSize = SAT_ALIGN((data == _res->_perso) ? (buf.w * buf.h) / 2 : buf.w * buf.h);
-            fixOffsetDecodeBuffer(&buf, dataPtr);
+			size_t dataSize = buf.w * buf.h;
+			
+			if(data == _res->_perso)
+			{
+				buf.type = 1;
+				buf.setPixel = MAC_setPixel4Bpp;
+				dataSize >>= 1;
+			}
+			else
+			{
+				buf.setPixel = MAC_setPixel;
+			}
+
+			dataSize = SAT_ALIGN(dataSize);
+
+
+			fixOffsetDecodeBuffer(&buf, dataPtr);
             memset(buf.ptr, 0x00, dataSize);
 
             // Decode sprite data and set size

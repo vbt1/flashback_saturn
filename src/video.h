@@ -31,7 +31,7 @@ struct Resource;
 struct SystemStub;
 
 struct Video {
-	typedef void (Video::*drawCharFunc)(uint8_t *, int, int, int, const uint8_t *, uint8_t, uint8_t, bool);
+	typedef void (Video::*drawCharFunc)(uint8_t *, int, int, int, const uint8_t *, uint8_t, uint8_t);
 	
 	enum {
 		GAMESCREEN_W = 256,
@@ -89,8 +89,8 @@ struct Video {
 	void drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
 	void drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
 	void drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
-	void PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp);
-	void MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp);	
+	//void PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr;
+	void MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);
 	void drawChar(uint8_t c, int16 y, int16 x);
 	const char *drawString(const char *str, int16_t x, int16_t y, uint8_t col);
 	const char *drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col);

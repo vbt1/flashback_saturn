@@ -1,4 +1,4 @@
-//#pragma GCC optimize ("O2")
+#pragma GCC optimize ("O2")
 //#include <assert.h>
 extern "C" {
 #include <string.h>
@@ -104,8 +104,6 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 }
 
 inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
-	y += buf->y;
-	x += buf->x;
 	buf->setPixel(buf, x, y, color);
 }
 
@@ -125,8 +123,8 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     uint8_t *tmp_ptr = (uint8_t *)window + 4096;
 
 //	slTVOff(); on le fait bien avant
-
-    for (unsigned short y = 0; y < h; ++y) {
+	w*=8;
+    for (unsigned short y = 0; y < h/8; ++y) {
         unsigned short x = 0;
 
         while (x < w) {
@@ -145,7 +143,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                 if (!carry) {
                     uint8_t color = *src++;
 
-					if(mask!=0xff)
+					if(mask!=0xff) // cas ecran niveau
 					{
 						if(color >= 128 && color < 158)
 						{
@@ -163,6 +161,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 								case 161: color = 15;  break;
 								case 190: color = 150; break;  // si on enleve le masque
 								case 191: color = 151; break;
+                                default: break; // No change
 							}
 						}
 					}
@@ -195,15 +194,17 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
             }
         }
 
-        if ((y & 7) == 7) {
+//        if ((y & 7) == 7) 
+		{
             tmp_ptr = (uint8_t *)window + 4096;
-            memcpyl(buf->ptr, tmp_ptr, w * 8);
-            buf->ptr += w * 8;
+//            memcpyl(buf->ptr, tmp_ptr, w * 8);
+            DMA_ScuMemCopy(buf->ptr, tmp_ptr, w * 8);
+            buf->ptr += w;
         }
     }
 	slTVOn();
 }
-
+#if 0
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //emu_printf("decodeC211 src strt %p\n",src);
 	struct {
@@ -266,5 +267,103 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 		}
 	}
 //emu_printf("decodeC211 end\n");
-	
 }
+#else
+void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
+//emu_printf("decodeC211 src strt %p\n",src);
+	struct {
+		const uint8_t *ptr;
+		int repeatCount;
+	} stack[512];
+	int y = 0;
+	int x = 0;
+	int sp = 0;
+
+	while (1) {
+		const uint8_t code = *src++;
+		if ((code & 0x80) != 0) {
+			++y;
+			x = 0;
+		}
+	
+		int count = code & 0x1F;
+		if (count == 0) {
+			count = READ_BE_UINT16(src); src += 2;
+//			count = ((uint16_t*)src)[0]; src += 2;
+		}
+		if ((code & 0x40) == 0) {
+			if ((code & 0x20) == 0) {
+				if (count == 1) {
+//					assert(sp > 0);
+					if(sp <= 0)
+						break;
+					--stack[sp - 1].repeatCount;
+					if (stack[sp - 1].repeatCount >= 0) {
+						src = stack[sp - 1].ptr;
+					} else {
+						--sp;
+					}
+				} else {
+//					assert(sp < ARRAYSIZE(stack));
+					if(sp >= ARRAYSIZE(stack))
+						break;
+					stack[sp].ptr = src;
+					stack[sp].repeatCount = count - 1;
+					++sp;
+				}
+			} else {
+				x += count;
+			}
+		} else {
+			if ((code & 0x20) == 0) {
+				if (count == 1) {
+					return;
+				}
+
+				 uint8_t color = *src++;
+				int offset = 0;
+
+                switch(buf->type)
+                {
+                    case 0: // spc
+                        offset = y * buf->h + x;
+                        memset(&buf->ptr[offset],color,count);
+                        x+=count;
+                        break;
+
+					case 1: //perso 4bpp & ennemis
+						offset = y * (buf->h>>1) + (x>>1);
+
+						if(x&1)
+						{
+
+							for (int i = 0; i < count; ++i) {
+								setPixeli(x++, y, color, buf);
+							}
+							goto fin;
+						}
+						else
+						{
+							memset(&buf->ptr[offset],(color&0x0f)|color<<4,((count)>>1));
+							if(count&1)
+								buf->ptr[offset+(count>>1)]=((color&0x0f)<<4);
+							x+=count;
+						}
+fin:
+                        break;
+                    default: // font 8bpp et menu inventaire
+						for (int i = 0; i < count; ++i) {
+							setPixeli(x++, y, color, buf);
+						}
+                        break;
+                }
+			} else {
+				for (int i = 0; i < count; ++i) {
+					setPixeli(x++, y, *src++, buf);
+				}
+			}
+		}
+	}
+//emu_printf("decodeC211 end\n");
+}
+#endif
