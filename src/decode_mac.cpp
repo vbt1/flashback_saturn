@@ -123,8 +123,8 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     uint8_t *tmp_ptr = (uint8_t *)window + 4096;
 
 //	slTVOff(); on le fait bien avant
-
-    for (unsigned short y = 0; y < h; ++y) {
+	w*=8;
+    for (unsigned short y = 0; y < h/8; ++y) {
         unsigned short x = 0;
 
         while (x < w) {
@@ -143,7 +143,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                 if (!carry) {
                     uint8_t color = *src++;
 
-					if(mask!=0xff)
+					if(mask!=0xff) // cas ecran niveau
 					{
 						if(color >= 128 && color < 158)
 						{
@@ -161,6 +161,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 								case 161: color = 15;  break;
 								case 190: color = 150; break;  // si on enleve le masque
 								case 191: color = 151; break;
+                                default: break; // No change
 							}
 						}
 					}
@@ -193,10 +194,12 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
             }
         }
 
-        if ((y & 7) == 7) {
+//        if ((y & 7) == 7) 
+		{
             tmp_ptr = (uint8_t *)window + 4096;
-            memcpyl(buf->ptr, tmp_ptr, w * 8);
-            buf->ptr += w * 8;
+//            memcpyl(buf->ptr, tmp_ptr, w * 8);
+            DMA_ScuMemCopy(buf->ptr, tmp_ptr, w * 8);
+            buf->ptr += w;
         }
     }
 	slTVOn();
