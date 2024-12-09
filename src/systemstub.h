@@ -87,6 +87,7 @@ struct SystemStub {
 	virtual void processEvents() = 0;
 	virtual void sleep(uint32 duration) = 0;
 	virtual uint32 getTimeStamp() = 0;
+	virtual void initTimeStamp();
 	
 	virtual void startAudio(AudioCallback callback, void *param) = 0;
 	virtual void stopAudio() = 0;

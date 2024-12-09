@@ -2,10 +2,6 @@
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
 //#define DEBUG 1
-#define FRTH 0xfffffe12
-#define FRTL 0xfffffe13
-#define READ_FRT() ((((Uint16) *((Uint8 *) FRTH)) << 8) | ((Uint16) *((Uint8 *) FRTL)))
-
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -2150,7 +2146,7 @@ void Game::handleInventory() {
 		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
-			switch (_res._type) {
+/*			switch (_res._type) {
 			case kResourceTypeDOS: {
 					// draw inventory background
 					int icon_num = 31;
@@ -2162,11 +2158,11 @@ void Game::handleInventory() {
 					}
 				}
 				break;
-			case kResourceTypeMac:
+			case kResourceTypeMac:*/
 //				drawIcon(31, 56, 140, 0xF);
 				_vid.MAC_drawFG(56,140,_res._icn, 31);
-				break;
-			}
+/*				break;
+			}*/
 			if (!display_score) {
 				int icon_x_pos = 72;
 				for (int i = 0; i < 4; ++i) {
@@ -2695,8 +2691,8 @@ void Game::SAT_preloadMonsters() {
 
 	const uint8_t* mList = _monsterListLevels[_currentLevel];
 //#ifdef DEBUG
-	TIM_FRT_SET_16(0);
-	unsigned int s = READ_FRT();
+	_stub->initTimeStamp();
+	unsigned int s = _stub->getTimeStamp();
 //#endif
 	while (*mList != 0xFF) {
 		_curMonsterFrame = mList[0];
@@ -2741,7 +2737,7 @@ void Game::SAT_preloadMonsters() {
 		mList += 2;
 	}
 //#ifdef DEBUG
-	unsigned int e = READ_FRT();
+	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration ennemies : %d\n",e-s);
 //#endif
 }
@@ -2762,13 +2758,13 @@ void Game::SAT_preloadSpc() {
 //		sprintf(my_date,"%02x%02x/%02d/%02x %02x-%02x-%02x",t[6],t[5],t[4] & 0x0F,t[3],t[2],t[1],t[0] );
 //		emu_printf("%s\n",my_date,84*3,220,2,8,9,0);
 #endif
-	TIM_FRT_SET_16(0);
-	unsigned int s = READ_FRT();
+	_stub->initTimeStamp();
+	unsigned int s = _stub->getTimeStamp();
 //#endif
 	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);
 
 //#ifdef DEBUG
-	unsigned int e = READ_FRT();
+	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration spc : %d\n",e-s);
 //#endif
 }

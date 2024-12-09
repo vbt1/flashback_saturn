@@ -1,4 +1,4 @@
-//#pragma GCC optimize ("O2")
+#pragma GCC optimize ("O2")
 //#include <assert.h>
 extern "C" {
 #include <string.h>
@@ -317,15 +317,43 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 					return;
 				}
 
-				const uint8_t color = *src++;
-				for (int i = 0; i < (count & ~1); i += 2) {
-					setPixeli(x++, y, color, buf);
-					setPixeli(x++, y, color, buf);
-				}
-				for (int i = count & ~1; i < count; ++i) {
-					setPixeli(x++, y, color, buf);
-				}
+				 uint8_t color = *src++;
+				int offset = 0;
 
+                switch(buf->type)
+                {
+                    case 0: // spc
+                        offset = y * buf->h + x;
+                        memset(&buf->ptr[offset],color,count);
+                        x+=count;
+                        break;
+
+					case 1: //perso 4bpp & ennemis
+						offset = y * (buf->h>>1) + (x>>1);
+
+						if(x&1)
+						{
+
+							for (int i = 0; i < count; ++i) {
+								setPixeli(x++, y, color, buf);
+							}
+							goto fin;
+						}
+						else
+						{
+							memset(&buf->ptr[offset],(color&0x0f)|color<<4,((count)>>1));
+							if(count&1)
+								buf->ptr[offset+(count>>1)]=((color&0x0f)<<4);
+							x+=count;
+						}
+fin:
+                        break;
+                    default: // font 8bpp et menu inventaire
+						for (int i = 0; i < count; ++i) {
+							setPixeli(x++, y, color, buf);
+						}
+                        break;
+                }
 			} else {
 				for (int i = 0; i < count; ++i) {
 					setPixeli(x++, y, *src++, buf);

@@ -547,12 +547,6 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 		buf->ptr[offset] = ((color&0x0f)<<4);
 	}
 }
-/*
-void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	const int offset = (y-buf->y) * buf->h + (x-buf->x);	
-//	const int offset = y * buf->h + x;	
-	buf->ptr[offset] = color;
-}*/
 
 void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 //	const int offset = (y-buf->y) * buf->h + (x-buf->x);	
@@ -561,6 +555,8 @@ void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
 }
 
 void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
+	y += buf->y;
+	x += buf->x;
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
 }
@@ -633,6 +629,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 //		fixOffsetDecodeBuffer(&buf, dataPtr);
 
 		buf.setPixel = MAC_setPixelFG;
+		buf.type	 = 2;
 		buf.ptr      = _frontLayer;
 		_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 	}
