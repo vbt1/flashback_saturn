@@ -120,8 +120,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     short bits = 1;
     uint8_t count = 0;
     unsigned short offset = 0;
-    static uint8_t window[(3 << kBits)] __attribute__ ((aligned (4)));
-    uint8_t *tmp_ptr = (uint8_t *)window + 4096;
+    static uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
 
 //	slTVOff(); on le fait bien avant
 	w*=8;
@@ -168,8 +167,6 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 					}
 
                     window[cursor++] = color;
-                    *tmp_ptr++ = color;
-
                     cursor &= kMask;
                     continue;
                 }
@@ -181,15 +178,11 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 
 			uint8_t color = window[offset++];
 			window[cursor++] = color;
-			*tmp_ptr++ = color;
-
 			cursor &= kMask;
 			offset &= kMask;
 			count--;
         }
-
-		tmp_ptr = (uint8_t *)window + 4096;
-		DMA_ScuMemCopy(buf->ptr, tmp_ptr, w);
+		DMA_ScuMemCopy(buf->ptr, window, w);
 		buf->ptr += w;
     }
 	slTVOn();
