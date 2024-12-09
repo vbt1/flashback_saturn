@@ -109,6 +109,7 @@ inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
 
 #define CS1(x)                  (0x24000000UL + (x))
 
+
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
     static const short kBits = 12;
     static const short kMask = (1 << kBits) - 1;
@@ -124,10 +125,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 
 //	slTVOff(); on le fait bien avant
 	w*=8;
-    for (unsigned short y = 0; y < h/8; ++y) {
-        unsigned short x = 0;
-
-        while (x < w) {
+    for (unsigned short y = 0; y < h/8; ++y) 
+	{
+		for (int x = 0; x < w; x++) 
+		{
             if (count == 0) {
                 uint8_t carry = bits & 1;
                 bits >>= 1;
@@ -170,7 +171,6 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                     *tmp_ptr++ = color;
 
                     cursor &= kMask;
-                    x++;
                     continue;
                 }
                 offset = READ_BE_UINT16(src); src += 2;
@@ -179,31 +179,22 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                 offset = (cursor - offset - 1) & kMask;
             }
 
-            const short tt = kMask - count;
-			{
-                while (count > 0 && x < w) {
-                    uint8_t color = window[offset++];
-                    window[cursor++] = color;
-                    *tmp_ptr++ = color;
+			uint8_t color = window[offset++];
+			window[cursor++] = color;
+			*tmp_ptr++ = color;
 
-                    cursor &= kMask;
-                    offset &= kMask;
-                    count--;
-                    x++;
-                }
-            }
+			cursor &= kMask;
+			offset &= kMask;
+			count--;
         }
 
-//        if ((y & 7) == 7) 
-		{
-            tmp_ptr = (uint8_t *)window + 4096;
-//            memcpyl(buf->ptr, tmp_ptr, w * 8);
-            DMA_ScuMemCopy(buf->ptr, tmp_ptr, w * 8);
-            buf->ptr += w;
-        }
+		tmp_ptr = (uint8_t *)window + 4096;
+		DMA_ScuMemCopy(buf->ptr, tmp_ptr, w);
+		buf->ptr += w;
     }
 	slTVOn();
 }
+
 #if 0
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //emu_printf("decodeC211 src strt %p\n",src);
