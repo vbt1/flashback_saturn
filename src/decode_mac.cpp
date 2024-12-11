@@ -22,8 +22,6 @@ Uint8 *current_dram2=(Uint8 *)0x22600000;
 #include "util.h"
 #include "saturn_print.h"
 
-
-
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
 //emu_printf("lzss %s %05d\n", name, decodedSize);
@@ -78,12 +76,14 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 			}
 		}
 	}
+
 	uint32_t count = 0;
 
 	while (count < decodedSize) {
-		const int code = f.readByte();
+		int code = f.readByte();
 		for (int i = 0; i < 8 && count < decodedSize; ++i) {
-			if ((code & (1 << i)) == 0) {
+//			if ((code & (1 << i)) == 0) {
+			if ((code & 1) == 0) {
 				dst[count++] = f.readByte();
 			} else {
 				int offset = f.readUint16BE();
@@ -95,8 +95,10 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 				}
 				count += len;
 			}
+			code >>= 1;
 		}
 	}
+
 //	emu_printf("inf %d sup %d\n",a,b);
 //	emu_printf("dst %p\n",dst);
 
