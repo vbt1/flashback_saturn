@@ -946,7 +946,7 @@ void Resource::free_OBJ() {
 		_objectNodesMap[i] = 0;
 	}
 }
-
+/*
 void Resource::load_OBC(File *f) {
 	const int packedSize = f->readUint32BE();
 	uint8_t *packedData = (uint8_t *)sat_malloc(packedSize);
@@ -971,7 +971,7 @@ void Resource::load_OBC(File *f) {
 	decodeOBJ(tmp, unpackedSize);
 	sat_free(tmp);
 }
-
+*/
 void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	//emu_printf("Resource::decodeOBJ\n");
 	uint32_t offsets[256];
@@ -1047,7 +1047,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	}
 //slPrint("end decodeOBJ",slLocate(3,18));	
 }
-
+/*
 void Resource::load_PGE(File *f) {
 //	debug(DBG_RES, "Resource::load_PGE()");
 	_pgeNum = f->readUint16LE();
@@ -1079,7 +1079,7 @@ void Resource::load_PGE(File *f) {
 		pge->text_num = f->readUint16LE();
 	}
 }
-
+*/
 void Resource::decodePGE(const uint8_t *p, int size) {
 	_pgeNum = _readUint16(p); 
 	p += 2;
@@ -1458,7 +1458,7 @@ uint8_t *Resource::findBankData(uint16_t num) {
 	}
 	return 0;
 }
-
+/*
 uint8_t *Resource::loadBankData(uint16_t num) {
 	const uint8_t *ptr = _mbk + num * 6;
 	int dataOffset = READ_BE_UINT32(ptr);
@@ -1494,7 +1494,7 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 	_bankDataHead += size;
 	return bankData;
 }
-
+*/
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
@@ -1539,7 +1539,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //	emu_printf("Resource::decodeResourceMacData 'seek %d entry %p file %p'\n",_mac->_dataOffset + entry->dataOffset, entry,_mac->_f);	
 //	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
-//	emu_printf("Resource::readUint32BE\n");
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 

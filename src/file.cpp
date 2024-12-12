@@ -137,7 +137,7 @@ uint8_t File::readByte() {
 	read(&b, 1);
 	return b;
 }
-
+/*
 uint16_t File::readUint16LE() {
 	uint8_t lo = readByte();
 	uint8_t hi = readByte();
@@ -149,7 +149,7 @@ uint32_t File::readUint32LE() {
 	uint16_t hi = readUint16LE();
 	return (hi << 16) | lo;
 }
-
+*/
 uint16_t File::readUint16BE() {
 /*	uint8_t hi = readByte();
 	uint8_t lo = readByte();

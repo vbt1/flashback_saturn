@@ -2716,7 +2716,10 @@ void Game::SAT_preloadMonsters() {
 //			_res._monster = 0;
 			for (int i = 0; data[i].id; ++i) {
 				if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) {
+	unsigned int st = _stub->getTimeStamp();
 					_res._monster = _res.decodeResourceMacData(data[i].name, true);
+	unsigned int se = _stub->getTimeStamp();
+	emu_printf("--lzss %d ennemies : %d\n",i,se-st);	
 #ifdef DEBUG					
 					Color palette[512];
 					// on l'appelle juste pour la palette				

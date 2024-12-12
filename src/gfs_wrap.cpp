@@ -35,7 +35,7 @@ static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 //static Uint8* cache = (uint8_t *)22440000; // vbt : after frontlayer
 
-static Uint8  fully_cached = 0; // If file is cached from start to finish
+//static Uint8  fully_cached = 0; // If file is cached from start to finish
 static Uint32 cache_offset = 0;
 
 // Used for initialization and such
@@ -209,19 +209,9 @@ GFS_FILE *sat_fopen(const char *path) {
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 		
 		// Encapsulate the file data
-//emu_printf("sat_malloc in sat_fopen %s fid %d\n",path_token, fid);
-//		fp = (GFS_FILE*)sat_malloc(sizeof(GFS_FILE));
-//emu_printf("%p ***\n",fp);		
-//		if (fp == NULL) {
-//			emu_printf("fp == NULL\n");
-//			return NULL;}
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
-//slPrint((char *)"GFS_GetFileInfo     ",slLocate(10,12));	
-//					emu_printf("GFS_GetFileInfo\n");
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
-//slPrint((char *)"            ",slLocate(10,13));					
-//slPrintHex(fsize,slLocate(10,13));					
 		fp->f_size = fsize;
 		fp->file_hash = hashString(path);
 
@@ -233,7 +223,7 @@ GFS_FILE *sat_fopen(const char *path) {
 			tot_sectors = GFS_ByteToSct(fp->fid, fp->f_size);
 			memset((Uint8*)cache, 0, fp->f_size);
 
-			fully_cached = 1;
+//			fully_cached = 1;
 			cache_offset = 0;
 //					emu_printf("GFS_Fread1 in cache\n");
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, fp->f_size);
@@ -245,7 +235,7 @@ GFS_FILE *sat_fopen(const char *path) {
 			tot_sectors = GFS_ByteToSct(fp->fid, CACHE_SIZE);
 			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
 
-			fully_cached = 0;
+//			fully_cached = 0;
 			cache_offset = 0;
 //					emu_printf("GFS_Fread2 fid %d size %d cache %d\n", fid, fsize, CACHE_SIZE);	
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
@@ -382,6 +372,7 @@ long sat_ftell(GFS_FILE *stream) {
 
 	return stream->f_seek_pos;
 }
+
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;
@@ -408,13 +399,14 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 
 	Uint32 dataToRead = MIN(request_block, remaining_data);
 
-	if((stream->file_hash == current_cached) && fully_cached) {
+/*	if((stream->file_hash == current_cached) && fully_cached) {
 //emu_printf("fully_cached\n");
 		memcpy(ptr, cache + stream->f_seek_pos, dataToRead);	
 		stream->f_seek_pos += dataToRead;
 		
 		return dataToRead;
-	} else if ((stream->file_hash == current_cached) && ((dataToRead + skip_bytes) < CACHE_SIZE) && !fully_cached) {
+	} else*/
+		if ((stream->file_hash == current_cached) && ((dataToRead + skip_bytes) < CACHE_SIZE) /*&& !fully_cached*/) {
 		Uint32 end_offset;
 
 partial_cache:
@@ -442,10 +434,6 @@ partial_cache:
 	if(skip_bytes) {
 //emu_printf("skip_bytes %p size %d\n",current_lwram,tot_bytes);
 		read_buffer = (Uint8*)current_lwram;
-//		read_buffer = (Uint8*)22440000;
-//		read_buffer = (Uint8*)&cache[CACHE_SIZE];
-//		read_buffer = (Uint8*)sat_malloc(tot_bytes);
-//emu_printf("read_buffer %p %d\n",read_buffer,tot_bytes);
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 //		sat_free(read_buffer);
@@ -458,6 +446,7 @@ partial_cache:
 
 	return (readBytes - skip_bytes);
 }
+
 /*
 char *sat_fgets(char *s, int size, GFS_FILE *stream) {
 	if(s == NULL || stream == NULL) return NULL;
