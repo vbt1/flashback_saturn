@@ -28,8 +28,8 @@ struct File_impl {
 	virtual bool open(const char *path, const char *mode) = 0;
 	virtual void close() = 0;
 	virtual uint32_t size() = 0;
-	virtual void seek(int32_t off) = 0;
-	virtual void read(void *ptr, uint32_t len) = 0;
+	inline virtual void seek(int32_t off) = 0;
+	inline virtual void read(void *ptr, uint32_t len) = 0;
 	virtual void write(void *ptr, uint32_t len) = 0;
 };
 
@@ -54,14 +54,14 @@ struct stdFile : File_impl {
 		}
 		return sz;
 	}
-	void seek(int32_t off) {
+	inline void seek(int32_t off) {
 //		emu_printf("seek\n");
 		if (_fp) {
 //			emu_printf("sat_seek\n");
 			sat_fseek(_fp, off, SEEK_SET);
 		}
 	}
-	void read(void *ptr, uint32_t len) {
+	inline void read(void *ptr, uint32_t len) {
 		if (_fp) {
 			uint32_t r = sat_fread(ptr, 1, len, _fp);
 			if (r != len) {
@@ -131,14 +131,18 @@ void File::read(void *ptr, uint32_t len) {
 	_impl->read(ptr, len);
 //emu_printf("File::read done\n");
 }
-
+inline void File::readInline(void *ptr, uint32_t len) {
+//emu_printf("File::read %p\n",ptr);		
+	_impl->read(ptr, len);
+//emu_printf("File::read done\n");
+}
 uint8_t File::readByte() {
 	uint8_t b;
-	read(&b, 1);
+	readInline(&b, 1);
 	return b;
 }
 /*
-uint16_t File::readUint16LE() {
+ uint16_t File::readUint16LE() {
 	uint8_t lo = readByte();
 	uint8_t hi = readByte();
 	return (hi << 8) | lo;
@@ -156,7 +160,7 @@ uint16_t File::readUint16BE() {
 	return (hi << 8) | lo;
 */
 	uint16_t value;
-	read(&value, 2);
+	readInline(&value, 2);
 //	emu_printf("readUint16BE %04X\n",value);		
 	return value;
 }
@@ -167,7 +171,7 @@ uint32_t File::readUint32BE() {
 emu_printf("readUint32BE %04X\n",(hi << 16) | lo);	
 	return (hi << 16) | lo;*/
 	uint32_t value;
-	read(&value, 4);
+	readInline(&value, 4);
 //emu_printf("readUint32BE %04X\n",value);		
 	return value;
 }

@@ -38,6 +38,7 @@ struct File {
 	void seek(int32_t off);
 	uint32_t tell();
 	void read(void *ptr, uint32_t len);
+	inline void readInline(void *ptr, uint32_t len);
 	uint8_t readByte();
 	uint16_t readUint16LE();
 	uint32_t readUint32LE();
