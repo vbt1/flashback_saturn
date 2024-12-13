@@ -1901,7 +1901,7 @@ void Game::loadLevelData() {
 #endif
 	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
-		hwram_ptr = hwram+49000;
+		hwram_ptr = hwram+50000;
 //		hwram_screen = NULL;
 //		position_vram = position_vram_aft_monster; // vbt on repart des monsters
 		position_vram = position_vram_aft_monster = 0; // vbt correction

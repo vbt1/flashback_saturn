@@ -386,6 +386,9 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	Uint32 start_sector = (stream->f_seek_pos)/SECTOR_SIZE;
 	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector
 //emu_printf("start_sector %d skip_bytes %d\n",start_sector,skip_bytes);
+
+	if(start_sector == 3303)
+		GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
 /*	if(GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET) < 0)
 	{
 		return 0;
@@ -451,38 +454,6 @@ partial_cache:
 	return (readBytes - skip_bytes);
 }
 
-/*
-char *sat_fgets(char *s, int size, GFS_FILE *stream) {
-	if(s == NULL || stream == NULL) return NULL;
-
-	int idx;
-	char *buffer = NULL;
-		
-	buffer = (char*)sat_malloc(size);
-	size_t read_data;
-
-	if (buffer == NULL) return NULL;
-
-	read_data = sat_fread(buffer, size - 1, 1, stream); // We have filled the buffer, but we are not sure that everything will be needed
-
-	if(read_data == 0) {
-		sat_free(buffer);
-		return NULL;
-	}
-	
-	for(idx = 0; idx < read_data; idx++)
-		if (buffer[idx] == '\n') break;
-
-	memcpy(s, buffer, idx);
-
-	if (idx < read_data)
-		stream->f_seek_pos -= (read_data - idx - 1);
-
-	sat_free(buffer);
-
-	return s;
-}
-*/
 int sat_feof(GFS_FILE *stream) {
 	if((stream->f_size - 1) <= stream->f_seek_pos) return 1;
 	else return 0;

@@ -550,23 +550,6 @@ void SystemStub_SDL::forceGfxRedraw() {
 void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch) {
 	return;
 }
-/*
-int cdUnlock (void) {
-     Sint32 ret;
-     CdcStat stat;
-     volatile unsigned int delay;
-
-     SYS_CDINIT1(3);
-     SYS_CDINIT2();
-
-     do {
-          for(delay = 1000000; delay; delay--);
-          ret = CDC_GetCurStat(&stat);
-     } while ((ret != 0) || (CDC_STAT_STATUS(&stat) == 0xff));
-
-     return (int) CDC_STAT_STATUS(&stat);
-}
-*/
 // Store the info on connected peripheals inside an array
 void SystemStub_SDL::setup_input (void) {
 	if ((Per_Connect1 + Per_Connect2) == 0) {
@@ -594,40 +577,6 @@ void SystemStub_SDL::setup_input (void) {
 }
 
 void SystemStub_SDL::load_audio_driver(void) {
-/*
-	SndIniDt snd_init;
-	Uint8 sound_map[] = {0xff , 0xff};
-	
-	GFS_FILE *drv_file = NULL;
-	uint32 drv_size = 0;
-	uint8 *sddrvstsk = NULL;
-
-//slPrint((char *)"sat_fopen     ",slLocate(10,12));
-
-	drv_file = sat_fopen("SDDRVS.TSK");
-
-
-	if(drv_file == NULL) 
-		emu_printf("Unable to load sound driver\n");
-
-	sat_fseek(drv_file, 0, SEEK_END);
-	drv_size = sat_ftell(drv_file);
-	sat_fseek(drv_file, 0, SEEK_SET);
-
-#define	SDDRV_ADDR	0x00200000
-
-	sddrvstsk = (uint8*)SDDRV_ADDR;
-
-	sat_fread(sddrvstsk, drv_size, 1, drv_file);
-	sat_fclose(drv_file);
-
-	SND_INI_PRG_ADR(snd_init) 	= (uint16 *)sddrvstsk;
-	SND_INI_PRG_SZ(snd_init) 	= drv_size;
-	SND_INI_ARA_ADR(snd_init) 	= (uint16 *)sound_map;
-	SND_INI_ARA_SZ(snd_init) 	= sizeof(sound_map);
-	SND_Init(&snd_init);
-	SND_ChgMap(0);
-memset((void *)SDDRV_ADDR,0x00,drv_size);*/
 	snd_init();
 	return;
 }

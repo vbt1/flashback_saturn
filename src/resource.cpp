@@ -49,7 +49,6 @@ void init_GFS();
 #include "game.h"
 
 extern Uint8 vceEnabled;
-//extern Uint8 *current_dram;
 uint8_t * save_current_lwram;
 
 Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
@@ -65,7 +64,6 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
-//	_scratchBuffer = (uint8_t *)current_dram;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 	static const int kBankDataSize = 0x7000;
 
@@ -1587,6 +1585,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //				emu_printf("hwram_ptr ");				
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
+				emu_printf("hwram_ptr %p\n",hwram_ptr);
 			}
 			else
 			{
@@ -1727,7 +1726,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 //emu_printf("decodeResourceMacData %s\n",name);	
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
-//emu_printf("MAC_decodeImageData\n");		
+//emu_printf("MAC_decodeImageData\n");
 		MAC_decodeImageData(ptr, 0, buf, 0xff);
 //emu_printf("end MAC_decodeImageData\n");
 //		sat_free(ptr);  // pas de vidage car on utilise scratchbuffer
