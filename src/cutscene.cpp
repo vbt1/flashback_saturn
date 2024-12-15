@@ -1270,7 +1270,8 @@ emu_printf(" Cutscene::load %x \n", cutName);
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
-
+	_stub->initTimeStamp();
+	unsigned int s = _stub->getTimeStamp();
 	//audioEnabled = 0;
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	/*switch (_res->_type) {
@@ -1280,9 +1281,13 @@ emu_printf(" Cutscene::load %x \n", cutName);
 		break;
 	case kResourceTypeMac:*/
 		_res->MAC_loadCutscene(name);
+	unsigned int e = _stub->getTimeStamp();
+	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
 /*		break;
 	}*/
 	_res->load_CINE();
+	e = _stub->getTimeStamp();
+	emu_printf("--duration load_CINE : %d\n",e-s);	
 	bool loaded = (_res->_cmd && _res->_pol);
 ////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
 
@@ -1295,6 +1300,9 @@ emu_printf(" Cutscene::load %x \n", cutName);
 		pcm_sample_stop(i);
 	}
 */	
+	e = _stub->getTimeStamp();
+	emu_printf("--duration unload : %d\n",e-s);
+	
 	return loaded;
 }
 

@@ -34,9 +34,8 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)]; 
 void *calloc (size_t, size_t);
-
 static void process_cmd();
-//extern Uint8 *current_dram2;
+
 void init_GFS();
 }
 #include "saturn_print.h"
@@ -1842,7 +1841,6 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
             offset = 32;
         }
     }
-
     // Unroll loops to reduce loop overhead
     MAC_copyClut16(clut, 0, offset + 0);
     MAC_copyClut16(clut, 1, offset + 1);
@@ -2015,7 +2013,7 @@ void Resource::process_polygons(const char *cutscene)
 void Resource::MAC_loadCutscene(const char *cutscene) {
 	slTVOff();
 	slSynch();
-		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
+//		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 //	MAC_unloadCutscene();
 	char name[32];
 	save_current_lwram = (uint8_t *)current_lwram;
@@ -2046,7 +2044,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 //	emu_printf("MAC_loadCutscene2 %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
 	if (!cmdEntry) {
-		current_lwram = (uint8_t *)save_current_lwram;
+//		current_lwram = (uint8_t *)save_current_lwram; // vbt : inutile?
 		return;
 	}
 

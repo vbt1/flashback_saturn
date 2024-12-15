@@ -514,7 +514,7 @@ void Video::MAC_decodeMap(int level, int room) {
 	_res->MAC_loadLevelRoom(level, room, &buf);
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration background : %d\n",e-s);
-	
+
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 
@@ -538,7 +538,7 @@ void Video::MAC_decodeMap(int level, int room) {
 			const int color = j * 16 + i + 256;
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
-	}	
+	}
 }
 
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {

@@ -35,9 +35,9 @@ extern "C" {
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
 //extern TEXTURE tex_spr[4];
 extern Uint8 *current_lwram;
-//extern Uint8 *current_dram;
 extern Uint8 *save_current_lwram;
 extern Uint8 *soundAddr;
+Uint8 *current_dram2=(Uint8 *)0x22600000;
 }
 extern void sat_restart_audio(void);
 
@@ -61,7 +61,6 @@ extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
-//extern Uint8 *current_dram;
 extern Uint8 *current_dram2;
 extern unsigned int end1;
 }

@@ -14,8 +14,6 @@ extern Uint8 *hwram_screen;
 extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 extern unsigned int end1;
-//Uint8 *current_dram=(Uint8 *)0x22440000;
-Uint8 *current_dram2=(Uint8 *)0x22600000;
 }
 
 #include "decode_mac.h"
@@ -25,57 +23,34 @@ Uint8 *current_dram2=(Uint8 *)0x22600000;
 uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
 
 //emu_printf("lzss %s %05d\n", name, decodedSize);
-	decodedSize = f.readUint32BE();
-	
-	uint8_t *dst;
-	 if(strstr(name,"Junky") != NULL
-	 )
-	 {
-		dst = (uint8_t *)current_lwram;
-		current_lwram+=4;
-	 }
-	 else if(strstr(name,"Replicant") != NULL
-	 || strstr(name,"Mercenary") != NULL
-	 || strstr(name,"Alien") != NULL
-//	 || strstr(name,"Objects") != NULL
-	 )
-	 {
-		dst = (uint8_t *)current_dram2;
-		current_dram2 += SAT_ALIGN(decodedSize);	 
-	 }
-	else
-	{
-		if(strstr(name,"Room") != NULL)
-//		if(strstr(name,"Room") != NULL || strstr(name,"polygons")   != NULL)
-		{
-			//emu_printf("hwram1 %d %s\n", decodedSize, name);
-			dst = (uint8_t *)hwram_screen;
-		}
-		else
-		{
-			if(strstr(name,"polygons")   != NULL || strstr(name,"movie") != NULL)
-//			if(strstr(name,"movie") != NULL)
-			{
-				dst = (uint8_t *)current_lwram;
-				current_lwram += SAT_ALIGN(decodedSize);
-			}
-			else
-			{
-				if (((int)hwram_ptr)+SAT_ALIGN(decodedSize)<end1)
-				{
-//					emu_printf("hwram2 %d %s\n", decodedSize, name);
-					dst = (uint8_t *)hwram_ptr;
-					hwram_ptr += SAT_ALIGN(decodedSize);
-				}
-				else
-				{
-					dst = (uint8_t *)current_lwram;
-					current_lwram += SAT_ALIGN(decodedSize);
-//					emu_printf("lwram_new %d %p %s\n", decodedSize, current_lwram, name);
-				}
-			}
-		}
-	}
+   // Read the decoded size
+   decodedSize = f.readUint32BE();
+    uint32_t alignedSize = SAT_ALIGN(decodedSize);
+
+    // Pointer for memory allocation
+    uint8_t *dst;
+
+    // Cache strstr results
+    bool isJunky = strstr(name, "Junky") != NULL;
+    bool isRoom = strstr(name, "Room") != NULL;
+
+    // Memory allocation logic
+    if (isJunky) {
+        // Special case for "Junky"
+        dst = (uint8_t *)current_lwram;
+        current_lwram += 4;
+    } else if (isRoom) {
+        // Allocates from hwram_screen
+        dst = (uint8_t *)hwram_screen;
+    } else if (((int)hwram_ptr) + alignedSize < end1) {
+        // Allocates from hwram_ptr if there's enough space
+        dst = (uint8_t *)hwram_ptr;
+        hwram_ptr += alignedSize;
+    } else {
+        // Fallback to current_lwram
+        dst = (uint8_t *)current_lwram;
+        current_lwram += alignedSize;
+    }
 
 	uint32_t count = 0;
 
