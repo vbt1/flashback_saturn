@@ -31,7 +31,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
     uint8_t *dst;
 
     // Cache strstr results
-    bool isJunky = strstr(name, "Junky") != NULL;
+    bool isJunky = strstr(name, "Junky") != NULL || strstr(name, "Alien") != NULL || strstr(name, "Replicant") != NULL;
     bool isRoom = strstr(name, "Room") != NULL;
 
     // Memory allocation logic
@@ -42,7 +42,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
         dst = (uint8_t *)current_lwram;
         current_lwram += alignedSize;
 		}
-//		dst = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
+
     else if (isJunky) {
         // Special case for "Junky"
         dst = (uint8_t *)current_lwram;

@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -185,19 +185,19 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 void Game::run() {
 
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
-emu_printf("_randSeed\n");
+//emu_printf("_randSeed\n");
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram	
-emu_printf("_res.init\n");
+//emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
-emu_printf("_res.load_TEXT\n");
+//emu_printf("_res.load_TEXT\n");
 	_res.load_TEXT();
 
-	switch (_res._type) {
-	/*case kResourceTypeDOS:
+/*	switch (_res._type) {
+	case kResourceTypeDOS:
 		_res.load("FB_TXT", Resource::OT_FNT);
-		break;*/
-	case kResourceTypeMac:
+		break;
+	case kResourceTypeMac:*/
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 			
@@ -212,9 +212,9 @@ _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 // vbt : refaire le chargement des sons
 		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé
-		break;
+/*		break;
 	}
-
+*/
 hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION

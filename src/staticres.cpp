@@ -435,7 +435,7 @@ const uint8_t Game::_monsterListLevel1[] = {
 };
 
 const uint8_t Game::_monsterListLevel2[] = {
-	0x22, 0, 0x23, 0, 0x4B, 0, 0x49, 1, 0x4D, 1, 0x76, 2, 0xFF
+	0x22, 0, 0x23, 0, 0x4B, 0, 0x76, 2, 0x49, 1, 0x4D, 1, 0xFF
 };
 
 const uint8_t Game::_monsterListLevel3[] = {
@@ -443,7 +443,7 @@ const uint8_t Game::_monsterListLevel3[] = {
 };
 
 const uint8_t Game::_monsterListLevel4_1[] = {
-	0x4D, 1, 0x76, 2, 0xFF
+	0x76, 2, 0x4D, 1, 0xFF
 };
 
 const uint8_t Game::_monsterListLevel4_2[] = {

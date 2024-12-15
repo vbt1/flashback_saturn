@@ -1552,13 +1552,13 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 	uint8_t *data = 0;
 	if (decompressLzss) {
-emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
+//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}
 	} else {
-emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+//emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 		if(strncmp("Title", entry->name, 5) == 0 
 		|| strcmp("Flashback colors", entry->name) == 0 
 //		|| strncmp("intro", entry->name, 5) == 0 
@@ -1566,7 +1566,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 //		|| strncmp("espion", entry->name, 5) == 0 
 		)
 		{
-			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
+//			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
 		else
@@ -1577,7 +1577,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 //				emu_printf("hwram_ptr ");				
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
-				emu_printf("hwram_ptr %p\n",hwram_ptr);
+//				emu_printf("hwram_ptr %p\n",hwram_ptr);
 			}
 			else
 			{
@@ -1595,7 +1595,7 @@ emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _res
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-		emu_printf("xxx data %p %d\n",data,_resourceMacDataSize);
+	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
 	return data;
 }
 
