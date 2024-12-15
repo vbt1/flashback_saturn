@@ -108,7 +108,7 @@ void Cutscene::updateScreen() {
 
     SPRITE user_sprite;
     user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    user_sprite.COLR = 0x1C0;
+    user_sprite.COLR = 0xC0;
     user_sprite.SIZE = (240 / 8) << 8 | 128;
 
     user_sprite.CTRL = FUNC_Sprite | _ZmCC;
@@ -127,7 +127,7 @@ void Cutscene::updateScreen() {
 	user_sprite.SRCA = spriteVramOffset / 8;
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 
-	user_sprite.COLR = 0x1D0; // vbt mauvaise palette
+	user_sprite.COLR = 0xD0; // vbt mauvaise palette
 	spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage==_res->_scratchBuffer)? (IMG_SIZE/2):0);
 	user_sprite.SRCA = spriteVramOffset / 8;
 
