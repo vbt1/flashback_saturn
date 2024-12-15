@@ -370,7 +370,7 @@ static const char *getCineName(Language lang, ResourceType type) {
 		return "ENG";
 	}
 }
-*/
+
 void Resource::load_CINE() {
 //	const char *prefix = getCineName(_lang, _type);
 //	emu_printf("Resource::load_CINE('%s')\n", prefix);
@@ -378,7 +378,7 @@ void Resource::load_CINE() {
 //	File f;
 			
 	switch (_type) {
-/*	case kResourceTypeDOS:
+	case kResourceTypeDOS:
 
 		if (_cine_off == 0) {
 			snprintf(_entryName, sizeof(_entryName), "%sCINE.BIN", prefix);
@@ -429,18 +429,18 @@ void Resource::load_CINE() {
 			error("Cannot load '%s'", _entryName);
 		}
 		break;
-*/
+
 	case kResourceTypeMac:
 		MAC_loadCutsceneText();
 		break;
 	}
 }
-
+*/
 void Resource::free_CINE() {
 	sat_free(_cine_off);
 	_cine_off = 0;
 //	sat_free(_cine_txt);
-	_cine_txt = 0;
+//	_cine_txt = 0;
 }
 
 void Resource::load_TEXT() {
@@ -1552,28 +1552,21 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 	uint8_t *data = 0;
 	if (decompressLzss) {
-//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
+emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
 		if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}
 	} else {
-
-		if(strncmp("Movie", entry->name, 5) == 0)
-		{
-//			data = (uint8_t *)current_lwram+SAT_ALIGN(_resourceMacDataSize*4);
-			data = (uint8_t *)current_lwram;
-			current_lwram += SAT_ALIGN(_resourceMacDataSize);
-		}
-		else if(strcmp("Flashback colors", entry->name) == 0 
-		|| strncmp("Title", entry->name, 5) == 0  
-		|| strncmp("intro", entry->name, 5) == 0 
-		|| strncmp("logo", entry->name, 4) == 0 
-		|| strncmp("espion", entry->name, 5) == 0 
+emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+		if(strncmp("Title", entry->name, 5) == 0 
+		|| strcmp("Flashback colors", entry->name) == 0 
+//		|| strncmp("intro", entry->name, 5) == 0 
+//		|| strncmp("logo", entry->name, 4) == 0 
+//		|| strncmp("espion", entry->name, 5) == 0 
 		)
 		{
-			emu_printf("_scratchBuffer %p\n", _scratchBuffer);
-//			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
+			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
 			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
 		}
 		else
@@ -1946,8 +1939,8 @@ void Resource::MAC_unloadCutscene() {
 	_pol = 0;
 	sat_free(_cmd);
 	_cmd = 0;
-	sat_free(_cine_txt);
-	_cine_txt = 0;
+//	sat_free(_cine_txt);
+//	_cine_txt = 0;
 }
 
 
@@ -2044,7 +2037,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 //	emu_printf("MAC_loadCutscene2 %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
 	if (!cmdEntry) {
-//		current_lwram = (uint8_t *)save_current_lwram; // vbt : inutile?
+		current_lwram = (uint8_t *)save_current_lwram; // vbt : inutile?
 		return;
 	}
 

@@ -1285,7 +1285,8 @@ emu_printf(" Cutscene::load %x \n", cutName);
 	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
 /*		break;
 	}*/
-	_res->load_CINE();
+//	_res->MAC_loadCutsceneText(); // vbt déplacé
+//	_res->load_CINE();
 	e = _stub->getTimeStamp();
 	emu_printf("--duration load_CINE : %d\n",e-s);	
 	bool loaded = (_res->_cmd && _res->_pol);

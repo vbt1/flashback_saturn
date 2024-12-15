@@ -211,7 +211,7 @@ _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 // vbt : refaire le chargement des sons
-		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé	
+		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé
 		break;
 	}
 
@@ -1934,6 +1934,7 @@ void Game::loadLevelData() {
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 
 		_res.MAC_loadLevelData(_currentLevel);
+		_res.MAC_loadCutsceneText(); // vbt déplacé
 		SAT_preloadMonsters();
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
