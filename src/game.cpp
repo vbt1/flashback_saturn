@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -2655,9 +2655,15 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				position_vram_aft_monster = position_vram;
 			}
 			else {
+#if 1
 				DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
 				sprData->cgaddr = (int)current_dram2;
 				current_dram2 += dataSize;
+#else
+				DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
+				sprData->cgaddr = (int)current_lwram;
+				current_lwram += dataSize;
+#endif
 			}
 #ifdef DEBUG			
 			buf.x = 200 - sprData->x;
@@ -2755,11 +2761,6 @@ void Game::SAT_preloadSpc() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
-
-//		Uint8	*t = PER_GET_TIM();
-//		char my_date[60];
-//		sprintf(my_date,"%02x%02x/%02d/%02x %02x-%02x-%02x",t[6],t[5],t[4] & 0x0F,t[3],t[2],t[1],t[0] );
-//		emu_printf("%s\n",my_date,84*3,220,2,8,9,0);
 #endif
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
