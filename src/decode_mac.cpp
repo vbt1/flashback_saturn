@@ -94,8 +94,8 @@ inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
 
 #define CS1(x)                  (0x24000000UL + (x))
 
-
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
+/*
     static const short kBits = 12;
     static const short kMask = (1 << kBits) - 1;
     static unsigned char remap[256];
@@ -106,6 +106,29 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
             remap[128 + i] = (unsigned char[]){14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
                                               126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239}[i];
         }
+        remap[14] = 128; remap[15] = 129; remap[30] = 130; remap[31] = 131;
+        remap[160] = 14; remap[161] = 15; remap[190] = 150; remap[191] = 151;
+        remap_initialized = true;
+    }
+*/
+    static const short kBits = 12;
+    static const short kMask = (1 << kBits) - 1;
+    static unsigned char remap[256];
+    static bool remap_initialized = false;
+
+    // Remap initialization (potential one-time setup)
+    if (!remap_initialized) {
+memset(remap, 0, sizeof(remap));
+const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
+                                      126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239};
+// Use 16-bit copy where possible
+		uint16_t* remap16 = reinterpret_cast<uint16_t*>(remap + 128);
+		const uint16_t* src16 = reinterpret_cast<const uint16_t*>(remap_values);
+
+		size_t i = 0;
+		for (; i + 1 < sizeof(remap_values); i += 2) {
+			*remap16++ = *src16++;
+		}
         remap[14] = 128; remap[15] = 129; remap[30] = 130; remap[31] = 131;
         remap[160] = 14; remap[161] = 15; remap[190] = 150; remap[191] = 151;
         remap_initialized = true;
@@ -151,18 +174,33 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
                 offset &= kMask;
                 offset = (cursor - offset - 1) & kMask;
             }
+//------------------------
+			if (cursor+count <=kMask && offset+count <=kMask)
+			{
+				uint8_t *dst = &window[cursor];
+				uint8_t *src = &window[offset];
 
-			uint8_t color = window[offset++];
-			window[cursor++] = color;
+				for (size_t i = 0; i < count; ++i) {
+					*dst++ = *src++;
+				}
+				cursor += count;
+				cursor &= kMask;
+				x += count-1;
+				count=0;
+				continue;
+			}
+//------------------------
+			window[cursor++] = window[offset++];
 			cursor &= kMask;
 			offset &= kMask;
-			count--;
-        }
+			--count;
+		}
 		DMA_ScuMemCopy(buf->ptr, window, w);
 		buf->ptr += w;
     }
 	slTVOn();
 }
+
 
 #if 0
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {

@@ -509,11 +509,11 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
-	_stub->initTimeStamp();
-	unsigned int s = _stub->getTimeStamp();	
+//	_stub->initTimeStamp();
+//	unsigned int s = _stub->getTimeStamp();	
 	_res->MAC_loadLevelRoom(level, room, &buf);
-	unsigned int e = _stub->getTimeStamp();
-	emu_printf("--duration background : %d\n",e-s);
+//	unsigned int e = _stub->getTimeStamp();
+//	emu_printf("--duration background : %d\n",e-s);
 
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
@@ -543,6 +543,7 @@ void Video::MAC_decodeMap(int level, int room) {
 
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 //	const int offset = (y-buf->y) * (buf->h>>1) + ((x>>1)-(buf->x>>1));	
+
 	const int offset = y * (buf->h>>1) + (x>>1);	
 	if(x&1)
 		buf->ptr[offset] |= (color&0x0f);
