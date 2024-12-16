@@ -69,6 +69,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 			if ((code & 1) == 0) {
 				dst[count++] = f.readByte();
 			} else {
+#if 1
 				int offset = f.readUint16BE();
 				const int len = (offset >> 12) + 3;
 				offset &= 0xFFF;
@@ -77,6 +78,78 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 					dst[count + j] = dst[count - offset - 1 + j];
 				}
 				count += len;
+#else
+int off = f.readUint16BE();
+int len = (off >> 12) + 3;
+off &= 0xFFF;
+
+if (len > 0) {
+    int src = count - off - 1;
+    
+    // Optimize for common case of non-overlapping or simple copy
+/*
+    if (off + 1 >= len) {
+        // Equivalent to memcpy, but potentially more efficient
+//		memcpy(dst + count, dst + src, len);
+				uint8_t *src1 = (uint8_t *)dst + src;
+				uint8_t *dst1 = (uint8_t *)dst + count;
+
+				for (size_t i = 0; i < len; ++i) {
+					*dst1++ = *src1++;
+				}
+
+
+    } else {
+        // Handle overlapping copies carefully
+        for (int j = 0; j < len; ++j) {
+            dst[count + j] = dst[src + j];
+        }
+    }
+*/	
+__asm__ volatile (
+    // Initialize pointers and counters
+    "mov %[dst], r0\n\t"       // r0 = destination pointer
+    "add %[count], r0\n\t"     // Adjust r0 with count offset
+    "mov r0, r1\n\t"           // r1 = adjusted destination pointer
+    "sub %[off], r0\n\t"       // r0 = source pointer (destination - offset)
+    "add #-1, r0\n\t"          // Adjust source pointer
+
+    "mov %[len], r2\n\t"       // r2 = length (total bytes to copy)
+
+    // Word copy loop (2 bytes at a time)
+    "2:\n\t"
+    "cmp/hs #2, r2\n\t"        // Check if 2 or more bytes remain
+    "bt 3f\n\t"                // If less than 2 bytes, branch to byte copy
+    "mov.w @r0+, r3\n\t"       // Load 2 bytes (word) from source
+    "mov.w r3, @r1+\n\t"       // Store 2 bytes to destination
+    "add #-2, r2\n\t"          // Decrement remaining length by 2
+    "bra 2b\n\t"               // Repeat word copy loop
+    "nop\n\t"                  // Delay slot
+
+    // Byte copy loop
+    "3:\n\t"
+    "cmp/eq #0, r2\n\t"        // Check if any bytes remain
+    "bt 4f\n\t"                // If none, exit
+    "mov.b @r0+, r3\n\t"       // Load byte from source
+    "mov.b r3, @r1+\n\t"       // Store byte to destination
+    "add #-1, r2\n\t"          // Decrement remaining length by 1
+    "bra 3b\n\t"               // Repeat byte copy loop
+    "nop\n\t"                  // Delay slot
+
+    // Exit
+    "4:\n\t"
+    :
+    : [dst] "r" (dst), 
+      [count] "r" (count), 
+      [off] "r" (off), 
+      [len] "r" (len)
+    : "r0", "r1", "r2", "r3", "memory"
+);
+
+
+    count += len;
+}
+#endif				
 			}
 			code >>= 1;
 		}

@@ -149,26 +149,26 @@ bool Resource::fileExists(const char *filename) {
 }
 */
 void Resource::clearLevelRes() {
-emu_printf("vbt clearLevelRes\n");
+//emu_printf("vbt clearLevelRes\n");
 
 current_lwram = (Uint8 *)VBT_L_START;//+(448*512);
 
-emu_printf("_tbn\n");	
+//emu_printf("_tbn\n");	
 	sat_free(_tbn); _tbn = 0;
-emu_printf("_mbk\n");		
+//emu_printf("_mbk\n");		
 	sat_free(_mbk); _mbk = 0;
-emu_printf("_pal\n");		
+//emu_printf("_pal\n");		
 	sat_free(_pal); _pal = 0;
-emu_printf("_map\n");		
+//emu_printf("_map\n");		
 	sat_free(_map); _map = 0;
-emu_printf("_lev\n");		
+//emu_printf("_lev\n");		
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
-emu_printf("_sgd\n");	
+//emu_printf("_sgd\n");	
 	sat_free(_sgd); _sgd = 0;
-emu_printf("_bnq\n");
+//emu_printf("_bnq\n");
 	sat_free(_bnq); _bnq = 0;
-emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
+//emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
 	sat_free(_ani); _ani = 0; // hwram
 
 	free_OBJ();

@@ -1860,23 +1860,23 @@ static bool isMetro(int level, int room) {
 */
 void Game::loadLevelMap() {
 //	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
-	bool widescreenUpdated = false;
+//	bool widescreenUpdated = false;
 	_currentIcon = 0xFF;
-	switch (_res._type) {
+/*	switch (_res._type) {
 	case kResourceTypeDOS:
 //		_vid.PC_decodeMap(_currentLevel, _currentRoom);  // vbt à remettre
 		break;
-	case kResourceTypeMac:
+	case kResourceTypeMac:*/
 		_vid.MAC_decodeMap(_currentLevel, _currentRoom);
-		break;
-	}
+//		break;
+//	}
 }
 
 void Game::loadLevelData() {
 	//audioEnabled = 0;
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
-	switch (_res._type) {
+//	switch (_res._type) {
 #if 0		
 	case kResourceTypeDOS:
 		_res.load(lvl->name, Resource::OT_MBK);
@@ -1898,7 +1898,7 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 #endif
-	case kResourceTypeMac:
+//	case kResourceTypeMac:
 //emu_printf("MAC_unloadLevelData\n");
 		hwram_ptr = hwram+50000;
 //		hwram_screen = NULL;
@@ -1938,8 +1938,8 @@ void Game::loadLevelData() {
 		SAT_preloadMonsters();
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-		break;
-	}
+//		break;
+//	}
 	_cut._id = lvl->cutscene_id;
 
 	_curMonsterNum = 0xFFFF;
@@ -1994,7 +1994,7 @@ emu_printf("_pge_liveTable1\n");
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
-emu_printf("pge_resetMessages\n");	
+//emu_printf("pge_resetMessages\n");	
 	pge_resetMessages();
 	_validSaveState = false;
 /* // vbt à remettre ???	
@@ -2007,7 +2007,8 @@ emu_printf("pge_resetMessages\n");
 */
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-	//audioEnabled = 1;	
+	//audioEnabled = 1;
+emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000+0x300000-(int)MEM_Malloc(0),(int)current_dram2-0x22600000);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
