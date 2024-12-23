@@ -22,12 +22,11 @@ extern "C"
 
 #include "sat_mem_checker.h"
 #include "gfs_wrap.h"
-extern Uint8 *hwram;
+//extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *soundAddr;
 extern unsigned int end1;
 extern Uint8 *hwram_screen;
-extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 void	*malloc(size_t);
 extern Uint32 position_vram;
@@ -100,11 +99,11 @@ Resource::~Resource() {
 void Resource::init() {
 	
 //	_type = kResourceTypeMac; // vbt ajout
-	
+/*	
 	switch (_type) {
 	case kResourceTypeDOS:
 		break;
-	case kResourceTypeMac:
+	case kResourceTypeMac:*/
 //		File f;
 //		if (_fs->exists(ResourceMac::FILENAME1)) 
 /*		if (f.open(ResourceMac::FILENAME1, _dataPath, "rb"))
@@ -122,8 +121,8 @@ emu_printf("new ResourceMac\n");
 		}
 emu_printf("_mac->load\n");
 		_mac->load();
-		break;
-	}
+/*		break;
+	}*/
 }
 /*
 void Resource::setLanguage(Language lang) {
@@ -1539,17 +1538,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 
-	if(hwram==NULL)
-	{
-		hwram = (Uint8 *)malloc(end1);//(282344);
-		end1  += (int)hwram;
-		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
-		hwram_ptr = (unsigned char *)hwram;
-	}
-//	else
-//	//emu_printf("hwram2 %d %s\n", decodedSize, name);
-
-
 	uint8_t *data = 0;
 	if (decompressLzss) {
 //emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
@@ -1967,13 +1955,13 @@ static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMa
 static void process_cmd()
 {
 	tingyInstance->process_commands();
-	slave_done_flag = true;
+//	slave_done_flag = true;
 }
 
 void Resource::process_commands()
 {
 	char name[32];
-	snprintf(name, sizeof(name), "%s movie", cut, current_lwram);
+	snprintf(name, sizeof(name), "%s movie", cut);
 	stringLowerCase(name);
 	emu_printf("MAC_loadCutscene2 %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
@@ -1983,7 +1971,7 @@ void Resource::process_commands()
 	}
 	_cmd = decodeResourceMacData(cmdEntry, true);
     // Signal that the slave has completed its work
-    slave_done_flag = true;
+//    slave_done_flag = true;
 }
 
 void Resource::process_polygons(const char *cutscene)
@@ -2024,7 +2012,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		emu_printf("wait_for_slave\n");
 
     // Waiting for the slave to finish before continuing
-    wait_for_slave();
+//    wait_for_slave();
 		emu_printf("slCashPurge\n");
     // Clear the Master CPU cache otherwise the updated values by the Slave might not be seen by the Master
     slCashPurge();
@@ -2032,7 +2020,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 
 #else
 // vbt :  paraléliser les décodages !!!
-	snprintf(name, sizeof(name), "%s movie", cutscene, current_lwram);
+	snprintf(name, sizeof(name), "%s movie", cutscene);
 	stringLowerCase(name);
 //	emu_printf("MAC_loadCutscene2 %s\n",name);	
 	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
@@ -2074,6 +2062,7 @@ void Resource::MAC_loadSounds() {
 	};
 	_numSfx = NUM_SFXS;
 	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
+
 	if (!_sfxList) {
 		return;
 	}

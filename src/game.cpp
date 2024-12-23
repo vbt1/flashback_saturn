@@ -198,15 +198,20 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:*/
+	
+		hwram = (Uint8 *)malloc(end1);//(282344);
+		end1 += (int)hwram;
+		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
+		hwram_ptr = (unsigned char *)hwram;
+		hwram_screen = hwram_ptr;
+		hwram_ptr += 50000;
+	
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 			
 _vid.setTextPalette();
 _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
-
-		hwram_screen=hwram_ptr;
-		hwram_ptr+=50000;
 
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
@@ -671,7 +676,7 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
-	if (_cut._id != 0xFFFF && _cut._id != 8 && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 && _cut._id != 30 && _cut._id != 31) {
+	if (_cut._id != 0xFFFF /*&& _cut._id != 8*/ && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 && _cut._id != 30 && _cut._id != 31) {
 //		_sfxPly.stop(); // vbt à voir
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();
@@ -1814,18 +1819,18 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 	_curMonsterFrame = mList[0];
 	if (_curMonsterNum != mList[1]) {
 		_curMonsterNum = mList[1];
-		switch (_res._type) {
-/*		case kResourceTypeDOS: {
+/*		switch (_res._type) {
+		case kResourceTypeDOS: {
 				const char *name = _monsterNames[0][_curMonsterNum];
 				_res.load(name, Resource::OT_SPRM);
 //				_res.load_SPR_OFF(name, _res._sprm);
 //				_vid.setPaletteSlotLE(5, _monsterPals[_curMonsterNum]);
 			}
 			break;
-*/
+
 		case kResourceTypeMac: {
-				Color palette[512];
-				_cut._stop=true; // vbt bidouille pour relancer la piste audio
+*/				Color palette[512];
+//				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 
 // on l'appelle juste pour la palette				
 				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
@@ -1834,9 +1839,9 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 					const int color = 256 + kMonsterPalette * 16 + i;
 					_stub->setPaletteEntry(color, &palette[color]);
 				}
-			}
-			break;
-		}
+//			}
+//			break;
+//		}
 	}
 	return 0xFFFF;
 }
@@ -2732,8 +2737,8 @@ void Game::SAT_preloadMonsters() {
 					// on l'appelle juste pour la palette				
 					_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
 					static const int kMonsterPalette = 5;
-					for (int i = 0; i < 16; ++i) {
-						const int color = 256 + kMonsterPalette * 16 + i;
+					for (int j = 0; j < 16; ++j) {
+						const int color = 256 + kMonsterPalette * 16 + j;
 						_stub->setPaletteEntry(color, &palette[color]);
 					}
 #endif
