@@ -1500,8 +1500,7 @@ void Cutscene::play() {
 			uint8_t *_caillouSetData = (uint8_t *)current_lwram;
 			int loaded = GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.BIN"),0,(void *)_caillouSetData,6361);
 			playSet(_caillouSetData, 0x5E4);
-			
-//		_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");			
+			_res->reopenFile();
 		}
 //		//emu_printf("fullRefresh\n");
 //		_vid->fullRefresh();

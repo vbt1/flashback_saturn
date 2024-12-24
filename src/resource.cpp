@@ -1279,9 +1279,13 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 			}
 		}
 #endif
-//emu_printf("vbt : reopening main file\n");
-		_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
+		reopenFile();
 	}
+}
+
+void Resource::reopenFile()
+{
+	_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
 }
 /*
 static void normalizeSPL(SoundFx *sfx) {

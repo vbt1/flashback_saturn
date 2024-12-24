@@ -321,7 +321,7 @@ struct Resource {
 	void MAC_loadSounds();
 	void process_commands();
 	void process_polygons(const char *cutscene);
-
+	void reopenFile();
 	int MAC_getPersoFrame(int anim) const {
 		static const int16_t data[] = {
 			0x000, 0x22E,
