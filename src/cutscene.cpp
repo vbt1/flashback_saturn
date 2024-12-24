@@ -1423,7 +1423,7 @@ void Cutscene::playCredits() {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-		emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
+//		emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
 		_creditsSequence = false;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
@@ -1437,9 +1437,10 @@ void Cutscene::play() {
 					cutName = 2; // CARTE
 				}
 				break;
+*/
 			case 8: // save checkpoints
 				break;
-			case 19:
+/*			case 19:
 				//if (g_options.play_serrure_cutscene) 
 				{
 					cutName = 31; // SERRURE
@@ -1494,14 +1495,10 @@ void Cutscene::play() {
 			}
 		}
 		else if (_id == 8) {
-			emu_printf("loading CAILLOU\n");
-			uint8_t *_caillouSetData = (uint8_t *)hwram_screen;
-			
 		GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
 		GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
-		
+			uint8_t *_caillouSetData = (uint8_t *)current_lwram;
 			int loaded = GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.BIN"),0,(void *)_caillouSetData,6361);
-			emu_printf("loading CAILLOU %d\n",loaded);			
 			playSet(_caillouSetData, 0x5E4);
 			
 //		_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");			
@@ -1574,7 +1571,6 @@ static const int kMaxPaletteSize = 32;
 void Cutscene::playSet(const uint8_t *p, int offset) {
 	SetShape backgroundShapes[kMaxShapesCount];
 	const int bgCount = READ_BE_UINT16(p + offset); offset += 2;
-emu_printf("1\n");	
 	assert(bgCount <= kMaxShapesCount);
 	for (int i = 0; i < bgCount; ++i) {
 		uint16_t nextOffset = readSetShapeOffset(p, offset);
@@ -1584,7 +1580,6 @@ emu_printf("1\n");
 	}
 	SetShape foregroundShapes[kMaxShapesCount];
 	const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
-emu_printf("2\n");	
 	assert(fgCount <= kMaxShapesCount);
 	for (int i = 0; i < fgCount; ++i) {
 		uint16_t nextOffset = readSetShapeOffset(p, offset);
@@ -1592,18 +1587,13 @@ emu_printf("2\n");
 		foregroundShapes[i].size = nextOffset - offset;
 		offset = nextOffset + 45;
 	}
-emu_printf("3\n");	
 	prepare();
-emu_printf("4\n");		
 	_gfx.setLayer(_backPage, _vid->_w);
-
 	offset = 10;
 	const int frames = READ_BE_UINT16(p + offset); offset += 2;
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
 		const uint32_t timestamp = _stub->getTimeStamp();
-
 		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
-
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
 
@@ -1611,12 +1601,10 @@ emu_printf("4\n");
 		memset(paletteBuffer, 0, sizeof(paletteBuffer));
 		readSetPalette(p, backgroundShapes[shapeBg].offset + backgroundShapes[shapeBg].size, paletteBuffer);
 		int paletteLutSize = 16;
-
 		uint8_t paletteLut[kMaxPaletteSize];
 		for (int j = 0; j < 16; ++j) {
 			paletteLut[j] = 0xC0 + j;
 		}
-emu_printf("5\n");	
 		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
 		for (int j = 0; j < count; ++j) {
 			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
@@ -1640,10 +1628,9 @@ emu_printf("5\n");
 					paletteBuffer[paletteLutSize++] = tempPalette[k];
 				}
 			}
-
 			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY, paletteLut);
 		}
-emu_printf("6\n");	
+
 		for (int j = 0; j < paletteLutSize; ++j) {
 //			Color c = Video::AMIGA_convertColor(paletteBuffer[j]);
 			
@@ -1654,11 +1641,16 @@ emu_printf("6\n");
 			c.g = ((paletteBuffer[j] & 0x0F0) >> 2) | t;
 			c.b = ((paletteBuffer[j] & 0x00F) << 2) | t;			
 			
-			_stub->setPaletteEntry(0xC0 + j, &c);
+			_stub->setPaletteEntry(0x1C0 + j, &c);
 		}
-emu_printf("7\n");	
+/*
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
 		_stub->updateScreen(0);
+*/
+
+		_vid->SAT_displayCutscene(0,0, 0, 128, 240);
+		slSynch();
+		updatePalette();
 		const int diff = 90 - (_stub->getTimeStamp() - timestamp);
 		_stub->sleep((diff < 16) ? 16 : diff);
 		_stub->processEvents();
