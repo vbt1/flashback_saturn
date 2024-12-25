@@ -1228,15 +1228,15 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	int offset = 0;
 // vbt : obligatoire - ne pas mettre 45	
 // à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
-//	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59) 
+	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 24) 
 	{
 		if (num != 0) {
 			offset = READ_BE_UINT16(p + 2 + num * 2);
 		}
 		_baseOffset = (READ_BE_UINT16(p) + 1) * 2;
-	} /*else {
+	} else {
 		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
-	}*/
+	}
 	
 	_varKey = 0;
 	_cmdPtr = _cmdPtrBak = p + _baseOffset + offset;
@@ -1271,7 +1271,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 }
 
 bool Cutscene::load(uint16_t cutName) {
-emu_printf(" Cutscene::load %x \n", cutName);	
+//emu_printf(" Cutscene::load %x \n", cutName);	
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
@@ -1279,7 +1279,7 @@ emu_printf(" Cutscene::load %x \n", cutName);
 	unsigned int s = _stub->getTimeStamp();
 	//audioEnabled = 0;
 	const char *name = _namesTableDOS[cutName & 0xFF];
-	if(cutName!=12)
+	if(cutName!=12 && cutName!=31)
 		_res->MAC_loadCutscene(name);
 	else
 	{

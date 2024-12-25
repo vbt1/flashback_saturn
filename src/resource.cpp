@@ -1594,7 +1594,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
+//	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
 	return data;
 }
 
