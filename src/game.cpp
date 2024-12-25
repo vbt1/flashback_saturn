@@ -676,7 +676,7 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
-	if (_cut._id != 0xFFFF /*&& _cut._id != 8*/ && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 && _cut._id != 30 && _cut._id != 31) {
+	if (_cut._id != 0xFFFF /*&& _cut._id != 8 && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 && _cut._id != 30*/ /*&& _cut._id != 31*/) {
 //		_sfxPly.stop(); // vbt à voir
 //		ToggleWidescreenStack tws(_stub, false);
 //		_mix.stopMusic();

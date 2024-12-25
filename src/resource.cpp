@@ -555,14 +555,14 @@ void Resource::unload(int objType) {
 		break;
 	}
 }
-/*
+
 void Resource::load(const char *objName, int objType, const char *ext) {
 	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
 	File f;
 		
 	switch (objType) {
-	case OT_MBK:
+/*	case OT_MBK:
 		snprintf(_entryName, sizeof(_entryName), "%s.MBK", objName);
 		loadStub = &Resource::load_MBK;
 		break;
@@ -637,11 +637,11 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.POL", objName);
 		loadStub = &Resource::load_POL;
 		break;
-	case OT_CMP:
+*/	case OT_CMP:
 		snprintf(_entryName, sizeof(_entryName), "%s.CMP", objName);
 		loadStub = &Resource::load_CMP;
 		break;
-	case OT_OBC:
+/*	case OT_OBC:
 		snprintf(_entryName, sizeof(_entryName), "%s.OBC", objName);
 		loadStub = &Resource::load_OBC;
 		break;
@@ -665,8 +665,8 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.SPM", objName);
 		loadStub = &Resource::load_SPM;
 		break;
-	default:
-		error("Unimplemented Resource::load() type %d", objType);
+*/	default:
+		emu_printf("Unimplemented Resource::load() type %d\n", objType);
 		break;
 	}
 	if (ext) {
@@ -674,13 +674,15 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 	}
 
 	if (f.open(_entryName, _dataPath, "rb")) {
-		assert(loadStub);
+//		assert(loadStub);
 		(this->*loadStub)(&f);
-		if (f.ioErr()) {
-			error("I/O error when reading '%s'", _entryName);
-		}
-		f.close();
-	} else {
+		/*if (f.ioErr()) {
+			emu_printf("I/O error when reading '%s'", _entryName);
+		}*/
+//		f.close();
+	}
+/*
+	else {
 		if (_aba) {
 			uint32_t size;
 emu_printf("_aba->loadEntry\n");			
@@ -753,8 +755,9 @@ emu_printf("_aba->loadEntry\n");
 		error("Cannot open '%s'", _entryName);
 	}
 	f.close();
+	*/
 }
-
+/*
 void Resource::load_CT(File *pf) {
 //	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
@@ -1152,16 +1155,17 @@ emu_printf("Resource::load_POL()\n");
 		pf->read(_pol, len);
 	}
 }
-
+*/
 void Resource::load_CMP(File *pf) {
-emu_printf("Resource::load_CMP()\n");	
-	sat_free(_pol);
-	sat_free(_cmd);
+//	sat_free(_pol);
+//	sat_free(_cmd);
 	int len = pf->size();
-	uint8_t *tmp = (uint8_t *)sat_malloc(len);
-	if (!tmp) {
+	save_current_lwram = (uint8_t *)current_lwram;
+	uint8_t *tmp = (uint8_t *)current_lwram;//sat_malloc(len);
+	current_lwram += SAT_ALIGN(len);
+	/*if (!tmp) {
 		error("Unable to allocate CMP buffer");
-	}
+	}*/
 	pf->read(tmp, len);
 	struct {
 		int offset, packedSize, size;
@@ -1179,27 +1183,30 @@ emu_printf("Resource::load_CMP()\n");
 		data[i].packedSize = packedSize;
 		offset += packedSize;
 	}
-	_pol = (uint8_t *)sat_malloc(data[0].size);
-	if (!_pol) {
-		error("Unable to allocate POL buffer");
-	}
+//	_pol = (uint8_t *)sat_malloc(data[0].size);
+	_pol = (uint8_t *)current_lwram;
+	current_lwram += SAT_ALIGN(data[0].size);
+	/*if (!_pol) {
+		emu_printf("Unable to allocate POL buffer\n");
+	}*/
 	if (data[0].packedSize == data[0].size) {
 		memcpy(_pol, tmp + data[0].offset, data[0].packedSize);
 	} else if (!bytekiller_unpack(_pol, data[0].size, tmp + data[0].offset, data[0].packedSize)) {
-		error("Bad CRC for cutscene polygon data");
+		emu_printf("Bad CRC for cutscene polygon data\n");
 	}
-	_cmd = (uint8_t *)sat_malloc(data[1].size);
-	if (!_cmd) {
-		error("Unable to allocate CMD buffer");
-	}
+//	_cmd = (uint8_t *)sat_malloc(data[1].size);
+	_cmd = (uint8_t *)current_lwram;
+	current_lwram += SAT_ALIGN(data[1].size);
+	/*if (!_cmd) {
+		emu_printf("Unable to allocate CMD buffer\n");
+	}*/
 	if (data[1].packedSize == data[1].size) {
 		memcpy(_cmd, tmp + data[1].offset, data[1].packedSize);
 	} else if (!bytekiller_unpack(_cmd, data[1].size, tmp + data[1].offset, data[1].packedSize)) {
-		error("Bad CRC for cutscene command data");
+		emu_printf("Bad CRC for cutscene command data\n");
 	}
-	sat_free(tmp);
+//	sat_free(tmp);
 }
-*/
 Sint32 GetFileSize(int file_id)
 {
 #ifndef ACTION_REPLAY	
