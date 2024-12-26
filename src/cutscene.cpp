@@ -3,6 +3,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
+#define VBT_SATURN 1
 //#define SUBTITLE_SPRITE 1
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
 extern "C"
@@ -171,8 +172,8 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à reme
 #define SIN(a) (int16_t)(sin(a * M_PI / 180) * 256)
 #define COS(a) (int16_t)(cos(a * M_PI / 180) * 256)
 #else
-#define SIN(a) _sinTable[a] //slSin(a)//
-#define COS(a) _cosTable[a] //slCos(a)//
+#define SIN(a) _sinTable[a]
+#define COS(a) _cosTable[a]
 #endif
 
 /*
@@ -289,7 +290,6 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			++len;
 		}
 	}
-
 	Video::drawCharFunc dcf = _vid->_drawChar;
 	const uint8_t *fnt = /*(_res->_lang == LANG_JP) ? Video::_font8Jp :*/ _res->_fnt;
 	uint16_t lastSep = 0;
@@ -1226,18 +1226,24 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
 	int offset = 0;
+#ifdef VBT_SATURN
 // vbt : obligatoire - ne pas mettre 45	
 // à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
 	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 19 || _id == 22 || _id == 23 || _id == 24 || _id == 3) 
 	{
+#endif
 		if (num != 0) {
 			offset = READ_BE_UINT16(p + 2 + num * 2);
 		}
 		_baseOffset = (READ_BE_UINT16(p) + 1) * 2;
+#ifdef VBT_SATURN
 	} else {
 		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
 	}
-	
+#else
+	const int count = READ_BE_UINT16(p);
+	_baseOffset = (count + 1) * 2;
+#endif
 	_varKey = 0;
 	_cmdPtr = _cmdPtrBak = p + _baseOffset + offset;
 	_polPtr = getPolygonData();
@@ -1411,7 +1417,6 @@ void Cutscene::playCredits() {
 		const uint16_t *offsets = _offsetsTableDOS;
 		uint16_t cutName = offsets[cut_id * 2 + 0];
 		uint16_t cutOff  = offsets[cut_id * 2 + 1];
-		
 		if (load(cutName)) {
 			mainLoop(cutOff);
 			unload();
@@ -1504,7 +1509,6 @@ void Cutscene::play() {
 //		//emu_printf("fullRefresh\n");
 //		_vid->fullRefresh();
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
-
 		if (_id != 0x3D  /*&& _id != 40  && _id != 69*/) {
 			_id = 0xFFFF;
 		}
@@ -1585,13 +1589,17 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		foregroundShapes[i].size = nextOffset - offset;
 		offset = nextOffset + 45;
 	}
+
 	prepare();
 	_gfx.setLayer(_backPage, _vid->_w);
+
 	offset = 10;
 	const int frames = READ_BE_UINT16(p + offset); offset += 2;
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
 		const uint32_t timestamp = _stub->getTimeStamp();
+
 		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
+
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
 
@@ -1599,10 +1607,12 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		memset(paletteBuffer, 0, sizeof(paletteBuffer));
 		readSetPalette(p, backgroundShapes[shapeBg].offset + backgroundShapes[shapeBg].size, paletteBuffer);
 		int paletteLutSize = 16;
+
 		uint8_t paletteLut[kMaxPaletteSize];
 		for (int j = 0; j < 16; ++j) {
 			paletteLut[j] = 0xC0 + j;
 		}
+
 		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
 		for (int j = 0; j < count; ++j) {
 			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
@@ -1626,6 +1636,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 					paletteBuffer[paletteLutSize++] = tempPalette[k];
 				}
 			}
+
 			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY, paletteLut);
 		}
 
