@@ -1157,6 +1157,7 @@ emu_printf("Resource::load_POL()\n");
 }
 */
 void Resource::load_CMP(File *pf) {
+//	emu_printf("load_CMP\n");
 //	sat_free(_pol);
 //	sat_free(_cmd);
 	int len = pf->size();

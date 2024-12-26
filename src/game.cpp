@@ -670,6 +670,7 @@ void Game::updateTiming() {
 }
 
 void Game::playCutscene(int id) {
+//if(id>0)
 //emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram);
 //		return;   // vbt : pour ne pas lire les videos
 

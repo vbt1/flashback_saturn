@@ -1228,7 +1228,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	int offset = 0;
 // vbt : obligatoire - ne pas mettre 45	
 // à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
-	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 24) 
+	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 19 || _id == 22 || _id == 23 || _id == 24) 
 	{
 		if (num != 0) {
 			offset = READ_BE_UINT16(p + 2 + num * 2);
@@ -1271,7 +1271,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 }
 
 bool Cutscene::load(uint16_t cutName) {
-//emu_printf(" Cutscene::load %x \n", cutName);	
+//emu_printf(" Cutscene::load %d id %d\n", cutName, _id);
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
@@ -1318,18 +1318,18 @@ void Cutscene::unload() {
 //	return;
 //	position_vram = 0;
 //	position_vram_aft_monster = 0;
-	switch (_res->_type) {
+/*	switch (_res->_type) {
 	case kResourceTypeDOS:
 		_res->unload(Resource::OT_CMD);
 		_res->unload(Resource::OT_POL);
 		break;
-	case kResourceTypeMac:
+	case kResourceTypeMac:*/
 		if (_id != 0x3D)// && _id != 40 && _id != 69)
 		_res->MAC_unloadCutscene();
-		break;
+/*		break;
 	}
-	
-	if (_res->isMac() && _id != 0x48 && _id != 0x49)
+*/	
+	if (/*_res->isMac() &&*/ _id != 0x48 && _id != 0x49)
 	{
 		_vid->SAT_cleanSprites();
 #ifndef SUBTITLE_SPRITE
@@ -1428,24 +1428,7 @@ void Cutscene::play() {
 //		emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
 		_creditsSequence = false;
 		prepare();
-//		const uint16_t *offsets = _offsetsTableDOS;
-
-
-const uint16_t _offsetsTableAmiga[] = {
-	0x0000,  0, 0x0001,  3, 0x0001,  4, 0x0002,  0, 0x0001,  2, 0x0003,  0, 0x0004,  0, 0xFFFF,  0,
-	0xFFFF,  0, 0x0006,  0, 0x0001,  1, 0xFFFF,  0, 0xFFFF,  0, 0x0007,  0, 0x0003,  1, 0x0001, 11,
-	0x0001,  5, 0x0009,  0, 0x0001,  6, 0x000A,  0, 0x000B,  0, 0x0001, 10, 0x000C,  1, 0xFFFF,  2,
-	0xFFFF,  0, 0x000D,  4, 0x000D,  0, 0x000D,  1, 0x000D,  2, 0x000D,  3, 0xFFFF,  0, 0xFFFF,  1,
-	0x0001, 12, 0x0001, 13, 0x0001, 14, 0x0001, 15, 0x0001, 16, 0x000F,  0, 0x000F,  1, 0x000F,  1,
-	0x000F,  3, 0x000F,  2, 0x000F,  4, 0x0001,  8, 0x0001,  7, 0x000F,  5, 0xFFFF,  0, 0x0004,  1,
-	0x0011,  0, 0x0001,  9, 0x0012,  0, 0xFFFF,  0, 0x0014,  0, 0x0015,  0, 0x0016,  0, 0x0016,  1,
-	0xFFFF, 18, 0x0017,  0, 0x0001, 17, 0x0018,  0, 0x0001, 19, 0x0019,  0, 0x001A,  0, 0x0019,  1,
-	0x001B,  0, 0x001C,  0, 0x000F,  6, 0x000F,  6, 0x000F,  7, 0x000F,  8, 0x000F,  9, 0x000F, 10,
-	0x001D,  0, 0x001B,  1
-};
-
-		const uint16_t *offsets = _id==24 ? _offsetsTableAmiga : _offsetsTableDOS;
-
+		const uint16_t *offsets = _offsetsTableDOS;
 
 		uint16_t cutName = offsets[_id * 2 + 0];
 		uint16_t cutOff  = offsets[_id * 2 + 1];
