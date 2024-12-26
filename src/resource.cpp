@@ -1231,8 +1231,7 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 	if (offset != 0xFFFF) 
 	{
 	// vbt : on ferme le fichier Mac
-		GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
-		GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+		MAC_closeMainFile();
 #if 1
 		char filename[50];
 		sprintf(filename,"%d_%d.PCM",num,segment);
@@ -1287,14 +1286,10 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 			}
 		}
 #endif
-		reopenFile();
+		MAC_reopenMainFile();
 	}
 }
 
-void Resource::reopenFile()
-{
-	_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
-}
 /*
 static void normalizeSPL(SoundFx *sfx) {
 	static const int kGain = 2;
@@ -2113,3 +2108,13 @@ void Resource::MAC_loadSounds() {
 	soundAddr = p;
 }
 
+void Resource::MAC_closeMainFile()
+{
+	GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
+	GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+}
+
+void Resource::MAC_reopenMainFile()
+{
+	_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
+}

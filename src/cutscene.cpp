@@ -1283,10 +1283,9 @@ bool Cutscene::load(uint16_t cutName) {
 		_res->MAC_loadCutscene(name);
 	else
 	{
-		GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
-		GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+		_res->MAC_closeMainFile();
 		_res->load(name, Resource::OT_CMP);
-		_res->reopenFile();
+		_res->MAC_reopenMainFile();
 	}
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
@@ -1347,7 +1346,6 @@ void Cutscene::unload() {
 		}
 //		_id = 0xFFFF; // vbt : ajout
 	}
-	//audioEnabled = 1;
 	slTVOn();
 }
 
@@ -1497,12 +1495,11 @@ void Cutscene::play() {
 			}
 		}
 		else if (_id == 8) {
-		GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
-		GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+			_res->MAC_closeMainFile();
 			uint8_t *_caillouSetData = (uint8_t *)current_lwram;
 			int loaded = GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.CMP"),0,(void *)_caillouSetData,6361);
 			playSet(_caillouSetData, 0x5E4);
-			_res->reopenFile();
+			_res->MAC_reopenMainFile();
 		}
 //		//emu_printf("fullRefresh\n");
 //		_vid->fullRefresh();
