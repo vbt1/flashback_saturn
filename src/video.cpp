@@ -51,8 +51,8 @@ emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 //	_backLayer = (uint8_t *)LOW_WORK_RAM;
 
-	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE - 480*70);//+ TEXT1_RAM_VDP2);
-	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE - 480*140);	
+	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*70);//+ TEXT1_RAM_VDP2);
+	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*140);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
 	
 	_fullRefresh = true;
@@ -723,7 +723,7 @@ uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSi
 
 	return tx.CGadr; 
 }
-
+/*
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
 	SPRITE user_sprite;
@@ -737,7 +737,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
-
+*/
 void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data) {
     // emu_printf("SAT_displaySprite\n");
     SPRITE user_sprite{};

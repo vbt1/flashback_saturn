@@ -69,7 +69,7 @@ struct Cutscene {
 	SystemStub *_stub;
 	Video *_vid;
 	const uint8_t *_patchedOffsetsTable;
-
+	bool hasText = false;
 	uint16_t _id;
 	uint16_t _deathCutsceneId;
 	bool _interrupted;
