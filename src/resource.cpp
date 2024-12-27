@@ -434,14 +434,14 @@ void Resource::load_CINE() {
 		break;
 	}
 }
-*/
+
 void Resource::free_CINE() {
 	sat_free(_cine_off);
 	_cine_off = 0;
 //	sat_free(_cine_txt);
 //	_cine_txt = 0;
 }
-
+*/
 void Resource::load_TEXT() {
 #if 1
 
@@ -1999,8 +1999,6 @@ void Resource::process_polygons(const char *cutscene)
 
 
 void Resource::MAC_loadCutscene(const char *cutscene) {
-	slTVOff();
-	slSynch();
 //		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 //	MAC_unloadCutscene();
 	char name[32];

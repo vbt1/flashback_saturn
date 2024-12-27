@@ -139,17 +139,21 @@ void Cutscene::updateScreen() {
     uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
     uint8_t *back = (uint8_t *)_frontPage;
     
-    // Unroll the loop by processing 4 elements at a time
-    for (i = 0; i < IMG_SIZE; i += 8) {
+	// Unroll the loop by processing 8 elements at a time
+	for (i = 0; i < IMG_SIZE; i += 16) {
 		uint8_t *b = back + i;
 		uint8_t *a = aux + (i / 2);
 
-		// Process 4 pairs of bytes: (b[i], b[i+1]), (b[i+2], b[i+3]), (b[i+4], b[i+5]), (b[i+6], b[i+7])
+		// Process 8 pairs of bytes
 		a[0] = (b[1]) | (b[0] << 4);
 		a[1] = (b[3]) | (b[2] << 4);
 		a[2] = (b[5]) | (b[4] << 4);
 		a[3] = (b[7]) | (b[6] << 4);
-    }
+		a[4] = (b[9]) | (b[8] << 4);
+		a[5] = (b[11]) | (b[10] << 4);
+		a[6] = (b[13]) | (b[12] << 4);
+		a[7] = (b[15]) | (b[14] << 4);
+	}
     slSetSprite(&user_sprite, toFIXED2(240));
 
 #ifdef SUBTITLE_SPRITE
@@ -454,7 +458,8 @@ void Cutscene::op_waitForSync() {
 	} else {
 		_frameDelay = fetchNextCmdByte() * 4;
 		sync(_frameDelay);
-		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
+		if(_id != 17)
+			_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 	}
 }
 
@@ -576,7 +581,7 @@ void Cutscene::op_setPalette() {
 }
 
 void Cutscene::op_drawCaptionText() {
-emu_printf("Cutscene::op_drawCaptionText()\n");		
+//emu_printf("Cutscene::op_drawCaptionText()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
@@ -1237,7 +1242,7 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 #ifdef VBT_HACK_SATURN
 // vbt : obligatoire - ne pas mettre 45	
 // à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
-	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 19 || _id == 22 || _id == 23 || _id == 24 || _id == 3) 
+	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 17 || _id == 19 || _id == 22 || _id == 23 || _id == 24 || _id == 3) 
 	{
 #endif
 		if (num != 0) {
@@ -1291,6 +1296,8 @@ bool Cutscene::load(uint16_t cutName) {
 		return 0;
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
+	slTVOff();
+	slSynch();
 	//audioEnabled = 0;
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	if(cutName!=12 && cutName!=31 && cutName!=2)
@@ -1307,8 +1314,8 @@ bool Cutscene::load(uint16_t cutName) {
 	}*/
 //	_res->MAC_loadCutsceneText(); // vbt déplacé
 //	_res->load_CINE();
-	e = _stub->getTimeStamp();
-	emu_printf("--duration load_CINE : %d\n",e-s);	
+//	e = _stub->getTimeStamp();
+//	emu_printf("--duration load_CINE : %d\n",e-s);	
 	bool loaded = (_res->_cmd && _res->_pol);
 ////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
 
@@ -1371,6 +1378,7 @@ void Cutscene::prepare() {
 	_backPage = (uint8_t *)_res->_scratchBuffer;
 	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
+slSynch();
 	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
 	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
 //emu_printf("prepare cutscene\n");	
