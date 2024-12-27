@@ -434,7 +434,6 @@ void Cutscene::op_refreshScreen() {
 		_creditsSlowText = false;
 	}
 }
-
 void Cutscene::op_waitForSync() {
 //	emu_printf("Cutscene::op_waitForSync()\n");
 	if (_creditsSequence) {
@@ -455,6 +454,7 @@ void Cutscene::op_waitForSync() {
 	} else {
 		_frameDelay = fetchNextCmdByte() * 4;
 		sync(_frameDelay);
+		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 	}
 }
 
