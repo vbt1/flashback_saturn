@@ -171,7 +171,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 	_mix(stub), _res(dataPath, ver, lang), /*_sfxPly(&_mix),*/ _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
-	_inp_demPos = 0;
+//	_inp_demPos = 0;
 	_skillLevel = _menu._skill = kSkillNormal;
 	_currentLevel = _menu._level = level;
 //	_demoBin = -1;
@@ -340,10 +340,10 @@ for (int i=36;i<100;i++)
 			while (!_stub->_pi.quit && !_endLoop) {
 //		emu_printf("mainLoop\n");
 				mainLoop();
-				if (/*_demoBin != -1*/ 0 && _inp_demPos >= _res._demLen) {
+				/*if (_demoBin != -1 0 && _inp_demPos >= _res._demLen) {
 					// exit level
 					_endLoop = true;
-				}
+				}*/
 			}
 //			slTVOff();
 			_vid._fullRefresh = true;
@@ -360,7 +360,7 @@ for (int i=36;i<100;i++)
 			slTVOn();
 		}
 	}
-	_res.free_TEXT();
+//	_res.free_TEXT();
 	_mix.free();
 	_stub->destroy();
 }
@@ -1955,7 +1955,7 @@ void Game::loadLevelData() {
 
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
-	_res.clearBankData();
+//	_res.clearBankData();
 	_printLevelCodeCounter = 150;
 
 	_col_slots2Cur = _col_slots2;

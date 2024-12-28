@@ -68,7 +68,7 @@ struct Game {
 		CT_LEFT_ROOM  = 0xC0
 	};
 
-	static const Demo _demoInputs[3];
+//	static const Demo _demoInputs[3];
 	static const Level _gameLevels[];
 	static const uint16_t _scoreTable[];
 	static const uint8_t _monsterListLevel1[];
@@ -118,12 +118,12 @@ struct Game {
 	AnimBufferState _animBuffer2State[42];
 	AnimBufferState _animBuffer3State[12];
 	AnimBuffers _animBuffers;
-	uint8 *_bankData;//[0x7000];
-	uint8 *_firstBankData;
-	uint8 *_lastBankData;
-	BankSlot _bankSlots[49];
-	BankSlot *_curBankSlot;
-	const uint8 *_bankDataPtrs;
+//	uint8 *_bankData;//[0x7000];
+//	uint8 *_firstBankData;
+//	uint8 *_lastBankData;
+//	BankSlot _bankSlots[49];
+//	BankSlot *_curBankSlot;
+//	const uint8 *_bankDataPtrs;
 	uint16 _deathCutsceneCounter;
 	bool _saveStateCompleted;
 	bool _endLoop;
@@ -401,7 +401,7 @@ struct Game {
 	// input
 	uint8 _inp_lastKeysHit;
 	uint8 _inp_lastKeysHitLeftRight;
-	int _inp_demPos;	
+//	int _inp_demPos;	
 //	bool _inp_replay;
 //	bool _inp_record;
 //	File *_inp_demo;
@@ -414,7 +414,7 @@ struct Game {
 	uint8 _stateSlot;
 	bool _validSaveState;
 
-	void makeGameDemoName(char *buf);
+//	void makeGameDemoName(char *buf);
 	void makeGameStateName(uint8 slot, char *buf);
 	bool saveGameState(uint8 slot);
 	bool loadGameState(uint8 slot);

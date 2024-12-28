@@ -63,14 +63,14 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
-	static const int kBankDataSize = 0x7000;
+/*	static const int kBankDataSize = 0x7000;
 
 	emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
 	_bankData = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(kBankDataSize);
 
 	_bankDataTail = _bankData + kBankDataSize;
-	clearBankData();
+	clearBankData();*/
 }
 
 Resource::~Resource() {
@@ -162,15 +162,15 @@ current_lwram = (Uint8 *)VBT_L_START;//+(448*512);
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
 //emu_printf("_sgd\n");	
-	sat_free(_sgd); _sgd = 0;
+//	sat_free(_sgd); _sgd = 0;
 //emu_printf("_bnq\n");
-	sat_free(_bnq); _bnq = 0;
+//	sat_free(_bnq); _bnq = 0;
 //emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
 	sat_free(_ani); _ani = 0; // hwram
 
 	free_OBJ();
 
-	if(_type==kResourceTypeMac)
+//	if(_type==kResourceTypeMac)
 	{
 //	emu_printf("MAC_unloadLevelData\n");
 //	emu_printf("_res._monster %p\n",_monster);
@@ -503,7 +503,7 @@ void Resource::load_TEXT() {
 	}
 #endif
 }
-
+/*
 void Resource::free_TEXT() {
 	if (_extTextsTable) {
 		sat_free(_extTextsTable);
@@ -523,18 +523,18 @@ static const char *getTextBin(Language lang, ResourceType type) {
 	switch (lang) {
 	case LANG_FR:
 		return "TBF";
-/*	case LANG_DE:
+	case LANG_DE:
 		return "TBG";
 	case LANG_SP:
 		return "TBS";
 	case LANG_IT:
-		return "TBI";*/
+		return "TBI";
 	case LANG_EN:
 	default:
 		return "TBN";
 	}
 }
-
+*/
 void Resource::unload(int objType) {
 	
 	emu_printf("Resource::unload(int objType)\n");
@@ -1431,7 +1431,7 @@ void Resource::load_SPM(File *f) {
 	sat_free(tmp);
 */	
 }
-
+/*
 void Resource::clearBankData() {
 	_bankBuffersCount = 0;
 	_bankDataHead = _bankData;
@@ -1464,7 +1464,7 @@ uint8_t *Resource::findBankData(uint16_t num) {
 	}
 	return 0;
 }
-/*
+
 uint8_t *Resource::loadBankData(uint16_t num) {
 	const uint8_t *ptr = _mbk + num * 6;
 	int dataOffset = READ_BE_UINT32(ptr);

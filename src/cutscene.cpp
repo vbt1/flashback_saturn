@@ -523,7 +523,7 @@ void Cutscene::op_waitForSync() {
 			_creditsSlowText = true;
 			_frameDelay = 3;
 			if (_textBuf == _textCurBuf) {
-				_creditsTextCounter = _res->isDOS() ? 20 : 60;
+				_creditsTextCounter = /*_res->isDOS() ? 20 :*/ 60;
 			}
 			memcpy(_backPage, _frontPage, IMG_SIZE);
 			drawCreditsText();

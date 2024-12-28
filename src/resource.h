@@ -139,15 +139,15 @@ struct Resource {
 	
 	
 //	uint8_t _sprm[0x10000];
-	uint8_t *_sprm; // vbt : pas utilisé pour mac
+//	uint8_t *_sprm; // vbt : pas utilisé pour mac
 	uint16_t _pgeNum;
 	InitPGE _pgeInit[256];
 	
 	uint8_t *_map;
 	uint8_t *_lev;
 	int _levNum;
-	uint8_t *_sgd;
-	uint8_t *_bnq;
+//	uint8_t *_sgd;
+//	uint8_t *_bnq;
 	uint16_t _numObjectNodes;
 	ObjectNode *_objectNodesMap[255];
 	uint8_t *_scratchBuffer;
@@ -160,17 +160,17 @@ struct Resource {
 	uint8_t *_cine_off;
 	uint8_t *_cine_txt;
 //	uint8_t *_voiceBuf;
-	char **_extTextsTable;
+//	char **_extTextsTable;
 	const char **_textsTable;
-	uint8_t *_extStringsTable;
+//	uint8_t *_extStringsTable;
 	const uint8_t *_stringsTable;
-	uint8_t *_bankData;
-	uint8_t *_bankDataHead;
-	uint8_t *_bankDataTail;
-	BankSlot _bankBuffers[NUM_BANK_BUFFERS];
-	int _bankBuffersCount;
-	uint8_t *_dem;
-	int _demLen;
+//	uint8_t *_bankData;
+//	uint8_t *_bankDataHead;
+//	uint8_t *_bankDataTail;
+//	BankSlot _bankBuffers[NUM_BANK_BUFFERS];
+//	int _bankBuffersCount;
+//	uint8_t *_dem;
+//	int _demLen;
 	uint32_t _resourceMacDataSize;
 	int _clutSize;
 	Color _clut[kClutSize];
@@ -186,7 +186,7 @@ struct Resource {
 
 	void setLanguage(Language lang);
 
-	bool isDOS()   const { return _type == kResourceTypeDOS; }
+//	bool isDOS()   const { return _type == kResourceTypeDOS; }
 	bool isMac()   const { return _type == kResourceTypeMac; }
 
 	bool fileExists(const char *filename);
