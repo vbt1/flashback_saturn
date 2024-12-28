@@ -1271,7 +1271,7 @@ void Cutscene::op_handleKeys() {
 	
 #ifdef VBT_HACK_SATURN
 // vbt : remis de l'ancienne version, mettre 45 uniquement ici   // quoi faire pour la 69
-	if (!(_id >= 37 && _id <= 42) && _id != 45 && _id != 69 && _id != 59) {
+	if (!(_id >= 37 && _id <= 42) && _id != 59 && !(_id >= 66 && _id <= 71) /*_id != 45 && _id != 69 */ ) {
 //		if (_res->isMac()) 
 		{
 			_cmdPtr = getCommandData();
