@@ -116,10 +116,8 @@ void Resource::init() {
 	//if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
 		{
 	//		f.close();
-emu_printf("new ResourceMac\n");
 			_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 		}
-emu_printf("_mac->load\n");
 		_mac->load();
 /*		break;
 	}*/
@@ -449,7 +447,12 @@ void Resource::load_TEXT() {
 	_stringsTable = LocaleData::_stringsTableFR;
 	_textsTable = LocaleData::_textsTableFR;
 #else
-	_stringsTable = LocaleData::_stringsTableEN;
+//	_stringsTable = LocaleData::_stringsTableEN;
+
+	uint8_t *_stringsTable = (uint8_t *)current_lwram;
+	int loaded = GFS_Load(GFS_NameToId((int8_t *)"LANGEN.DAT"),0,(void *)_stringsTable,3446);
+	current_lwram += 3448;
+
 	_textsTable = LocaleData::_textsTableEN;
 #endif
 #else	

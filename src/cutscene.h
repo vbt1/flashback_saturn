@@ -68,7 +68,7 @@ struct Cutscene {
 	Resource *_res;
 	SystemStub *_stub;
 	Video *_vid;
-	const uint8_t *_patchedOffsetsTable;
+//	const uint8_t *_patchedOffsetsTable;
 	bool hasText = false;
 	uint16_t _id;
 	uint16_t _deathCutsceneId;

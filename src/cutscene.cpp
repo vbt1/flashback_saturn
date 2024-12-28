@@ -48,7 +48,7 @@ static void scalePoints(Point *pt, int count, int scale) {
 */
 Cutscene::Cutscene(Resource *res, SystemStub *stub, Video *vid)
 	: _mix(stub), _res(res), _stub(stub), _vid(vid) {
-	_patchedOffsetsTable = 0;
+//	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
 }
 
@@ -1493,13 +1493,13 @@ slSynch();
 }
 
 void Cutscene::playCredits() {
-	if (_res->isMac()) {
+//	if (_res->isMac()) {
 		_res->MAC_loadCreditsText();
 		_creditsTextIndex = 0;
 		_creditsTextLen = 0;
-	} else {
+//	} else {
 //		_textCurPtr = _creditsDataDOS;
-	}
+//	}
 	_textBuf[0] = 0xA;
 	_textCurBuf = _textBuf;
 	_creditsSequence = true;
@@ -1544,6 +1544,10 @@ void Cutscene::play() {
 				}
 				break;
 			case 8: // save checkpoints
+				_res->MAC_closeMainFile();
+				GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.CMP"),0,(void *)current_lwram,6361);
+				playSet(current_lwram, 0x5E4);
+				_res->MAC_reopenMainFile();
 				break;
 			case 19:
 				//if (g_options.play_serrure_cutscene) 
@@ -1573,7 +1577,7 @@ void Cutscene::play() {
 				break;
 			}
 		}
-		
+/*
 		if (_patchedOffsetsTable) {
 			for (int i = 0; _patchedOffsetsTable[i] != 255; i += 3) {
 				if (_patchedOffsetsTable[i] == _id) {
@@ -1583,7 +1587,7 @@ void Cutscene::play() {
 				}
 			}
 		}
-/*		if (g_options.use_text_cutscenes) 
+		if (g_options.use_text_cutscenes) 
 		{
 			const Text *textsTable = (_res->_lang == LANG_FR) ? _frTextsTable : _enTextsTable;
 			for (int i = 0; textsTable[i].str; ++i) {
@@ -1599,17 +1603,7 @@ void Cutscene::play() {
 				unload();
 			}
 		}
-		else if (_id == 8) {
-			_res->MAC_closeMainFile();
-			uint8_t *_caillouSetData = (uint8_t *)current_lwram;
-			int loaded = GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.CMP"),0,(void *)_caillouSetData,6361);
-			playSet(_caillouSetData, 0x5E4);
-			_res->MAC_reopenMainFile();
-		}
-//		//emu_printf("fullRefresh\n");
-//		_vid->fullRefresh();
-//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
-		if (_id != 0x3D  /*&& _id != 40  && _id != 69*/) {
+		if (_id != 0x3D) {
 			_id = 0xFFFF;
 		}
 	}
@@ -1769,5 +1763,6 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 			_interrupted = true;
 		}
 	}
+	_stop = true; // pour reprendre la musique
 }
 

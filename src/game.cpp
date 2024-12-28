@@ -192,7 +192,6 @@ void Game::run() {
 //emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
 //emu_printf("_res.load_TEXT\n");
-	_res.load_TEXT();
 
 /*	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -213,7 +212,7 @@ void Game::run() {
 _vid.setTextPalette();
 _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
-
+		_res.load_TEXT();
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 // vbt : refaire le chargement des sons
@@ -1998,7 +1997,6 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 		}
 		_printLevelCodeCounter = 0;
 	}*/
-emu_printf("_pge_liveTable1\n");
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {
 			LivePGE *pge = &_pgeLive[i];
@@ -2006,20 +2004,10 @@ emu_printf("_pge_liveTable1\n");
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
-//emu_printf("pge_resetMessages\n");	
 	pge_resetMessages();
 	_validSaveState = false;
-/* // vbt à remettre ???	
-//emu_printf("vbt playmusic loadLevelData\n");
-//	_mix.playMusic(Mixer::MUSIC_TRACK + lvl->track); // vbt : à remettre, le seul à garder
-	if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
-		_mix.unpauseMusic(); // vbt : on reprend où la musique était
-	else
-		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
-*/
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-	//audioEnabled = 1;
 emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000+0x300000-(int)MEM_Malloc(0),(int)current_dram2-0x22600000);
 }
 
