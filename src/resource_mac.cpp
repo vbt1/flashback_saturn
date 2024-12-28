@@ -87,14 +87,12 @@ emu_printf("ResourceMac::loadResourceFork\n");
 	_map.typesCount = _f.readUint16BE() + 1;
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
-//int xx = 0;	
 	
 //	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
-	_types = (ResourceMacType *)calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
-//	_types = (ResourceMacType *)hwram_ptr;//sat_calloc(_numSfx, sizeof(SoundFx));
+	_types = (ResourceMacType *)malloc(_map.typesCount * sizeof(ResourceMacType));  // taille 8 LWRAM
+//	_types = (ResourceMacType *)hwram_ptr;
 //	hwram_ptr += _map.typesCount * sizeof(SoundFx);
-
-emu_printf("SAT_CALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_map.typesCount);
+//emu_printf("MALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_map.typesCount);
 
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
@@ -105,14 +103,14 @@ emu_printf("SAT_CALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_m
 		}
 	}
 //	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
-	_entries = (ResourceMacEntry **)calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
-emu_printf("SAT_CALLOC: _entries: %p size %d\n", _types,sizeof(ResourceMacEntry *)*_map.typesCount);	
-//	xx+=sizeof(ResourceMacEntry *);
+	_entries = (ResourceMacEntry **)malloc(_map.typesCount * sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+//emu_printf("MALLOC: _entries: %p size %d\n", _types,sizeof(ResourceMacEntry *)*_map.typesCount);	
+
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
 //		_entries[i] = (ResourceMacEntry *)sat_calloc(_types[i].count, sizeof(ResourceMacEntry));
-		_entries[i] = (ResourceMacEntry *)calloc(_types[i].count, sizeof(ResourceMacEntry));
-//		xx+=sizeof(ResourceMacEntry);
+		_entries[i] = (ResourceMacEntry *)malloc(_types[i].count * sizeof(ResourceMacEntry));
+
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();
 			_entries[i][j].nameOffset = _f.readUint16BE();
@@ -129,11 +127,9 @@ emu_printf("SAT_CALLOC: _entries: %p size %d\n", _types,sizeof(ResourceMacEntry 
 					break;
 				_f.read(_entries[i][j].name, len);
 				_entries[i][j].name[len] = '\0';
-//					slPrint((char *)_entries[i][j].name,slLocate(10,16));
 			}
 		}
 	}
-//emu_printf("SAT_CALLOC: _entries: %d\n", xx);	
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {

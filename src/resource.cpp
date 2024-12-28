@@ -32,7 +32,6 @@ void	*malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)]; 
-void *calloc (size_t, size_t);
 static void process_cmd();
 
 void init_GFS();
