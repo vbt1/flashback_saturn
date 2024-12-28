@@ -4,6 +4,7 @@ extern "C" {
 #include <string.h>
 #include <sl_def.h>	
 #include "sat_mem_checker.h"
+extern Uint8 *hwram_ptr;
 }
 
 #include <assert.h>
@@ -50,7 +51,7 @@ void ResourceMac::load() {
 
 	if (sig == 0x00051607) { // AppleDouble
 //		debug(DBG_INFO, "Load Macintosh data from AppleDouble");
-		error("Load Macintosh data from AppleDouble");
+//		emu_printf("Load Macintosh data from AppleDouble\n");
 		_f.seek(24);
 		const int count = _f.readUint16BE();
 		for (int i = 0; i < count; ++i) {
@@ -62,14 +63,14 @@ void ResourceMac::load() {
 				break;
 			}
 		}
-	} else { // MacBinary
+	} /*else { // MacBinary
 		//debug(DBG_INFO, "Load Macintosh data from MacBinary");
-		error("Load Macintosh data from MacBinary");
+		emu_printf("Load Macintosh data from MacBinary\n");
 		_f.seek(83);
 		uint32_t dataSize = _f.readUint32BE();
 		uint32_t resourceOffset = 128 + ((dataSize + 127) & ~127);
 		loadResourceFork(resourceOffset, dataSize);
-	}
+	}*/
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
@@ -88,7 +89,10 @@ emu_printf("ResourceMac::loadResourceFork\n");
 	_f.seek(mapOffset + _map.typesOffset + 2);
 //int xx = 0;	
 	
-	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
+//	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
+	_types = (ResourceMacType *)calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
+//	_types = (ResourceMacType *)hwram_ptr;//sat_calloc(_numSfx, sizeof(SoundFx));
+//	hwram_ptr += _map.typesCount * sizeof(SoundFx);
 
 emu_printf("SAT_CALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_map.typesCount);
 
@@ -100,12 +104,14 @@ emu_printf("SAT_CALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_m
 			_sndIndex = i;
 		}
 	}
-	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+//	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+	_entries = (ResourceMacEntry **)calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
 emu_printf("SAT_CALLOC: _entries: %p size %d\n", _types,sizeof(ResourceMacEntry *)*_map.typesCount);	
 //	xx+=sizeof(ResourceMacEntry *);
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
-		_entries[i] = (ResourceMacEntry *)sat_calloc(_types[i].count, sizeof(ResourceMacEntry));
+//		_entries[i] = (ResourceMacEntry *)sat_calloc(_types[i].count, sizeof(ResourceMacEntry));
+		_entries[i] = (ResourceMacEntry *)calloc(_types[i].count, sizeof(ResourceMacEntry));
 //		xx+=sizeof(ResourceMacEntry);
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();

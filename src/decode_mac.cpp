@@ -11,7 +11,7 @@ extern "C" {
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
-extern Uint8 *save_lwram;
+//extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 extern unsigned int end1;
 }

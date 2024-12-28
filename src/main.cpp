@@ -60,10 +60,10 @@ Uint8 *hwram_ptr = NULL;
 Uint8 *hwram_screen = NULL;
 Uint8 *soundAddr = NULL;
 Uint8 *current_lwram = (Uint8 *)VBT_L_START;
-Uint8 *save_lwram = NULL;
+//Uint8 *save_lwram = NULL;
 Uint32 position_vram = 0;
 Uint32 position_vram_aft_monster = 0;
-unsigned int end1 = 564000+30000;//-16384;//538624;
+unsigned int end1 = 564000+28000;//-16384;//538624;
 
 void ss_main(void) {
 	const int version = detectVersion("/");

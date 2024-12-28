@@ -56,12 +56,15 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_lang = lang;
 	_aba = 0;
 	_mac = 0;
-	_readUint16 = (_type == kResourceTypeDOS) ? READ_LE_UINT16 : READ_BE_UINT16;
-	_readUint32 = (_type == kResourceTypeDOS) ? READ_LE_UINT32 : READ_BE_UINT32;
+	_readUint16 = /*(_type == kResourceTypeDOS) ? READ_LE_UINT16 :*/ READ_BE_UINT16;
+	_readUint32 = /*(_type == kResourceTypeDOS) ? READ_LE_UINT32 :*/ READ_BE_UINT32;
 
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 
-	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+	_scratchBuffer = (uint8_t *)current_lwram;
+	current_lwram += kScratchBufferSize;
+//	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+	
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 /*	static const int kBankDataSize = 0x7000;
 
@@ -148,7 +151,7 @@ bool Resource::fileExists(const char *filename) {
 void Resource::clearLevelRes() {
 //emu_printf("vbt clearLevelRes\n");
 
-current_lwram = (Uint8 *)VBT_L_START;//+(448*512);
+current_lwram = (Uint8 *)VBT_L_START+kScratchBufferSize;
 
 //emu_printf("_tbn\n");	
 	sat_free(_tbn); _tbn = 0;
@@ -1165,7 +1168,7 @@ void Resource::load_CMP(File *pf) {
 //	sat_free(_cmd);
 	int len = pf->size();
 	save_current_lwram = (uint8_t *)current_lwram;
-	uint8_t *tmp = (uint8_t *)current_lwram;//sat_malloc(len);
+	uint8_t *tmp = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(len);
 	/*if (!tmp) {
 		error("Unable to allocate CMP buffer");
@@ -1642,19 +1645,6 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 		_clut[i].r = (ptr[0] & 0xff) >> 2; ptr += 2;
 		_clut[i].g = (ptr[0] & 0xff) >> 2; ptr += 2;
 		_clut[i].b = (ptr[0] & 0xff) >> 2; ptr += 2;
-	
-/*	
-		_clut[i].r = (ptr[0] & 0xF00) >> 6; ptr += 2;
-		_clut[i].g = (ptr[0] & 0x0F0) >> 2; ptr += 2;
-		_clut[i].b = (ptr[0] & 0x00F) << 2; ptr += 2;
-		
-		_clut[i].r = ptr[0]; ptr += 2;
-		_clut[i].g = ptr[0]; ptr += 2;
-		_clut[i].b = ptr[0]; ptr += 2;
-			c.r = ((color & 0xF00) >> 6);
-			c.g = ((color & 0x0F0) >> 2) | t;
-			c.b = ((color & 0x00F) << 2) | t;		
-*/		
 	}
 }
 
@@ -2068,7 +2058,9 @@ void Resource::MAC_loadSounds() {
 		-1, 57
 	};
 	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
+//	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
+	_sfxList = (SoundFx *)hwram_ptr;
+	hwram_ptr += _numSfx * sizeof(SoundFx);
 
 	if (!_sfxList) {
 		return;

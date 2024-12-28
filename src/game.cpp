@@ -191,7 +191,6 @@ void Game::run() {
 	_mix.init();  // vbt : evite de fragmenter la ram	
 //emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
-//emu_printf("_res.load_TEXT\n");
 
 /*	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -216,7 +215,7 @@ _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 // vbt : refaire le chargement des sons
-		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé
+		_res.MAC_loadSounds(); // vbt déplacé
 		_res.MAC_loadCutsceneText(); // vbt déplacé
 /*		break;
 	}
@@ -2008,7 +2007,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000+0x300000-(int)MEM_Malloc(0),(int)current_dram2-0x22600000);
+emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,(int)current_dram2-0x22600000);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {

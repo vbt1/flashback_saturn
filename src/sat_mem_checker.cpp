@@ -11,7 +11,7 @@ extern "C" {
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
 extern Uint8 *hwram;
-extern Uint8 *save_lwram;
+//extern Uint8 *save_lwram;
 extern Uint8 *current_lwram;
 typedef double MemAlign;                        /* 64ビットのアライメント    */
 union mem_head {                                /* セルのヘッダ              */
@@ -32,7 +32,7 @@ extern MemHead *MEM_empty_top;
 
 
 extern "C" void __cxa_pure_virtual() { while (1); }
-
+/*
 void *sat_calloc(size_t nmemb, size_t size) {
 	void *mem = NULL;
 	mem = (void*)MEM_Calloc(nmemb, SAT_ALIGN(size));
@@ -69,7 +69,7 @@ void *sat_malloc(size_t size) {
 		
 	return (void*)save_lwram;
 }
-
+*/
 void sat_free(void *ptr) {
 
 	if(ptr == NULL || ptr == hwram)
@@ -86,16 +86,14 @@ void sat_free(void *ptr) {
 //		ptr = NULL;
 		return;		
 	}
-
-
 		
-
+/*
 	if((ptr >= (volatile void *)LOW_WORK_RAM_START) && (ptr < ADR_WORKRAM_L_END))
 	{
 		emu_printf("FREE: addr: %p %p\n", ptr,MEM_empty_top);		
 		MEM_Free(ptr);
 	}
-	
+*/	
 	if((ptr >= VBT_L_START) && (ptr < (volatile void *)LOW_WORK_RAM_START))
 	{
 //		emu_printf("NO FREE: addr: %p\n", ptr);
@@ -110,7 +108,7 @@ void sat_free(void *ptr) {
 
 	return;
 }
-
+/*
 void *sat_realloc(void *ptr, size_t size) {
 	void *mem = NULL;
 
@@ -124,6 +122,7 @@ void *sat_realloc(void *ptr, size_t size) {
 	return (void*)mem;
 
 }
+*/
 /*
 void *std_malloc(size_t size) {
 	void *mem = NULL;
