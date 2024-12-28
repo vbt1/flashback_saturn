@@ -1,6 +1,7 @@
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
+//#define VIDEO_PLAYER 1
 //#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
@@ -217,6 +218,7 @@ _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
 // vbt : refaire le chargement des sons
 		_res.MAC_loadSounds(); //à vbt à faire bien avant déplacé
+		_res.MAC_loadCutsceneText(); // vbt déplacé
 /*		break;
 	}
 */
@@ -243,6 +245,10 @@ hwram = (uint8_t *)hwram_ptr;
 //	_stub->updateScreen(0);
 memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h);
 _stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+#ifdef VIDEO_PLAYER
+for (int i=36;i<100;i++)
+	playCutscene(i);
+#endif
 	playCutscene(0x40);
 	playCutscene(0x0D);
 	
@@ -1938,9 +1944,9 @@ void Game::loadLevelData() {
 //emu_printf("slsynch Game::loadLevelData()\n");							
 //		slSynch();
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
-
+//xxxxxxxxxxxxxxxxxxxxx
 		_res.MAC_loadLevelData(_currentLevel);
-		_res.MAC_loadCutsceneText(); // vbt déplacé
+//		_res.MAC_loadCutsceneText(); // vbt déplacé
 		SAT_preloadMonsters();
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);

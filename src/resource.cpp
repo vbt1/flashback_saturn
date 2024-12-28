@@ -2033,7 +2033,6 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		current_lwram = (uint8_t *)save_current_lwram; // vbt : inutile?
 		return;
 	}
-
 	_cmd = decodeResourceMacData(cmdEntry, true);
 
 	snprintf(name, sizeof(name), "%s polygons", cutscene);
@@ -2045,7 +2044,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 	}
 	_pol = decodeResourceMacData(polEntry, true);
 #endif
-	slTVOn();
+//	slTVOn();
 }
 
 void Resource::MAC_loadCutsceneText() {

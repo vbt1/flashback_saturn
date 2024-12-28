@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 #define VBT_HACK_SATURN 1
+//#define DEBUG_CUTSCENE 1
 //#define SUBTITLE_SPRITE 1
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
 extern "C"
@@ -105,8 +106,19 @@ void Cutscene::updatePalette() {
 		_newPal = false;
 	}
 }
+struct DecodeBuffer {
+	uint8_t *ptr;
+	int w, h, pitch;
+	int x, y;
+	bool xflip;
+	uint8_t type;
 
+	void (*setPixel)(DecodeBuffer *buf, int x, int y, uint8_t color);
+//	void *dataPtr;
+};
 void Cutscene::updateScreen() {
+//--------------------------
+DecodeBuffer buf{};
 	sync(_frameDelay - 1);
 	SWAP(_frontPage, _backPage);
 
@@ -173,6 +185,71 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à reme
 	}
 #endif
 	transferAux=0;
+
+#ifdef DEBUG_CUTSCENE
+ #define SAT_ALIGN(a) ((a+3)&~3)
+	buf.w=240;
+	buf.h=128;
+	position_vram = 0x1000;
+size_t dataSize = SAT_ALIGN(buf.w * buf.h);
+    int cgaddr1 = _vid->SAT_copySpriteToVram((uint8_t *)_backPage, buf, dataSize);
+	
+    uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1*8);  // Use pointers to avoid array indexing overhead
+    uint8_t *back2 = (uint8_t *)_backPage;
+    
+	// Unroll the loop by processing 8 elements at a time
+	for (i = 0; i < IMG_SIZE; i += 16) {
+		uint8_t *b = back2 + i;
+		uint8_t *a = aux2 + (i / 2);
+
+		// Process 8 pairs of bytes
+		a[0] = (b[1]) | (b[0] << 4);
+		a[1] = (b[3]) | (b[2] << 4);
+		a[2] = (b[5]) | (b[4] << 4);
+		a[3] = (b[7]) | (b[6] << 4);
+		a[4] = (b[9]) | (b[8] << 4);
+		a[5] = (b[11]) | (b[10] << 4);
+		a[6] = (b[13]) | (b[12] << 4);
+		a[7] = (b[15]) | (b[14] << 4);
+	}	
+	
+	
+	
+	
+	_vid->SAT_displaySprite((uint8_t *)(cgaddr1*8),-320,-224, 128, 240);
+//	SAT_displaySprite(spriteData, buf, data);
+
+int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
+
+    uint8_t *aux1 = (uint8_t *)(SpriteVRAM + cgaddr3*8);  // Use pointers to avoid array indexing overhead
+    uint8_t *back1 = (uint8_t *)_frontPage;
+    
+	// Unroll the loop by processing 8 elements at a time
+	for (i = 0; i < IMG_SIZE; i += 16) {
+		uint8_t *b = back1 + i;
+		uint8_t *a = aux1 + (i / 2);
+
+		// Process 8 pairs of bytes
+		a[0] = (b[1]) | (b[0] << 4);
+		a[1] = (b[3]) | (b[2] << 4);
+		a[2] = (b[5]) | (b[4] << 4);
+		a[3] = (b[7]) | (b[6] << 4);
+		a[4] = (b[9]) | (b[8] << 4);
+		a[5] = (b[11]) | (b[10] << 4);
+		a[6] = (b[13]) | (b[12] << 4);
+		a[7] = (b[15]) | (b[14] << 4);
+	}
+
+
+
+	_vid->SAT_displaySprite((uint8_t *)(cgaddr3*8),-320,-96, 128, 240);	
+
+int cgaddr2 = _vid->SAT_copySpriteToVram((uint8_t *)_auxPage, buf, dataSize);
+	_vid->SAT_displaySprite((uint8_t *)(cgaddr2*8),-320,32, 128, 240);
+	
+position_vram = 0x1000;
+#endif
+
 }
 
 #if 0
@@ -798,10 +875,10 @@ void Cutscene::op_drawShapeScale() {
 			}
 			_hasAlphaColor = (verticesOffset & 0x4000) != 0;
 			uint8_t color = *shapeData++;
-			if (_clearScreen == 0) {
+			/*if (_clearScreen == 0) {
 				color += 0x10; // 2nd palette buffer
-			}
-			_primitiveColor = color & 0x0f;
+			}*/
+			_primitiveColor = color;// & 0x0f;
 			drawShapeScale(p, zoom, dx, dy, x, y, 0, 0);
 			++_shape_count;
 		}
@@ -1026,7 +1103,7 @@ void Cutscene::op_drawShapeScaleRotate() {
 		/*if (_clearScreen == 0) {
 			color += 0x10; // 2nd palette buffer
 		}*/
-		_primitiveColor = color & 0x0f;
+		_primitiveColor = color;// & 0x0f;
 		drawShapeScaleRotate(p, zoom, dx, dy, x, y, 0, 0);
 		++_shape_count;
 	}
@@ -1108,7 +1185,7 @@ void Cutscene::op_copyScreen() {
 }
 
 void Cutscene::op_drawTextAtPos() {
-	emu_printf("Cutscene::op_drawTextAtPos()\n");
+//	emu_printf("Cutscene::op_drawTextAtPos()\n");
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
@@ -1195,7 +1272,8 @@ void Cutscene::op_handleKeys() {
 #ifdef VBT_HACK_SATURN
 // vbt : remis de l'ancienne version, mettre 45 uniquement ici   // quoi faire pour la 69
 	if (!(_id >= 37 && _id <= 42) && _id != 45 && _id != 69 && _id != 59) {
-		if (_res->isMac()) {
+//		if (_res->isMac()) 
+		{
 			_cmdPtr = getCommandData();
 			_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
 			n = 0;
@@ -1242,7 +1320,9 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 #ifdef VBT_HACK_SATURN
 // vbt : obligatoire - ne pas mettre 45	
 // à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
-	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 17 || _id == 19 || _id == 22 || _id == 23 || _id == 24 || _id == 3) 
+//	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 17 || _id == 19 || _id == 22 || _id == 23 || _id == 3) 
+	if (_id == 3 || (_id >= 19 && _id < 21) || (_id >= 22 && _id < 25) 
+		|| (_id >= 26 && _id < 28) || (_id >= 37 && _id <= 42) /*|| (_id >= 65 && _id <= 71)*/ ) // 18 21
 	{
 #endif
 		if (num != 0) {
@@ -1301,13 +1381,16 @@ bool Cutscene::load(uint16_t cutName) {
 	//audioEnabled = 0;
 	const char *name = _namesTableDOS[cutName & 0xFF];
 	if(cutName!=12 && cutName!=31 && cutName!=2)
+	{
 		_res->MAC_loadCutscene(name);
+	}
 	else
 	{
 		_res->MAC_closeMainFile();
 		_res->load(name, Resource::OT_CMP);
 		_res->MAC_reopenMainFile();
 	}
+	slTVOn();	
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
 /*		break;
@@ -1631,6 +1714,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		}
 
 		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
+
 		for (int j = 0; j < count; ++j) {
 			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
 			const int shapeX = (int16_t)READ_BE_UINT16(p + offset); offset += 2;

@@ -723,12 +723,12 @@ uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSi
 
 	return tx.CGadr; 
 }
-/*
+
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
 	SPRITE user_sprite;
 	user_sprite.CTRL=0;
-	user_sprite.COLR = 224;		
+	user_sprite.COLR = 0xc0;		
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= ((int)ptrsp)/8;
 	user_sprite.SIZE=(w/8)<<8|h;
@@ -737,7 +737,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
-*/
+
 void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data) {
     // emu_printf("SAT_displaySprite\n");
     SPRITE user_sprite{};
