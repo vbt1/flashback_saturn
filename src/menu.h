@@ -9,7 +9,6 @@
 
 #include "intern.h"
 
-//struct ModPlayer;
 struct Resource;
 struct SystemStub;
 struct Video;
@@ -41,6 +40,7 @@ struct Menu {
 	};
 
 	enum {
+		LEVELS_COUNT = 8,
 		EVENTS_DELAY = 80
 	};
 
@@ -49,13 +49,13 @@ struct Menu {
 		int opt;
 	};
 
-	static const char *_levelNames[];
+	static const char *const _levelNames[];
 //	static const char *_passwordsDOS[];	
 //	static const char *_passwords[8][3];
 //	static const char *_passwordsMac[];
 	
-static const uint8_t _flagEn16x12[];
-static const uint8_t _flagFr16x12[];
+//static const uint8_t _flagEn16x12[];
+//static const uint8_t _flagFr16x12[];
 //	static const uint8_t _flagDe16x12[];
 //	static const uint8_t _flagIt16x12[];
 //	static const uint8_t _flagJp16x12[];
@@ -84,6 +84,7 @@ static const uint8_t _flagFr16x12[];
 	void drawString(const char *str, int16 y, int16 x, uint8 color);
 	void drawString2(const char *str, int16 y, int16 x);
 	void loadPicture(const char *prefix);
+
 	void handleInfoScreen();
 	void handleSkillScreen();
 	bool handlePasswordScreen();

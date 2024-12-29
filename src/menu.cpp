@@ -1,19 +1,7 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 
 extern "C" {
@@ -34,11 +22,11 @@ Menu::Menu(Resource *res, SystemStub *stub, Video *vid)
 	: _res(res), _stub(stub), _vid(vid) {
 }
 
-void Menu::drawString(const char *str, int16 y, int16 x, uint8 color) {
+void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t color) {
 //	debug(DBG_MENU, "Menu::drawString()");
-	uint8 v1b = _vid->_charFrontColor;
-	uint8 v2b = _vid->_charTransparentColor;
-	uint8 v3b = _vid->_charShadowColor;
+	uint8_t v1b = _vid->_charFrontColor;
+	uint8_t v2b = _vid->_charTransparentColor;
+	uint8_t v3b = _vid->_charShadowColor;
 	switch (color) {
 	case 0:
 		_vid->_charFrontColor = _charVar1;
@@ -198,7 +186,6 @@ void Menu::handleSkillScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
-//			emu_printf("_pi.enter6\n");			
 			_stub->_pi.enter = false;
 			_skill = currentSkill;
 			return;
@@ -206,8 +193,7 @@ void Menu::handleSkillScreen() {
 	} while (!_stub->_pi.quit);
 	_skill = 1;
 }
-*/
-/*
+
 bool Menu::handlePasswordScreen() {
 //	emu_printf("Menu::handlePasswordScreen()\n");
 	_vid->fadeOut();
@@ -334,7 +320,6 @@ bool Menu::handleLevelScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
-//			emu_printf("_pi.enter8\n");			
 			_stub->_pi.enter = false;
 			_skill = currentSkill;
 			_level = currentLevel;

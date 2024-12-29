@@ -222,11 +222,9 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			++y;
 			x = 0;
 		}
-	
 		int count = code & 0x1F;
 		if (count == 0) {
 			count = READ_BE_UINT16(src); src += 2;
-//			count = ((uint16_t*)src)[0]; src += 2;
 		}
 		if ((code & 0x40) == 0) {
 			if ((code & 0x20) == 0) {

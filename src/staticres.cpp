@@ -30,7 +30,7 @@ const Cutscene::OpcodeStub Cutscene::_opcodeTable[] = {
 	&Cutscene::op_handleKeys
 };
 
-const char *Cutscene::_namesTableDOS[] = {
+const char *const Cutscene::_namesTableDOS[] = {
 	"DEBUT",
 	"OBJET",
 	"CARTE",
@@ -351,8 +351,8 @@ const uint8_t Cutscene::_creditsDataDOS[] = {
 	0x20, 0x20, 0x20, 0x20, 0x20, 0x7C, 0xFE, 0x50, 0xFE, 0xFF, 0x00, 0xFF
 };
 */
-const uint16_t Cutscene::_creditsCutSeq[] =  {
-	0x00, 0x05, 0x2F, 0x32, 0x36, 0x3E, 0x30, 0x39, 0x3F, 0x14, 0x34, 0xFFFF
+const uint8_t Cutscene::_creditsCutSeq[] =  {
+	0x00, 0x05, 0x2F, 0x32, 0x36, 0x3E, 0x30, 0x39, 0x3F, 0x14, 0x34, 0xFF
 };
 
 const uint8_t Cutscene::_musicTableDOS[] = {
@@ -419,11 +419,11 @@ const Demo Game::_demoInputs[] = {
 const Level Game::_gameLevels[] = {
 	{ "level1", "level1", 0x00, 1, 3 },
 	{ "level2", "level2", 0x2F, 1, 4 },
-	{ "level3", "level3", 0xFFFF, 3, 5 },
+	{ "level3", "level3", 0xFF, 3, 5 },
 	{ "level4", "level4_1", 0x34, 3, 6 },
 	{ "level4", "level4_2", 0x39, 3, 6 },
 	{ "level5", "level5_1", 0x35, 4, 7 },
-	{ "level5", "level5_2", 0xFFFF, 4, 7 }
+	{ "level5", "level5_2", 0xFF, 4, 7 }
 };
 
 const uint16_t Game::_scoreTable[] = {
@@ -458,7 +458,7 @@ const uint8_t Game::_monsterListLevel5_2[] = {
 	0xB0, 3, 0xD7, 3, 0xD8, 3, 0xFF
 };
 
-const uint8_t *Game::_monsterListLevels[] = {
+const uint8_t * const Game::_monsterListLevels[] = {
 	_monsterListLevel1,
 	_monsterListLevel2,
 	_monsterListLevel3,
@@ -487,7 +487,7 @@ const uint8_t Game::_monsterPals[4][32] = {
 	}
 };
 */
-const char *Game::_monsterNames[1][4] = {
+const char *const Game::_monsterNames[1][4] = {
 	{ // PC
 		"junky",
 		"mercenai",
@@ -1186,7 +1186,7 @@ const uint8_t LocaleData::_stringsTableDE[] = {
 };
 */
 #ifdef LANGFR
-const char *LocaleData::_textsTableFR[] = {
+const char *const LocaleData::_textsTableFR[LocaleData::LI_NUM] = {
 	"CONTINUER OU ABANDONNER ?",
 	"TEMPS",
 	"CONTINUER",
@@ -1212,7 +1212,7 @@ const char *LocaleData::_textsTableFR[] = {
 	"DEMO"
 };
 #else
-const char *LocaleData::_textsTableEN[] = {
+const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
 	"CONTINUE OR ABORT THIS GAME ?",
 	"TIME",
 	"CONTINUE",
@@ -1239,7 +1239,7 @@ const char *LocaleData::_textsTableEN[] = {
 };
 #endif
 /*
-const char *LocaleData::_textsTableDE[] = {
+const char *const LocaleData::_textsTableDE[LocaleData::LI_NUM] = {
 	"WEITERSPIELEN ODER ABBRECHEN ?",
 	"ZEIT : ",
 	"WEITERSPIELEN",
@@ -1265,7 +1265,7 @@ const char *LocaleData::_textsTableDE[] = {
 	"DEMO"
 };
 
-const char *LocaleData::_textsTableSP[] = {
+const char *const LocaleData::_textsTableSP[LocaleData::LI_NUM] = {
 	"CONTINUAR O TERMINAR JUEGO ?",
 	"TIEMPO",
 	"SEGUIR",
@@ -1291,7 +1291,7 @@ const char *LocaleData::_textsTableSP[] = {
 	"DEMO"
 };
 */
-const uint16 Resource::_voicesOffsetsTable[] = {
+const uint16_t Resource::_voicesOffsetsTable[] = {
 	0x0064, 0x006A, 0x0070, 0x0084, 0x0090, 0x0096, 0x009E, 0x00A4, 0x00AE, 0x00B4,
 	0x00BC, 0x00C4, 0x00CC, 0x00D4, 0x00E0, 0x00E6, 0x00EC, 0x00F6, 0x00FC, 0x0102,
 	0x010C, 0x0126, 0x0130, 0x0136, 0x013E, 0x0144, 0x014C, 0x0152, 0x015A, 0x0160,
@@ -1481,9 +1481,8 @@ const uint32_t Resource::_spmOffsetsTable[1287] = {
 	0x2A67C, 0x2A84B, 0x2A9D1, 0x2AB7E, 0x2AD36, 0x2AEF3, 0x2B08C, 0x2B223,
 	0x2B3DE, 0x2B595, 0x2B74A, 0x2B7C6, 0x2B847, 0x2B8CE, 0x2B952
 };
-*/
-/*
-const char *Resource::_splNames[] = {
+
+const char *const Resource::_splNames[] = {
 	"pneuma05.spl",
 	"bip00105.spl",
 	"bip00205.spl",
@@ -1689,7 +1688,7 @@ const Game::pge_OpcodeProc Game::_pge_opcodeTable[] = {
 	&Game::pge_op_setCollisionState2,
 	&Game::pge_op_saveState,
 	&Game::pge_o_unk0x6A,
-	&Game::pge_isToggleable,
+	&Game::pge_op_isMessageReceived,
 	/* 0x6C */
 	&Game::pge_o_unk0x6C,
 	&Game::pge_op_isCollidingObject,
@@ -1736,28 +1735,28 @@ const uint8_t Game::_pge_modKeysTable[] = {
 	0x40, 0x10, 0x20
 };
 
-const char *Menu::_levelNames[] = {
+const char *const Menu::_levelNames[] = {
 	"Titan / The Jungle",
 	"Titan / New Washington",
 	"Titan / Death Tower Show",
 	"Earth / Surface",
 	"Earth / Paradise Club",
 	"Planet Morphs / Surface",
-	"Planet Morphs / Inner Core"
+	"Planet Morphs / Inner Core",
+	"Credits Sequence"
 };
 /*
-const char *Menu::_passwordsDOS[] = {
+const char *const Menu::_passwordsDOS[] = {
 	"JAGUAR", "COMBEL", "ANTIC",  "NOLAN",  "ARTHUR", "SHIRYU", "RENDER", "BELUGA", // easy
 	"BANTHA", "SHIVA",  "KASYYK", "SARLAC", "MAENOC", "SULUST", "NEPTUN", "BELUGA", // normal
 	"TOHOLD", "PICOLO", "FUGU",   "CAPSUL", "ZZZAP",  "MANIAC", "NO WAY", "BELUGA", // hard
 };
 
-const char *Menu::_passwordsMac[] = {
+const char *const Menu::_passwordsMac[] = {
 	"QUENCH",  "GHOST",  "LEGEND", "SPHERE",  "BULLET", "DISRUPT", "TRAUMA", "OPAQUE", // easy
 	"HICK",    "FRGO",   "JERK",   "KOIK",    "KIMO",   "LEDUX",   "MORDO",  "OPAQUE", // normal
 	"CURIOUS", "IMPACT", "LETHAL", "PERSIST", "MORTAL", "VERDICT", "KNIGHT", "OPAQUE", // hard
 };
-
 
 const uint8_t Video::_conradPal1[] = {
 	0x00, 0x00, 0xCC, 0x0C, 0x8F, 0x08, 0x7E, 0x07, 0x6C, 0x06, 0x5B, 0x05, 0x4A, 0x04, 0x63, 0x09,
@@ -3107,8 +3106,7 @@ const uint16_t SfxPlayer::_periodTable[] = {
 	0x153, 0x140, 0x12E, 0x11D, 0x10D, 0x0FE, 0x0F0, 0x0E2, 0x0D6, 0x0CA,
 	0x0BE, 0x0B4, 0x0AA, 0x0A0, 0x097, 0x08F, 0x087, 0x07F, 0x078, 0x071
 };
-*/
-/*
+
 const uint8_t Cutscene::_caillouSetData[] = {
 	0x50, 0x4f, 0x4c, 0x59, 0x00, 0x0a, 0x00, 0x02, 0xff, 0xff, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x02,
 	0x00, 0x0d, 0x00, 0x26, 0x00, 0x18, 0x00, 0x00, 0x00, 0x25, 0x00, 0x17, 0x00, 0x00, 0x00, 0x02,
@@ -3509,8 +3507,7 @@ const uint8_t Cutscene::_caillouSetData[] = {
 	0x08, 0x64, 0x0c, 0x86, 0x0e, 0xa8, 0x08, 0xaa, 0x04, 0x66, 0x04, 0x48, 0x0c, 0xcc, 0x0a, 0xaa,
 	0x06, 0x66, 0x04, 0x44, 0x02, 0x22, 0x04, 0x66, 0x00
 };
-*/
-/*
+
 const uint8_t Cutscene::_memoSetShape2Data[] = {
 	0x00, 0x25, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x41, 0x00, 0x27, 0x0c, 0x0c, 0x00, 0x69,
 	0x00, 0x22, 0x00, 0x7c, 0x00, 0x31, 0x00, 0x7c, 0x00, 0x34, 0x00, 0x78, 0x00, 0x36, 0x00, 0x72,

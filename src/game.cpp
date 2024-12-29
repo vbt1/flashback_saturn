@@ -233,7 +233,6 @@ hwram = (uint8_t *)hwram_ptr;
 	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
-//			slScrTransparent(!NBG1ON);
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}*/
@@ -330,8 +329,6 @@ for (int i=36;i<100;i++)
 			_score = 0;
 //			clearStateRewind();
 			loadLevelData();
-
-		
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -432,8 +429,6 @@ void Game::displayTitleScreenMac(int num) {
 
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
-			
-		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback",slLocate(3,13));		
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
 			for (int i = 0; i < 7; ++i) {
@@ -550,14 +545,12 @@ heapWalk();
 	pge_getInput();
 	pge_prepare();
 	col_prepareRoomState();
-
 	uint8_t oldLevel = _currentLevel;
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		LivePGE *pge = _pge_liveTable2[i];
 		if (pge) {
 			_col_currentPiegeGridPosY = (pge->pos_y / 36) & ~1;
 			_col_currentPiegeGridPosX = (pge->pos_x + 8) >> 4;
-		
 			pge_process(pge);
 		}
 	}
@@ -576,20 +569,15 @@ emu_printf("vbt playmusic chg lvl\n");
 		return;
 	}
 	if (_loadMap) {
-//		_mix.pauseMusic(); // vbt : on vire
-		if (_currentRoom == 0xFF || !hasLevelMap(_currentLevel, _pgeLive[0].room_location)) {
+		if (_currentRoom == 0xFF || !hasLevelRoom(_currentLevel, _pgeLive[0].room_location)) {
 			_cut._id = 6;
 			_deathCutsceneCounter = 1;
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
 		_mix.pauseMusic();
-			loadLevelMap();
+			loadLevelRoom();
 			_loadMap = false;
-			//audioEnabled = 0;
  // vbt à mettre si slave reduit les plantages
-//			sat_restart_audio();
-//			_mix.init();
-
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			{
 //slPrint("unpauseMusic",slLocate(3,13));					
@@ -617,14 +605,11 @@ emu_printf("vbt playmusic chg lvl\n");
 	}
 //slPrint("updateScreen1",slLocate(3,13));	
 	_vid.updateScreen();
-//	updateTiming();
-//slPrint("drawStoryTexts",slLocate(3,13));
-	drawStoryTexts();  // vbt à remettre ??
+	updateTiming();
+	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
 		handleInventory();
-//		_stub->_pi.backspace = false;
-//		_stub->_pi.quit = false;
 	}
 	if (_stub->_pi.escape) {
 		_stub->_pi.escape = false;
@@ -662,15 +647,14 @@ emu_printf("vbt playmusic chg lvl\n");
 }
 
 void Game::updateTiming() {
-	static uint32 tstamp = 0;
-	int32 delay = _stub->getTimeStamp() - tstamp;
-	int32 pause = (_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE) ? 20 : 30;
+	static const int frameHz = 30;
+	int32_t delay = _stub->getTimeStamp() - _frameTimestamp;
+	int32_t pause = (_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE) ? 20 : (1000 / frameHz);
 	pause -= delay;
 	if (pause > 0) {
-//		emu_printf("_stub->sleep(pause2) %d\n",pause);
 		_stub->sleep(pause);
 	}
-	tstamp = _stub->getTimeStamp();
+	_frameTimestamp = _stub->getTimeStamp();
 }
 
 void Game::playCutscene(int id) {
@@ -719,7 +703,6 @@ void Game::playCutscene(int id) {
 			case 0x4A:
 				return;
 			}
-
 			if (SeqPlayer::_namesTable[_cut._id]) {
 			        char name[16];
 			        snprintf(name, sizeof(name), "%s.SEQ", SeqPlayer::_namesTable[_cut._id]);
@@ -852,7 +835,6 @@ void Game::showFinalScore() {
 //		_stub->updateScreen(0);
 		_stub->processEvents();
 		if (_stub->_pi.enter) {
-//			emu_printf("_pi.enter2\n");			
 			_stub->_pi.enter = false;
 			break;
 		}
@@ -996,9 +978,6 @@ bool Game::handleConfigPanel() {
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
 				break;
-//			case MENU_ITEM_CLEAR:    // vbt : ࠲emettre plus tard
-//				clearSaveSlots(_currentLevel);
-//				break;
 			}
 			break;
 		}
@@ -1139,7 +1118,6 @@ void Game::printSaveStateCompleted() {
 }
 
 void Game::drawLevelTexts() {
-
 	LivePGE *pge = &_pgeLive[0];
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
 	if (obj == 0) {
@@ -1184,10 +1162,8 @@ static int getLineLength(const uint8_t *str) {
 }
 
 void Game::drawStoryTexts() {
-	
 	if (_textToDisplay != 0xFFFF) {
 		uint8_t textColor = 0xE8;
-//	_textToDisplay=29;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
@@ -1596,10 +1572,9 @@ void Game::drawObject(const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flag
 		dataPtr += 4;
 	}
 }
-*/
-/*
-void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
 
+void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, int16_t x, int16_t y, uint8_t flags) {
+	debug(DBG_GAME, "Game::drawObjectFrame(%p, %d, %d, 0x%X)", dataPtr, x, y, flags);
 	const uint8_t *src = bankDataPtr + dataPtr[0] * 32;
 
 	int16_t sprite_y = y + dataPtr[2];
@@ -1615,8 +1590,8 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 		sprite_flags ^= 0x10;
 	}
 
-	uint8_t sprite_h = (((sprite_flags >> 0) & 3) + 1) * 8;
-	uint8_t sprite_w = (((sprite_flags >> 2) & 3) + 1) * 8;
+	const uint8_t sprite_h = (((sprite_flags >> 0) & 3) + 1) * 8;
+	const uint8_t sprite_w = (((sprite_flags >> 2) & 3) + 1) * 8;
 
 	switch (_res._type) {
 	case kResourceTypeDOS:
@@ -1632,10 +1607,10 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 	int16_t sprite_clipped_w;
 	if (sprite_x >= 0) {
 		sprite_clipped_w = sprite_x + sprite_w;
-		if (sprite_clipped_w < 256) {
+		if (sprite_clipped_w < Video::GAMESCREEN_W) {
 			sprite_clipped_w = sprite_w;
 		} else {
-			sprite_clipped_w = 256 - sprite_x;
+			sprite_clipped_w = Video::GAMESCREEN_W - sprite_x;
 			if (sprite_flags & 0x10) {
 				sprite_mirror_x = true;
 				src += sprite_w - 1;
@@ -1658,11 +1633,11 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 
 	int16_t sprite_clipped_h;
 	if (sprite_y >= 0) {
-		sprite_clipped_h = 224 - sprite_h;
+		sprite_clipped_h = Video::GAMESCREEN_H - sprite_h;
 		if (sprite_y < sprite_clipped_h) {
 			sprite_clipped_h = sprite_h;
 		} else {
-			sprite_clipped_h = 224 - sprite_y;
+			sprite_clipped_h = Video::GAMESCREEN_H - sprite_y;
 		}
 	} else {
 		sprite_clipped_h = sprite_h + sprite_y;
@@ -1677,8 +1652,8 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 		src += sprite_w - 1;
 	}
 
-	uint32_t dst_offset = 256 * sprite_y + sprite_x;
-	uint8_t sprite_col_mask = (flags & 0x60) >> 1;
+	const uint32_t dst_offset = Video::GAMESCREEN_W * sprite_y + sprite_x;
+	const uint8_t sprite_col_mask = (flags & 0x60) >> 1;
 
 	if (_eraseBackground) {
 		if (!(sprite_flags & 0x10)) {
@@ -1696,9 +1671,8 @@ void Game::drawObjectFrame(const uint8_t *bankDataPtr, const uint8_t *dataPtr, i
 //	_vid.markBlockAsDirty(sprite_x, sprite_y, sprite_clipped_w, sprite_clipped_h, _vid._layerScale);
 }
 
-void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a, uint8 b, uint8 flags) {
-	emu_printf("Game::drawCharacter(0x%X, %d, %d, 0x%X, 0x%X, 0x%X)\n", dataPtr, pos_x, pos_y, a, b, flags);
-
+void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, uint8_t a, uint8_t b, uint8_t flags) {
+	debug(DBG_GAME, "Game::drawCharacter(%p, %d, %d, 0x%X, 0x%X, 0x%X)", dataPtr, pos_x, pos_y, a, b, flags);
 	bool sprite_mirror_y = false;
 	if (b & 0x40) {
 		b &= ~0x40;
@@ -1780,8 +1754,8 @@ void Game::drawCharacter(const uint8 *dataPtr, int16 pos_x, int16 pos_y, uint8 a
 		}
 	}
 
-	uint32_t dst_offset = 256 * pos_y + pos_x;
-	uint8_t sprite_col_mask = ((flags & 0x60) == 0x60) ? 0x50 : 0x40;
+	const uint32_t dst_offset = 256 * pos_y + pos_x;
+	const uint8_t sprite_col_mask = ((flags & 0x60) == 0x60) ? 0x50 : 0x40;
 
 //	emu_printf("dst_offset=0x%X src_offset=0x%X\n", dst_offset, src - dataPtr);
 
@@ -1851,7 +1825,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 	return 0xFFFF;
 }
 
-bool Game::hasLevelMap(int level, int room) const {
+bool Game::hasLevelRoom(int level, int room) const {
 //	emu_printf("Game::hasLevelMap() level %d room%d\n", level, room);
 	if (_res._type == kResourceTypeMac) {
 		return _res.MAC_hasLevelMap(level, room);
@@ -1868,22 +1842,14 @@ static bool isMetro(int level, int room) {
 	return level == 1 && (room == 0 || room == 13 || room == 38 || room == 51);
 }
 */
-void Game::loadLevelMap() {
+
+
+void Game::loadLevelRoom() {
 //	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
-//	bool widescreenUpdated = false;
-	_currentIcon = 0xFF;
-/*	switch (_res._type) {
-	case kResourceTypeDOS:
-//		_vid.PC_decodeMap(_currentLevel, _currentRoom);  // vbt à remettre
-		break;
-	case kResourceTypeMac:*/
-		_vid.MAC_decodeMap(_currentLevel, _currentRoom);
-//		break;
-//	}
+	_vid.MAC_decodeMap(_currentLevel, _currentRoom);
 }
 
 void Game::loadLevelData() {
-	//audioEnabled = 0;
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
 //	switch (_res._type) {
@@ -1930,31 +1896,21 @@ void Game::loadLevelData() {
 		sat_free(_res._pol);
 		sat_free(_res._cine_off);
 //		sat_free(_res._cine_txt);
-/*
-		for (int i = 0; i < _res._numSfx; ++i) {
-			sat_free(_res._sfxList[i].data);
-		}
-		sat_free(_res._sfxList);
-*/
+
 		_vid.setTextPalette();
 		_vid.drawString("Loading Please wait", 20, 40, 0xE7);
 		slScrAutoDisp(NBG1ON);
-//emu_printf("slsynch Game::loadLevelData()\n");							
-//		slSynch();
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
-//xxxxxxxxxxxxxxxxxxxxx
 		_res.MAC_loadLevelData(_currentLevel);
-//		_res.MAC_loadCutsceneText(); // vbt déplacé
 		SAT_preloadMonsters();
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
 //	}
-	_cut._id = lvl->cutscene_id;
+	_cut._id = (int8_t)lvl->cutscene_id;
 
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
-//	_res.clearBankData();
 	_printLevelCodeCounter = 150;
 
 	_col_slots2Cur = _col_slots2;
@@ -1985,7 +1941,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	}
 /*
 	if (_demoBin != -1) {
-		_cut._id = -1;
+		_cut._id = 0xFFFF;
 		if (_demoInputs[_demoBin].room != 255) {
 			_pgeLive[0].room_location = _demoInputs[_demoBin].room;
 			_pgeLive[0].pos_x = _demoInputs[_demoBin].x;
@@ -2007,17 +1963,17 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,(int)current_dram2-0x22600000);
+emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,((int)current_dram2)+(512*448)-0x22600000);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 //	uint8_t buf[16 * 16];
-	switch (_res._type) {
+/*	switch (_res._type) {
 	case kResourceTypeDOS:
 //		_vid.PC_decodeIcn(_res._icn, iconNum, buf);  // vbt ࠲emettre
 		break;
 	case kResourceTypeMac:
-/*		switch (iconNum) {
+		switch (iconNum) {
 		case 76: // cursor
 			iconNum = 32;
 			break;
@@ -2029,8 +1985,8 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 			break;
 		}*/
 		_vid.MAC_drawSprite(x, y, _res._icn, iconNum, 0, false);
-		return;
-	}
+//		return;
+//	}
 //	_vid.drawSpriteSub1(buf, _vid._frontLayer + x + y * _vid._w, 16, 16, 16, colMask << 4);
 //	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
@@ -2117,7 +2073,7 @@ void Game::changeLevel() {
 	_vid.fadeOut();
 //	clearStateRewind();
 	loadLevelData();
-	loadLevelMap();
+	loadLevelRoom();
 	_vid.setPalette0xF();
 	_vid.setTextPalette();
 	_vid.fullRefresh();

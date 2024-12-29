@@ -49,10 +49,9 @@ emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
 	memset(&_frontLayer[0], 0, _w * _h);
 //	_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
-//	_backLayer = (uint8_t *)LOW_WORK_RAM;
 
-	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*70);//+ TEXT1_RAM_VDP2);
-	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*140);	
+//	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*70);//+ TEXT1_RAM_VDP2);
+//	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*140);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
 	
 	_fullRefresh = true;
@@ -102,7 +101,6 @@ void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int s
 			_screenBlocks[by1 * (_w / SCREENBLOCK_W) + i] = 2;
 		}
 	}
-	
 }
 */
 void Video::updateScreen() {
@@ -243,13 +241,14 @@ void Video::setPalette0xF() {
 	}
 }
 
-void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
+/*
+static void DOS_decodeMapPlane(int sz, const uint8_t *src, uint8_t *dst) {
 	//	debug(DBG_VIDEO, "Video::decodeLevelMap() sz = 0x%X", sz);
-	const uint8 *end = src + sz;
+	const uint8_t *end = src + sz;
 	while (src < end) {
-		int16 code = (int8)*src++;
+		int code = (int8_t)*src++;
 		if (code < 0) {
-			int len = 1 - code;
+			const int len = 1 - code;
 			memset(dst, *src++, len);
 			dst += len;
 		} else {
@@ -260,7 +259,7 @@ void Video::decodeLevelMap(uint16 sz, const uint8 *src, uint8 *dst) {
 		}
 	}
 }
-/*
+
 void Video::setLevelPalettes() {
 	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
 	if (_unkPalSlot2 == 0) {

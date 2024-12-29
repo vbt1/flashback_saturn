@@ -34,6 +34,7 @@ struct ResourceMac {
 	static const char *FILENAME2;
 
 	File _f;
+
 	uint32_t _dataOffset;
 	ResourceMacMap _map;
 	ResourceMacType *_types;

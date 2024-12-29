@@ -43,12 +43,8 @@ ResourceMac::~ResourceMac() {
 }
 
 void ResourceMac::load() {
-
 //	emu_printf("ResourceMac::load\n");
-
 	const uint32_t sig = _f.readUint32BE();
-//	slPrintHex(sig,slLocate(10,15));
-
 	if (sig == 0x00051607) { // AppleDouble
 //		debug(DBG_INFO, "Load Macintosh data from AppleDouble");
 //		emu_printf("Load Macintosh data from AppleDouble\n");
@@ -74,7 +70,7 @@ void ResourceMac::load() {
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
-emu_printf("ResourceMac::loadResourceFork\n");
+//emu_printf("ResourceMac::loadResourceFork\n");
 // vbt : consomme 40ko de ram	
 	_f.seek(resourceOffset);
 	_dataOffset = resourceOffset + _f.readUint32BE();

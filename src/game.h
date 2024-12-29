@@ -1,23 +1,11 @@
-/* REminiscence - Flashback interpreter
- * Copyright (C) 2005-2007 Gregory Montoir
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+/*
+ * REminiscence - Flashback interpreter
+ * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 
-#ifndef __GAME_H__
-#define __GAME_H__
+#ifndef GAME_H__
+#define GAME_H__
 
 #include "intern.h"
 #include "cutscene.h"
@@ -78,13 +66,13 @@ struct Game {
 	static const uint8_t _monsterListLevel4_2[];
 	static const uint8_t _monsterListLevel5_1[];
 	static const uint8_t _monsterListLevel5_2[];
-	static const uint8_t *_monsterListLevels[];
+	static const uint8_t * const _monsterListLevels[];
 	static const uint8_t _monsterPals[4][32];
-	static const char *_monsterNames[1][4];
+	static const char *const _monsterNames[1][4];
 	static const pge_OpcodeProc _pge_opcodeTable[];
-	static const uint8 _pge_modKeysTable[];
-//	static const uint8 _protectionCodeData[];
-//	static const uint8 _protectionPal[];
+	static const uint8_t _pge_modKeysTable[];
+//	static const uint8_t _protectionCodeData[];
+//	static const uint8_t _protectionPal[];
 
 	Cutscene _cut;
 	Menu _menu;
@@ -118,13 +106,7 @@ struct Game {
 	AnimBufferState _animBuffer2State[42];
 	AnimBufferState _animBuffer3State[12];
 	AnimBuffers _animBuffers;
-//	uint8 *_bankData;//[0x7000];
-//	uint8 *_firstBankData;
-//	uint8 *_lastBankData;
-//	BankSlot _bankSlots[49];
-//	BankSlot *_curBankSlot;
-//	const uint8 *_bankDataPtrs;
-	uint16 _deathCutsceneCounter;
+	uint16_t _deathCutsceneCounter;
 	bool _saveStateCompleted;
 	bool _endLoop;
 	uint32_t _frameTimestamp;
@@ -133,14 +115,14 @@ struct Game {
 	Game(SystemStub *, const char *dataPath, const char *savePath, int level, ResourceType ver, Language lang);
 
 	void run();
-	void displayTitleScreenMac(int num);	
+	void displayTitleScreenMac(int num);
 	void resetGameState();
 	void mainLoop();
 	void updateTiming();
 	void playCutscene(int id = -1);
 	bool playCutsceneSeq(const char *name);
-	bool hasLevelMap(int level, int room) const;
-	void loadLevelMap();
+	bool hasLevelRoom(int level, int room) const;
+	void loadLevelRoom();
 	void loadLevelData();
 	void drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask);
 	void drawCurrentInventoryItem();
@@ -148,7 +130,6 @@ struct Game {
 	void showFinalScore();
 	bool handleConfigPanel();
 	bool handleContinueAbort();
-//	bool handleProtectionScreen();
 	void printSaveStateCompleted();
 	void drawLevelTexts();
 	void drawStoryTexts();
@@ -166,7 +147,6 @@ struct Game {
 	uint16_t getRandomNumber();
 	void changeLevel();
 	void handleInventory();
-	uint8 *findBankData(uint16 entryNum);
 	void clearSaveSlots(uint8 level);
 
 	// pieges
@@ -177,10 +157,10 @@ struct Game {
 	LivePGE *_pge_liveTable2[256]; // active pieges list (index = pge number)
 	LivePGE *_pge_liveTable1[256]; // pieges list by room (index = room)
 	LivePGE _pgeLive[256];
-	uint8 _pge_currentPiegeRoom;
+	uint8_t _pge_currentPiegeRoom;
 	bool _pge_currentPiegeFacingDir; // (false == left)
 	bool _pge_processOBJ;
-	uint8 _pge_inpKeysMask;
+	uint8_t _pge_inpKeysMask;
 	uint16_t _pge_opGunVar;
 	uint16_t _pge_compareVar1;
 	uint16_t _pge_compareVar2;
@@ -308,7 +288,7 @@ struct Game {
 	int pge_op_setCollisionState2(ObjectOpcodeArgs *args);
 	int pge_op_saveState(ObjectOpcodeArgs *args);
 	int pge_o_unk0x6A(ObjectOpcodeArgs *args);
-	int pge_isToggleable(ObjectOpcodeArgs *args);
+	int pge_op_isMessageReceived(ObjectOpcodeArgs *args);
 	int pge_o_unk0x6C(ObjectOpcodeArgs *args);
 	int pge_op_isCollidingObject(ObjectOpcodeArgs *args);
 	int pge_o_unk0x6E(ObjectOpcodeArgs *args);
@@ -364,60 +344,56 @@ struct Game {
 
 	// collision
 	CollisionSlot _col_slots[256];
-	uint8 _col_curPos;
+	uint8_t _col_curPos;
 	CollisionSlot *_col_slotsTable[256];
 	CollisionSlot *_col_curSlot;
 	CollisionSlot2 _col_slots2[256];
 	CollisionSlot2 *_col_slots2Cur;
 	CollisionSlot2 *_col_slots2Next;
-	uint8 _col_activeCollisionSlots[0x30 * 3]; // left, current, right
-	uint8 _col_currentLeftRoom;
-	uint8 _col_currentRightRoom;
-	int16 _col_currentPiegeGridPosX;
-	int16 _col_currentPiegeGridPosY;
+	uint8_t _col_activeCollisionSlots[0x30 * 3]; // left, current, right
+	uint8_t _col_currentLeftRoom;
+	uint8_t _col_currentRightRoom;
+	int16_t _col_currentPiegeGridPosX;
+	int16_t _col_currentPiegeGridPosY;
 
 	void col_prepareRoomState();
 	void col_clearState();
-	LivePGE *col_findPiege(LivePGE *pge, uint16 arg2);
-	int16 col_findSlot(int16 pos);
+	LivePGE *col_findPiege(LivePGE *pge, uint16_t arg2);
+	int16_t col_findSlot(int16_t pos);
 	void col_preparePiegeState(LivePGE *dst_pge);
-	uint16 col_getGridPos(LivePGE *pge, int16 dx);
-	int16 col_getGridData(LivePGE *pge, int16 dy, int16 dx);
-	uint8 col_findCurrentCollidingObject(LivePGE *pge, uint8 n1, uint8 n2, uint8 n3, LivePGE **pge_out);
-	int16 col_detectHit(LivePGE *pge, int16 arg2, int16 arg4, col_Callback1 callback1, col_Callback2 callback2, int16 argA, int16 argC);
-	int col_detectHitCallback2(LivePGE *pge1, LivePGE *pge2, int16 unk1, int16 unk2);
-	int col_detectHitCallback3(LivePGE *pge1, LivePGE *pge2, int16 unk1, int16 unk2);
-	int col_detectHitCallback4(LivePGE *pge1, LivePGE *pge2, int16 unk1, int16 unk2);
-	int col_detectHitCallback5(LivePGE *pge1, LivePGE *pge2, int16 unk1, int16 unk2);
-	int col_detectHitCallback1(LivePGE *pge, int16 dy, int16 unk1, int16 unk2);
-	int col_detectHitCallback6(LivePGE *pge, int16 dy, int16 unk1, int16 unk2);
-	int col_detectHitCallbackHelper(LivePGE *pge, int16 unk1);
-	int col_detectGunHitCallback1(LivePGE *pge, int16 arg2, int16 arg4, int16 arg6);
-	int col_detectGunHitCallback2(LivePGE *pge1, LivePGE *pge2, int16 arg4, int16);
-	int col_detectGunHitCallback3(LivePGE *pge1, LivePGE *pge2, int16 arg4, int16);
-	int col_detectGunHit(LivePGE *pge, int16 arg2, int16 arg4, col_Callback1 callback1, col_Callback2 callback2, int16 argA, int16 argC);
+	uint16_t col_getGridPos(LivePGE *pge, int16_t dx);
+	int16_t col_getGridData(LivePGE *pge, int16_t dy, int16_t dx);
+	uint8_t col_findCurrentCollidingObject(LivePGE *pge, uint8_t objectType1, uint8_t objectType2, uint8_t objectType3, LivePGE **pge_out);
+	int16_t col_detectHit(LivePGE *pge, int16_t msgNum, int16_t objectType, col_Callback1 callback1, col_Callback2 callback2, int16_t argA, int16_t argC);
+	int col_detectHitCallback2(LivePGE *pge1, LivePGE *pge2, int16_t msgNum, int16_t objectType);
+	int col_detectHitCallback3(LivePGE *pge1, LivePGE *pge2, int16_t msgNum, int16_t objectType);
+	int col_detectHitCallback4(LivePGE *pge1, LivePGE *pge2, int16_t msgNum, int16_t objectType);
+	int col_detectHitCallback5(LivePGE *pge1, LivePGE *pge2, int16_t msgNum, int16_t objectType);
+	int col_detectHitCallback1(LivePGE *pge, int16_t dy, int16_t unk1, int16_t msgNum);
+	int col_detectHitCallback6(LivePGE *pge, int16_t dy, int16_t unk1, int16_t msgNum);
+	int col_detectHitCallbackHelper(LivePGE *pge, int16_t msgNum);
+	int col_detectGunHitCallback1(LivePGE *pge, int16_t arg2, int16_t arg4, int16_t arg6);
+	int col_detectGunHitCallback2(LivePGE *pge1, LivePGE *pge2, int16_t arg4, int16_t);
+	int col_detectGunHitCallback3(LivePGE *pge1, LivePGE *pge2, int16_t arg4, int16_t);
+	int col_detectGunHit(LivePGE *pge, int16_t arg2, int16_t arg4, col_Callback1 callback1, col_Callback2 callback2, int16_t argA, int16_t argC);
 
 
 	// input
-	uint8 _inp_lastKeysHit;
-	uint8 _inp_lastKeysHitLeftRight;
-//	int _inp_demPos;	
-//	bool _inp_replay;
-//	bool _inp_record;
-//	File *_inp_demo;
+	uint8_t _inp_lastKeysHit;
+	uint8_t _inp_lastKeysHitLeftRight;
+//	int _inp_demPos;
 
 	void inp_handleSpecialKeys();
 	void inp_update();
 
 
 	// save/load state
-	uint8 _stateSlot;
+	uint8_t _stateSlot;
 	bool _validSaveState;
 
-//	void makeGameDemoName(char *buf);
-	void makeGameStateName(uint8 slot, char *buf);
-	bool saveGameState(uint8 slot);
-	bool loadGameState(uint8 slot);
+	void makeGameStateName(uint8_t slot, char *buf);
+	bool saveGameState(uint8_t slot);
+	bool loadGameState(uint8_t slot);
 	void saveState(SAVE_BUFFER *sbuf);
 	void loadState(SAVE_BUFFER *sbuf);
 
@@ -426,4 +402,4 @@ struct Game {
 	void SAT_preloadSpc();
 };
 
-#endif // __GAME_H__
+#endif // GAME_H__

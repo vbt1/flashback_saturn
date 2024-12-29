@@ -428,7 +428,6 @@ void Resource::load_CINE() {
 			error("Cannot load '%s'", _entryName);
 		}
 		break;
-
 	case kResourceTypeMac:
 		MAC_loadCutsceneText();
 		break;
@@ -728,7 +727,7 @@ emu_printf("_aba->loadEntry\n");
 					break;
 				case OT_OBJ:
 					_numObjectNodes = READ_LE_UINT16(dat);
-					assert(_numObjectNodes == 230);
+					assert(_numObjectNodes == NUM_OBJECTS);
 //emu_printf("decodeOBJ1\n");					
 					decodeOBJ(dat + 2, size - 2);
 					break;
@@ -953,8 +952,7 @@ void Resource::free_OBJ() {
 /*
 void Resource::load_OBC(File *f) {
 	const int packedSize = f->readUint32BE();
-	uint8_t *packedData = (uint8_t *)sat_malloc(packedSize);
-//emu_printf("load_OBC %p %d\n", packedData,packedSize);	
+	uint8_t *packedData = (uint8_t *)malloc(packedSize);
 	if (!packedData) {
 		error("Unable to allocate OBC temporary buffer 1");
 	}
@@ -980,9 +978,10 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	//emu_printf("Resource::decodeOBJ\n");
 	uint32_t offsets[256];
 	int tmpOffset = 0;
-	_numObjectNodes = 230;
+	_numObjectNodes = NUM_OBJECTS;
 	if (_type == kResourceTypeMac) {
 		_numObjectNodes = _readUint16(tmp);
+		/* offsets start from &tmp[0] with Macintosh, &tmp[2] with DOS */
 		tmpOffset += 2;
 	}
 	for (int i = 0; i < _numObjectNodes; ++i) {
@@ -1049,7 +1048,6 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 		}
 		_objectNodesMap[i] = prevNode;
 	}
-//slPrint("end decodeOBJ",slLocate(3,18));	
 }
 /*
 void Resource::load_PGE(File *f) {
@@ -1085,8 +1083,7 @@ void Resource::load_PGE(File *f) {
 }
 */
 void Resource::decodePGE(const uint8_t *p, int size) {
-	_pgeNum = _readUint16(p); 
-	p += 2;
+	_pgeNum = _readUint16(p); p += 2;
 	memset(_pgeInit, 0, sizeof(_pgeInit));
 	assert(_pgeNum <= ARRAYSIZE(_pgeInit));
 	for (uint16_t i = 0; i < _pgeNum; ++i) {
@@ -1231,7 +1228,6 @@ Sint32 GetFileSize(int file_id)
 
 void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) {
 	*buf = 0;
-
 	int offset = _voicesOffsetsTable[num];
 	if (offset != 0xFFFF) 
 	{
@@ -1268,7 +1264,6 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 						for (int i = 0; i < len / (0x2000 + 2048); ++i) {
 							if (s == segment) {
 								f.seek(offset);
-
 								int n = 2048;
 								while (n--) {
 									int v = f.readByte();
@@ -1395,9 +1390,9 @@ void Resource::load_BNQ(File *f) {
 		f->read(_bnq, len);
 	}
 }
-*/
+
 void Resource::load_SPM(File *f) {
-/* // vbt version pc on verra plus tard	
+ // vbt version pc on verra plus tard	
 	static const int kPersoDatSize = 178647;
 	const int len = f->size();
 	f->seek(len - 4);
@@ -1431,9 +1426,8 @@ void Resource::load_SPM(File *f) {
 		}
 	}
 	sat_free(tmp);
-*/	
 }
-/*
+
 void Resource::clearBankData() {
 	_bankBuffersCount = 0;
 	_bankDataHead = _bankData;
@@ -1506,7 +1500,6 @@ uint8_t *Resource::loadBankData(uint16_t num) {
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
-		
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
 //		emu_printf("decodeResourceMacText1 %s found\n", buf);
@@ -1518,7 +1511,6 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		}
 		const char *language = (_lang == LANG_FR) ? "French" : "English";
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
-		
 //		emu_printf("decodeResourceMacText2 %s\n", buf);
 		return decodeResourceMacData(buf, false);
 	}
@@ -1590,7 +1582,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
-//			emu_printf("_mac->_f.read(data, _resourceMacDataSize %d\n",_resourceMacDataSize);
 			_mac->_f.read(data, _resourceMacDataSize);
 		}
 	}
@@ -1611,17 +1602,12 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 //	assert(i < count);
 	if(i>=count)
 		return;
-	
 	ptr += 4;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
-	
 	if (offset != 0) {
 		ptr = basePtr + offset;
-//		const int w = ((uint16_t*)ptr)[0]; ptr += 2;
-//		const int h = ((uint16_t*)ptr)[0]; ptr += 2;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
-		
 		switch (sig) {
 		case 0xC211:
 			decodeC211(ptr + 4, w, h, dst);
@@ -1674,7 +1660,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 	static const struct {
 		const char *id;
 		const char *name;
-		int index;
+		uint8_t index;
 	} data[] = {
 		{ "junky", "Junky", 0x32 },
 		{ "mercenai", "Mercenary", 0x34 },
@@ -1731,10 +1717,6 @@ void Resource::MAC_unloadLevelData() {
 	_tbn = 0;
 	sat_free(_str);
 	_str = 0;
-	
-// vbt ajout	
-//	sat_free(_spc);
-//	_spc = 0;	
 }
 
 static const int _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red palette: 32
@@ -1747,37 +1729,30 @@ void Resource::MAC_loadLevelData(int level) {
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 emu_printf("MAC_loadLevelData %s\n", name);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-	//slPrint(name,slLocate(3,13));		
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
 //emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
 emu_printf("MAC_loadLevelData %s\n", name);
-	//slPrint(name,slLocate(3,13));
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
 //emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 emu_printf("MAC_loadLevelData %s\n", name);
-	//slPrint(name,slLocate(3,13));	
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
-	//slPrint("decodeOBJ",slLocate(3,13));
 	decodeOBJ(ptr, _resourceMacDataSize);
-	//slPrint("sat_free1",slLocate(3,13));	
-	
 //	char toto[50];
 //	sprintf(toto,"***%p****",ptr);
 	//slPrint(toto,slLocate(3,20));
-emu_printf("decodeOBJ3 free %p\n",ptr);		
+//emu_printf("decodeOBJ3 free %p\n",ptr);		
 	sat_free(ptr);
 //emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
-	//slPrint(name,slLocate(3,13));
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
@@ -1786,17 +1761,18 @@ emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 emu_printf("MAC_loadLevelData %s\n", name);		
 	_spc = decodeResourceMacData(name, true);
+
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
 emu_printf("MAC_loadLevelData %s\n", name);	
 	_tbn = decodeResourceMacText(name, "names");
+
 	_str = decodeResourceMacText("Flashback", "strings");
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //emu_printf("MAC_loadLevelRoom\n");	
 	char name[64];
-	
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 
@@ -1809,7 +1785,7 @@ void Resource::MAC_clearClut16(Color *clut, uint8_t dest) {
 
 void Resource::MAC_copyClut16(Color *clut, uint8_t dest, uint8_t src) {
 	memcpy(&clut[dest * 16], &_clut[src * 16], 16 * sizeof(Color));
-}	
+}
 
 void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     const int num = _macLevelNumbers[level][0] - '1';
@@ -2050,7 +2026,7 @@ void Resource::MAC_loadCreditsText() {
 
 void Resource::MAC_loadSounds() {
 	static const int8_t table[NUM_SFXS] = {
-		0, -1,  1,  2,  3,  4, -1,  5,  6,  7,  8,  9, 10, 11, -1, 12,
+		 0, -1,  1,  2,  3,  4, -1,  5,  6,  7,  8,  9, 10, 11, -1, 12,
 		13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, 26, 27,
 		28, -1, 29, -1, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
 		42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, -1, 53, 54, 55, 56,

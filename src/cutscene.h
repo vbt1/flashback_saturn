@@ -10,7 +10,6 @@
 #include "graphics.h"
 #include "mixer.h"
 
-//struct ModPlayer;
 struct Resource;
 struct SystemStub;
 struct Video;
@@ -48,12 +47,12 @@ struct Cutscene {
 	};
 
 	static const OpcodeStub _opcodeTable[];
-	static const char *_namesTableDOS[];
+	static const char *const _namesTableDOS[];
 	static const uint16_t _offsetsTableDOS[];
 	static const uint16_t _cosTable[];
 	static const uint16_t _sinTable[];
 //	static const uint8_t _creditsDataDOS[];
-	static const uint16_t _creditsCutSeq[];
+	static const uint8_t _creditsCutSeq[];
 	static const uint8_t _musicTableDOS[];
 //	static const uint8 _protectionShapeData[];
 	static const Text _frTextsTable[];
@@ -63,7 +62,6 @@ struct Cutscene {
 //	static const uint8_t _memoSetShape4Data[];
 
 	Graphics _gfx;
-//	ModPlayer *_ply;
 	Mixer _mix;
 	Resource *_res;
 	SystemStub *_stub;

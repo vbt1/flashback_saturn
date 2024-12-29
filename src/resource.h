@@ -48,8 +48,8 @@ struct LocaleData {
 		LI_NUM
 	};
 
-	static const char *_textsTableFR[];
-	static const char *_textsTableEN[];
+	static const char *const _textsTableFR[];
+	static const char *const _textsTableEN[];
 //	static const char *_textsTableDE[];
 //	static const char *_textsTableSP[];
 	static const uint8_t _stringsTableFR[];
@@ -96,6 +96,7 @@ struct Resource {
 		NUM_SFXS = 66,
 		NUM_BANK_BUFFERS = 50,
 		NUM_CUTSCENE_TEXTS = 117,
+		NUM_OBJECTS = 230,
 		NUM_SPRITES = 1287,
 		NUM_SPC = 1137
 	};
@@ -142,7 +143,6 @@ struct Resource {
 //	uint8_t *_sprm; // vbt : pas utilisé pour mac
 	uint16_t _pgeNum;
 	InitPGE _pgeInit[256];
-	
 	uint8_t *_map;
 	uint8_t *_lev;
 	int _levNum;
@@ -151,7 +151,6 @@ struct Resource {
 	uint16_t _numObjectNodes;
 	ObjectNode *_objectNodesMap[255];
 	uint8_t *_scratchBuffer;
-	//uint8_t *_memBuf;
 	SoundFx *_sfxList;
 	uint8_t _numSfx;
 	uint8_t *_cmd;
@@ -161,7 +160,7 @@ struct Resource {
 	uint8_t *_cine_txt;
 //	uint8_t *_voiceBuf;
 //	char **_extTextsTable;
-	const char **_textsTable;
+	const char *const *_textsTable;
 //	uint8_t *_extStringsTable;
 	const uint8_t *_stringsTable;
 //	uint8_t *_bankData;
@@ -277,8 +276,8 @@ struct Resource {
 			return _cine_txt + offset;
 		}
 		return (num >= 0 && num < NUM_CUTSCENE_TEXTS) ? _cineStrings[num] : 0;
-	}	
-	const char *getMenuString(int num) {
+	}
+	const char *getMenuString(int num) const {
 		return (num >= 0 && num < LocaleData::LI_NUM) ? _textsTable[num] : "";
 	}
 	const uint8_t *getCreditsString(int num) {
@@ -341,7 +340,6 @@ struct Resource {
 		assert(0);
 		return 0;
 	}
-	
 	int MAC_getMonsterFrame(int anim) const {
 		static const int16_t data[] = {
 			0x22F, 0x28D, // junky - 94
@@ -358,7 +356,6 @@ struct Resource {
 		assert(0);
 		return 0;
 	}
-
 };
 
 #endif // RESOURCE_H__

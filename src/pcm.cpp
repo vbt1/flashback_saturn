@@ -54,7 +54,7 @@ static const int logtbl[] = {
 
 void snd_init()
 {
-	emu_printf("snd_init\n");
+//	emu_printf("snd_init\n");
    *(volatile uint8_t *)(0x25B00400) = 0x02;
    // Turn off Sound CPU
    smpc_smc_sndoff_call();

@@ -193,7 +193,7 @@ void Game::pge_setupNextAnimFrame(LivePGE *pge, MessagePGE *le) {
 		MessagePGE *next_le = le;
 		while (next_le) {
 			uint16_t msgNum = next_le->msg_num;
-			if (obj->opcode2 == 0x6B) { // pge_isToggleable
+			if (obj->opcode2 == 0x6B) { // pge_op_isMessageReceived
 				if (obj->opcode_arg2 == 0) {
 					if (msgNum == 1 || msgNum == 2) goto set_anim;
 				}
@@ -203,7 +203,7 @@ void Game::pge_setupNextAnimFrame(LivePGE *pge, MessagePGE *le) {
 			} else if (msgNum == obj->opcode_arg2) {
 				if (obj->opcode2 == 0x22 || obj->opcode2 == 0x6F) goto set_anim;
 			}
-			if (obj->opcode1 == 0x6B) { // pge_isToggleable
+			if (obj->opcode1 == 0x6B) { // pge_op_isMessageReceived
 				if (obj->opcode_arg1 == 0) {
 					if (msgNum == 1 || msgNum == 2) goto set_anim;
 				}
@@ -1572,7 +1572,7 @@ loc_0_15446:
 	return 0;
 }
 
-int Game::pge_isToggleable(ObjectOpcodeArgs *args) {
+int Game::pge_op_isMessageReceived(ObjectOpcodeArgs *args) {
 	LivePGE *pge = args->pge;
 	MessagePGE *le = _pge_messagesTable[pge->index];
 	if (le) {
@@ -1951,7 +1951,7 @@ int Game::pge_op_changeRoom(ObjectOpcodeArgs *args) {
 		if (init_pge_2->object_type == 1) {
 			if (_currentRoom != live_pge_2->room_location) {
 				_currentRoom = live_pge_2->room_location;
-				loadLevelMap();
+				loadLevelRoom();
 				_vid.fullRefresh();
 			}
 		}

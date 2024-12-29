@@ -61,7 +61,6 @@ const uint8_t *Cutscene::getPolygonData() const {
 }
 
 void Cutscene::sync(int frameDelay) {
-
 	if (_stub->_pi.quit) {
 		return;
 	}
@@ -289,17 +288,17 @@ void Cutscene::setRotationTransform(uint16_t a, uint16_t b, uint16_t c) { // ide
 	_rotMat[3] = (-sin_c * cos_a) >> 8;
 }
 
-static bool isNewLineChar(uint8_t chr, Resource *res) {
-	const uint8_t nl = 0x7C;
-	return chr == nl;
+static uint8_t getNewLineChar(const Resource *res) {
+	return /*(res->_lang == LANG_JP) ? 0xD1 :*/ '|';
 }
 
 uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
+	const uint8_t newLineChar = getNewLineChar(_res);
 	uint8_t *q = _textSep;
 	uint16_t ret = 0;
 	uint16_t pos = 0;
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
-		if (isNewLineChar(p[i], _res)) {
+		if (p[i] == newLineChar) {
 			*q++ = pos;
 			if (pos > ret) {
 				ret = pos;
@@ -391,14 +390,11 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	if (textJustify != kTextJustifyLeft) {
 		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 	}
-
-//	memset4_fast(&_vid->_frontLayer[yPos*2*_vid->_w],0,512*48); // vbt : 1ere ligne
-
+	const uint8_t newLineChar = getNewLineChar(_res);
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
-		if (isNewLineChar(p[i], _res)) {
+		if (p[i] == newLineChar) {
 			yPos += Video::CHAR_H;
 			xPos = x;
-//			memset4_fast(&_vid->_frontLayer[yPos*2*_vid->_w],0,512*32); // vbt : les lignes suivantes
 			if (textJustify != kTextJustifyLeft) {
 				xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 			}
@@ -511,10 +507,10 @@ void Cutscene::op_refreshScreen() {
 	_clearScreen = fetchNextCmdByte();
 	if (_clearScreen != 0) {
 		clearBackPage();
-//	memset4_fast(&_vid->_frontLayer[224*_vid->_w],0,_vid->_w* 192);			
 		_creditsSlowText = false;
 	}
 }
+
 void Cutscene::op_waitForSync() {
 //	emu_printf("Cutscene::op_waitForSync()\n");
 	if (_creditsSequence) {
@@ -525,11 +521,10 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = /*_res->isDOS() ? 20 :*/ 60;
 			}
-			memcpy(_backPage, _frontPage, IMG_SIZE);
+			DMA_ScuMemCopy(_backPage, _frontPage, IMG_SIZE);
 			drawCreditsText();
 			updateScreen();
 		} while (--n);
-//		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x33,_vid->_w* (_vid->_h-128));		
 		clearBackPage();
 		_creditsSlowText = false;
 	} else {
@@ -619,7 +614,7 @@ void Cutscene::op_drawShape() {
 		/*if (_clearScreen == 0) {
 			color += 0x10;
 		}*/
-		_primitiveColor = color & 0x0f;
+		_primitiveColor = color;// & 0x0f;
 		drawShape(primitiveVertices, x + dx, y + dy);
 	}
 	if (_clearScreen != 0) {
@@ -628,13 +623,17 @@ void Cutscene::op_drawShape() {
 		uint8_t *back = _backPage;  // Use pointers to avoid array indexing overhead
 		uint8_t *aux = _auxPage;
 		
-		// Unroll the loop by processing 4 elements at a time
-		for (i = 0; i < IMG_SIZE; i += 8) {
-			// Process 4 pairs of bytes (i, i+1), (i+2, i+3), (i+4, i+5), (i+6, i+7)
+		// Unroll the loop by processing 8 elements at a time
+		for (i = 0; i < IMG_SIZE; i += 16) {
+			// Process 8 pairs of bytes
 			aux[i / 2]       = (back[i + 1]) | (back[i] << 4);
 			aux[(i / 2) + 1] = (back[i + 3]) | (back[i + 2] << 4);
 			aux[(i / 2) + 2] = (back[i + 5]) | (back[i + 4] << 4);
 			aux[(i / 2) + 3] = (back[i + 7]) | (back[i + 6] << 4);
+			aux[(i / 2) + 4] = (back[i + 9]) | (back[i + 8] << 4);
+			aux[(i / 2) + 5] = (back[i + 11]) | (back[i + 10] << 4);
+			aux[(i / 2) + 6] = (back[i + 13]) | (back[i + 12] << 4);
+			aux[(i / 2) + 7] = (back[i + 15]) | (back[i + 14] << 4);
 		}
 		clearBackPage();
 		transferAux=1;
@@ -1154,9 +1153,8 @@ void Cutscene::op_copyScreen() {
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
 	}
-	memcpy(_backPage, _frontPage, IMG_SIZE);
+	DMA_ScuMemCopy(_backPage, _frontPage, IMG_SIZE);
 	_frameDelay = 10;
-//slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 /*
 	const bool drawMemoShapes = _drawMemoSetShapes && (_paletteNum == 19 || _paletteNum == 23) && (_memoSetOffset + 3) <= sizeof(memoSetPos);
 	if (drawMemoShapes) {
@@ -1191,7 +1189,6 @@ void Cutscene::op_drawTextAtPos() {
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
 		int16_t y = (int8_t)fetchNextCmdByte() * 8;
 		if (!_creditsSequence) {
-
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				hasText = true;
@@ -1214,8 +1211,6 @@ void Cutscene::op_drawTextAtPos() {
 			}
 		}
 	}
-//	else
-//		memset(_vid->_frontLayer,0x00,512*400);
 }
 
 void Cutscene::op_handleKeys() {
@@ -1364,9 +1359,6 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	}
 //		//emu_printf("VBT cutmainLoop h\n");
 	_stop=true;
-	if (_interrupted || _id != 0x0D) {
-//		_ply->stop();
-	}
 }
 
 bool Cutscene::load(uint16_t cutName) {
@@ -1378,8 +1370,8 @@ bool Cutscene::load(uint16_t cutName) {
 	unsigned int s = _stub->getTimeStamp();
 	slTVOff();
 	slSynch();
-	//audioEnabled = 0;
-	const char *name = _namesTableDOS[cutName & 0xFF];
+	cutName &= 0xFF;
+	const char *name = _namesTableDOS[cutName];
 	if(cutName!=12 && cutName!=31 && cutName!=2)
 	{
 		_res->MAC_loadCutscene(name);
@@ -1395,32 +1387,16 @@ bool Cutscene::load(uint16_t cutName) {
 	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
 /*		break;
 	}*/
-//	_res->MAC_loadCutsceneText(); // vbt déplacé
-//	_res->load_CINE();
 //	e = _stub->getTimeStamp();
-//	emu_printf("--duration load_CINE : %d\n",e-s);	
 	bool loaded = (_res->_cmd && _res->_pol);
 ////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
 
 	if(!loaded)
 		unload();
-/*
-	emu_printf("stop all\n");
-	for (unsigned int i = 0;i < 4; i++)
-	{
-		pcm_sample_stop(i);
-	}
-*/	
-//	e = _stub->getTimeStamp();
-//	emu_printf("--duration unload : %d\n",e-s);
 	return loaded;
 }
 
 void Cutscene::unload() {
-
-//	return;
-//	position_vram = 0;
-//	position_vram_aft_monster = 0;
 /*	switch (_res->_type) {
 	case kResourceTypeDOS:
 		_res->unload(Resource::OT_CMD);
@@ -1448,7 +1424,6 @@ void Cutscene::unload() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
-//		_id = 0xFFFF; // vbt : ajout
 	}
 	slTVOn();
 }
@@ -1507,10 +1482,10 @@ void Cutscene::playCredits() {
 	_creditsKeepText = false;
 	_creditsTextCounter = 0;
 	_interrupted = false;
-	const uint16_t *cut_seq = _creditsCutSeq;
+	const uint8_t *cut_seq = _creditsCutSeq;
 	while (!_stub->_pi.quit && !_interrupted) {
-		uint16_t cut_id = *cut_seq++;
-		if (cut_id == 0xFFFF) {
+		const uint8_t cut_id = *cut_seq++;
+		if (cut_id == 0xFF) {
 			break;
 		}
 		prepare();
@@ -1708,7 +1683,6 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		}
 
 		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
-
 		for (int j = 0; j < count; ++j) {
 			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
 			const int shapeX = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
