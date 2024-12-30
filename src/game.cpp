@@ -213,7 +213,9 @@ _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.load_TEXT();
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
+//				SAT_preloadIcon();
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
+//				SAT_preloadPerso();
 // vbt : refaire le chargement des sons
 		_res.MAC_loadSounds(); // vbt déplacé
 		_res.MAC_loadCutsceneText(); // vbt déplacé
@@ -493,7 +495,6 @@ void Game::resetGameState() {
 }
 
 void Game::mainLoop() {
-//emu_printf("mainLoop\n");			
 	playCutscene();
 	if (_cut._id == 0x3D) {
 		showFinalScore();
@@ -560,7 +561,6 @@ heapWalk();
 		}*/
 		changeLevel();
 		_pge_opGunVar = 0;
-emu_printf("vbt playmusic chg lvl\n");
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
 	}
@@ -605,7 +605,7 @@ emu_printf("vbt playmusic chg lvl\n");
 	}
 //slPrint("updateScreen1",slLocate(3,13));	
 	_vid.updateScreen();
-	updateTiming();
+//	updateTiming();
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
@@ -645,7 +645,7 @@ emu_printf("vbt playmusic chg lvl\n");
 //emu_printf("slsynch Game::mainLoop() 2\n");			
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
-
+/*
 void Game::updateTiming() {
 	static const int frameHz = 30;
 	int32_t delay = _stub->getTimeStamp() - _frameTimestamp;
@@ -656,7 +656,7 @@ void Game::updateTiming() {
 	}
 	_frameTimestamp = _stub->getTimeStamp();
 }
-
+*/
 void Game::playCutscene(int id) {
 //if(id>0)
 //emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram);
@@ -1506,10 +1506,10 @@ void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 				case kResourceTypeMac:
 					drawPiege(state);
 					break;
-				}
-			} else {
-				drawPiege(state);*/
-			}
+				}*/
+			}/* else {
+				drawPiege(state);
+			}*/
 			drawPiege(state);
 			--state;
 		} while (--numAnims != 0);
@@ -2624,11 +2624,21 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 #ifdef DEBUG			
 			buf.x = 200 - sprData->x;
 			buf.y = 240 - sprData->y;
+int min_val=256;
+int max_val=0;
 
+for (int i=0;i<dataSize;i++)
+{
+//buf.ptr, dataSize	
+if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
+	min_val=buf.ptr[i];
+if (buf.ptr[i]>max_val)
+	max_val=buf.ptr[i];
+}
 			char debug_info[60];
-			sprintf(debug_info,"%03d/%03d 0x%08x %d %d",j,count-1, sprData->cgaddr, buf.w,buf.h);
+			sprintf(debug_info,"%03d/%03d 0x%08x %d %d ",j,count-1, sprData->cgaddr, buf.w,buf.h);
 			_vid.drawString(debug_info, 4, 60, 0xE7);
-
+emu_printf("%03d mn %d mx %d diff %d\n",j, min_val,max_val,max_val-min_val);
 			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 			int oldcgaddr = sprData->cgaddr;
@@ -2647,7 +2657,50 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 		}
 	}
 }
+/*
+void Game::SAT_preloadIcon()
+{
+		Color clut[512];
+		_res.MAC_setupRoomClut(_currentLevel, _currentRoom, clut);		
 
+		const int baseColor = 256;
+		for (int i = 0; i < 256; ++i) {
+			int color = baseColor + i;
+			_stub->setPaletteEntry(color, &clut[color]);
+		}
+					
+	for (int i = 0; i <= 34;i++)
+	{
+//		int frame = _res.MAC_getPersoFrame(i);
+		
+//		if(frame>=0)
+			_vid.MAC_drawSprite(60, 60, _res._icn, i, 0, 0);
+		slSynch();
+	}
+}
+
+void Game::SAT_preloadPerso()
+{
+		Color clut[512];
+		_res.MAC_setupRoomClut(_currentLevel, _currentRoom, clut);		
+
+		const int baseColor = 256;
+		for (int i = 0; i < 256; ++i) {
+			int color = baseColor + i;
+			_stub->setPaletteEntry(color, &clut[color]);
+		}
+					
+	for (int i = 0; i <= 0x506;i++)
+	{
+		int frame = _res.MAC_getPersoFrame(i);
+		
+		if(frame>=0)
+			_vid.MAC_drawSprite(60, 60, _res._perso, frame, 0, 0);
+		slSynch();
+	}
+//	while(1);
+}
+*/
 void Game::SAT_preloadMonsters() {
 	_curMonsterNum = 0xFFFF;
 
@@ -2676,22 +2729,23 @@ void Game::SAT_preloadMonsters() {
 
 //			sat_free(_res._monster);
 //			_res._monster = 0;
+
+#ifdef DEBUG					
+			Color palette[512];
+			// on l'appelle juste pour la palette				
+			_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+			static const int kMonsterPalette = 5;
+			for (int j = 0; j < 16; ++j) {
+				const int color = 256 + kMonsterPalette * 16 + j;
+				_stub->setPaletteEntry(color, &palette[color]);
+			}
+#endif
 			for (int i = 0; data[i].id; ++i) {
 				if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) {
 	unsigned int st = _stub->getTimeStamp();
 					_res._monster = _res.decodeResourceMacData(data[i].name, true);
 	unsigned int se = _stub->getTimeStamp();
 	emu_printf("--lzss %d ennemies : %d\n",i,se-st);	
-#ifdef DEBUG					
-					Color palette[512];
-					// on l'appelle juste pour la palette				
-					_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
-					static const int kMonsterPalette = 5;
-					for (int j = 0; j < 16; ++j) {
-						const int color = 256 + kMonsterPalette * 16 + j;
-						_stub->setPaletteEntry(color, &palette[color]);
-					}
-#endif
 				
 					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen, _vid.MAC_setPixel4Bpp);
 
@@ -2721,7 +2775,7 @@ void Game::SAT_preloadSpc() {
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
 //#endif
-	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);
+	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);//_vid.MAC_setPixel);
 
 //#ifdef DEBUG
 	unsigned int e = _stub->getTimeStamp();

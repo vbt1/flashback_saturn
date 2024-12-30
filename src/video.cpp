@@ -508,12 +508,12 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
-	_stub->initTimeStamp();
+/*	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();	
-	_res->MAC_loadLevelRoom(level, room, &buf);
-	unsigned int e = _stub->getTimeStamp();
+*/	_res->MAC_loadLevelRoom(level, room, &buf);
+/*	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration background : %d\n",e-s);
-
+*/
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 
@@ -638,7 +638,7 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 		_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 	}
 }
-
+//int vbt_size=0;
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip) {
     DecodeBuffer buf{};
     buf.xflip = xflip;
@@ -686,14 +686,12 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 				buf.setPixel = MAC_setPixel4Bpp;
 				dataSize >>= 1;
 			}
-			else
+			else // icons _icn
 			{
 				buf.setPixel = MAC_setPixel;
 			}
 
-			dataSize = SAT_ALIGN(dataSize);
-
-
+			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
 			fixOffsetDecodeBuffer(&buf, dataPtr);
             memset(buf.ptr, 0x00, dataSize);
 
@@ -703,7 +701,8 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
             // Copy to VRAM
             spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)buf.ptr, buf, dataSize);
-
+//			vbt_size+=dataSize;
+//			emu_printf("frame %d cgaddr=%06x %d h %d h not rounded %d\n",frame, spriteData.cgaddr,buf.h, READ_BE_UINT16(dataPtr), buf.h-READ_BE_UINT16(dataPtr));
             // Display sprite
             SAT_displaySprite(spriteData, buf, data);
         }
@@ -748,7 +747,11 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     } else if (data == _res->_perso) {
         user_sprite.COLR = 64;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    } 
+    }
+/*	else if (data == _res->_spc) {
+        user_sprite.COLR = 16;
+        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+    }*/ 	
 /*	else if (spr.id>=530 && spr.id <=610)
 	{
         user_sprite.COLR = 0*16;

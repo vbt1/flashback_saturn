@@ -60,9 +60,9 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 
-	_scratchBuffer = (uint8_t *)current_lwram;
-	current_lwram += kScratchBufferSize;
-//	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
+//	_scratchBuffer = (uint8_t *)current_lwram;
+//	current_lwram += kScratchBufferSize;
+	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 	
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 /*	static const int kBankDataSize = 0x7000;

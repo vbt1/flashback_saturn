@@ -1366,9 +1366,9 @@ bool Cutscene::load(uint16_t cutName) {
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
-	_stub->initTimeStamp();
+/*	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
-	slTVOff();
+*/	slTVOff();
 	slSynch();
 	cutName &= 0xFF;
 	const char *name = _namesTableDOS[cutName];
@@ -1383,8 +1383,9 @@ bool Cutscene::load(uint16_t cutName) {
 		_res->MAC_reopenMainFile();
 	}
 	slTVOn();	
-	unsigned int e = _stub->getTimeStamp();
+/*	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
+*/
 /*		break;
 	}*/
 //	e = _stub->getTimeStamp();

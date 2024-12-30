@@ -400,6 +400,8 @@ struct Game {
 	void SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer* buf, int x, int y, uint8_t color));
 	void SAT_preloadMonsters();
 	void SAT_preloadSpc();
+	void SAT_preloadPerso();
+	void SAT_preloadIcon();
 };
 
 #endif // GAME_H__

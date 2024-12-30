@@ -337,8 +337,8 @@ struct Resource {
 			const int count = data[i + 1] + 1 - data[i];
 			offset += count;
 		}
-		assert(0);
-		return 0;
+//		assert(0);
+		return -1;
 	}
 	int MAC_getMonsterFrame(int anim) const {
 		static const int16_t data[] = {
@@ -353,8 +353,8 @@ struct Resource {
 				return anim - data[i];
 			}
 		}
-		assert(0);
-		return 0;
+//		assert(0);
+		return -1;
 	}
 };
 

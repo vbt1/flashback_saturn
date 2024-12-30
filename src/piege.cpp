@@ -166,10 +166,8 @@ void Game::pge_process(LivePGE *pge) {
 				anim_data = _res.getAniData(pge->obj_type);
 				uint8_t snd = anim_data[2];
 				if (snd) {
-//emu_printf("pge_playAnimSound\n");					
 					pge_playAnimSound(pge, snd);
 				}
-//emu_printf("pge_setupOtherPieges\n");				
 				pge_setupOtherPieges(pge, init_pge);
 				break;
 			}
