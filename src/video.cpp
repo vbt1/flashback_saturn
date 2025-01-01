@@ -748,10 +748,13 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
         user_sprite.COLR = 64;
         user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
     }
-/*	else if (data == _res->_spc) {
-        user_sprite.COLR = 16;
-        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    }*/ 	
+	else if (data == _res->_spc && spr.color!=0) {
+			user_sprite.COLR = spr.color;
+			user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+
+//        user_sprite.COLR = 17;
+//        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+    }
 /*	else if (spr.id>=530 && spr.id <=610)
 	{
         user_sprite.COLR = 0*16;

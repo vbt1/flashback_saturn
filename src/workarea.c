@@ -16,7 +16,7 @@
 #define		MAX_EVENTS		 1	/* number of events that can be used   */
 #define		MAX_WORKS		 1	/* number of works that can be used    */
 
-#define		WORK_AREA		0x060FB000			/* SGL Work Area           */
+#define		WORK_AREA		0x060FC000			/* SGL Work Area           */
 
 #define		trans_list		0x060fc800			/* DMA Transfer Table      */
 #define		pcmbuf			SoundRAM+0x78000	/* PCM Stream Address      */

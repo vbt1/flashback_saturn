@@ -2,7 +2,7 @@
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1524,7 +1524,8 @@ void Game::drawPiege(AnimBufferState *state) {
 //		break;
 	case kResourceTypeMac:*/
 		if (pge->flags & 8) {
-//emu_printf("MAC_drawSprite1\n");			
+if(pge->anim_number <100)
+	emu_printf("MAC_drawSprite _spc %d\n", pge->anim_number);
 			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, 0, (pge->flags & 2) != 0);
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
@@ -2603,7 +2604,8 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //			buf.h = (sprData->size >> 8) * 8;
 
 			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / ((buf.type==1) ? 2 : 1));
-			if ((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352) {
+			/*
+			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
 				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
 				sprData->cgaddr = (int)tx.CGadr;
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
@@ -2620,25 +2622,63 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				sprData->cgaddr = (int)current_lwram;
 				current_lwram += dataSize;
 #endif
-			}
+			}*/
 #ifdef DEBUG			
 			buf.x = 200 - sprData->x;
 			buf.y = 240 - sprData->y;
 int min_val=256;
 int max_val=0;
 
-for (int i=0;i<dataSize;i++)
-{
-//buf.ptr, dataSize	
-if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
-	min_val=buf.ptr[i];
-if (buf.ptr[i]>max_val)
-	max_val=buf.ptr[i];
-}
+	if(spriteData== _res._spc)
+	{
+		for (int i=0;i<(buf.w * buf.h);i++)
+		{
+		//buf.ptr, dataSize	
+			if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
+				min_val=buf.ptr[i];
+			if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
+				max_val=buf.ptr[i];
+		}
+
+		if((max_val-(min_val>>4)*16)<16)	
+		{
+			for (int j=0;j<(buf.w * buf.h);j+=2)
+			{
+				uint8_t	value1=(buf.ptr[j + 1]);
+				uint8_t	value2 = ((buf.ptr[j])) ;
+				buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
+			}
+			dataSize = SAT_ALIGN((buf.w * buf.h) /2);
+			sprData->color = (min_val>>4)*16;
+		}
+	}
+
+			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
+				TEXTURE tx = TEXDEF(buf.w, buf.h, position_vram);
+				sprData->cgaddr = (int)tx.CGadr;
+				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
+//				DMA_ScuMemCopy((void*)(SpriteVRAM + (sprData->cgaddr << 3)), (void*)buf.ptr, dataSize);
+				position_vram += (dataSize*4)>>2;
+				position_vram_aft_monster = position_vram;
+			}
+			else {
+#if 1
+				DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
+				sprData->cgaddr = (int)current_dram2;
+				current_dram2 += SAT_ALIGN(dataSize);
+#else
+				DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
+				sprData->cgaddr = (int)current_lwram;
+				current_lwram += SAT_ALIGN(dataSize);
+#endif
+			}
+
+
 			char debug_info[60];
 			sprintf(debug_info,"%03d/%03d 0x%08x %d %d ",j,count-1, sprData->cgaddr, buf.w,buf.h);
 			_vid.drawString(debug_info, 4, 60, 0xE7);
-emu_printf("%03d mn %d mx %d diff %d\n",j, min_val,max_val,max_val-min_val);
+//			if(max_val-min_val>=0 && max_val-min_val<=16)
+//emu_printf("%03d mn %d mx %d diff %d\n",j, min_val,max_val,max_val-min_val);
 			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 			int oldcgaddr = sprData->cgaddr;

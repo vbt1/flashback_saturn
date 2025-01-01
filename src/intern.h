@@ -95,6 +95,7 @@ struct SAT_sprite {
 	int16_t x_flip;
 	int16_t x;
 	int16_t y;
+	uint8_t color;
 };
 
 struct InitPGE {
