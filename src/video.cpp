@@ -663,6 +663,10 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
         // Copy sprite to VRAM if necessary
         if (spriteData.cgaddr > 0x10000) {
             size_t dataSize = SAT_ALIGN(buf.w * buf.h);
+			if(spriteData.color!=-1)
+			{
+				dataSize>>=1;
+			}
             spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)spriteData.cgaddr, buf, dataSize);
         }
 
