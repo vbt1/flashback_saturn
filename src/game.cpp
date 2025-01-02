@@ -2,7 +2,8 @@
 #define VRAM_MAX 0x65000
 #define PCM_VOICE 18
 //#define VIDEO_PLAYER 1
-#define DEBUG 1
+//#define DEBUG 1
+#define REDUCE_4BPP 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1524,8 +1525,6 @@ void Game::drawPiege(AnimBufferState *state) {
 //		break;
 	case kResourceTypeMac:*/
 		if (pge->flags & 8) {
-if(pge->anim_number <100)
-	emu_printf("MAC_drawSprite _spc %d\n", pge->anim_number);
 			_vid.MAC_drawSprite(state->x, state->y, _res._spc, pge->anim_number, 0, (pge->flags & 2) != 0);
 		} else if (pge->index == 0) {
 			if (pge->anim_number == 0x386) {
@@ -2596,7 +2595,8 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
 
 			sprData->size = (buf.h / 8) << 8 | buf.w;
-			sprData->x_flip = (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
+			sprData->x_flip = (uint8_t)-(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
+			
 			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
 
@@ -2604,60 +2604,44 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //			buf.h = (sprData->size >> 8) * 8;
 
 			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / ((buf.type==1) ? 2 : 1));
-			/*
-			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
-				TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
-				sprData->cgaddr = (int)tx.CGadr;
-				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
-				position_vram += dataSize;
-				position_vram_aft_monster = position_vram;
-			}
-			else {
-#if 1
-				DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
-				sprData->cgaddr = (int)current_dram2;
-				current_dram2 += dataSize;
-#else
-				DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
-				sprData->cgaddr = (int)current_lwram;
-				current_lwram += dataSize;
-#endif
-			}*/
-#ifdef DEBUG			
-			buf.x = 200 - sprData->x;
-			buf.y = 240 - sprData->y;
-int min_val=256;
-int max_val=0;
 
-	if(spriteData== _res._spc)
-	{
-		for (int i=0;i<(buf.w * buf.h);i++)
-		{
-		//buf.ptr, dataSize	
-			if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
-				min_val=buf.ptr[i];
-			if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
-				max_val=buf.ptr[i];
-		}
+			if (spriteData == _res._monster)
+				sprData->color = 80;
+			else
+				sprData->color = -1;
+//------------------------------------
+#ifdef REDUCE_4BPP
+			int min_val=256;
+			int max_val=0;
 
-		if((max_val-(min_val>>4)*16)<16)	
-		{
-			for (int j=0;j<(buf.w * buf.h);j+=2)
+			if(spriteData== _res._spc)
 			{
-				uint8_t	value1=(buf.ptr[j + 1]);
-				uint8_t	value2 = ((buf.ptr[j])) ;
-				buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
-			}
-			dataSize = SAT_ALIGN((buf.w * buf.h) /2);
-			sprData->color = (min_val>>4)*16;
-		}
-	}
+				for (int i=0;i<(buf.w * buf.h);i++)
+				{
+					if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
+						min_val=buf.ptr[i];
+					if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
+						max_val=buf.ptr[i];
+				}
 
+				if((max_val-(min_val>>4)*16)<16)
+				{
+					for (int j=0;j<(buf.w * buf.h);j+=2)
+					{
+						uint8_t	value1=(buf.ptr[j + 1]);
+						uint8_t	value2 = ((buf.ptr[j])) ;
+						buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
+					}
+					dataSize = SAT_ALIGN((buf.w * buf.h) /2);
+					sprData->color = (min_val>>4)*16;
+				}
+			}
+#endif
+//------------------------------------
 			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
 				TEXTURE tx = TEXDEF(buf.w, buf.h, position_vram);
 				sprData->cgaddr = (int)tx.CGadr;
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
-//				DMA_ScuMemCopy((void*)(SpriteVRAM + (sprData->cgaddr << 3)), (void*)buf.ptr, dataSize);
 				position_vram += (dataSize*4)>>2;
 				position_vram_aft_monster = position_vram;
 			}
@@ -2672,8 +2656,9 @@ int max_val=0;
 				current_lwram += SAT_ALIGN(dataSize);
 #endif
 			}
-
-
+#ifdef DEBUG
+			buf.x = 200 - sprData->x;
+			buf.y = 240 - sprData->y;
 			char debug_info[60];
 			sprintf(debug_info,"%03d/%03d 0x%08x %d %d ",j,count-1, sprData->cgaddr, buf.w,buf.h);
 			_vid.drawString(debug_info, 4, 60, 0xE7);
@@ -2683,7 +2668,7 @@ int max_val=0;
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 			int oldcgaddr = sprData->cgaddr;
 
-			if (!((position_vram + dataSize) <= VRAM_MAX || /*buf.h==128 ||*/ buf.h==352))
+			if (!((position_vram + dataSize) <= VRAM_MAX || buf.h==352))
 			{
 				DMA_ScuMemCopy((void*)SpriteVRAM+0x75000,(void*)sprData->cgaddr,dataSize);
 				sprData->cgaddr = (int)(0x75000/8);

@@ -650,7 +650,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
     // Handle sprite data for monster or spc (special sprite)
     if (data == _res->_monster || data == _res->_spc) {
-        buf.x += (buf.xflip ? spriteData.x_flip : -spriteData.x);
+        buf.x += (buf.xflip ? -spriteData.x_flip : -spriteData.x);
 
         if (buf.x >= 512) return;
 
@@ -685,10 +685,12 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 				buf.type = 1;
 				buf.setPixel = MAC_setPixel4Bpp;
 				dataSize >>= 1;
+				spriteData.color = 64;
 			}
 			else // icons _icn
 			{
 				buf.setPixel = MAC_setPixel;
+				spriteData.color = -1;
 			}
 
 			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
@@ -741,32 +743,15 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     SPRITE user_sprite{};
     user_sprite.CTRL = buf.xflip ? (1 << 4) : 0;
 
-    if (data == _res->_monster) {
-        user_sprite.COLR = 80;
-        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    } else if (data == _res->_perso) {
-        user_sprite.COLR = 64;
-        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    }
-	else if (data == _res->_spc && spr.color!=0) {
-			user_sprite.COLR = spr.color;
-			user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-
-//        user_sprite.COLR = 17;
-//        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-    }
-/*	else if (spr.id>=530 && spr.id <=610)
+	if (spr.color!=-1)
 	{
-        user_sprite.COLR = 0*16;
-        user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;		
-	}*/
+		user_sprite.COLR = spr.color;
+		user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
+	}
 	else {
         user_sprite.COLR = 0;
         user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
     }
-
-    // emu_printf("spr.cgaddr %p\n", spr.cgaddr);
-
     user_sprite.SIZE = spr.size;
     user_sprite.XA = 63 + (buf.x - 320);
     user_sprite.YA = buf.y - 224;
@@ -775,7 +760,6 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     user_sprite.SRCA = spr.cgaddr;
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
-
 
 void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
 {
