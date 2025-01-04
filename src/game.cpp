@@ -429,7 +429,6 @@ void Game::displayTitleScreenMac(int num) {
 //	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
 //	_stub->updateScreen(0);
-
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
 			static const uint8_t selectedColor = 0xE4;
@@ -641,9 +640,7 @@ heapWalk();
 			_saveTimestamp = _stub->getTimeStamp();
 		}
 	}*/
-//emu_printf("Game::mainLoop slSynch\n");
 //	_vid.SAT_displayPalette();
-//emu_printf("slsynch Game::mainLoop() 2\n");			
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*
@@ -857,10 +854,10 @@ bool Game::handleConfigPanel() {
 	_vid._charTransparentColor = 0xFF;
 
 	// the panel background is drawn using special characters from FB_TXT.FNT
-	static const bool kUseDefaultFont = true;
+//	static const bool kUseDefaultFont = true;
 
-	switch (_res._type) {
-/*	case kResourceTypeAmiga:
+/*	switch (_res._type) {
+	case kResourceTypeAmiga:
 		for (int i = 0; i < h; ++i) {
 			for (int j = 0; j < w; ++j) {
 				_vid.fillRect(Video::CHAR_W * (x + j), Video::CHAR_H * (y + i), Video::CHAR_W, Video::CHAR_H, 0xE2);
@@ -893,8 +890,8 @@ bool Game::handleConfigPanel() {
 				_vid.DOS_drawChar(0x20, y + j, x + i, kUseDefaultFont);
 			}
 		}
-		break;*/
-	case kResourceTypeMac:
+		break;
+	case kResourceTypeMac:*/
 		// top-left rounded corner
 		_vid.MAC_drawStringChar(_vid._frontLayer, _vid._w, Video::CHAR_W * x,       Video::CHAR_H * y,       _res._fnt, _vid._charFrontColor, 0x81);
 		// top-right rounded corner
@@ -916,8 +913,8 @@ bool Game::handleConfigPanel() {
 				_vid.fillRect(Video::CHAR_W * (x + j), Video::CHAR_H * (y + i), Video::CHAR_W, Video::CHAR_H, 0xE2);
 			}
 		}
-		break;
-	}
+/*		break;
+	}*/
 	_stub->_pi.quit = false;
 
 	_menu._charVar3 = 0xE4;
@@ -1031,7 +1028,7 @@ bool Game::handleContinueAbort() {
 //emu_printf("slsynch Game::handleContinueAbort()\n");
 //		slSynch();
 
-		if (_res.isMac()) {
+//		if (_res.isMac()) {
 
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
@@ -1047,7 +1044,7 @@ bool Game::handleContinueAbort() {
 					++current_color;
 				}
 			}
-		}
+/*		}
 		else
 		{
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -1065,6 +1062,7 @@ bool Game::handleContinueAbort() {
 				}
 			}
 		}
+*/
 		if (_stub->_pi.enter) {
 			_vid._layerScale=2;
 			_stub->_pi.enter = false;
@@ -2676,7 +2674,6 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 
 			_vid.SAT_displaySprite(*sprData, buf,spriteData);
 			sprData->cgaddr=oldcgaddr;
-			
 			slSynch();
 #endif
 		}

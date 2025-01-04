@@ -328,7 +328,6 @@ void SystemStub_SDL::processEvents() {
 				_pi.enter = false;
 			else if (PAD_PUSH_START)
 				_pi.enter = true;
-
 			if (PAD_PULL_B)
 				_pi.space = false;
 			else if (PAD_PUSH_B)
@@ -358,12 +357,10 @@ void SystemStub_SDL::processEvents() {
 
 			if (PAD_PUSH_Z)
 				_pi.escape = true;
-
 			break;
 		default:
 			break;
 	}
-
 	return;
 }
 

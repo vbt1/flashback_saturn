@@ -389,7 +389,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 
 	if(start_sector == 3303)
 		GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
-/*	if(GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET) < 0)
+	/*if(GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET) < 0)
 	{
 		return 0;
 	}*/

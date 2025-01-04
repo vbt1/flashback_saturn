@@ -746,16 +746,8 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     // emu_printf("SAT_displaySprite\n");
     SPRITE user_sprite{};
     user_sprite.CTRL = buf.xflip ? (1 << 4) : 0;
-
-	if (spr.color!=-1)
-	{
-		user_sprite.COLR = spr.color;
-		user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
-	}
-	else {
-        user_sprite.COLR = 0;
-        user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
-    }
+    user_sprite.COLR = (spr.color != -1) ? spr.color : 0;
+    user_sprite.PMOD = (spr.color != -1) ? (CL16Bnk | ECdis | 0x0800) : (CL256Bnk | ECdis | 0x0800);
     user_sprite.SIZE = spr.size;
     user_sprite.XA = 63 + (buf.x - 320);
     user_sprite.YA = buf.y - 224;
