@@ -647,7 +647,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
     const int index = (data == _res->_spc) ? _res->NUM_SPRITES + frame : anim_number;
     SAT_sprite &spriteData = _res->_sprData[index];
-
+// voir comment ne pas utiliser _sprData sur _res->_spc!
     // Handle sprite data for monster or spc (special sprite)
     if (data == _res->_monster || data == _res->_spc) {
         buf.x += (buf.xflip ? -spriteData.x_flip : -spriteData.x);
@@ -710,11 +710,13 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
             spriteData.size = (buf.h / 8) << 8 | buf.w;
 
             // Copy to VRAM
+//            int cgaddr = SAT_copySpriteToVram((uint8_t *)buf.ptr, buf, dataSize);
             spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)buf.ptr, buf, dataSize);
 //			vbt_size+=dataSize;
 //			emu_printf("frame %d cgaddr=%06x %d h %d h not rounded %d\n",frame, spriteData.cgaddr,buf.h, READ_BE_UINT16(dataPtr), buf.h-READ_BE_UINT16(dataPtr));
             // Display sprite
             SAT_displaySprite(spriteData, buf, data);
+//			SAT_displaySprite((uint8_t *)(cgaddr*8), buf.x-320, buf.y-224, buf.w, buf.h);
         }
     }
 }

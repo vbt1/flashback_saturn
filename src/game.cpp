@@ -1171,7 +1171,7 @@ void Game::drawStoryTexts() {
 			memset(_vid._frontLayer, 0x00, 512*224);
 //			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
 			yPos = 26;
-			if (_res._type == kResourceTypeMac) {
+//			if (_res._type == kResourceTypeMac) {
 				if (textSegmentsCount == 0) {
 					textSegmentsCount = *str++;
 				}
@@ -1204,7 +1204,7 @@ void Game::drawStoryTexts() {
 					str = next + 1;
 					len -= lineLength + 1;
 				}
-			}/* else {
+/*			} else {
 				if (*str == 0xFF) {
 					if (_res._lang == LANG_JP) {
 						switch (str[1]) {
@@ -1298,16 +1298,16 @@ _vid.drawString(toto, 1, 88, 0xE7);
 			}
 			_stub->_pi.quit = false;
 			_stub->_pi.backspace = false;
-			if (_res._type == kResourceTypeMac) {
+//			if (_res._type == kResourceTypeMac) {
 				if (textSpeechSegment >= textSegmentsCount) {
 					break;
 				}
-			} else {
+/*			} else {
 				if (*str == 0) {
 					break;
 				}
 				++str;
-			}
+			}*/
 		}
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
@@ -1322,12 +1322,12 @@ _vid.drawString(toto, 1, 88, 0xE7);
 void Game::drawString(const uint8_t *p, int x, int y, uint8_t color, bool hcenter) {
 	const char *str = (const char *)p;
 	int len = 0;
-	if (_res._type == kResourceTypeMac) {
+//	if (_res._type == kResourceTypeMac) {
 		len = *p;
 		++str;
-	} else {
+/*	} else {
 		len = strlen(str);
-	}
+	}*/
 	if (hcenter) {
 		x = (x - len * Video::CHAR_W) / 2;
 	}
@@ -1825,15 +1825,15 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 
 bool Game::hasLevelRoom(int level, int room) const {
 //	emu_printf("Game::hasLevelMap() level %d room%d\n", level, room);
-	if (_res._type == kResourceTypeMac) {
+//	if (_res._type == kResourceTypeMac) {
 		return _res.MAC_hasLevelMap(level, room);
-	}
+/*	}
 	if (_res._map) {
 		return READ_LE_UINT32(_res._map + room * 6) != 0;
 	} else if (_res._lev) {
 		return READ_BE_UINT32(_res._lev + room * 4) > 0x100;
 	}
-	return false;
+	return false;*/
 }
 /*
 static bool isMetro(int level, int room) {
@@ -2639,20 +2639,20 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //------------------------------------
 			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
 				TEXTURE tx = TEXDEF(buf.w, buf.h, position_vram);
-				sprData->cgaddr = (int)tx.CGadr;
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
+				sprData->cgaddr = (int)tx.CGadr;
 				position_vram += (dataSize*4)>>2;
 				position_vram_aft_monster = position_vram;
 			}
 			else {
 #if 1
-					if((int)current_lwram < 0x2D8000)
+					/*if((int)current_lwram < 0x2D8000)
 					{
 						DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
 						sprData->cgaddr = (int)current_lwram;
 						current_lwram += SAT_ALIGN(dataSize);
 					}
-					else
+					else*/
 					{
 						DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
 						sprData->cgaddr = (int)current_dram2;

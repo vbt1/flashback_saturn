@@ -1586,7 +1586,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-//	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
+	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
 	return data;
 }
 
@@ -1733,21 +1733,20 @@ emu_printf("MAC_loadLevelData %s\n", name);
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
 //emu_printf(" .ANI\n");	
-	// .ANI
-	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
-//emu_printf("MAC_loadLevelData %s\n", name);
-	_ani = decodeResourceMacData(name, true);
-	assert(READ_BE_UINT16(_ani) == 0x48D);
-//emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	decodeOBJ(ptr, _resourceMacDataSize);
-//	char toto[50];
-//	sprintf(toto,"***%p****",ptr);
-	//slPrint(toto,slLocate(3,20));
+
+	// .ANI
+	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
+//emu_printf("MAC_loadLevelData %s\n", name);
+	_ani = decodeResourceMacData(name, true);
+	assert(READ_BE_UINT16(_ani) == 0x48D);
+//emu_printf(" .OBJ\n");
+
 //emu_printf("decodeOBJ3 free %p\n",ptr);		
 	sat_free(ptr);
 //emu_printf(" .CT\n");

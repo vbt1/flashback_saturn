@@ -135,6 +135,7 @@ struct Resource {
 	uint8_t *_tbn;
 	int8_t _ctData[256 + 112 * 64];
 //	uint8_t *_spr1;
+// vbt : utiliser un pointeur !!!!
 	SAT_sprite _sprData[NUM_SPRITES+NUM_SPC]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 //	SAT_sprite _sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 	
@@ -246,8 +247,8 @@ struct Resource {
 			const int count = READ_BE_UINT16(_tbn);
 			assert(num < count);
 			const int offset = READ_BE_UINT16(_tbn + 2 + num * 2);
-/*			return _tbn + offset;
-		}
+			return _tbn + offset;
+/*		}
 		return _tbn + _readUint16(_tbn + num * 2);*/
 	}
 	const uint8_t *getGameString(int num) const {
