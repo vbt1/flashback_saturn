@@ -10,7 +10,6 @@ extern "C" {
 #include <sega_mem.h>
 #include "sat_mem_checker.h"
 extern Uint8 *hwram;
- Uint8 *save_lwram;
 }
 #include "saturn_print.h"
 
@@ -34,9 +33,7 @@ void *sat_malloc(size_t size) {
 //		}
 	}
 	emu_printf("MEM_MALLOC: size: %u - %p\n", size, mem);
-	save_lwram = (uint8_t*)((int)mem & 0x002FFFFF);
-
-	return (void*)save_lwram;
+	return (void*)((int)mem & 0x002FFFFF);
 }
 
 void sat_free(void *ptr) {
@@ -44,7 +41,7 @@ void sat_free(void *ptr) {
 	if(ptr == NULL || ptr == hwram)
 		return;
 
-	emu_printf("FREE to NULL: addr: %p\n", ptr);
+//	emu_printf("FREE to NULL: addr: %p\n", ptr);
 	ptr = NULL;
 
 	return;

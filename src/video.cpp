@@ -16,6 +16,7 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
+extern bool has4mb;
 void	*malloc(size_t);
 }
 #include "file.h"
@@ -33,29 +34,26 @@ void	*malloc(size_t);
 
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
-		
-
 
 	_layerScale = (_res->_type == kResourceTypeMac) ? 2 : 1; // Macintosh version is 512x448
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
-//	_layerSize = _w * _h;
+
+	if(has4mb)
+	{
+		_frontLayer = (uint8 *)0x22400000;
+	}
+	else
+	{
+		_frontLayer = (uint8_t *)sat_malloc(_w * _h);
+	}
 emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
-	Uint32 *DRAM0 = (Uint32 *)0x22400000;
-	_frontLayer = (uint8 *)DRAM0;
-//	_frontLayer = (uint8 *)current_lwram;
-	current_lwram+=_w * _h;
 
 	memset(&_frontLayer[0], 0, _w * _h);
-//	_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
-
-//	_txt1Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*70);//+ TEXT1_RAM_VDP2);
-//	_txt2Layer = (uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE -IMG_SIZE/2 - 480*140);	
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
 	
 	_fullRefresh = true;
-//	_shakeOffset = 0;
 	_charFrontColor = 0;
 	_charTransparentColor = 0;
 	_charShadowColor = 0;
@@ -649,7 +647,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
     SAT_sprite &spriteData = _res->_sprData[index];
 // voir comment ne pas utiliser _sprData sur _res->_spc!
     // Handle sprite data for monster or spc (special sprite)
-    if (data == _res->_monster || data == _res->_spc) {
+    if (data == _res->_monster || (data == _res->_spc && has4mb)) {
         buf.x += (buf.xflip ? -spriteData.x_flip : -spriteData.x);
 
         if (buf.x >= 512) return;

@@ -60,7 +60,6 @@ Uint8 *hwram_ptr = NULL;
 Uint8 *hwram_screen = NULL;
 Uint8 *soundAddr = NULL;
 Uint8 *current_lwram = (Uint8 *)VBT_L_START;
-//Uint8 *save_lwram = NULL;
 Uint32 position_vram = 0;
 Uint32 position_vram_aft_monster = 0;
 unsigned int end1 = 564000+34000;//-16384;//538624;

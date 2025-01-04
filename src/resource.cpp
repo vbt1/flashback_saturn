@@ -197,7 +197,7 @@ void Resource::load_DEM(const char *filename) {
 	File f;
 	if (f.open(filename, _dataPath, "rb")) {
 		_demLen = f.size();
-emu_printf("sat_malloc _bankData: %d %p\n", kBankDataSize, _bankData);		
+	
 		_dem = (uint8_t *)sat_malloc(_demLen);
 		if (_dem) {
 			f.read(_dem, _demLen);
@@ -223,7 +223,7 @@ void Resource::load_FIB(const char *fileName) {
 	if (f.open(_entryName, _dataPath, "rb")) {
 		_numSfx = f.readUint16LE();
 		_sfxList = (SoundFx *)std_malloc(_numSfx * sizeof(SoundFx));
-emu_printf("sat_malloc _sfxList: %d %p\n",_numSfx * sizeof(SoundFx),_sfxList);			
+			
 		if (!_sfxList) {
 			error("Unable to allocate SoundFx table");
 		}
@@ -1002,15 +1002,9 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	int iObj = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevOffset != offsets[i]) {
-//emu_printf("sat_malloc %d\n",sizeof(ObjectNode));			
-//#ifdef WITH_MEM_MALLOC
-#if 0
-			ObjectNode *on = (ObjectNode *)sat_malloc(sizeof(ObjectNode));
-#else
 //emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
-#endif			
 			if (!on) {
 				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
 			}
@@ -1586,7 +1580,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 	}
 //emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
-	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
+//	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
 	return data;
 }
 
@@ -1855,9 +1849,7 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
 }
 
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
-//if (ptr !=_perso && ptr!=_spc && ptr != _monster)
 //emu_printf("MAC_getImageData basePtr %p offset %02x %p %p\n",ptr,0,ptr + i * 4,current_lwram);
-	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); 
 	ptr += 2;

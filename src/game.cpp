@@ -40,6 +40,7 @@ extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 extern Uint8 *soundAddr;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
+bool has4mb = false;
 }
 extern void sat_restart_audio(void);
 
@@ -1901,8 +1902,8 @@ void Game::loadLevelData() {
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
 		SAT_preloadMonsters();
-//		if(0)
-		SAT_preloadSpc();
+		if(has4mb)
+			SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
 //	}
@@ -1962,7 +1963,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,((int)current_dram2)+(512*448)-0x22600000);
+emu_printf("hwram free %08d lwram used %08d segamem %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+(_vid._w*_vid._h),((int)current_dram2)-0x22600000);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
@@ -2610,6 +2611,8 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				sprData->color = -1;
 //------------------------------------
 #ifdef REDUCE_4BPP
+		if(!has4mb)
+		{
 			int min_val=256;
 			int max_val=0;
 
@@ -2635,6 +2638,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 					sprData->color = (min_val>>4);
 				}
 			}
+		}
 #endif
 //------------------------------------
 			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
@@ -2645,24 +2649,22 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				position_vram_aft_monster = position_vram;
 			}
 			else {
-#if 1
-					/*if((int)current_lwram < 0x2D8000)
-					{
-						DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
-						sprData->cgaddr = (int)current_lwram;
-						current_lwram += SAT_ALIGN(dataSize);
-					}
-					else*/
-					{
-						DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
-						sprData->cgaddr = (int)current_dram2;
-						current_dram2 += SAT_ALIGN(dataSize);
-					}
-#else
-				DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
-				sprData->cgaddr = (int)current_lwram;
-				current_lwram += SAT_ALIGN(dataSize);
-#endif
+				if(!has4mb)
+//						if((int)current_lwram < (int)_vid._frontLayer)
+				{
+					if((int)current_lwram+dataSize > (int)_vid._frontLayer)
+						emu_printf("ALERT : it doesn't fit!!!\n");
+					
+					DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
+					sprData->cgaddr = (int)current_lwram;
+					current_lwram += SAT_ALIGN(dataSize);
+				}
+				else
+				{
+					DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
+					sprData->cgaddr = (int)current_dram2;
+					current_dram2 += SAT_ALIGN(dataSize);
+				}
 			}
 #ifdef DEBUG
 			buf.x = 200 - sprData->x;
@@ -2737,10 +2739,10 @@ void Game::SAT_preloadMonsters() {
 	_curMonsterNum = 0xFFFF;
 
 	const uint8_t* mList = _monsterListLevels[_currentLevel];
-//#ifdef DEBUG
+#ifdef DEBUG
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
-//#endif
+#endif
 	while (*mList != 0xFF) {
 		_curMonsterFrame = mList[0];
 
@@ -2774,11 +2776,14 @@ void Game::SAT_preloadMonsters() {
 #endif
 			for (int i = 0; data[i].id; ++i) {
 				if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) {
+#ifdef DEBUG					
 	unsigned int st = _stub->getTimeStamp();
+#endif
 					_res._monster = _res.decodeResourceMacData(data[i].name, true);
+#ifdef DEBUG
 	unsigned int se = _stub->getTimeStamp();
 	emu_printf("--lzss %d ennemies : %d\n",i,se-st);	
-				
+#endif	
 					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen, _vid.MAC_setPixel4Bpp);
 
 					break; // Break out of the loop once the monster is found and processed.
@@ -2787,10 +2792,10 @@ void Game::SAT_preloadMonsters() {
 		}
 		mList += 2;
 	}
-//#ifdef DEBUG
+#ifdef DEBUG
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration ennemies : %d\n",e-s);
-//#endif
+#endif
 }
 
 void Game::SAT_preloadSpc() {
