@@ -3,7 +3,7 @@
 #define PCM_VOICE 18
 //#define VIDEO_PLAYER 1
 //#define DEBUG 1
-#define REDUCE_4BPP 1
+//#define REDUCE_4BPP 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1889,7 +1889,7 @@ void Game::loadLevelData() {
 		_res.MAC_unloadLevelData();
 //		sat_free(_res._icn);// icones du menu à ne pas vider
 
-		sat_free(_res._spr1);
+//		sat_free(_res._spr1);
 		sat_free(_res._cmd);
 		sat_free(_res._pol);
 		sat_free(_res._cine_off);
@@ -1901,6 +1901,7 @@ void Game::loadLevelData() {
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
 		SAT_preloadMonsters();
+//		if(0)
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
@@ -1990,9 +1991,9 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 }
 
 int channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
+#define NUM_SFXS 66
 void Game::playSound(uint8_t num, uint8_t softVol) {
-	if (num < _res._numSfx) {
+	if (num < NUM_SFXS) {
 		SoundFx *sfx = &_res._sfxList[num];
 		if (sfx->data) {
 //		emu_printf("play sound %02d/%d\n",num,_res._numSfx);
@@ -2604,7 +2605,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / ((buf.type==1) ? 2 : 1));
 
 			if (spriteData == _res._monster)
-				sprData->color = 80;
+				sprData->color = 5;//80;
 			else
 				sprData->color = -1;
 //------------------------------------
@@ -2631,7 +2632,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 						buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
 					}
 					dataSize = SAT_ALIGN((buf.w * buf.h) /2);
-					sprData->color = (min_val>>4)*16;
+					sprData->color = (min_val>>4);
 				}
 			}
 #endif
@@ -2645,9 +2646,18 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			}
 			else {
 #if 1
-				DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
-				sprData->cgaddr = (int)current_dram2;
-				current_dram2 += SAT_ALIGN(dataSize);
+					if((int)current_lwram < 0x2D8000)
+					{
+						DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
+						sprData->cgaddr = (int)current_lwram;
+						current_lwram += SAT_ALIGN(dataSize);
+					}
+					else
+					{
+						DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
+						sprData->cgaddr = (int)current_dram2;
+						current_dram2 += SAT_ALIGN(dataSize);
+					}
 #else
 				DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
 				sprData->cgaddr = (int)current_lwram;

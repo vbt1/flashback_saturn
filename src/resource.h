@@ -94,16 +94,16 @@ struct Resource {
 
 	enum {
 		NUM_SFXS = 66,
-		NUM_BANK_BUFFERS = 50,
-		NUM_CUTSCENE_TEXTS = 117,
+//		NUM_BANK_BUFFERS = 50,
+//		NUM_CUTSCENE_TEXTS = 117,
 		NUM_OBJECTS = 230,
 		NUM_SPRITES = 1287,
 		NUM_SPC = 1137
 	};
 
 	enum {
-		kPaulaFreq = 3546897,
-		kClutSize = 1024,
+//		kPaulaFreq = 3546897,
+		kClutSize = 912, //1024,
 		kScratchBufferSize = 0x19000 //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
@@ -125,17 +125,18 @@ struct Resource {
 	uint8_t *_fnt;
 	uint8_t *_mbk;
 	uint8_t *_icn;
-	int _icnLen;
+//	int _icnLen;
 //	uint8_t *_tab;
 	uint8_t *_spc;
-	uint16_t _numSpc;
+//	uint16_t _numSpc;
 //	uint8_t _rp[74];
 	uint8_t *_pal;
 	uint8_t *_ani;
 	uint8_t *_tbn;
 	int8_t _ctData[256 + 112 * 64];
-	uint8_t *_spr1;
+//	uint8_t *_spr1;
 	SAT_sprite _sprData[NUM_SPRITES+NUM_SPC]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+//	SAT_sprite _sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 	
 	
 	
@@ -152,10 +153,10 @@ struct Resource {
 	ObjectNode *_objectNodesMap[255];
 	uint8_t *_scratchBuffer;
 	SoundFx *_sfxList;
-	uint8_t _numSfx;
+//	uint8_t _numSfx;
 	uint8_t *_cmd;
 	uint8_t *_pol;
-	uint8_t *_cineStrings[NUM_CUTSCENE_TEXTS];
+//	uint8_t *_cineStrings[NUM_CUTSCENE_TEXTS];
 	uint8_t *_cine_off;
 	uint8_t *_cine_txt;
 //	uint8_t *_voiceBuf;
@@ -171,7 +172,7 @@ struct Resource {
 //	uint8_t *_dem;
 //	int _demLen;
 	uint32_t _resourceMacDataSize;
-	int _clutSize;
+//	int _clutSize;
 	Color _clut[kClutSize];
 	uint8_t *_perso;
 	uint8_t *_monster;
@@ -231,52 +232,52 @@ struct Resource {
 	void load_BNQ(File *pf);
 	void load_SPM(File *f);
 	const uint8_t *getAniData(int num) const {
-		if (_type == kResourceTypeMac) {
+//		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_ani);
 			assert(num < count);
 			const int offset = READ_BE_UINT16(_ani + 2 + num * 2);
 			return _ani + offset;
-		}
+/*		}
 		const int offset = _readUint16(_ani + 2 + num * 2);
-		return _ani + 2 + offset;
+		return _ani + 2 + offset;*/
 	}
 	const uint8_t *getTextString(int level, int num) const {
-		if (_type == kResourceTypeMac) {
+//		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_tbn);
 			assert(num < count);
 			const int offset = READ_BE_UINT16(_tbn + 2 + num * 2);
-			return _tbn + offset;
+/*			return _tbn + offset;
 		}
-		return _tbn + _readUint16(_tbn + num * 2);
+		return _tbn + _readUint16(_tbn + num * 2);*/
 	}
 	const uint8_t *getGameString(int num) const {
-		if (_type == kResourceTypeMac) {
+//		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_str);
 			if(num >= count)
 				return NULL;
 			const int offset = READ_BE_UINT16(_str + 2 + num * 2);
 			return _str + offset;
-		}
-		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);
+/*		}
+		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);*/
 	}
 	const uint8_t *getCineString(int num) const {
-		if (_type == kResourceTypeMac) {
+//		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_cine_txt);
 //emu_printf("getCineString num : %d count %d %p\n",num,count,_cine_txt);			
 			assert(num < count);
 			const int offset = READ_BE_UINT16(_cine_txt + 2 + num * 2);
 			return _cine_txt + offset;
-		}
-		/*if (_lang == LANG_JP) {
+/*		}
+		if (_lang == LANG_JP) {
 			const int offset = READ_BE_UINT16(LocaleData::_cineBinJP + num * 2);
 			return LocaleData::_cineTxtJP + offset;
-		}*/
+		}
 		if (_cine_off) {
 			const int offset = READ_BE_UINT16(_cine_off + num * 2);
 			return _cine_txt + offset;
 		}
 		return (num >= 0 && num < NUM_CUTSCENE_TEXTS) ? _cineStrings[num] : 0;
-	}
+*/	}
 	const char *getMenuString(int num) const {
 		return (num >= 0 && num < LocaleData::LI_NUM) ? _textsTable[num] : "";
 	}

@@ -183,7 +183,7 @@ current_lwram = (Uint8 *)VBT_L_START+kScratchBufferSize;
 		MAC_unloadLevelData();
 	//	sat_free(_res._icn);// icones du menu à ne pas vider
 
-		sat_free(_spr1);
+//		sat_free(_spr1);
 		sat_free(_cmd);
 		sat_free(_pol);
 		sat_free(_cine_off);
@@ -538,7 +538,7 @@ static const char *getTextBin(Language lang, ResourceType type) {
 */
 void Resource::unload(int objType) {
 	
-	emu_printf("Resource::unload(int objType)\n");
+//	emu_printf("Resource::unload(int objType)\n");
 	switch (objType) {
 	case OT_CMD:
 		sat_free(_cmd);
@@ -561,7 +561,7 @@ void Resource::unload(int objType) {
 }
 
 void Resource::load(const char *objName, int objType, const char *ext) {
-	emu_printf("Resource::load('%s', %d)\n", objName, objType);
+//	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
 	File f;
 		
@@ -1621,8 +1621,9 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 
 void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 	ptr += 6; // seed+flags
-	_clutSize = READ_BE_UINT16(ptr); ptr += 2;
-	assert(_clutSize < kClutSize);
+	uint16_t _clutSize = READ_BE_UINT16(ptr); ptr += 2;
+//	emu_printf ("_clutSize %d\n",_clutSize);
+//	assert(_clutSize < kClutSize);
 	for (int i = 0; i < _clutSize; ++i) {
 		const int index = READ_BE_UINT16(ptr); ptr += 2;
 		assert(i == index);
@@ -1734,13 +1735,13 @@ emu_printf("MAC_loadLevelData %s\n", name);
 //emu_printf(" .ANI\n");	
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
-emu_printf("MAC_loadLevelData %s\n", name);
+//emu_printf("MAC_loadLevelData %s\n", name);
 	_ani = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
 //emu_printf(" .OBJ\n");
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
-emu_printf("MAC_loadLevelData %s\n", name);
+//emu_printf("MAC_loadLevelData %s\n", name);
 	ptr = decodeResourceMacData(name, true);
 	assert(READ_BE_UINT16(ptr) == 0xE6);
 	decodeOBJ(ptr, _resourceMacDataSize);
@@ -1752,19 +1753,19 @@ emu_printf("MAC_loadLevelData %s\n", name);
 //emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
-emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
+//emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
 	ptr = decodeResourceMacData(name, true);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
-emu_printf("MAC_loadLevelData %s\n", name);		
+//emu_printf("MAC_loadLevelData %s\n", name);		
 	_spc = decodeResourceMacData(name, true);
 
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
-emu_printf("MAC_loadLevelData %s\n", name);	
+//emu_printf("MAC_loadLevelData %s\n", name);	
 	_tbn = decodeResourceMacText(name, "names");
 
 	_str = decodeResourceMacText("Flashback", "strings");
@@ -2032,10 +2033,10 @@ void Resource::MAC_loadSounds() {
 		42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, -1, 53, 54, 55, 56,
 		-1, 57
 	};
-	_numSfx = NUM_SFXS;
+//	_numSfx = NUM_SFXS;
 //	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
 	_sfxList = (SoundFx *)hwram_ptr;
-	hwram_ptr += _numSfx * sizeof(SoundFx);
+	hwram_ptr += NUM_SFXS * sizeof(SoundFx);
 
 	if (!_sfxList) {
 		return;

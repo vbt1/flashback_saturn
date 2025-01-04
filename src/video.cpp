@@ -44,7 +44,7 @@ emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
 	Uint32 *DRAM0 = (Uint32 *)0x22400000;
 	_frontLayer = (uint8 *)DRAM0;
 //	_frontLayer = (uint8 *)current_lwram;
-//	current_lwram+=_w * _h;
+	current_lwram+=_w * _h;
 
 	memset(&_frontLayer[0], 0, _w * _h);
 //	_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
@@ -689,15 +689,19 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 				buf.type = 1;
 				buf.setPixel = MAC_setPixel4Bpp;
 				dataSize >>= 1;
-				spriteData.color = 64;
+				spriteData.color = 4;//64;
 			}
 			else // icons _icn
 			{
 				buf.setPixel = MAC_setPixel;
 				spriteData.color = -1;
 			}
-
-			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
+/*
+	if(data == _res->_spc)
+	{
+		emu_printf("affichage spc %d\n",frame);
+	}
+*/			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
 			fixOffsetDecodeBuffer(&buf, dataPtr);
             memset(buf.ptr, 0x00, dataSize);
 
@@ -746,7 +750,7 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *d
     // emu_printf("SAT_displaySprite\n");
     SPRITE user_sprite{};
     user_sprite.CTRL = buf.xflip ? (1 << 4) : 0;
-    user_sprite.COLR = (spr.color != -1) ? spr.color : 0;
+    user_sprite.COLR = (spr.color != -1) ? (spr.color<<4) : 0;
     user_sprite.PMOD = (spr.color != -1) ? (CL16Bnk | ECdis | 0x0800) : (CL256Bnk | ECdis | 0x0800);
     user_sprite.SIZE = spr.size;
     user_sprite.XA = 63 + (buf.x - 320);
