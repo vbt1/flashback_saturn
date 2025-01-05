@@ -8,7 +8,6 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
-//#define HEAP_WALK 1
 extern "C" {
 	#include 	<string.h>
 	#include <stdio.h>
@@ -35,7 +34,7 @@ extern "C" {
 #define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
 #define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
-//extern TEXTURE tex_spr[4];
+
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 extern Uint8 *soundAddr;
@@ -67,86 +66,11 @@ extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_dram2;
 extern unsigned int end1;
 }
-
-
-
-#ifdef HEAP_WALK
-extern Uint32  end;
-extern Uint32  __malloc_free_list;
-
-extern "C" {
-extern Uint32  _sbrk(int size);
-}
-
-
-
-void heapWalk(void)
-{
-    Uint32 chunkNumber = 1;
-    // The __end__ linker symbol points to the beginning of the heap.
-    Uint32 chunkCurr = (Uint32)&end;
-    // __malloc_free_list is the head pointer to newlib-nano's link list of free chunks.
-    Uint32 freeCurr = __malloc_free_list;
-    // Calling _sbrk() with 0 reserves no more memory but it returns the current top of heap.
-    Uint32 heapEnd = _sbrk(0);
-    
-//    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
-    char msg[100];
-	sprintf (msg,"Heap Size: %d  e%08x s%08x\n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
-	emu_printf(msg);
-	
-    // Walk through the chunks until we hit the end of the heap.
-    while (chunkCurr < heapEnd)
-    {
-        // Assume the chunk is in use.  Will update later.
-        int      isChunkFree = 0;
-        // The first 32-bit word in a chunk is the size of the allocation.  newlib-nano over allocates by 8 bytes.
-        // 4 bytes for this 32-bit chunk size and another 4 bytes to allow for 8 byte-alignment of returned pointer.
-        Uint32 chunkSize = *(Uint32*)chunkCurr;
-        // The start of the next chunk is right after the end of this one.
-        Uint32 chunkNext = chunkCurr + chunkSize;
-        
-        // The free list is sorted by address.
-        // Check to see if we have found the next free chunk in the heap.
-        if (chunkCurr == freeCurr)
-        {
-            // Chunk is free so flag it as such.
-            isChunkFree = 1;
-            // The second 32-bit word in a free chunk is a pointer to the next free chunk (again sorted by address).
-            freeCurr = *(Uint32*)(freeCurr + 4);
-        }
-        
-        // Skip past the 32-bit size field in the chunk header.
-        chunkCurr += 4;
-        // 8-byte align the data pointer.
-        chunkCurr = (chunkCurr + 7) & ~7;
-        // newlib-nano over allocates by 8 bytes, 4 bytes for the 32-bit chunk size and another 4 bytes to allow for 8
-        // byte-alignment of the returned pointer.
-        chunkSize -= 8;
-//        	emu_printf("Chunk: %lu  Address: %x  Size: %d  %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "");
-        
-	sprintf (msg,"%d A%04x  S%04d %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "") ;
-//	if(chunkNumber<20)	
-	emu_printf(msg);
-//	if(chunkNumber>=200)
-//	//slPrint((char *)msg,slLocate(0,chunkNumber-200));
-//	if(chunkNumber>=230)
-//	//slPrint((char *)msg,slLocate(20,chunkNumber-230));
-
-		chunkCurr = chunkNext;
-        chunkNumber++;
-    }
-}
-#endif
-
 static SAVE_BUFFER sbuf;
 static Uint8 rle_buf[SAV_BUFSIZE];
 extern "C" {
 #include "sega_mem.h"
 }
-Uint8 vceEnabled = 1;
-extern Uint8 newZoom;
 /* *** */
 static Uint32 getFreeSaveBlocks(void);
 static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
@@ -1895,8 +1819,7 @@ void Game::loadLevelData() {
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
 		SAT_preloadMonsters();
-		if(has4mb)
-			SAT_preloadSpc();
+		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
 //	}
@@ -2581,6 +2504,12 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			buf.w = READ_BE_UINT16(dataPtr + 2) & 0xff;
 			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptr = destPtr;
+
+			if(!has4mb && spriteData==_res._spc)
+				if(j!=616 && j!=273)
+				{
+					continue;
+				}
 			memset(buf.ptr, 0, buf.w * buf.h);
 
 			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
@@ -2599,42 +2528,43 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / ((buf.type==1) ? 2 : 1));
 
 			if (spriteData == _res._monster)
-				sprData->color = 5;//80;
+				sprData->color = 5;
 			else
 				sprData->color = -1;
 //------------------------------------
 #ifdef REDUCE_4BPP
-		if(!has4mb)
-		{
-			int min_val=256;
-			int max_val=0;
-
-			if(spriteData== _res._spc)
+			if(!has4mb)
 			{
-				for (int i=0;i<(buf.w * buf.h);i++)
-				{
-					if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
-						min_val=buf.ptr[i];
-					if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
-						max_val=buf.ptr[i];
-				}
+				int min_val=256;
+				int max_val=0;
 
-				if((max_val-(min_val>>4)*16)<16)
+				if(spriteData== _res._spc)
 				{
-					for (int j=0;j<(buf.w * buf.h);j+=2)
+					for (int i=0;i<(buf.w * buf.h);i++)
 					{
-						uint8_t	value1=(buf.ptr[j + 1]);
-						uint8_t	value2 = ((buf.ptr[j])) ;
-						buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
+						if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
+							min_val=buf.ptr[i];
+						if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
+							max_val=buf.ptr[i];
 					}
-					dataSize = SAT_ALIGN((buf.w * buf.h) /2);
-					sprData->color = (min_val>>4);
+
+					if((max_val-(min_val>>4)*16)<16)
+					{
+						for (int j=0;j<(buf.w * buf.h);j+=2)
+						{
+							uint8_t	value1=(buf.ptr[j + 1]);
+							uint8_t	value2 = ((buf.ptr[j])) ;
+							buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
+						}
+						dataSize = SAT_ALIGN((buf.w * buf.h) /2);
+						sprData->color = (min_val>>4);
+					}
 				}
 			}
-		}
 #endif
-//------------------------------------
-			if ((position_vram + dataSize) <= VRAM_MAX || buf.h==352) {
+//------------------------------------if(buf.h!=352 && j!=273)
+// on precharge ascenseur et metro
+			if ((position_vram + dataSize) <= VRAM_MAX || j==616 || j==273) {
 				TEXTURE tx = TEXDEF(buf.w, buf.h, position_vram);
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
 				sprData->cgaddr = (int)tx.CGadr;
@@ -2646,7 +2576,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //						if((int)current_lwram < (int)_vid._frontLayer)
 				{
 					if((int)current_lwram+dataSize > (int)_vid._frontLayer)
-						emu_printf("ALERT : it doesn't fit!!!\n");
+						emu_printf("ALERT : it doesn't fit!!!%d x %d\n", buf.w, buf.h);
 					
 					DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
 					sprData->cgaddr = (int)current_lwram;
@@ -2801,14 +2731,13 @@ void Game::SAT_preloadSpc() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
-#endif
+
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
-//#endif
-	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);//_vid.MAC_setPixel);
-
-//#ifdef DEBUG
+#endif
+	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);
+#ifdef DEBUG
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration spc : %d\n",e-s);
-//#endif
+#endif
 }

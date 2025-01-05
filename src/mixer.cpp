@@ -113,7 +113,7 @@ void Mixer::playMusic(int num, int tempo) {
 	}
 	else
 		trackNum = num;
-	emu_printf("Mixer::trackNum(%d)\n", trackNum);
+//	emu_printf("Mixer::trackNum(%d)\n", trackNum);
 
 	if(trackNum>1 && trackNum<40)
 	{

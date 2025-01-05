@@ -7,11 +7,9 @@
 extern "C"
 {
 #include <sl_def.h>	
-//#include "sega_mem.h"
 #include "sat_mem_checker.h"
 #include "saturn_print.h"
 #include <string.h>
-//extern TEXTURE tex_spr[4];
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
@@ -44,12 +42,10 @@ Video::Video(Resource *res, SystemStub *stub)
 	{
 		_frontLayer = (uint8 *)current_dram2;
 		current_dram2 += (_w * _h);
-emu_printf("_frontLayer = (uint8 *)(%d) %p\n",_w * _h,_frontLayer);
 	}
 	else
 	{
 		_frontLayer = (uint8_t *)sat_malloc(_w * _h);
-emu_printf("_frontLayer = (uint8 *)(%d) %p\n",_w * _h,_frontLayer);
 	}
 
 	memset(&_frontLayer[0], 0, _w * _h);
@@ -109,7 +105,6 @@ void Video::updateScreen() {
 	
 //	_stub->updateScreen(0);
 //	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
-//		memset(_screenBlocks, 1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
 //	_fullRefresh = false;
 //_shakeOffset=0;
 	if (_fullRefresh) {
@@ -148,10 +143,10 @@ void Video::updateScreen() {
 	}
 */	
 //	if (_shakeOffset != 0) 
-	{
+//	{
 //		_shakeOffset = 0;
 //		_fullRefresh = true;
-	}
+//	}
 }
 
 void Video::fullRefresh() {
@@ -650,7 +645,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
     SAT_sprite &spriteData = _res->_sprData[index];
 // voir comment ne pas utiliser _sprData sur _res->_spc!
     // Handle sprite data for monster or spc (special sprite)
-    if (data == _res->_monster || (data == _res->_spc && has4mb)) {
+    if (data == _res->_monster || (data == _res->_spc && has4mb) || index ==1903 || index ==1560) {
         buf.x += (buf.xflip ? -spriteData.x_flip : -spriteData.x);
 
         if (buf.x >= 512) return;
@@ -669,8 +664,8 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 				dataSize>>=1;
 			}
             spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)spriteData.cgaddr, buf, dataSize);
+//			emu_printf("decompressed just copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.h);
         }
-
         // Display sprite
         SAT_displaySprite(spriteData, buf, data);
 		spriteData.cgaddr = oldcgaddr;
@@ -684,7 +679,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
             buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
             buf.ptr = hwram_screen;
 			size_t dataSize = buf.w * buf.h;
-			
+
 			if(data == _res->_perso)
 			{
 				buf.type = 1;
@@ -697,12 +692,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 				buf.setPixel = MAC_setPixel;
 				spriteData.color = -1;
 			}
-/*
-	if(data == _res->_spc)
-	{
-		emu_printf("affichage spc %d\n",frame);
-	}
-*/			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
+			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
 			fixOffsetDecodeBuffer(&buf, dataPtr);
             memset(buf.ptr, 0x00, dataSize);
 
@@ -715,6 +705,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
             spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)buf.ptr, buf, dataSize);
 //			vbt_size+=dataSize;
 //			emu_printf("frame %d cgaddr=%06x %d h %d h not rounded %d\n",frame, spriteData.cgaddr,buf.h, READ_BE_UINT16(dataPtr), buf.h-READ_BE_UINT16(dataPtr));
+//			emu_printf("decompression and copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.h);
             // Display sprite
             SAT_displaySprite(spriteData, buf, data);
 //			SAT_displaySprite((uint8_t *)(cgaddr*8), buf.x-320, buf.y-224, buf.w, buf.h);
@@ -730,8 +721,7 @@ uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSi
 
     TEXTURE tx = TEXDEF(buf.h, buf.w, position_vram);
     DMA_ScuMemCopy((void *)(SpriteVRAM + (tx.CGadr << 3)), src, dataSize);
-    position_vram += SAT_ALIGN(dataSize);
-
+    position_vram += (dataSize*4)>>2;
 	return tx.CGadr; 
 }
 

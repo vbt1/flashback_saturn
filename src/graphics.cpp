@@ -350,7 +350,7 @@ void Graphics::drawPolygon(uint8 color, bool hasAlpha, const Point *pts, uint8 n
 //	assert(numPts * 4 < 0x100);
 	if(numPts * 4 >= 0x100)
 	{
-		emu_printf("Graphics::drawPolygon(%d,%d,x%d,y%d,%d)\n",color,hasAlpha,pts->x,pts->y,numPts);
+//		emu_printf("Graphics::drawPolygon(%d,%d,x%d,y%d,%d)\n",color,hasAlpha,pts->x,pts->y,numPts);
 		return;
 	}
 

@@ -1,14 +1,12 @@
 extern "C" {
-//#include	<sgl.h>
 #include 	<sl_def.h>
 #include 	<sega_mem.h>
-//#include 	<sega_spr.h>
-//#include	<sega_csh.h>
 #include	<sega_sys.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
 #include <string.h>
 void *memset4_fast(void *, long, size_t);
+extern bool has4mb;
 }
 
 #include 	"saturn_print.h"
@@ -22,11 +20,6 @@ void *memset4_fast(void *, long, size_t);
 extern Uint32 _bstart, _bend;
 
 extern void ss_main( void );
-
-extern "C" {
-	TEXTURE tex_spr[4];
-//	extern void DMA_ScuInit(void);
-}
 
 int	main( void )
 {
@@ -47,9 +40,10 @@ int	main( void )
 	init_GFS(); // Initialize GFS system
 
 	int id = CartRAM_init(0);
+#if 0
     if(id!=0x5c)
     {
-		slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL		
+		slInitSystem(TV_320x224, (TEXTURE*)NULL, 1); // Init SGL
 		slTVOn();
 		slPrint((char*)"No ram cart found",slLocate(10,12));
 		slPrint((char*)"Please insert 4Mb",slLocate(10,14));
@@ -57,12 +51,11 @@ int	main( void )
 		slSynch();
 		while(1);
     }
-#ifdef _352_CLOCK_
-	slInitSystem(TV_320x224, (TEXTURE*)tex_spr, 1); // Init SGL
 #else
-	slInitSystem(TV_640x448, (TEXTURE*)tex_spr, 1); // Init SGL
-//	slSetSprTVMode(TV_320x224); // Init SGL
-
+    if(id==0x5c)
+		has4mb = true;
+#endif
+	slInitSystem(TV_640x448, (TEXTURE*)NULL, 1); // Init SGL
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 //	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM_START, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
@@ -75,15 +68,10 @@ int	main( void )
 	
 //	slTVOn();
 	slSynch();
-#endif
 
-#ifdef _PAR_UPLOAD_
-	cdUnlock(); // Unlock the cd drive
-#endif
 //	DMA_ScuInit(); // Init for SCU DMA
 	/* Application Call */
 	ss_main();
-
 	return 0;
 }
 
@@ -92,7 +80,7 @@ extern void emu_printf(const char *format, ...);
 
 void emu_printf(const char *format, ...)
 {
-#if 1
+#if 0
    static char emu_printf_buffer[128];
    char *s = emu_printf_buffer;
    volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);

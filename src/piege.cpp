@@ -122,7 +122,7 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 //		assert(i < on->num_objects);
 		if(i >= on->num_objects)
 		{
-			emu_printf("assert(i %d < on->num_objects %d)obj %p live %p hwram_screen %p hwram %p\n", i, on->num_objects, on->objects, live_pge,hwram_screen, hwram);		
+//			emu_printf("assert(i %d < on->num_objects %d)obj %p live %p hwram_screen %p hwram %p\n", i, on->num_objects, on->objects, live_pge,hwram_screen, hwram);		
 			return;
 		}
 		live_pge->first_obj_number = i;

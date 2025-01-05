@@ -43,7 +43,6 @@ void init_GFS();
 #include "resource_mac.h"
 #include "game.h"
 
-extern Uint8 vceEnabled;
 uint8_t * save_current_lwram;
 
 Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
@@ -53,27 +52,16 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_lang = lang;
 	_aba = 0;
 	_mac = 0;
-	_readUint16 = /*(_type == kResourceTypeDOS) ? READ_LE_UINT16 :*/ READ_BE_UINT16;
-	_readUint32 = /*(_type == kResourceTypeDOS) ? READ_LE_UINT32 :*/ READ_BE_UINT32;
+	_readUint16 = READ_BE_UINT16;
+	_readUint32 = READ_BE_UINT32;
 
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 
 //	_scratchBuffer = (uint8_t *)current_lwram;
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
-	
-//emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
-/*	static const int kBankDataSize = 0x7000;
-
-	emu_printf("_bankData current_lwram size %d %p\n",kBankDataSize, current_lwram);
-	_bankData = (uint8_t *)current_lwram;
-	current_lwram += SAT_ALIGN(kBankDataSize);
-
-	_bankDataTail = _bankData + kBankDataSize;
-	clearBankData();*/
 }
 
 Resource::~Resource() {
-//			emu_printf("vbt Resource::~Resource free all resources !!!!!\n");	
 /*	clearLevelRes();
 //	MAC_unloadLevelData();
 	sat_free(_fnt);
@@ -959,9 +947,9 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 //emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
 			ObjectNode *on = (ObjectNode *)current_lwram;
 			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
-			if (!on) {
-				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
-			}
+//			if (!on) {
+//				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
+//			}
 			const uint8_t *objData = tmp + offsets[i];
 			on->num_objects = _readUint16(objData); objData += 2;
 //emu_printf("on->num_objects = %d objectsCount[iObj] %d\n", on->num_objects,objectsCount[iObj]);			
@@ -1108,15 +1096,10 @@ emu_printf("Resource::load_POL()\n");
 */
 void Resource::load_CMP(File *pf) {
 //	emu_printf("load_CMP\n");
-//	sat_free(_pol);
-//	sat_free(_cmd);
 	int len = pf->size();
 	save_current_lwram = (uint8_t *)current_lwram;
 	uint8_t *tmp = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(len);
-	/*if (!tmp) {
-		error("Unable to allocate CMP buffer");
-	}*/
 	pf->read(tmp, len);
 	struct {
 		int offset, packedSize, size;
@@ -1181,268 +1164,19 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 	{
 	// vbt : on ferme le fichier Mac
 		MAC_closeMainFile();
-#if 1
-		char filename[50];
+
+		char filename[14];
 		sprintf(filename,"%d_%d.PCM",num,segment);
 		
 		int fid=GFS_NameToId((Sint8 *)filename);
 		Sint32 filesize=GetFileSize(fid);
 		*bufSize=filesize;
 	// version lecture pcm
-
 		GFS_Load(fid,0,(void *)soundAddr,filesize);
-#else		
-		const uint16_t *p = _voicesOffsetsTable + offset / 2;
-		offset = (*p++) * 2048;
-		int count = *p++;
-		if (segment < count) {
-			File f;
-			if (vceEnabled) {
-				f.open("VOICE.VCE", _dataPath, "rb");
-//emu_printf("reading VOICE.VCE\n");
-				int voiceSize = p[segment] * 2048 / 5;
-				uint8_t *voiceBuf = (uint8_t *)soundAddr;
-				if (voiceBuf) {
-					uint8_t *dst = voiceBuf;
-					offset += 0x2000;
-					for (int s = 0; s < count; ++s) {
-						int len = p[s] * 2048;
-						for (int i = 0; i < len / (0x2000 + 2048); ++i) {
-							if (s == segment) {
-								f.seek(offset);
-								int n = 2048;
-								while (n--) {
-									int v = f.readByte();
-									if (v & 0x80) {
-										v = -(v & 0x7F);
-									}
-									*dst++ = (uint8_t)(v & 0xFF);
-								}
-							}
-							offset += 0x2000 + 2048;
-						}
-						if (s == segment) {
-							break;
-						}
-					}
-					*buf = voiceBuf;
-					*bufSize = voiceSize;
-				}
-				f.close();
-			}
-		}
-#endif
 		MAC_reopenMainFile();
 	}
 }
 
-/*
-static void normalizeSPL(SoundFx *sfx) {
-	static const int kGain = 2;
-
-	sfx->peak = ABS(sfx->data[0]);
-	for (int i = 1; i < sfx->len; ++i) {
-		const int8_t sample = sfx->data[i];
-		if (ABS(sample) > sfx->peak) {
-			sfx->peak = ABS(sample);
-		}
-		sfx->data[i] = sample / kGain;
-	}
-}
-
-void Resource::load_SPL(File *f) {
-	for (int i = 0; i < _numSfx; ++i) {
-		sat_free(_sfxList[i].data);
-	}
-	sat_free(_sfxList);
-	_numSfx = NUM_SFXS;
-	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
-	if (!_sfxList) {
-		error("Unable to allocate SoundFx table");
-	}
-	int offset = 0;
-	for (int i = 0; i < _numSfx; ++i) {
-		const int size = f->readUint16BE(); offset += 2;
-		if ((size & 0x8000) != 0) {
-			continue;
-		}
-		debug(DBG_RES, "sfx=%d size=%d", i, size);
-		assert(size != 0 && (size & 1) == 0);
-		if (i == 64) {
-	//		warning("Skipping sound #%d (%s) size %d", i, _splNames[i], size);
-	//		f->seek(offset + size);
-		}  else {
-			_sfxList[i].offset = offset;
-			_sfxList[i].freq = kPaulaFreq / 650;
-			_sfxList[i].data = (uint8_t *)sat_malloc(size);
-			if (_sfxList[i].data) {
-				f->read(_sfxList[i].data, size);
-				_sfxList[i].len = size;
-				normalizeSPL(&_sfxList[i]);
-			}
-		}
-		offset += size;
-	}
-}
-
-void Resource::load_LEV(File *f) {
-//emu_printf("load_LEV %d\n", f->size());	
-	const int len = f->size();
-	_lev = (uint8_t *)sat_malloc(len);
-	if (!_lev) {
-		error("Unable to allocate LEV buffer");
-	} else {
-		f->read(_lev, len);
-	}
-}
-
-void Resource::load_SGD(File *f) {
-	const int len = f->size();
-	if (_type == kResourceTypeDOS) {
-		_sgd = (uint8_t *)sat_malloc(len);
-		if (!_sgd) {
-			error("Unable to allocate SGD buffer");
-		} else {
-			f->read(_sgd, len);
-			// first byte == number of entries, clear to fix up 32 bits offset
-			_sgd[0] = 0;
-		}
-		return;
-	}
-	f->seek(len - 4);
-	int size = f->readUint32BE();
-	f->seek(0);
-	uint8_t *tmp = (uint8_t *)sat_malloc(len);
-	if (!tmp) {
-		error("Unable to allocate SGD temporary buffer");
-	}
-	f->read(tmp, len);
-	_sgd = (uint8_t *)sat_malloc(size);
-	if (!_sgd) {
-		error("Unable to allocate SGD buffer");
-	}
-	if (!bytekiller_unpack(_sgd, size, tmp, len)) {
-		error("Bad CRC for SGD data");
-	}
-	sat_free(tmp);
-}
-
-void Resource::load_BNQ(File *f) {
-	const int len = f->size();
-	_bnq = (uint8_t *)sat_malloc(len);
-	if (!_bnq) {
-		error("Unable to allocate BNQ buffer");
-	} else {
-		f->read(_bnq, len);
-	}
-}
-
-void Resource::load_SPM(File *f) {
- // vbt version pc on verra plus tard	
-	static const int kPersoDatSize = 178647;
-	const int len = f->size();
-	f->seek(len - 4);
-	const uint32_t size = f->readUint32BE();
-	f->seek(0);
-	uint8_t *tmp = (uint8_t *)sat_malloc(len);
-	if (!tmp) {
-		error("Unable to allocate SPM temporary buffer");
-	}
-	f->read(tmp, len);
-	if (size == kPersoDatSize) {
-		_spr1 = (uint8_t *)sat_malloc(size);
-		if (!_spr1) {
-			error("Unable to allocate SPR1 buffer");
-		}
-		if (!bytekiller_unpack(_spr1, size, tmp, len)) {
-			error("Bad CRC for SPM data");
-		}
-	} else {
-		assert(size <= sizeof(_sprm));
-		if (!bytekiller_unpack(_sprm, sizeof(_sprm), tmp, len)) {
-			error("Bad CRC for SPM data");
-		}
-	}
-	for (int i = 0; i < NUM_SPRITES; ++i) {
-		const uint32_t offset = _spmOffsetsTable[i];
-		if (offset >= kPersoDatSize) {
-			_sprData[i] = _sprm + offset - kPersoDatSize;
-		} else {
-			_sprData[i] = _spr1 + offset;
-		}
-	}
-	sat_free(tmp);
-}
-
-void Resource::clearBankData() {
-	_bankBuffersCount = 0;
-	_bankDataHead = _bankData;
-}
-
-int Resource::getBankDataSize(uint16_t num) {
-	int len = READ_BE_UINT16(_mbk + num * 6 + 4);
-	switch (_type) {
-	case kResourceTypeDOS:
-		if (len & 0x8000) {
-			if (_mbk == _bnq) { // demo .bnq use signed int
-				len = -(int16_t)len;
-				break;
-			}
-			len &= 0x7FFF;
-		}
-		break;
-	case kResourceTypeMac:
-		assert(0); // different graphics format
-		break;
-	}
-	return len * 32;
-}
-
-uint8_t *Resource::findBankData(uint16_t num) {
-	for (int i = 0; i < _bankBuffersCount; ++i) {
-		if (_bankBuffers[i].entryNum == num) {
-			return _bankBuffers[i].ptr;
-		}
-	}
-	return 0;
-}
-
-uint8_t *Resource::loadBankData(uint16_t num) {
-	const uint8_t *ptr = _mbk + num * 6;
-	int dataOffset = READ_BE_UINT32(ptr);
-	if (_type == kResourceTypeDOS) {
-		// first byte of the data buffer corresponds
-		// to the total count of entries
-		dataOffset &= 0xFFFF;
-	}
-	const int size = getBankDataSize(num);
-	if (size == 0) {
-		warning("Invalid bank data %d", num);
-		return _bankDataHead;
-	}
-	const int avail = _bankDataTail - _bankDataHead;
-	if (avail < size) {
-		clearBankData();
-	}
-	assert(_bankDataHead + size <= _bankDataTail);
-	assert(_bankBuffersCount < (int)ARRAYSIZE(_bankBuffers));
-	_bankBuffers[_bankBuffersCount].entryNum = num;
-	_bankBuffers[_bankBuffersCount].ptr = _bankDataHead;
-	const uint8_t *data = _mbk + dataOffset;
-	if (READ_BE_UINT16(ptr + 4) & 0x8000) {
-		memcpy(_bankDataHead, data, size);
-	} else {
-		assert(dataOffset > 4);
-		assert(size == (int)READ_BE_UINT32(data - 4));
-		if (!bytekiller_unpack(_bankDataHead, _bankDataTail - _bankDataHead, data, 0)) {
-			error("Bad CRC for bank data %d", num);
-		}
-	}
-	uint8_t *bankData = _bankDataHead;
-	_bankDataHead += size;
-	return bankData;
-}
-*/
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	char buf[256];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
@@ -1464,9 +1198,6 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
 	uint8_t *data = 0;
-
-//if(strstr(name,"Icons")   != NULL)
-//		emu_printf("decodeResourceMacData 1       %s ",name);	
 	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
@@ -1476,8 +1207,6 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 		_resourceMacDataSize = 0;
 //		emu_printf("Resource '%s' not found\n", name);
 	}
-//if(strstr(name,"Icons")   != NULL)
-//		emu_printf("%p\n",data);
 	return data;
 }
 
@@ -1674,7 +1403,7 @@ void Resource::MAC_loadLevelData(int level) {
 //emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
-emu_printf("MAC_loadLevelData %s\n", name);
+//emu_printf("MAC_loadLevelData %s\n", name);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
@@ -1815,7 +1544,7 @@ emu_printf("MAC_getImageData bad sig %x %p\n",sig,ptr);
 	
 	if (!(i < count))
 	{
-emu_printf("!(i < count)\n");		
+//emu_printf("!(i < count)\n");		
 		return NULL;
 	}
 	ptr += 4;

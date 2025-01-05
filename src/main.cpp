@@ -32,29 +32,6 @@ void	*malloc(size_t);
 //#define LOW_WORK_RAM_SIZE 0x100000
 void *__dso_handle = 0;
 
-static int detectVersion(const char *dataPath) {
-	static const struct {
-		const char *filename;
-		int type;
-		const char *name;
-	} table[] = {
-		{ "FLASHBCK.RSR", kResourceTypeMac, "Macintosh" },
-		{ "LEVEL1.MAP", kResourceTypeDOS, "DOS" },
-		{ 0, -1, 0 }
-	};
-	for (int i = 0; table[i].filename; ++i) {
-		File f;
-
-		if (f.open(table[i].filename, dataPath, "rb")) {
-//			debug(DBG_INFO, "Detected %s version", table[i].name);
-//			emu_printf("Detected %s version\n", table[i].name);
-			f.close();
-			return table[i].type;
-		}
-	}
-	return -1;
-}
-
 Uint8 *hwram = NULL;
 Uint8 *hwram_ptr = NULL;
 Uint8 *hwram_screen = NULL;
@@ -65,8 +42,7 @@ Uint32 position_vram_aft_monster = 0;
 unsigned int end1 = 0;
 
 void ss_main(void) {
-	const int version = detectVersion("/");
-//	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX;
+	const int version = kResourceTypeMac;
 	int levelNum = 0;
 	const Language language = (Language)LANG_EN;
 	

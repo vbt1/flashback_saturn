@@ -1546,7 +1546,7 @@ void Cutscene::play() {
 			case 46: // Level 2 terminal card mission
 				break;
 			default:
-				emu_printf("Unknown cutscene %d\n", _id);
+//				emu_printf("Unknown cutscene %d\n", _id);
 				break;
 			}
 		}
