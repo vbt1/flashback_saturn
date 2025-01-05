@@ -17,18 +17,16 @@ extern "C"
 	#include 	<string.h>	
 #include "pcm.h"	
 #include "scsp.h"	
-//#include <sega_mem.h>
-
 
 #include "sat_mem_checker.h"
 #include "gfs_wrap.h"
-//extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *soundAddr;
 extern unsigned int end1;
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
-void	*malloc(size_t);
+extern bool has4mb;
+void *malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)]; 
@@ -61,7 +59,6 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
 
 //	_scratchBuffer = (uint8_t *)current_lwram;
-//	current_lwram += kScratchBufferSize;
 	_scratchBuffer = (uint8_t *)sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 	
 //emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
@@ -99,30 +96,12 @@ Resource::~Resource() {
 
 
 void Resource::init() {
-	
-//	_type = kResourceTypeMac; // vbt ajout
-/*	
-	switch (_type) {
-	case kResourceTypeDOS:
-		break;
-	case kResourceTypeMac:*/
-//		File f;
-//		if (_fs->exists(ResourceMac::FILENAME1)) 
-/*		if (f.open(ResourceMac::FILENAME1, _dataPath, "rb"))
-		{
-			f.close();
-			_mac = new ResourceMac(ResourceMac::FILENAME1, _dataPath);
-		} 
-//		else if (_fs->exists(ResourceMac::FILENAME2)) 
-		else*/ 
-	//if (f.open(ResourceMac::FILENAME2, _dataPath, "rb")) 
-		{
-	//		f.close();
-			_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
-		}
-		_mac->load();
-/*		break;
-	}*/
+	uint16_t size = NUM_SPRITES;
+//	if (has4mb)
+		size += NUM_SPC;
+	_sprData = (SAT_sprite *)malloc(size * sizeof(SAT_sprite));
+	_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
+	_mac->load();
 }
 /*
 void Resource::setLanguage(Language lang) {
@@ -148,47 +127,22 @@ bool Resource::fileExists(const char *filename) {
 }
 */
 void Resource::clearLevelRes() {
-//emu_printf("vbt clearLevelRes\n");
-
-current_lwram = (Uint8 *)VBT_L_START+kScratchBufferSize;
-
-//emu_printf("_tbn\n");	
+	current_lwram = (Uint8 *)VBT_L_START;
 	sat_free(_tbn); _tbn = 0;
-//emu_printf("_mbk\n");		
-	sat_free(_mbk); _mbk = 0;
-//emu_printf("_pal\n");		
 	sat_free(_pal); _pal = 0;
-//emu_printf("_map\n");		
 	sat_free(_map); _map = 0;
-//emu_printf("_lev\n");		
 	sat_free(_lev); _lev = 0;
 	_levNum = -1;
-//emu_printf("_sgd\n");	
-//	sat_free(_sgd); _sgd = 0;
-//emu_printf("_bnq\n");
-//	sat_free(_bnq); _bnq = 0;
-//emu_printf("_ani %p\n",_ani);	// vbt est dans scratchbuff
 	sat_free(_ani); _ani = 0; // hwram
-
 	free_OBJ();
 
-//	if(_type==kResourceTypeMac)
-	{
-//	emu_printf("MAC_unloadLevelData\n");
-//	emu_printf("_res._monster %p\n",_monster);
-		sat_free(_monster);
-//	emu_printf("_res._spc %p\n",_spc);	
-		sat_free(_spc);	
-		sat_free(_ani);
-		MAC_unloadLevelData();
-	//	sat_free(_res._icn);// icones du menu à ne pas vider
-
-//		sat_free(_spr1);
-		sat_free(_cmd);
-		sat_free(_pol);
-		sat_free(_cine_off);
-//		sat_free(_cine_txt);
-	}
+	sat_free(_spc);	
+	sat_free(_ani);
+	MAC_unloadLevelData();
+	sat_free(_cmd);
+	sat_free(_pol);
+	sat_free(_cine_off);
+//	sat_free(_cine_txt);
 }
 /*
 void Resource::load_DEM(const char *filename) {
@@ -1246,8 +1200,6 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 			if (vceEnabled) {
 				f.open("VOICE.VCE", _dataPath, "rb");
 //emu_printf("reading VOICE.VCE\n");
-//			GfsFile *gfs = GFS_Open((Sint32)8);
-
 				int voiceSize = p[segment] * 2048 / 5;
 				uint8_t *voiceBuf = (uint8_t *)soundAddr;
 				if (voiceBuf) {
@@ -1889,7 +1841,7 @@ static void stringLowerCase(char *p) {
 
 void Resource::MAC_unloadCutscene() {
 	current_lwram = (uint8_t *)save_current_lwram;
-	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
+//	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
 	sat_free(_pol);
 	_pol = 0;
 	sat_free(_cmd);

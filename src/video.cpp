@@ -16,6 +16,7 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
+extern Uint8 *current_dram2;
 extern bool has4mb;
 void	*malloc(size_t);
 }
@@ -35,19 +36,21 @@ void	*malloc(size_t);
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
 
-	_layerScale = (_res->_type == kResourceTypeMac) ? 2 : 1; // Macintosh version is 512x448
+	_layerScale = /*(_res->_type == kResourceTypeMac) ?*/ 2 /*: 1*/; // Macintosh version is 512x448
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 
 	if(has4mb)
 	{
-		_frontLayer = (uint8 *)0x22400000;
+		_frontLayer = (uint8 *)current_dram2;
+		current_dram2 += (_w * _h);
+emu_printf("_frontLayer = (uint8 *)(%d) %p\n",_w * _h,_frontLayer);
 	}
 	else
 	{
 		_frontLayer = (uint8_t *)sat_malloc(_w * _h);
+emu_printf("_frontLayer = (uint8 *)(%d) %p\n",_w * _h,_frontLayer);
 	}
-emu_printf("_frontLayer = (uint8 *)(%d) \n",_w * _h);
 
 	memset(&_frontLayer[0], 0, _w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;

@@ -199,6 +199,8 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:*/
+//		end1 = 564000+(has4mb?36000:46000);//-16384;//538624;
+		end1 = 564000+38000;//-16384;//538624;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -1874,27 +1876,18 @@ void Game::loadLevelData() {
 		break;
 #endif
 //	case kResourceTypeMac:
-//emu_printf("MAC_unloadLevelData\n");
 		hwram_ptr = hwram+50000;
-//		hwram_screen = NULL;
-//		position_vram = position_vram_aft_monster; // vbt on repart des monsters
 		position_vram = position_vram_aft_monster = 0; // vbt correction
-		current_dram2=(Uint8 *)0x22600000;
+		if (has4mb)
+			current_dram2 = (Uint8 *)0x22600000+ (_vid._w * _vid._h);
 //		memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //heapWalk();		
-
-//		sat_free(_res._monster);
-//		emu_printf("_res._spc %p\n",_res._spc);	
 		sat_free(_res._spc); // on ne vire pas
 		sat_free(_res._ani);
 		_res.MAC_unloadLevelData();
-//		sat_free(_res._icn);// icones du menu à ne pas vider
-
-//		sat_free(_res._spr1);
 		sat_free(_res._cmd);
 		sat_free(_res._pol);
 		sat_free(_res._cine_off);
-//		sat_free(_res._cine_txt);
 
 		_vid.setTextPalette();
 		_vid.drawString("Loading Please wait", 20, 40, 0xE7);

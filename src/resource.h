@@ -123,7 +123,7 @@ struct Resource {
 
 	char _entryName[32];
 	uint8_t *_fnt;
-	uint8_t *_mbk;
+//	uint8_t *_mbk;
 	uint8_t *_icn;
 //	int _icnLen;
 //	uint8_t *_tab;
@@ -136,7 +136,8 @@ struct Resource {
 	int8_t _ctData[256 + 112 * 64];
 //	uint8_t *_spr1;
 // vbt : utiliser un pointeur !!!!
-	SAT_sprite _sprData[NUM_SPRITES+NUM_SPC]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+//	SAT_sprite _sprData[NUM_SPRITES+NUM_SPC]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
+	SAT_sprite *_sprData; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 //	SAT_sprite _sprData[NUM_SPRITES]; // 0-0x22F + 0x28E-0x2E9 ... conrad, 0x22F-0x28D : junkie
 	
 	

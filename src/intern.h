@@ -72,17 +72,17 @@ struct Point {
 	int16_t x;
 	int16_t y;
 };
-
+/*
 struct Demo {
 	const char *name;
 	int level;
 	int room;
 	int x, y;
 };
-
+*/
 struct Level {
 	const char *name;
-	const char *name2;
+//	const char *name2;
 	uint16_t cutscene_id;
 	uint8_t sound;
 	uint8_t track;
@@ -191,7 +191,7 @@ struct CollisionSlot {
 	LivePGE *live_pge;
 	uint16_t index;
 };
-
+/*
 struct MbkEntry {
 	uint16 offset;
 	uint16 len;
@@ -201,7 +201,7 @@ struct BankSlot {
 	uint16_t entryNum;
 	uint8_t *ptr;
 };
-
+*/
 struct CollisionSlot2 {
 	CollisionSlot2 *next_slot;
 	int8_t *unk2; // grid_data_pos

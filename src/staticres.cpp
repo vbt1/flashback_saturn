@@ -417,13 +417,13 @@ const Demo Game::_demoInputs[] = {
 };
 */
 const Level Game::_gameLevels[] = {
-	{ "level1", "level1", 0x00, 1, 3 },
-	{ "level2", "level2", 0x2F, 1, 4 },
-	{ "level3", "level3", 0xFF, 3, 5 },
-	{ "level4", "level4_1", 0x34, 3, 6 },
-	{ "level4", "level4_2", 0x39, 3, 6 },
-	{ "level5", "level5_1", 0x35, 4, 7 },
-	{ "level5", "level5_2", 0xFF, 4, 7 }
+	{ "level1", /*"level1",*/ 0x00, 1, 3 },
+	{ "level2", /*"level2",*/ 0x2F, 1, 4 },
+	{ "level3", /*"level3",*/ 0xFF, 3, 5 },
+	{ "level4", /*"level4_1",*/ 0x34, 3, 6 },
+	{ "level4", /*"level4_2",*/ 0x39, 3, 6 },
+	{ "level5", /*"level5_1",*/ 0x35, 4, 7 },
+	{ "level5", /*"level5_2",*/ 0xFF, 4, 7 }
 };
 
 const uint16_t Game::_scoreTable[] = {

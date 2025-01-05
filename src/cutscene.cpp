@@ -190,7 +190,7 @@ _vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à reme
 	buf.w=240;
 	buf.h=128;
 	position_vram = 0x1000;
-size_t dataSize = SAT_ALIGN(buf.w * buf.h);
+	size_t dataSize = SAT_ALIGN(buf.w * buf.h);
     int cgaddr1 = _vid->SAT_copySpriteToVram((uint8_t *)_backPage, buf, dataSize);
 	
     uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1*8);  // Use pointers to avoid array indexing overhead
@@ -211,14 +211,11 @@ size_t dataSize = SAT_ALIGN(buf.w * buf.h);
 		a[6] = (b[13]) | (b[12] << 4);
 		a[7] = (b[15]) | (b[14] << 4);
 	}	
-	
-	
-	
-	
+
 	_vid->SAT_displaySprite((uint8_t *)(cgaddr1*8),-320,-224, 128, 240);
 //	SAT_displaySprite(spriteData, buf, data);
 
-int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
+	int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
 
     uint8_t *aux1 = (uint8_t *)(SpriteVRAM + cgaddr3*8);  // Use pointers to avoid array indexing overhead
     uint8_t *back1 = (uint8_t *)_frontPage;
