@@ -81,7 +81,7 @@ struct Game {
 //	SfxPlayer _sfxPly;
 	Video _vid;
 	SystemStub *_stub;
-	const char *_savePath;
+//	const char *_savePath;
 	uint32_t _cheats;
 
 	const uint8_t *_stringsTable;
@@ -93,9 +93,9 @@ struct Game {
 	uint8_t _currentRoom;
 	uint8_t _currentIcon;
 	bool _loadMap;
-	uint8_t _printLevelCodeCounter;
+//	uint8_t _printLevelCodeCounter;
 	uint32_t _randSeed;
-	uint16_t _currentInventoryIconNum;
+//	uint16_t _currentInventoryIconNum;
 	uint16_t _curMonsterFrame;
 	uint16_t _curMonsterNum;
 	uint8_t _blinkingConradCounter;

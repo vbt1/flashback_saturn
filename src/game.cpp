@@ -671,7 +671,7 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
-		if (_res.isMac() && !(id == 0x48 || id == 0x49)) { // continue or score screens
+		if (/*_res.isMac() &&*/ !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
 			Color palette[32];
 			_res.MAC_copyClut16(palette, 0, 0x37);
@@ -1050,7 +1050,7 @@ void Game::drawLevelTexts() {
 		obj = col_findCurrentCollidingObject(pge, 0xFF, 5, 9, &pge);
 	}
 	if (obj > 0) {
-		_printLevelCodeCounter = 0;
+//		_printLevelCodeCounter = 0;
 		if (_textToDisplay == 0xFFFF) {
 			uint8_t icon_num = obj - 1;
 			drawIcon(icon_num, 80, 8, 0xA);
@@ -1066,9 +1066,9 @@ void Game::drawLevelTexts() {
 				printSaveStateCompleted();
 				return;
 			}
-		} else {
+		}/* else {
 			_currentInventoryIconNum = obj - 1;
-		}
+		}*/
 	}
 	else
 	{
@@ -1827,7 +1827,7 @@ void Game::loadLevelData() {
 
 	_curMonsterNum = 0xFFFF;
 	_curMonsterFrame = 0;
-	_printLevelCodeCounter = 150;
+//	_printLevelCodeCounter = 150;
 
 	_col_slots2Cur = _col_slots2;
 	_col_slots2Next = 0;

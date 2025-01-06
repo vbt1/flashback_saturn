@@ -147,8 +147,8 @@ struct Resource {
 	uint16_t _pgeNum;
 	InitPGE _pgeInit[256];
 	uint8_t *_map;
-	uint8_t *_lev;
-	int _levNum;
+//	uint8_t *_lev;
+//	int _levNum;
 //	uint8_t *_sgd;
 //	uint8_t *_bnq;
 	uint16_t _numObjectNodes;

@@ -57,13 +57,13 @@ struct Mixer {
 		MAX_VOLUME = 7
 	};
 
-	void *_mutex;
+//	void *_mutex;
 	SystemStub *_stub;
-	MixerChannel _channels[NUM_CHANNELS];
-	PremixHook _premixHook;
-	void *_premixHookData;
-	MusicType _backgroundMusicType;
-	MusicType _musicType;
+//	MixerChannel _channels[NUM_CHANNELS];
+//	PremixHook _premixHook;
+//	void *_premixHookData;
+//	MusicType _backgroundMusicType;
+//	MusicType _musicType;
 	int _musicTrack;
 
 	Mixer(SystemStub *stub);
@@ -79,10 +79,10 @@ struct Mixer {
 	uint32 getSampleRate() const;
 //	void mix(int8 *buf, int len);
 
-	static void addclamp(int8 &a, int b);
+//	static void addclamp(int8 &a, int b);
 //	static void mixCallback(void *param, uint8 *buf, int len);
 };
-
+/*
 template <class T>
 int resampleLinear(T *sample, int pos, int step, int fracBits) {
 	const int inputPos = pos >> fracBits;
@@ -95,7 +95,7 @@ int resampleLinear(T *sample, int pos, int step, int fracBits) {
 	return sample->getPCM(inputPos);
 #endif
 }
-/*
+
 template <class T>
 int resample3Pt(T *sample, int pos, int step, int fracBits) {
 	const int inputPos = pos >> fracBits;

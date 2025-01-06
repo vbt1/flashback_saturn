@@ -66,7 +66,7 @@ struct Menu {
 	SystemStub *_stub;
 	Video *_vid;
 
-	int _currentScreen;
+//	int _currentScreen;
 	int _nextScreen;
 	int _selectedOption;
 

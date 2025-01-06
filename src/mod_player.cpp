@@ -463,7 +463,7 @@ void ModPlayer::handleTick() {
 		_playing = false;
 	}
 }
-
+/*
 void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 	for (int i = 0; i < NUM_TRACKS; ++i) {
 		Track *tk = &_tracks[i];
@@ -473,7 +473,7 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 			int len = si->len << FRAC_BITS;
 			int loopLen = si->repeatLen << FRAC_BITS;
 			int loopPos = si->repeatPos << FRAC_BITS;
-			int deltaPos = (tk->freq << FRAC_BITS) / /*_mix->getSampleRate()*/22050;
+			int deltaPos = (tk->freq << FRAC_BITS) / 22050;
 			int curLen = samplesLen;
 			int pos = tk->pos;
 			while (curLen != 0) {
@@ -503,7 +503,7 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
      	}
 	}
 }
-
+*/
 bool ModPlayer::mix(int8 *buf, int len) {
 //emu_printf("ModPlayer::mix %p %d\n",buf, len);		
 #ifdef SLAVE_SOUND

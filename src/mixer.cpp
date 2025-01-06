@@ -26,8 +26,8 @@ Mixer::Mixer(SystemStub *stub)
 void Mixer::init() {
 	
 //slPrint((char *)"mix.memset    ",slLocate(10,12));	
-	memset(_channels, 0, sizeof(_channels));
-	_premixHook = 0;
+//	memset(_channels, 0, sizeof(_channels));
+//	_premixHook = 0;
 //slPrint((char *)"mix.createMutex    ",slLocate(10,12));		
 //	_mutex = _stub->createMutex();
 //slPrint((char *)"mix.startAudio    ",slLocate(10,12));	
@@ -40,15 +40,15 @@ void Mixer::free() {
 //	setPremixHook(0, 0);
 	//stopAll();
 	_stub->stopAudio();
-	_stub->destroyMutex(_mutex);
+//	_stub->destroyMutex(_mutex);
 }
-
+/*
 void Mixer::setPremixHook(PremixHook premixHook, void *userData) {
 	debug(DBG_SND, "Mixer::setPremixHook()");
 	_premixHook = premixHook;
 	_premixHookData = userData;
 }
-
+*/
 uint32 Mixer::getSampleRate() const {
 	return _stub->getOutputSampleRate();
 }
@@ -143,17 +143,17 @@ void Mixer::playMusic(int num, int tempo) {
 		CDC_CdPlay(&ply);
 
 	}
-	else { // cutscene
+/*	else { // cutscene
 //		_mod.play(num, tempo);
 //		emu_printf("cutscene MT_MOD %d\n", num);	
-/*		if (_mod._playing) 
+		if (_mod._playing) 
 		{
 			_musicType = MT_MOD;
 			return;
 		}
-*/
 
-	}
+
+	}*/
 }
 
 void Mixer::stopMusic() {
@@ -207,7 +207,7 @@ void Mixer::stopMusic() {
 	}
 */	
 }
-
+/*
 void Mixer::addclamp(int8& a, int b) {
 	int add = a + b;
 	if (add < -128) {
@@ -217,7 +217,7 @@ void Mixer::addclamp(int8& a, int b) {
 	}
 	a = add;
 }
-/*
+
 void Mixer::mixCallback(void *param, uint8 *buf, int len) {
 	((Mixer *)param)->mix((int8 *)buf, len);
 }

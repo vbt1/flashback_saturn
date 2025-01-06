@@ -469,7 +469,8 @@ void Cutscene::drawCreditsText() {
 			*_textCurBuf++ = code;
 			*_textCurBuf = 0xA;
 			++_textCurPtr;
-			if (isMac) {
+//			if (isMac) 
+				{
 				--_creditsTextLen;
 				if (_creditsTextLen == 0) {
 					_creditsTextCounter = 600;

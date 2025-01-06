@@ -119,8 +119,8 @@ void Resource::clearLevelRes() {
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_pal); _pal = 0;
 	sat_free(_map); _map = 0;
-	sat_free(_lev); _lev = 0;
-	_levNum = -1;
+//	sat_free(_lev); _lev = 0;
+//	_levNum = -1;
 	sat_free(_ani); _ani = 0; // hwram
 	free_OBJ();
 
