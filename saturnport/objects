@@ -11,7 +11,6 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/unpack.cpp \
 		$(SRCDIR)/resource.cpp \
 		$(SRCDIR)/resource_mac.cpp \
-		$(SRCDIR)/resource_aba.cpp \
 		$(SRCDIR)/decode_mac.cpp \
 		$(SRCDIR)/staticres.cpp \
 		$(SRCDIR)/systemstub_sdl.cpp \
@@ -24,7 +23,7 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 
 SYSOBJS = $(SRCDIR)/workarea.o $(SRCDIR)/low.o
 OBJS = $(SRCS:.cpp=.o)
-LIBS = C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_gfs2.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_per.a \
+LIBS = C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_gfs2.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_mem.a \
 $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a 
 
 #L:\saturn\SBL6\SEGALIB\LIB\vbtelf4

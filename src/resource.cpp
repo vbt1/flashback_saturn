@@ -50,7 +50,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_dataPath = dataPath;
 	_type = type;
 	_lang = lang;
-	_aba = 0;
+//	_aba = 0;
 	_mac = 0;
 	_readUint16 = READ_BE_UINT16;
 	_readUint32 = READ_BE_UINT32;

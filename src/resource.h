@@ -115,7 +115,7 @@ struct Resource {
 
 	ResourceType _type;
 	Language _lang;
-	ResourceAba *_aba;
+//	ResourceAba *_aba;
 	ResourceMac *_mac;
 	uint16_t (*_readUint16)(const void *);
 	uint32_t (*_readUint32)(const void *);

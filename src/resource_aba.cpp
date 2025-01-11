@@ -72,7 +72,7 @@ const ResourceAbaEntry *ResourceAba::findEntry(const char *name) const {
 	strcpy(tmp.name, name);
 	return &tmp; //(const ResourceAbaEntry *)bsearch(&tmp, _entries, _entriesCount, sizeof(ResourceAbaEntry), compareAbaEntry);
 }
-
+/*
 uint8_t *ResourceAba::loadEntry(const char *name, uint32_t *size) {
 	uint8_t *dst = 0;
 	const ResourceAbaEntry *e = findEntry(name);
@@ -109,3 +109,4 @@ emu_printf("ResourceAba::loadEntry: sat_free  %p\n",tmp);
 	}
 	return dst;
 }
+*/
