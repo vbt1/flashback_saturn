@@ -173,11 +173,16 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
                 }
                 offset = READ_BE_UINT16(src); src += 2;
                 count = 3 + (offset >> 12);
-                offset &= kMask;
+ //               offset &= kMask;
                 offset = (cursor - offset - 1) & kMask;
             }
 //------------------------
-			if (cursor+count <=kMask && offset+count <=kMask)
+//			unsigned short max_pos = (cursor > offset) ? cursor : offset;
+//			unsigned short max_pos = (cursor > offset) ? cursor : offset;
+//			if (cursor+count <=kMask && offset+count <=kMask)
+//			if(max_pos + count <= kMask)
+			if(cursor <= 4077 && offset <= 4077)
+//		if(max_pos <= 4077)
 			{
 				uint8_t *dst = &window[cursor];
 				uint8_t *src = &window[offset];
@@ -186,7 +191,7 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 					*dst++ = *src++;
 				}
 				cursor += count;
-				cursor &= kMask;
+//				cursor &= kMask;
 				x += count-1;
 				count=0;
 				continue;
@@ -282,7 +287,7 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //    while (src < srcEnd) {
     while (1) {
 		const uint8_t code = *src++;
-		if ((code & 0x80) != 0) {
+        if (code & 0x80) {
 			++y;
 			x = 0;
 		}
@@ -292,8 +297,8 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			count = READ_BE_UINT16(src); src += 2;
 //			count = ((uint16_t*)src)[0]; src += 2;
 		}
-		if ((code & 0x40) == 0) {
-			if ((code & 0x20) == 0) {
+        if (!(code & 0x40)) {
+            if (!(code & 0x20)) {
 				if (count == 1) {
 //					assert(sp > 0);
 					if(sp <= 0)
@@ -316,7 +321,7 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 				x += count;
 			}
 		} else {
-			if ((code & 0x20) == 0) {
+            if (!(code & 0x20)) {
 				if (count == 1) {
 					return;
 				}
@@ -351,6 +356,7 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 fin:
                         break;
                     default: // font 8bpp et menu inventaire
+
 						for (int i = 0; i < count; ++i) {
 							setPixeli(x++, y, color, buf);
 						}

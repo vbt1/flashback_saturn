@@ -301,6 +301,7 @@ void Game::displayTitleScreenMac(int num) {
 	c.r = c.g = c.b = 0;
 	_stub->setPaletteEntry(255, &c);
 // vbt : la couleur 0 est transparente et affiche du noir !!!
+	slBMPaletteNbg1(1); // vbt : utilisation de palette 1
 	slScrTransparent(NBG1ON);
 	switch (num) {
 	case Menu::kMacTitleScreen_MacPlay:
@@ -395,6 +396,7 @@ void Game::displayTitleScreenMac(int num) {
 		_stub->sleep(30);
 	}
 	slScrTransparent(!NBG1ON);
+	slBMPaletteNbg1(2); // passage à la palette non recalculée
 }
 
 void Game::resetGameState() {
@@ -773,11 +775,8 @@ bool Game::handleConfigPanel() {
 	static const int w = 17;
 	static const int h = 12;
 
-//	_vid._charShadowColor = 0xE2;
-//	_vid._charFrontColor = 0xEE;
-//	_vid._charTransparentColor = 0xFF;
 	_vid._charShadowColor = 0xE2;
-	_vid._charFrontColor = 69;  // couleur prise // 238
+	_vid._charFrontColor = 0xEE;
 	_vid._charTransparentColor = 0xFF;
 
 	// the panel background is drawn using special characters from FB_TXT.FNT
@@ -860,8 +859,7 @@ bool Game::handleConfigPanel() {
 		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
-//		_menu.drawString(buf, y + 10, 9, 1);
-		_menu.drawString(buf, y + 10, 9, 69);
+		_menu.drawString(buf, y + 10, 9, 1);
 		
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);

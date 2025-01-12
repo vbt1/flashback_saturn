@@ -471,7 +471,7 @@ void SystemStub_SDL::prepareGfxMode() {
 
 //	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
 	slBMPaletteNbg0(1); // NBG1 (game screen) uses palette 1 in CRAM
-	slBMPaletteNbg1(1); // NBG1 (game screen) uses palette 1 in CRAM
+	slBMPaletteNbg1(2); // NBG1 (game screen) uses palette 2 in CRAM
 	slColRAMOffsetSpr(2) ;  // spr palette
 #ifdef _352_CLOCK_
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
@@ -483,8 +483,6 @@ void SystemStub_SDL::prepareGfxMode() {
 	slPriorityNbg1(6); // Game screen
 	slPrioritySpr0(4);
 	
-//	slScrPosNbg1(toFIXED(HOR_OFFSET), toFIXED(0.0)); // Position NBG1, offset it a bit to center the image on a TV set
-
 	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
 //	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
 //	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
