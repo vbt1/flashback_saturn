@@ -59,31 +59,27 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
         current_lwram += alignedSize;
     }
 
-	uint32_t count = 0;
+    uint8_t* const end = dst + decodedSize;
+    uint8_t* cur = dst;
+    while (cur < end) {
+        uint8_t code = f.readByte();
+        for (int i = 0; i < 8 && cur < end; ++i) {
+            if ((code & 1) == 0) {
+                *cur++ = f.readByte();
+            } else {
 
-	while (count < decodedSize) 
-	{
-		int code = f.readByte();
-		for (int i = 0; i < 8 && count < decodedSize; ++i) 
-		{
-			if ((code & 1) == 0) {
-				dst[count++] = f.readByte();
-			} else {
-#if 1
-				int offset = f.readUint16BE();
-				const int len = (offset >> 12) + 3;
-				offset &= 0xFFF;
-
-				for (int j = 0; j < len; ++j) {
-					dst[count + j] = dst[count - offset - 1 + j];
-				}
-				count += len;
-			}
-#endif
-			code >>= 1;
-		}
-	}
-
+                uint16_t offset = f.readUint16BE();
+                const int len = (offset >> 12) + 3;
+                offset &= 0xFFF;
+				uint8_t* src = cur - offset - 1;
+                for (int j = 0; j < len; ++j) {
+                    cur[j] = src[j];
+                }
+				cur+=len;
+            }
+            code >>= 1;
+        }
+    }
 //	emu_printf("inf %d sup %d\n",a,b);
 //	emu_printf("dst %p\n",dst);
 
@@ -188,7 +184,7 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 				uint8_t *src = &window[offset];
 
 				for (size_t i = 0; i < count; ++i) {
-					*dst++ = *src++;
+					dst[i] = src[i];
 				}
 				cursor += count;
 //				cursor &= kMask;
@@ -325,36 +321,26 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 				if (count == 1) {
 					return;
 				}
-
-				 uint8_t color = *src++;
+				uint8_t color = *src++;
 				int offset = 0;
                 switch(buf->type)
                 {
                     case 0: // spc
-
                         offset = y * buf->h + x;
                         memset(&buf->ptr[offset],color,count);
-                        x+=count;
+                        x += count;
                         break;
 
 					case 1: //perso 4bpp & ennemis
-						if(x&1)
-						{
-							for (int i = 0; i < count; ++i) {
-								setPixeli(x++, y, color, buf);
-							}
-							goto fin;
-						}
-						else
+						if(!x&1)
 						{
 							offset = y * (buf->h>>1) + (x>>1);
 							memset(&buf->ptr[offset],(color&0x0f)|color<<4,((count)>>1));
 							if(count&1)
 								buf->ptr[offset+(count>>1)]=((color&0x0f)<<4);
 							x+=count;
+							break;
 						}
-fin:
-                        break;
                     default: // font 8bpp et menu inventaire
 
 						for (int i = 0; i < count; ++i) {

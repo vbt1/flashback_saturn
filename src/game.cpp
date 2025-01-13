@@ -140,9 +140,25 @@ _vid.setTextPalette();
 _vid.drawString("Loading Please wait", 20, 40, 0xE7);
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.load_TEXT();
+#ifdef DEBUG
+	_stub->initTimeStamp();
+	unsigned int s = _stub->getTimeStamp();
+#endif
 		_res.MAC_loadIconData(); // hwram taille 9036 = "Icons" 
+#ifdef DEBUG
+	unsigned int e = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","icons", e-s);
+#endif
 //				SAT_preloadIcon();
+#ifdef DEBUG
+	_stub->initTimeStamp();
+	unsigned int st = _stub->getTimeStamp();
+#endif
 		_res.MAC_loadPersoData();// lwram taille 213124 = "Person"
+#ifdef DEBUG
+	unsigned int et = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","perso", et-st);
+#endif		
 //				SAT_preloadPerso();
 // vbt : refaire le chargement des sons
 		_res.MAC_loadSounds(); // vbt déplacé
@@ -2697,7 +2713,7 @@ void Game::SAT_preloadMonsters() {
 #endif
 			for (int i = 0; data[i].id; ++i) {
 				if (strcmp(data[i].id, _monsterNames[0][_curMonsterNum]) == 0) {
-#ifdef DEBUG					
+#ifdef DEBUG
 	unsigned int st = _stub->getTimeStamp();
 #endif
 					_res._monster = _res.decodeResourceMacData(data[i].name, true);
@@ -2729,7 +2745,8 @@ void Game::SAT_preloadSpc() {
 			int color = baseColor + i;
 			_stub->setPaletteEntry(color, &clut[color]);
 		}
-
+#endif
+#ifdef DEBUG
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
 #endif

@@ -1,3 +1,4 @@
+#pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000
 /*
@@ -221,7 +222,7 @@ void Video::setTextPalette() {
 			_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : front palette
 		else
 			_stub->setPaletteEntry(68 + i - 14, &c);  // vbt : front palette
-		_stub->setPaletteEntry(256+0xE0 + i, &c);  // vbt : sprite palette
+		_stub->setPaletteEntry(0x1E0 + i, &c);  // vbt : sprite palette
 	}
 }
 
@@ -504,12 +505,12 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
-/*	_stub->initTimeStamp();
+	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();	
-*/	_res->MAC_loadLevelRoom(level, room, &buf);
-/*	unsigned int e = _stub->getTimeStamp();
+	_res->MAC_loadLevelRoom(level, room, &buf);
+	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration background : %d\n",e-s);
-*/
+
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 
@@ -537,14 +538,13 @@ void Video::MAC_decodeMap(int level, int room) {
 }
 
 void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-//	const int offset = (y-buf->y) * (buf->h>>1) + ((x>>1)-(buf->x>>1));	
-
+    color &= 0x0f;
 	const int offset = y * (buf->h>>1) + (x>>1);	
 	if(x&1)
-		buf->ptr[offset] |= (color&0x0f);
+		buf->ptr[offset] |= (color);
 	else
 	{
-		buf->ptr[offset] = ((color&0x0f)<<4);
+		buf->ptr[offset] = (color<<4);
 	}
 }
 
