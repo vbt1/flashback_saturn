@@ -155,8 +155,10 @@ void Menu::displayTitleScreenMac(int num) {
 	Color c;
 	c.r = c.g = c.b = 0;
 	_stub->setPaletteEntry(255, &c);
+	_stub->setPaletteEntry(256+255, &c);
 // vbt : la couleur 0 est transparente et affiche du noir !!!
-	slBMPaletteNbg1(1); // vbt : utilisation de palette 1
+	slBMPaletteNbg1(2); // vbt : utilisation de palette 1
+//	slScrTransparent(!NBG0ON);
 	slScrTransparent(NBG1ON);
 	switch (num) {
 	case kMacTitleScreen_MacPlay:
@@ -180,6 +182,7 @@ void Menu::displayTitleScreenMac(int num) {
 	buf.y = (_vid->_h - h) / 2;
 	buf.setPixel = Video::MAC_setPixel;
 	memset(_vid->_frontLayer, 0, w * h);
+	memset(_vid->_backLayer, 0, w * h);
 	_res->MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
@@ -189,6 +192,14 @@ void Menu::displayTitleScreenMac(int num) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
 		}
 	}
+	/*
+	c.r = c.g = c.b = 0;
+	_stub->setPaletteEntry(1, &c);
+	_stub->setPaletteEntry(10, &c);
+	c.r = 255;
+	_stub->setPaletteEntry(255+256, &c);
+	_stub->setPaletteEntry(0+256, &c);
+	*/
 /*	if (num == kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		for (int i = 0; i < 2; ++i) {
@@ -372,12 +383,13 @@ bool Menu::handlePasswordScreen() {
 	} while (!_stub->_pi.quit);
 	return false;
 }
-
+*/
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	_vid->fadeOut();
 	loadPicture("menu2");
-	_vid->fullRefresh();
+memset(_vid->_frontLayer, 0, 512*448);	
+//	_vid->fullRefresh();
 	int currentSkill = _skill;
 	int currentLevel = _level;
 	do {
@@ -389,7 +401,8 @@ bool Menu::handleLevelScreen() {
 		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 14, (currentSkill == 1) ? 2 : 3);
 		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 24, (currentSkill == 2) ? 2 : 3);
 
-		_vid->updateScreen();
+//		_vid->updateScreen();
+		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
 
@@ -444,7 +457,7 @@ bool Menu::handleLevelScreen() {
 	} while (!_stub->_pi.quit);
 	return false;
 }
-*/
+
 void Menu::handleTitleScreen() {
 //	debug(DBG_MENU, "Menu::handleTitleScreen()");
 
@@ -580,9 +593,9 @@ memset(_vid->_frontLayer, 0, 512*448);
 //				}
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
-//				if (handleLevelScreen()) {
-//					return;
-//				}
+				if (handleLevelScreen()) {
+					return;
+				}
 				break;
 			case MENU_OPTION_ITEM_INFO:
 //				handleInfoScreen();
@@ -618,7 +631,9 @@ memset(_vid->_frontLayer, 0, 512*448);
 // VBt : ) remettre			
 //			_stub->copyRectRgb24(flagX, flagY, flagW, flagH, languages[currentLanguage].bitmap16x12);
 		}
-		_vid->updateScreen();
+//		_vid->updateScreen();
+//			memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
+			_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
 	}

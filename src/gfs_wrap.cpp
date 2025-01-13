@@ -387,7 +387,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector
 //emu_printf("start_sector %d skip_bytes %d\n",start_sector,skip_bytes);
 
-	if(start_sector == 3303)
+	if(start_sector == 3303 || start_sector == 3399)
 		GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
 	/*if(GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET) < 0)
 	{

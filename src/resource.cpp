@@ -1271,7 +1271,9 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
 //	assert(sig == 0xC211 || sig == 0xC103);
 	if(sig != 0xC211 && sig != 0xC103)
+	{
 		return;
+	}
 //	const int count = ((uint16_t*)ptr)[0]; ptr += 2;
 	const int count = READ_BE_UINT16(ptr); ptr += 2;
 //	assert(i < count);
