@@ -1463,7 +1463,7 @@ slSynch();
 	const int sx = x; //* _vid->_layerScale;
 	const int sy = y;// * _vid->_layerScale;
 	_gfx.setClippingRect(sx, sy, sw, sh);
-	slScrAutoDisp(NBG1ON|SPRON); // vbt à remettre
+	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // vbt à remettre
 	slTVOn();
 }
 

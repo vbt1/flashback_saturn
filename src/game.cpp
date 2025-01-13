@@ -307,7 +307,7 @@ for (int i=36;i<100;i++)
 	_mix.free();
 	_stub->destroy();
 }
-
+#if 0
 void Game::displayTitleScreenMac(int num) {
 	const int w = 512;
 	int h = 384;
@@ -415,7 +415,7 @@ void Game::displayTitleScreenMac(int num) {
 	slScrTransparent(!NBG1ON);
 	slBMPaletteNbg1(2); // passage à la palette non recalculée
 }
-
+#endif
 void Game::resetGameState() {
 	_animBuffers._states[0] = _animBuffer0State;
 	_animBuffers._curPos[0] = 0xFF;

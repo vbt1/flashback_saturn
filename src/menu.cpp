@@ -6,6 +6,8 @@
 
 extern "C" {
 	#include 	<string.h>
+#include <sl_def.h>
+#include <sgl.h>
 }
 
 #include "decode_mac.h"
@@ -111,7 +113,7 @@ void Menu::loadPicture(const char *prefix) {
 			if (strncmp(prefix, screens[i].prefix, strlen(screens[i].prefix)) == 0) {
 				displayTitleScreenMac(screens[i].num);
 				if (screens[i].num == kMacTitleScreen_Controls) {
-					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
+//					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
 					displayTitleScreenMac(kMacTitleScreen_LeftEye);
 					for (int j = 0; j < _vid->_h * _vid->_w; ++j) {
 						if (_vid->_backLayer[j] != 0) {
@@ -148,6 +150,14 @@ void Menu::displayTitleScreenMac(int num) {
 	const int w = 512;
 	int h = 384;
 	int clutBaseColor = 0;
+
+// vbt : on force la couleur 255
+	Color c;
+	c.r = c.g = c.b = 0;
+	_stub->setPaletteEntry(255, &c);
+// vbt : la couleur 0 est transparente et affiche du noir !!!
+	slBMPaletteNbg1(1); // vbt : utilisation de palette 1
+	slScrTransparent(NBG1ON);
 	switch (num) {
 	case kMacTitleScreen_MacPlay:
 		break;
@@ -163,13 +173,13 @@ void Menu::displayTitleScreenMac(int num) {
 		break;
 	}
 	DecodeBuffer buf{};
-//	memset(&buf, 0, sizeof(buf));
 	buf.ptr = _vid->_frontLayer;
-	buf.w = _vid->_w;
+	buf.pitch = buf.w = _vid->_w;
 	buf.h = _vid->_h;
 	buf.x = (_vid->_w - w) / 2;
 	buf.y = (_vid->_h - h) / 2;
-	memset(_vid->_frontLayer, 0, _vid->_h * _vid->_w);
+	buf.setPixel = Video::MAC_setPixel;
+	memset(_vid->_frontLayer, 0, w * h);
 	_res->MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
@@ -179,7 +189,7 @@ void Menu::displayTitleScreenMac(int num) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
 		}
 	}
-	if (num == kMacTitleScreen_MacPlay) {
+/*	if (num == kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		for (int i = 0; i < 2; ++i) {
 			_res->MAC_copyClut16(palette, 0, 55 + i);
@@ -192,12 +202,16 @@ void Menu::displayTitleScreenMac(int num) {
 		Color c;
 		c.r = c.g = c.b = 0;
 		_stub->setPaletteEntry(0, &c);
-	} else if (num == kMacTitleScreen_Flashback) {
+	} else*/ if (num == kMacTitleScreen_Flashback) {
 		_vid->setTextPalette();
+//		_mix->playMusic(1); // vbt : déplacé, musique du menu
 	}
-	if (num == kMacTitleScreen_MacPlay || num == kMacTitleScreen_Presage) {
-		_vid->fullRefresh();
-		_vid->updateScreen();
+	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
+
+	if (num == kMacTitleScreen_MacPlay || num == kMacTitleScreen_Presage) 
+	{
+//		_vid->fullRefresh();
+//		_vid->updateScreen();
 		do {
 			_stub->sleep(EVENTS_DELAY);
 			_stub->processEvents();
@@ -209,8 +223,12 @@ void Menu::displayTitleScreenMac(int num) {
 				_stub->_pi.enter = false;
 				break;
 			}
+			_stub->copyRect(24, 24, 440, 10*24, _vid->_frontLayer, _vid->_w);
+			_stub->updateScreen(0);			
 		} while (!_stub->_pi.quit);
 	}
+	slScrTransparent(!NBG1ON);
+	slBMPaletteNbg1(2); // passage à la palette non recalculée
 }
 /*
 void Menu::handleInfoScreen() {
@@ -501,7 +519,8 @@ void Menu::handleTitleScreen() {
 		if (_nextScreen == SCREEN_TITLE) {
 			_vid->fadeOut();
 			loadPicture("menu1");
-			_vid->fullRefresh();
+//			_vid->fullRefresh();
+memset(_vid->_frontLayer, 0, 512*448);
 			_charVar1 = _res->isMac() ? 0xE0 : 0; // shadowColor
 			_charVar3 = _res->isMac() ? 0xE4 : 1; // selectedColor
 			_charVar4 = _res->isMac() ? 0xE5 : 2; // defaultColor
