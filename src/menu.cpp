@@ -8,8 +8,9 @@ extern "C" {
 	#include 	<string.h>
 }
 
+#include "decode_mac.h"
 #include "game.h"
-#include "mod_player.h"
+#include "menu.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
@@ -86,33 +87,132 @@ void Menu::drawString2(const char *str, int16_t y, int16_t x) {
 		break;
 	case kResourceTypeMac:*/
 		for (; str[len]; ++len) {
-			_vid->MAC_drawStringChar(_vid->_frontLayer, _vid->_w, Video::CHAR_W * (x + len), Video::CHAR_H * y, _res->_fnt, _vid->_charFrontColor, (uint8_t)str[len]);
+			_vid->MAC_drawStringChar(_vid->_frontLayer, _vid->_w, w * (x + len), h * y, _res->_fnt, _vid->_charFrontColor, (uint8_t)str[len]);
 		}
 /*		break;
 	}*/
-//	_vid->markBlockAsDirty(x * w, y * h, len * w, h, _vid->_layerScale);
+//	_vid->markBlockAsDirty(x * w, y * h, len * w, h, _vid->_h * _vid->_w);
 }
 
-/*
 void Menu::loadPicture(const char *prefix) {
-//	emu_printf( "Menu::loadPicture('%s')\n", prefix);
-	static const int kPictureW = 256;
-	static const int kPictureH = 224;
-	_res->load_MAP_menu(prefix, _res->_scratchBuffer);
-	for (int i = 0; i < 4; ++i) {
-		for (int y = 0; y < kPictureH; ++y) {
-			for (int x = 0; x < 64; ++x) {
-				_vid->_frontLayer[i + x * 4 + kPictureW * y] = _res->_scratchBuffer[0x3800 * i + x + 64 * y];
+	emu_printf("Menu::loadPicture('%s')\n", prefix);
+//	if (_res->isMac()) {
+		static const struct {
+			const char *prefix;
+			int8_t num;
+		} screens[] = {
+			{ "menu1", kMacTitleScreen_Flashback },
+			{ "menu2", kMacTitleScreen_RightEye },
+			{ "menu3", kMacTitleScreen_LeftEye },
+			{ "instr", kMacTitleScreen_Controls },
+			{ 0, -1 }
+		};
+		for (int i = 0; screens[i].prefix; ++i) {
+			if (strncmp(prefix, screens[i].prefix, strlen(screens[i].prefix)) == 0) {
+				displayTitleScreenMac(screens[i].num);
+				if (screens[i].num == kMacTitleScreen_Controls) {
+					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
+					displayTitleScreenMac(kMacTitleScreen_LeftEye);
+					for (int j = 0; j < _vid->_h * _vid->_w; ++j) {
+						if (_vid->_backLayer[j] != 0) {
+							_vid->_frontLayer[j] = _vid->_backLayer[j];
+						}
+					}
+				}
+				break;
 			}
 		}
-	}
-	_res->load_PAL_menu(prefix, _res->_scratchBuffer);
-	_stub->setPalette(_res->_scratchBuffer, 256);
-	
-	// To fix overscan colours in saturn port
-	_stub->setOverscanColor(0);
+/*	} else {
+		if (_res->isDOS()) {
+			static const int kPictureW = 256;
+			static const int kPictureH = 224;
+			_res->load_MAP_menu(prefix, _res->_scratchBuffer);
+			for (int i = 0; i < 4; ++i) {
+				for (int y = 0; y < kPictureH; ++y) {
+					for (int x = 0; x < kPictureW / 4; ++x) {
+						_vid->_frontLayer[i + x * 4 + kPictureW * y] = _res->_scratchBuffer[0x3800 * i + x + 64 * y];
+					}
+				}
+			}
+		} else if (_res->isPC98()) {
+			_res->load_MAP_menu(prefix, _vid->_frontLayer);
+		}
+		_res->load_PAL_menu(prefix, _res->_scratchBuffer);
+		_stub->setPalette(_res->_scratchBuffer, 256);
+	}*/
+	memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
+//	_vid->updateWidescreen();
 }
 
+void Menu::displayTitleScreenMac(int num) {
+	const int w = 512;
+	int h = 384;
+	int clutBaseColor = 0;
+	switch (num) {
+	case kMacTitleScreen_MacPlay:
+		break;
+	case kMacTitleScreen_Presage:
+		clutBaseColor = 12;
+		break;
+	case kMacTitleScreen_Flashback:
+	case kMacTitleScreen_LeftEye:
+	case kMacTitleScreen_RightEye:
+		h = 448;
+		break;
+	case kMacTitleScreen_Controls:
+		break;
+	}
+	DecodeBuffer buf{};
+//	memset(&buf, 0, sizeof(buf));
+	buf.ptr = _vid->_frontLayer;
+	buf.w = _vid->_w;
+	buf.h = _vid->_h;
+	buf.x = (_vid->_w - w) / 2;
+	buf.y = (_vid->_h - h) / 2;
+	memset(_vid->_frontLayer, 0, _vid->_h * _vid->_w);
+	_res->MAC_loadTitleImage(num, &buf);
+	for (int i = 0; i < 12; ++i) {
+		Color palette[16];
+		_res->MAC_copyClut16(palette, 0, clutBaseColor + i);
+		const int basePaletteColor = i * 16;
+		for (int j = 0; j < 16; ++j) {
+			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+		}
+	}
+	if (num == kMacTitleScreen_MacPlay) {
+		Color palette[16];
+		for (int i = 0; i < 2; ++i) {
+			_res->MAC_copyClut16(palette, 0, 55 + i);
+			const int basePaletteColor = (12 + i) * 16;
+			for (int j = 0; j < 16; ++j) {
+				_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+			}
+		}
+	} else if (num == kMacTitleScreen_Presage) {
+		Color c;
+		c.r = c.g = c.b = 0;
+		_stub->setPaletteEntry(0, &c);
+	} else if (num == kMacTitleScreen_Flashback) {
+		_vid->setTextPalette();
+	}
+	if (num == kMacTitleScreen_MacPlay || num == kMacTitleScreen_Presage) {
+		_vid->fullRefresh();
+		_vid->updateScreen();
+		do {
+			_stub->sleep(EVENTS_DELAY);
+			_stub->processEvents();
+			if (_stub->_pi.escape) {
+				_stub->_pi.escape = false;
+				break;
+			}
+			if (_stub->_pi.enter) {
+				_stub->_pi.enter = false;
+				break;
+			}
+		} while (!_stub->_pi.quit);
+	}
+}
+/*
 void Menu::handleInfoScreen() {
 //	debug(DBG_MENU, "Menu::handleInfoScreen()");
 	_vid->fadeOut();
@@ -326,7 +426,7 @@ bool Menu::handleLevelScreen() {
 	} while (!_stub->_pi.quit);
 	return false;
 }
-
+*/
 void Menu::handleTitleScreen() {
 //	debug(DBG_MENU, "Menu::handleTitleScreen()");
 
@@ -343,28 +443,28 @@ void Menu::handleTitleScreen() {
 	menuItems[menuItemsCount].str = LocaleData::LI_07_START;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_START;
 	++menuItemsCount;
-//	if (!_res->_isDemo) 
-	{
-		if (0) //(g_options.enable_password_menu) // vbt à voir si on remet 
-		{
+//	if (!_res->_isDemo) {
+/*		if (g_options.enable_password_menu) {
 			menuItems[menuItemsCount].str = LocaleData::LI_08_SKILL;
 			menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_SKILL;
 			++menuItemsCount;
 			menuItems[menuItemsCount].str = LocaleData::LI_09_PASSWORD;
 			menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_PASSWORD;
 			++menuItemsCount;
-		} else {
+		} else*/ {
 			menuItems[menuItemsCount].str = LocaleData::LI_06_LEVEL;
 			menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_LEVEL;
 			++menuItemsCount;
 		}
-	}
+//	}
 	menuItems[menuItemsCount].str = LocaleData::LI_10_INFO;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_INFO;
 	++menuItemsCount;
-	menuItems[menuItemsCount].str = LocaleData::LI_23_DEMO;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_DEMO;
-	++menuItemsCount;
+/*	if (!_res->isMac()) {
+		menuItems[menuItemsCount].str = LocaleData::LI_23_DEMO;
+		menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_DEMO;
+		++menuItemsCount;
+	}*/
 	menuItems[menuItemsCount].str = LocaleData::LI_11_QUIT;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_QUIT;
 	++menuItemsCount;
@@ -409,7 +509,7 @@ void Menu::handleTitleScreen() {
 			_nextScreen = -1;
 		}
 
-		if (g_options.enable_language_selection) {
+/*		if (g_options.enable_language_selection) {
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 				if (currentLanguage != 0) {
@@ -426,7 +526,7 @@ void Menu::handleTitleScreen() {
 					currentLanguage = 0;
 				}
 			}
-		}
+		}*/
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (currentEntry != 0) {
@@ -453,20 +553,20 @@ void Menu::handleTitleScreen() {
 			case MENU_OPTION_ITEM_START:
 				return;
 			case MENU_OPTION_ITEM_SKILL:
-				handleSkillScreen();
+//				handleSkillScreen();
 				break;
 			case MENU_OPTION_ITEM_PASSWORD:
-				if (handlePasswordScreen()) {
-					return;
-				}
+//				if (handlePasswordScreen()) {
+//					return;
+//				}
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
-				if (handleLevelScreen()) {
-					return;
-				}
+//				if (handleLevelScreen()) {
+//					return;
+//				}
 				break;
 			case MENU_OPTION_ITEM_INFO:
-				handleInfoScreen();
+//				handleInfoScreen();
 				break;
 			case MENU_OPTION_ITEM_DEMO:
 				return;
@@ -504,7 +604,7 @@ void Menu::handleTitleScreen() {
 		_stub->processEvents();
 	}
 }
-
+/*
 const char *Menu::getLevelPassword(int level, int skill) const {
 	switch (_res->_type) {
 	case kResourceTypeAmiga:

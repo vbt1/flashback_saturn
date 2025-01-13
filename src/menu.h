@@ -84,6 +84,7 @@ struct Menu {
 	void drawString(const char *str, int16 y, int16 x, uint8 color);
 	void drawString2(const char *str, int16 y, int16 x);
 	void loadPicture(const char *prefix);
+	void displayTitleScreenMac(int num);
 
 	void handleInfoScreen();
 	void handleSkillScreen();

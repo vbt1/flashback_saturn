@@ -245,8 +245,8 @@ for (int i=36;i<100;i++)
 				}
 				break;
 			case kResourceTypeMac:*/
-				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
-//				_menu.handleTitleScreen();
+//				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
+				_menu.handleTitleScreen();
 /*				break;
 			}*/
 		//slPrint("_mix.stopMusic",slLocate(3,13));			
