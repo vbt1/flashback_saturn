@@ -177,9 +177,9 @@ hwram = (uint8_t *)hwram_ptr;
 #endif
 /*
 	if (_res.isMac()) {
-		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
+		_menu.displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
-			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
+			_menu.displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}*/
 // vbt : clean front layer	
@@ -246,6 +246,7 @@ for (int i=36;i<100;i++)
 				break;
 			case kResourceTypeMac:*/
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
+//				_menu.handleTitleScreen();
 /*				break;
 			}*/
 		//slPrint("_mix.stopMusic",slLocate(3,13));			
@@ -1622,7 +1623,7 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 	uint16_t sprite_w = b;
 
 	const uint8_t *src = dataPtr;
-	bool var14 = false;
+	bool sprite_mirror_x = false;
 
 	int16_t sprite_clipped_w;
 	if (pos_x >= 0) {
@@ -1631,7 +1632,7 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 		} else {
 			sprite_clipped_w = 256 - pos_x;
 			if (flags & 2) {
-				var14 = true;
+				sprite_mirror_x = true;
 				if (sprite_mirror_y) {
 					src += (sprite_w - 1) * sprite_h;
 				} else {
@@ -1650,13 +1651,13 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 				pos_x = 0;
 			}
 		} else {
-			var14 = true;
+			sprite_mirror_x = true;
 			if (sprite_mirror_y) {
 				src += sprite_h * (pos_x + sprite_w - 1);
 				pos_x = 0;
 			} else {
 				src += pos_x + sprite_w - 1;
-				var14 = true;
+				sprite_mirror_x = true;
 				pos_x = 0;
 			}
 		}
@@ -1685,7 +1686,7 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 		return;
 	}
 
-	if (!var14 && (flags & 2)) {
+	if (!sprite_mirror_x && (flags & 2)) {
 		if (sprite_mirror_y) {
 			src += sprite_h * (sprite_w - 1);
 		} else {
@@ -1716,7 +1717,7 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 */
 int Game::loadMonsterSprites(LivePGE *pge) {
 //	debug(DBG_GAME, "Game::loadMonsterSprites()");
-	InitPGE *init_pge = pge->init_PGE;
+	const InitPGE *init_pge = pge->init_PGE;
 	if (init_pge->obj_node_number != 0x49 && init_pge->object_type != 10) {
 		return 0xFFFF;
 	}

@@ -22,13 +22,13 @@ Menu::Menu(Resource *res, SystemStub *stub, Video *vid)
 	: _res(res), _stub(stub), _vid(vid) {
 }
 
-void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t color) {
+void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t colorConfig) {
 //	debug(DBG_MENU, "Menu::drawString()");
-	uint8_t v1b = _vid->_charFrontColor;
-	uint8_t v2b = _vid->_charTransparentColor;
-	uint8_t v3b = _vid->_charShadowColor;
-	switch (color) {
-	case 0:
+	const uint8_t v1b = _vid->_charFrontColor;
+	const uint8_t v2b = _vid->_charTransparentColor;
+	const uint8_t v3b = _vid->_charShadowColor;
+	switch (colorConfig) {
+	case 0: // unused
 		_vid->_charFrontColor = _charVar1;
 		_vid->_charTransparentColor = _charVar2;
 		_vid->_charShadowColor = _charVar2;
@@ -48,12 +48,12 @@ void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t color) {
 		_vid->_charTransparentColor = 0xFF;
 		_vid->_charShadowColor = _charVar1;
 		break;
-	case 4:
+	case 4: // unused
 		_vid->_charFrontColor = _charVar2;
 		_vid->_charTransparentColor = 0xFF;
 		_vid->_charShadowColor = _charVar1;
 		break;
-	case 5:
+	case 5: // unused
 		_vid->_charFrontColor = _charVar2;
 		_vid->_charTransparentColor = 0xFF;
 		_vid->_charShadowColor = _charVar5;
@@ -69,8 +69,8 @@ void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t color) {
 
 void Menu::drawString2(const char *str, int16_t y, int16_t x) {
 	debug(DBG_MENU, "Menu::drawString2()");
-	int w = Video::CHAR_W;
-	int h = Video::CHAR_H;
+	const int w = Video::CHAR_W;
+	const int h = Video::CHAR_H;
 	int len = 0;
 /*	switch (_res->_type) {
 	case kResourceTypeAmiga:
@@ -151,9 +151,9 @@ void Menu::handleSkillScreen() {
 	drawString(_res->getMenuString(LocaleData::LI_12_SKILL_LEVEL), 12, 4, 3);
 	int currentSkill = _skill;
 	do {
-		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   15, 14, colors[currentSkill][0]);
-		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 17, 14, colors[currentSkill][1]);
-		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 19, 14, colors[currentSkill][2]);
+		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   15, 14, (currentSkill == 0) ? 2 : 3);
+		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 17, 14, (currentSkill == 1) ? 2 : 3);
+		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 19, 14, (currentSkill == 2) ? 2 : 3);
 
 		_vid->updateScreen();
 		_stub->sleep(EVENTS_DELAY);
@@ -263,16 +263,14 @@ bool Menu::handleLevelScreen() {
 	int currentSkill = _skill;
 	int currentLevel = _level;
 	do {
-		for (int i = 0; i < 7; ++i) {
-			drawString(_levelNames[i], 7 + i * 2, 4, (currentLevel == i) ? 2 : 3);
+		for (int i = 0; i < LEVELS_COUNT; ++i) {
+			drawString(_levelNames[i], 5 + i * 2, 4, (currentLevel == i) ? 2 : 3);
 		}
-//		_vid->markBlockAsDirty(4 * Video::CHAR_W, 7 * Video::CHAR_H, 192, 7 * Video::CHAR_H, _vid->_layerScale);
 
 		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  4, (currentSkill == 0) ? 2 : 3);
 		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 14, (currentSkill == 1) ? 2 : 3);
 		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 24, (currentSkill == 2) ? 2 : 3);
-//		_vid->markBlockAsDirty(4 * Video::CHAR_W, 23 * Video::CHAR_H, 192, Video::CHAR_H, _vid->_layerScale);
-		_vid->_fullRefresh = true;
+
 		_vid->updateScreen();
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
@@ -282,12 +280,12 @@ bool Menu::handleLevelScreen() {
 			if (currentLevel != 0) {
 				--currentLevel;
 			} else {
-				currentLevel = 6;
+				currentLevel = LEVELS_COUNT - 1;
 			}
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-			if (currentLevel != 6) {
+			if (currentLevel != LEVELS_COUNT - 1) {
 				++currentLevel;
 			} else {
 				currentLevel = 0;
@@ -328,7 +326,6 @@ bool Menu::handleLevelScreen() {
 	} while (!_stub->_pi.quit);
 	return false;
 }
-
 
 void Menu::handleTitleScreen() {
 //	debug(DBG_MENU, "Menu::handleTitleScreen()");
@@ -405,14 +402,14 @@ void Menu::handleTitleScreen() {
 			_vid->fadeOut();
 			loadPicture("menu1");
 			_vid->fullRefresh();
-			_charVar3 = 1;
-			_charVar4 = 2;
+			_charVar1 = _res->isMac() ? 0xE0 : 0; // shadowColor
+			_charVar3 = _res->isMac() ? 0xE4 : 1; // selectedColor
+			_charVar4 = _res->isMac() ? 0xE5 : 2; // defaultColor
 			currentEntry = 0;
 			_nextScreen = -1;
 		}
 
-//		if (g_options.enable_language_selection) 
-		{
+		if (g_options.enable_language_selection) {
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 				if (currentLanguage != 0) {
@@ -447,7 +444,6 @@ void Menu::handleTitleScreen() {
 			}
 		}
 		if (_stub->_pi.enter) {
-//			emu_printf("_pi.enter9\n");			
 			_stub->_pi.enter = false;
 			selectedItem = currentEntry;
 		}
@@ -457,17 +453,15 @@ void Menu::handleTitleScreen() {
 			case MENU_OPTION_ITEM_START:
 				return;
 			case MENU_OPTION_ITEM_SKILL:
-				//handleSkillScreen();
+				handleSkillScreen();
 				break;
 			case MENU_OPTION_ITEM_PASSWORD:
-//				if (handlePasswordScreen()) {
-//					return;
-//				}
+				if (handlePasswordScreen()) {
+					return;
+				}
 				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
-//					emu_printf("handleLevelScreen level selected    \n");	
-					
 					return;
 				}
 				break;
@@ -496,13 +490,12 @@ void Menu::handleTitleScreen() {
 		}
 
 		// draw the language flag in the top right corner
-//		if (previousLanguage != currentLanguage) 
-		{
-//			_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
+		if (previousLanguage != currentLanguage) {
+			_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 			static const int flagW = 16;
 			static const int flagH = 12;
-			static const int flagX = Video::GAMESCREEN_W - flagW - 8;
-			static const int flagY = 8;
+			const int flagX = _vid->_w - flagW - 8;
+			const int flagY = 8;
 // VBt : ) remettre			
 //			_stub->copyRectRgb24(flagX, flagY, flagW, flagH, languages[currentLanguage].bitmap16x12);
 		}
@@ -514,14 +507,22 @@ void Menu::handleTitleScreen() {
 
 const char *Menu::getLevelPassword(int level, int skill) const {
 	switch (_res->_type) {
-
+	case kResourceTypeAmiga:
+		if (level < 7) {
+			if (_res->_lang == LANG_FR) {
+				return _passwordsFrAmiga[skill * 7 + level];
+			} else {
+				return _passwordsEnAmiga[skill * 7 + level];
+			}
+		}
+		break;
 	case kResourceTypeMac:
-		return _passwordsMac[skill * 8 + level];
+		return _passwordsMac[skill * LEVELS_COUNT + level];
 	case kResourceTypeDOS:
 		// default
 		break;
 	}
-	return _passwordsDOS[skill * 8 + level];
+	return _passwordsDOS[skill * LEVELS_COUNT + level];
 }
 */
 

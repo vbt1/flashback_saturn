@@ -34,12 +34,30 @@ inline void SWAP(T &a, T &b) {
 
 template<typename T>
 inline T CLIP(const T& val, const T& a, const T& b) {
-	if (val < a) {
+	if (val <= a) {
 		return a;
-	} else if (val > b) {
+	} else if (val >= b) {
 		return b;
 	}
 	return val;
+}
+
+#undef MIN
+template<typename T>
+inline T MIN(T v1, T v2) {
+	return (v1 < v2) ? v1 : v2;
+}
+
+#undef MAX
+template<typename T>
+inline T MAX(T v1, T v2) {
+	return (v1 > v2) ? v1 : v2;
+}
+
+#undef ABS
+template<typename T>
+inline T ABS(T t) {
+	return (t < 0) ? -t : t;
 }
 
 enum Language {
@@ -160,9 +178,8 @@ struct Object {
 };
 
 struct ObjectNode {
-	uint16 last_obj_number;
+	uint16_t num_objects;
 	Object *objects;
-	uint16 num_objects;
 };
 
 struct ObjectOpcodeArgs {
@@ -191,17 +208,12 @@ struct CollisionSlot {
 	LivePGE *live_pge;
 	uint16_t index;
 };
-/*
-struct MbkEntry {
-	uint16 offset;
-	uint16 len;
-};
 
 struct BankSlot {
 	uint16_t entryNum;
 	uint8_t *ptr;
 };
-*/
+
 struct CollisionSlot2 {
 	CollisionSlot2 *next_slot;
 	int8_t *unk2; // grid_data_pos
