@@ -204,70 +204,6 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 	slTVOn();
 }
 
-
-#if 0
-void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-//emu_printf("decodeC211 src strt %p\n",src);
-	struct {
-		const uint8_t *ptr;
-		int repeatCount;
-	} stack[512];
-	int y = 0;
-	int x = 0;
-	int sp = 0;
-
-	while (1) {
-		const uint8_t code = *src++;
-		if ((code & 0x80) != 0) {
-			++y;
-			x = 0;
-		}
-		int count = code & 0x1F;
-		if (count == 0) {
-			count = READ_BE_UINT16(src); src += 2;
-		}
-		if ((code & 0x40) == 0) {
-			if ((code & 0x20) == 0) {
-				if (count == 1) {
-//					assert(sp > 0);
-					if(sp <= 0)
-						break;
-					--stack[sp - 1].repeatCount;
-					if (stack[sp - 1].repeatCount >= 0) {
-						src = stack[sp - 1].ptr;
-					} else {
-						--sp;
-					}
-				} else {
-//					assert(sp < ARRAYSIZE(stack));
-					if(sp >= ARRAYSIZE(stack))
-						break;
-					stack[sp].ptr = src;
-					stack[sp].repeatCount = count - 1;
-					++sp;
-				}
-			} else {
-				x += count;
-			}
-		} else {
-			if ((code & 0x20) == 0) {
-				if (count == 1) {
-					return;
-				}
-				const uint8_t color = *src++;
-				for (int i = 0; i < count; ++i) {
-					setPixeli(x++, y, color, buf);
-				}
-			} else {
-				for (int i = 0; i < count; ++i) {
-					setPixeli(x++, y, *src++, buf);
-				}
-			}
-		}
-	}
-//emu_printf("decodeC211 end\n");
-}
-#else
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //emu_printf("decodeC211 src strt %p\n",src);
 	struct {
@@ -357,4 +293,3 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 	}
 //emu_printf("decodeC211 end\n");
 }
-#endif

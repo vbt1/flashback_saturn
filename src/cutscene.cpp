@@ -3,7 +3,6 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#define VBT_HACK_SATURN 1
 //#define DEBUG_CUTSCENE 1
 //#define SUBTITLE_SPRITE 1
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
@@ -1136,7 +1135,7 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 		const int dr = ((color >> 8) & 15) - ((paletteBuffer[l] >> 8) & 15);
 		const int dg = ((color >> 4) & 15) - ((paletteBuffer[l] >> 4) & 15);
 		const int db =  (color       & 15) -  (paletteBuffer[l]       & 15);
-		const int sum = dr * dr + dg * dg + db * db;
+		const int sum = 30 * dr * dr + 59 * dg * dg + 11 * db * db;
 		if (index < 0 || sum < currentSum) {
 			currentSum = sum;
 			index = l;
@@ -1259,20 +1258,15 @@ void Cutscene::op_handleKeys() {
 		_varKey = 0;
 		--n;
 		_cmdPtr = getCommandData();
-		n = READ_BE_UINT16(_cmdPtr + n * 2 + 2);
-	}
-	
-#ifdef VBT_HACK_SATURN
-// vbt : remis de l'ancienne version, mettre 45 uniquement ici   // quoi faire pour la 69
-	if (!(_id >= 37 && _id <= 42) && _id != 59 && !(_id >= 66 && _id <= 71) /*_id != 45 && _id != 69 */ ) {
-//		if (_res->isMac()) 
-		{
-			_cmdPtr = getCommandData();
-			_baseOffset = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
-			n = 0;
+		n = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
+		if (_res->isMac()) {
+			const int count = READ_BE_UINT16(_cmdPtr);
+			assert(n < count);
+			_cmdPtr += n;
+			_cmdPtrBak = _cmdPtr;
+			return;
 		}
 	}
-#endif
 	_cmdPtr = _cmdPtrBak = getCommandData() + n + _baseOffset;
 }
 
@@ -1309,29 +1303,36 @@ emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
 	_newPal = false;
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
+	const int count = READ_BE_UINT16(p);
 	int offset = 0;
-#ifdef VBT_HACK_SATURN
-// vbt : obligatoire - ne pas mettre 45	
-// à voir si la video 38 existe, sinon on garde if((_id != 40 && _id != 41 && _id != 42 && _id != 37 && _id != 39  && _id != 69)) 
-//	if (_id >= 37 && _id <= 42 || _id == 69 || _id == 59  || _id == 17 || _id == 19 || _id == 22 || _id == 23 || _id == 3) 
-	if (_id == 3 || (_id >= 19 && _id < 21) || (_id >= 22 && _id < 25) 
-		|| (_id >= 26 && _id < 28) || (_id >= 37 && _id <= 42) /*|| (_id >= 65 && _id <= 71)*/ ) // 18 21
-	{
-#endif
+	_baseOffset = (count + 1) * 2;
+	if (_res->isMac()) {
+		_vid->_charShadowColor = 0xE0;
+//		assert(num < count);
+		if(num >= count)
+			return;
+		offset = READ_BE_UINT16(p + 2 + num * 2);
+//		assert(offset >= _baseOffset);
+		if(offset < _baseOffset)
+			return;
+	} else {
 		if (num != 0) {
 			offset = READ_BE_UINT16(p + 2 + num * 2);
+		} else if (count != 0) {
+			const int startOffset = READ_BE_UINT16(p + 2);
+			if (startOffset != 0) {
+				warning("startOffset %d count %d num %d", startOffset, count, num);
+			}
 		}
-		_baseOffset = (READ_BE_UINT16(p) + 1) * 2;
-#ifdef VBT_HACK_SATURN
-	} else {
-		_baseOffset = READ_BE_UINT16(p + 2 + num * 2);
+		p += _baseOffset;
 	}
-#else
-	const int count = READ_BE_UINT16(p);
-	_baseOffset = (count + 1) * 2;
+#if 0
+	for (int i = 0; i < count; ++i) {
+		fprintf(stdout, "cutscene start point %d offset 0x%x, base 0x%x\n", i, READ_BE_UINT16(p + 2 + i * 2), (count + 1) * 2);
+	}
 #endif
 	_varKey = 0;
-	_cmdPtr = _cmdPtrBak = p + _baseOffset + offset;
+	_cmdPtr = _cmdPtrBak = p + offset;
 	_polPtr = getPolygonData();
 
 	_paletteNum = -1;
