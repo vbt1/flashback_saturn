@@ -31,7 +31,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 
     // Cache strstr results
     bool isJunky = strstr(name, "Junky") || strstr(name, "Alien") || strstr(name, "Replicant");
-    bool isRoom = strstr(name, "Room");
+    bool isRoom = strstr(name, "Room") || strstr(name, "Title 6");
 
     // Memory allocation logic
 	if(strncmp("intro", name, 5) == 0 
@@ -81,7 +81,7 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
         }
     }
 //	emu_printf("inf %d sup %d\n",a,b);
-//	emu_printf("dst %p\n",dst);
+//	emu_printf("dst %p size %d\n",dst,decodedSize);
 
 	return dst;
 }
@@ -205,7 +205,7 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-//emu_printf("decodeC211 src strt %p\n",src);
+//emu_printf("decodeC211 src strt %p w %d h %d\n",src, w, h);
 	struct {
 		const uint8_t *ptr;
 		int repeatCount;

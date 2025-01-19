@@ -219,9 +219,14 @@ void Video::setTextPalette() {
 		c.g = (color & 0x0F0) >> 2;
 		c.r = (color & 0xF00) >> 6;
 		if(i < 14)
+		{
 			_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : front palette
+		}
 		else
+		{
 			_stub->setPaletteEntry(68 + i - 14, &c);  // vbt : front palette
+		}
+//		_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : sprite palette
 		_stub->setPaletteEntry(0x1E0 + i, &c);  // vbt : sprite palette
 	}
 }

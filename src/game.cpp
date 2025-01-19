@@ -67,7 +67,7 @@ extern Uint8 *current_dram2;
 extern unsigned int end1;
 }
 static SAVE_BUFFER sbuf;
-static Uint8 rle_buf[SAV_BUFSIZE];
+//static Uint8 *rle_buf = NULL; //[SAV_BUFSIZE];
 extern "C" {
 #include "sega_mem.h"
 }
@@ -79,8 +79,10 @@ static Uint32 getFreeSaveBlocks(void) {
 	BupConfig conf[3];
 	BupStat sttb;
 
-    Uint32 libBakBuf[4096];
-    Uint32 BackUpRamWork[2048];
+//    Uint32 libBakBuf[4096];
+//    Uint32 BackUpRamWork[2048];
+	Uint32 *libBakBuf    = (Uint32 *)(hwram_screen+SAV_BUFSIZE);
+	Uint32 *BackUpRamWork= (Uint32 *)(hwram_screen+SAV_BUFSIZE+0x4000);
 
 	PER_SMPC_RES_DIS(); // Disable reset
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
@@ -123,8 +125,7 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:*/
-//		end1 = 564000+(has4mb?36000:46000);//-16384;//538624;
-		end1 = 564000+38000;//-16384;//538624;
+		end1 = 564000+48000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -307,115 +308,7 @@ for (int i=36;i<100;i++)
 	_mix.free();
 	_stub->destroy();
 }
-#if 0
-void Game::displayTitleScreenMac(int num) {
-	const int w = 512;
-	int h = 384;
-	int clutBaseColor = 0;
 
-// vbt : on force la couleur 255
-	Color c;
-	c.r = c.g = c.b = 0;
-	_stub->setPaletteEntry(255, &c);
-// vbt : la couleur 0 est transparente et affiche du noir !!!
-	slBMPaletteNbg1(1); // vbt : utilisation de palette 1
-	slScrTransparent(NBG1ON);
-	switch (num) {
-	case Menu::kMacTitleScreen_MacPlay:
-		break;
-	case Menu::kMacTitleScreen_Presage:
-		clutBaseColor = 12;
-		break;
-	case Menu::kMacTitleScreen_Flashback:
-	case Menu::kMacTitleScreen_LeftEye:
-	case Menu::kMacTitleScreen_RightEye:
-		h = 448;
-		break;
-	case Menu::kMacTitleScreen_Controls:
-		break;
-	}
-	DecodeBuffer buf{};
-	buf.ptr = _vid._frontLayer;
-	buf.pitch = buf.w = _vid._w;
-	buf.h = _vid._h;
-	buf.x = (_vid._w - w) / 2;
-	buf.y = (_vid._h - h) / 2;
-	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid._frontLayer, 0, w * h);
-	_res.MAC_loadTitleImage(num, &buf);
-	for (int i = 0; i < 12; ++i) {
-		Color palette[16];
-		_res.MAC_copyClut16(palette, 0, clutBaseColor + i);
-		const int basePaletteColor = i * 16;
-		for (int j = 0; j < 16; ++j) {
-			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
-		}
-	}/*
-	if (num == Menu::kMacTitleScreen_MacPlay) {
-		Color palette[16];
-		_res.MAC_copyClut16(palette, 0, 56);
-		for (int i = 12; i < 16; ++i) {
-			const int basePaletteColor = i * 16;
-			for (int j = 0; j < 16; ++j) {
-				_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
-			}
-		}
-	} else if (num == Menu::kMacTitleScreen_Presage) {
-		Color c;
-		c.r = c.g = c.b = 0;
-		_stub->setPaletteEntry(0, &c);
-	} else if (num == Menu::kMacTitleScreen_Flashback) 
-	*/
-	{
-//		_vid.setTextPalette(); // vbt : on enleve corrige le orange manquant sur le titre
-		_vid._charShadowColor = 0xE0;
-		_mix.playMusic(1); // vbt : déplacé, musique du menu
-	}
-//	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
-//	_stub->updateScreen(0);
-	while (1) {
-		if (num == Menu::kMacTitleScreen_Flashback) {
-			static const uint8_t selectedColor = 0xE4;
-			static const uint8_t defaultColor = 0xE8;
-			for (int i = 0; i < 7; ++i) {
-				const char *str = Menu::_levelNames[i];
-				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
-			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-				if (_currentLevel > 0) {
-					--_currentLevel;
-				}
-			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-				if (_currentLevel < 6) {
-					++_currentLevel;
-				}
-			}
-//			_vid.updateScreen();
-			_stub->copyRect(24, 24, 440, 10*24, _vid._frontLayer, _vid._w);
-			_stub->updateScreen(0);
-		}
-		_stub->processEvents();
-		if (_stub->_pi.quit) {
-		//	memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
-		//slPrint("displayTitleScreenMac kMacTitleScreen_Flashback quit",slLocate(3,13));				
-			break;
-		}
-		if (_stub->_pi.enter) {
-			memset(_vid._frontLayer,0x00,_vid._w* _vid._h);
-			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);	
-			_stub->_pi.enter = false;
-			break;
-		}
-		_stub->sleep(30);
-	}
-	slScrTransparent(!NBG1ON);
-	slBMPaletteNbg1(2); // passage à la palette non recalculée
-}
-#endif
 void Game::resetGameState() {
 	_animBuffers._states[0] = _animBuffer0State;
 	_animBuffers._curPos[0] = 0xFF;
@@ -2215,15 +2108,12 @@ bool Game::saveGameState(uint8 slot) {
 	Uint8 *time;
 //	Uint32 libBakBuf[4096] ;
 //	Uint32 BackUpRamWork[2048];
-
-	Uint32 *libBakBuf    =(Uint32 *)current_lwram;//[4096] ;
-	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];
-
-//	Uint32 *libBakBuf    =(Uint32 *)sat_malloc((4096*4)+(2048*4));//current_lwram;//[4096] ;
-//	Uint32 *BackUpRamWork=(Uint32 *)&libBakBuf[4096];//(current_lwram+(4096*4));//[2048];
-
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
-	sbuf.buffer	 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
+
+	Uint8  *rle_buf		 = (Uint8  *)hwram_screen;
+	Uint32 *libBakBuf    = (Uint32 *)(rle_buf+SAV_BUFSIZE);
+	Uint32 *BackUpRamWork= (Uint32 *)(rle_buf+SAV_BUFSIZE+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(rle_buf+SAV_BUFSIZE+0x4000+0x2000);
 	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));	
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2283,16 +2173,17 @@ bool Game::loadGameState(uint8 slot) {
 //	Uint32 libBakBuf[4096];
 //	Uint32 BackUpRamWork[2048];
 	
-	Uint32 *libBakBuf    =(Uint32 *)current_lwram;//[4096] ;
-	Uint32 *BackUpRamWork=(Uint32 *)(current_lwram+(4096*4));//[2048];
-	sbuf.buffer			 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
-	Uint32 i;
+	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
+	Uint8  *rle_buf		 = (Uint8  *)hwram_screen;
+	Uint32 *libBakBuf    = (Uint32 *)(rle_buf+SAV_BUFSIZE);
+	Uint32 *BackUpRamWork= (Uint32 *)(rle_buf+SAV_BUFSIZE+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(rle_buf+SAV_BUFSIZE+0x4000+0x2000);
+	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));
+
+	Uint32 i;
 	int32 status;
 
-	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
-	sbuf.buffer	 =(Uint8 *)(current_lwram+(4096*4)+(2048*4));
-	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));
 	// Load save from saturn backup memory
 	PER_SMPC_RES_DIS(); // Disable reset
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
@@ -2470,8 +2361,8 @@ void Game::clearSaveSlots(uint8 level) {
 	BupConfig conf[3];
 	BupStat sttb;
 
-    Uint32 libBakBuf[4096];
-    Uint32 BackUpRamWork[2048];
+	Uint32 *libBakBuf    = (Uint32 *)(hwram_screen+SAV_BUFSIZE);
+	Uint32 *BackUpRamWork= (Uint32 *)(hwram_screen+SAV_BUFSIZE+0x4000);
 
 	PER_SMPC_RES_DIS(); // Disable reset
 		BUP_Init(libBakBuf, BackUpRamWork, conf);

@@ -40,37 +40,20 @@ int	main( void )
 	init_GFS(); // Initialize GFS system
 
 	int id = CartRAM_init(0);
-#if 0
-    if(id!=0x5c)
-    {
-		slInitSystem(TV_320x224, (TEXTURE*)NULL, 1); // Init SGL
-		slTVOn();
-		slPrint((char*)"No ram cart found",slLocate(10,12));
-		slPrint((char*)"Please insert 4Mb",slLocate(10,14));
-//		emu_printf("id %x\n",id);
-		slSynch();
-		while(1);
-    }
-#else
-    if(id==0x5c)
-		has4mb = true;
-#endif
+//	if(id==0x5c)
+//		has4mb = true;
+
 	slInitSystem(TV_640x448, (TEXTURE*)NULL, 1); // Init SGL
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
-//	CSH_Init(CSH_4WAY);
 	MEM_Init(LOW_WORK_RAM_START, LOW_WORK_RAM_SIZE); // Use low work ram for the sega mem library
-//	slTVOff();
 //	
 	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
 //	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	
-//	slTVOn();
 	slSynch();
 
 //	DMA_ScuInit(); // Init for SCU DMA
-	/* Application Call */
 	ss_main();
 	return 0;
 }
@@ -80,7 +63,7 @@ extern void emu_printf(const char *format, ...);
 
 void emu_printf(const char *format, ...)
 {
-#if 0
+#if 1
    static char emu_printf_buffer[128];
    char *s = emu_printf_buffer;
    volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);

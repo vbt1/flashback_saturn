@@ -8,6 +8,7 @@ extern "C" {
 	#include 	<string.h>
 #include <sl_def.h>
 #include <sgl.h>
+extern Uint8 *current_lwram;
 }
 
 #include "decode_mac.h"
@@ -97,7 +98,7 @@ void Menu::drawString2(const char *str, int16_t y, int16_t x) {
 }
 
 void Menu::loadPicture(const char *prefix) {
-	emu_printf("Menu::loadPicture('%s')\n", prefix);
+//	emu_printf("Menu::loadPicture('%s')\n", prefix);
 //	if (_res->isMac()) {
 		static const struct {
 			const char *prefix;
@@ -114,12 +115,16 @@ void Menu::loadPicture(const char *prefix) {
 				displayTitleScreenMac(screens[i].num);
 				if (screens[i].num == kMacTitleScreen_Controls) {
 //					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
+					_stub->copyRect(0, 0, _vid->_w, _vid->_h, current_lwram, _vid->_w);
+
 					displayTitleScreenMac(kMacTitleScreen_LeftEye);
+
+					/*
 					for (int j = 0; j < _vid->_h * _vid->_w; ++j) {
 						if (_vid->_backLayer[j] != 0) {
 							_vid->_frontLayer[j] = _vid->_backLayer[j];
 						}
-					}
+					}*/
 				}
 				break;
 			}
@@ -151,37 +156,37 @@ void Menu::displayTitleScreenMac(int num) {
 	int h = 384;
 	int clutBaseColor = 0;
 
-// vbt : on force la couleur 255
-	Color c;
-	c.r = c.g = c.b = 0;
-	_stub->setPaletteEntry(255, &c);
-	_stub->setPaletteEntry(256+255, &c);
-// vbt : la couleur 0 est transparente et affiche du noir !!!
-	slBMPaletteNbg1(2); // vbt : utilisation de palette 1
-//	slScrTransparent(!NBG0ON);
-	slScrTransparent(NBG1ON);
+	slScrTransparent(NBG0ON|!NBG1ON);
+	slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+	slBMPaletteNbg1(2); // passage à la palette non recalculée	
+
+	DecodeBuffer buf{};
 	switch (num) {
 	case kMacTitleScreen_MacPlay:
+//emu_printf("loading macplay\n");
 		break;
 	case kMacTitleScreen_Presage:
+//emu_printf("loading presage\n");
 		clutBaseColor = 12;
 		break;
 	case kMacTitleScreen_Flashback:
 	case kMacTitleScreen_LeftEye:
 	case kMacTitleScreen_RightEye:
+		buf.ptr = _vid->_frontLayer;
+		memset(_vid->_frontLayer, 0, w * h);
 		h = 448;
 		break;
 	case kMacTitleScreen_Controls:
+		buf.ptr = current_lwram;
+		memset(buf.ptr, 0, w * h);
 		break;
 	}
-	DecodeBuffer buf{};
-	buf.ptr = _vid->_frontLayer;
 	buf.pitch = buf.w = _vid->_w;
+	buf.type = 2;
 	buf.h = _vid->_h;
 	buf.x = (_vid->_w - w) / 2;
 	buf.y = (_vid->_h - h) / 2;
-	buf.setPixel = Video::MAC_setPixel;
-	memset(_vid->_frontLayer, 0, w * h);
+	buf.setPixel = Video::MAC_setPixelFG;
 	memset(_vid->_backLayer, 0, w * h);
 	_res->MAC_loadTitleImage(num, &buf);
 	for (int i = 0; i < 12; ++i) {
@@ -190,16 +195,10 @@ void Menu::displayTitleScreenMac(int num) {
 		const int basePaletteColor = i * 16;
 		for (int j = 0; j < 16; ++j) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+			_stub->setPaletteEntry(256+basePaletteColor + j, &palette[j]);
 		}
 	}
-	/*
-	c.r = c.g = c.b = 0;
-	_stub->setPaletteEntry(1, &c);
-	_stub->setPaletteEntry(10, &c);
-	c.r = 255;
-	_stub->setPaletteEntry(255+256, &c);
-	_stub->setPaletteEntry(0+256, &c);
-	*/
+
 /*	if (num == kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		for (int i = 0; i < 2; ++i) {
@@ -217,8 +216,8 @@ void Menu::displayTitleScreenMac(int num) {
 		_vid->setTextPalette();
 //		_mix->playMusic(1); // vbt : déplacé, musique du menu
 	}
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
-
+//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
+/*	
 	if (num == kMacTitleScreen_MacPlay || num == kMacTitleScreen_Presage) 
 	{
 //		_vid->fullRefresh();
@@ -237,21 +236,24 @@ void Menu::displayTitleScreenMac(int num) {
 			_stub->copyRect(24, 24, 440, 10*24, _vid->_frontLayer, _vid->_w);
 			_stub->updateScreen(0);			
 		} while (!_stub->_pi.quit);
-	}
-	slScrTransparent(!NBG1ON);
-	slBMPaletteNbg1(2); // passage à la palette non recalculée
+	}*/
 }
-/*
+
 void Menu::handleInfoScreen() {
 //	debug(DBG_MENU, "Menu::handleInfoScreen()");
 	_vid->fadeOut();
+//	memset(_vid->_frontLayer, 0, 512*384);
+	
 	if (_res->_lang == LANG_FR) {
 		loadPicture("instru_f");
 	} else {
 		loadPicture("instru_e");
 	}
-	_vid->fullRefresh();
-	_vid->updateScreen();
+	
+//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+	
+//	_vid->fullRefresh();
+//	_vid->updateScreen();
 	do {
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
@@ -266,14 +268,10 @@ void Menu::handleInfoScreen() {
 		}
 	} while (!_stub->_pi.quit);
 }
-
+/*
 void Menu::handleSkillScreen() {
 //	debug(DBG_MENU, "Menu::handleSkillScreen()");
-	static const uint8_t colors[3][3] = {
-		{ 2, 3, 3 }, // easy
-		{ 3, 2, 3 }, // normal
-		{ 3, 3, 2 }  // expert
-	};
+
 	_vid->fadeOut();
 	loadPicture("menu3");
 	_vid->fullRefresh();
@@ -507,14 +505,14 @@ void Menu::handleTitleScreen() {
 
 	static const struct {
 		Language lang;
-		const uint8_t *bitmap16x12;
+//		const uint8_t *bitmap16x12;
 	} languages[] = {
-		{ LANG_EN, NULL  },
-		{ LANG_FR, NULL  },
-		{ LANG_DE, NULL },
-		{ LANG_SP, NULL },
-		{ LANG_IT, NULL },
-		{ LANG_JP, NULL },
+		{ LANG_EN   },
+		{ LANG_FR   },
+/*		{ LANG_DE },
+		{ LANG_SP },
+		{ LANG_IT },
+		{ LANG_JP },*/
 	};
 	int currentLanguage = 0;
 	for (int i = 0; i < ARRAYSIZE(languages); ++i) {
@@ -598,7 +596,7 @@ memset(_vid->_frontLayer, 0, 512*448);
 				}
 				break;
 			case MENU_OPTION_ITEM_INFO:
-//				handleInfoScreen();
+				handleInfoScreen();
 				break;
 			case MENU_OPTION_ITEM_DEMO:
 				return;

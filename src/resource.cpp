@@ -1234,7 +1234,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		)
 		{
 //			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
-			data = (uint8_t *)_scratchBuffer; //+0x12C00;//std_malloc(_resourceMacDataSize);
+			data = (uint8_t *)_scratchBuffer;
 		}
 		else
 		{
@@ -1369,9 +1369,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 //emu_printf("decodeResourceMacData %s\n",name);	
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
-//emu_printf("MAC_decodeImageData\n");
 		MAC_decodeImageData(ptr, 0, buf, 0xff);
-//emu_printf("end MAC_decodeImageData\n");
 //		sat_free(ptr);  // pas de vidage car on utilise scratchbuffer
 	}
 }
