@@ -218,41 +218,19 @@ for (int i=36;i<100;i++)
 */
 //	bool presentMenu = true; //((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
-//		if (presentMenu) 
-		{
+
 //			_mix.playMusic(1); // vbt : à remplacer
-			
-/*			switch (_res._type) {
-			case kResourceTypeDOS:
-				_menu.handleTitleScreen();
-				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _stub->_pi.quit) {
-					_stub->_pi.quit = true;
-					break;
-				}
-				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
-					_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
-					const char *fn = _demoInputs[_demoBin].name;
-					_res.load_DEM(fn);
-					if (_res._demLen == 0) {
-						continue;
-					}
-					_skillLevel = kSkillNormal;
-					_currentLevel = _demoInputs[_demoBin].level;
-					_randSeed = 0;
-				} else {
-					_demoBin = -1;
-					_skillLevel = _menu._skill;
-					_currentLevel = _menu._level;
-				}
-				break;
-			case kResourceTypeMac:*/
+
 //				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				_menu.handleTitleScreen();
 /*				break;
 			}*/
 		//slPrint("_mix.stopMusic",slLocate(3,13));			
 			_mix.stopMusic(); // vbt à remettre
-		}
+		memset(_vid._frontLayer, 0, 512*448);
+		_skillLevel = _menu._skill;
+		_currentLevel = _menu._level;
+
 		if (_stub->_pi.quit) {
 			break;
 		}
@@ -1722,6 +1700,7 @@ void Game::loadLevelData() {
 		sat_free(_res._cine_off);
 
 		_vid.setTextPalette();
+		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);		
 		_vid.drawString("Loading Please wait", 20, 40, 0xE7);
 		slScrAutoDisp(NBG1ON);
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);

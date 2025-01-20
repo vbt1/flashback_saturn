@@ -531,7 +531,6 @@ void Menu::handleTitleScreen() {
 			_vid->fadeOut();
 			loadPicture("menu1");
 //			_vid->fullRefresh();
-memset(_vid->_frontLayer, 0, 512*448);
 			_charVar1 = _res->isMac() ? 0xE0 : 0; // shadowColor
 			_charVar3 = _res->isMac() ? 0xE4 : 1; // selectedColor
 			_charVar4 = _res->isMac() ? 0xE5 : 2; // defaultColor

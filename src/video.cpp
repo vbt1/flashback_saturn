@@ -158,11 +158,13 @@ void Video::fullRefresh() {
 
 void Video::fadeOut() {
 //	emu_printf("Video::fadeOut()\n");	
-	if (1) {
+//	if (1) {
 		fadeOutPalette();
-	} else {
+		slTVOff();
+		slSynch();
+//	} else {
 //		_stub->fadeScreen();
-	}
+//	}
 }
 
 void Video::fadeOutPalette() {
@@ -226,7 +228,6 @@ void Video::setTextPalette() {
 		{
 			_stub->setPaletteEntry(68 + i - 14, &c);  // vbt : front palette
 		}
-//		_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : sprite palette
 		_stub->setPaletteEntry(0x1E0 + i, &c);  // vbt : sprite palette
 	}
 }
