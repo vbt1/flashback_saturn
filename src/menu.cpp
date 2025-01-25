@@ -580,15 +580,16 @@ void Menu::handleTitleScreen() {
 			_selectedOption = menuItems[selectedItem].opt;
 			switch (_selectedOption) {
 			case MENU_OPTION_ITEM_START:
+				_level = 0;
 				return;
-			case MENU_OPTION_ITEM_SKILL:
+//			case MENU_OPTION_ITEM_SKILL:
 //				handleSkillScreen();
-				break;
-			case MENU_OPTION_ITEM_PASSWORD:
+//				break;
+//			case MENU_OPTION_ITEM_PASSWORD:
 //				if (handlePasswordScreen()) {
 //					return;
 //				}
-				break;
+//				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
 					return;
