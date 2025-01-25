@@ -7,7 +7,7 @@ extern "C" {
 #include <ctype.h>
 #include "sat_mem_checker.h"
 #include <sl_def.h>
-
+#include <sega_gfs.h>
 extern Uint8 *hwram;
 extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
@@ -31,7 +31,8 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
 
     // Cache strstr results
     bool isJunky = strstr(name, "Junky") || strstr(name, "Alien") || strstr(name, "Replicant");
-    bool isRoom = strstr(name, "Room") || strstr(name, "Title 6");
+    bool isRoom = strstr(name, "Room");
+	bool isControl = strstr(name, "Title 6");
 
     // Memory allocation logic
 	if(strncmp("intro", name, 5) == 0 
@@ -49,6 +50,10 @@ uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uin
     } else if (isRoom) {
         // Allocates from hwram_screen
         dst = (uint8_t *)hwram_screen;
+    } else if (isControl) {
+        // Allocates from lwram_screen
+		GFS_Load(GFS_NameToId((int8_t *)"CONTROLS.BIN"),0,(void *)current_lwram+36352,147456);
+        dst = (uint8_t *)NULL;
     } else if (((int)hwram_ptr) + alignedSize < end1) {
         // Allocates from hwram_ptr if there's enough space
         dst = (uint8_t *)hwram_ptr;

@@ -325,22 +325,24 @@ void SystemStub_SDL::processEvents() {
 				_pi.dirMask |= PlayerInput::DIR_RIGHT;
 
 			if (PAD_PULL_START)
-				_pi.enter = false;
+				//_pi.enter = false;
+				_pi.backspace = false;
 			else if (PAD_PUSH_START)
-				_pi.enter = true;
-			if (PAD_PULL_B)
+				//_pi.enter = true;
+				_pi.backspace = true;
+			if (PAD_PULL_A)
 				_pi.space = false;
-			else if (PAD_PUSH_B)
+			else if (PAD_PUSH_A)
 				_pi.space = true;
 
-			if (PAD_PULL_X)
-				_pi.backspace = false;
-			else if (PAD_PUSH_X)
-				_pi.backspace = true;
+			if (PAD_PULL_C)
+				_pi.enter = false;
+			else if (PAD_PUSH_C)
+				_pi.enter = true;
 
-			if (PAD_PULL_A)
+			if (PAD_PULL_B)
 				_pi.shift = false;
-			else if (PAD_PUSH_A)
+			else if (PAD_PUSH_B)
 				_pi.shift = true;
 
 			if (PAD_PULL_LTRIG)

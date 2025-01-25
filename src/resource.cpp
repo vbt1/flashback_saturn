@@ -1221,9 +1221,9 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	if (decompressLzss) {
 //emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
 		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
-		if (!data) {
+		/*if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
-		}
+		}*/
 	} else {
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 		if(strncmp("Title", entry->name, 5) == 0 
