@@ -101,7 +101,8 @@ void Graphics::addEllipseRadius(int16 y, int16 x1, int16 x2) {
 }
 
 void Graphics::drawEllipse(uint8 color, bool hasAlpha, const Point *pt, int16 rx, int16 ry) {
-//	debug(DBG_VIDEO, "Graphics::drawEllipse()");
+if(hasAlpha)
+	emu_printf("Graphics::drawEllipse() %d color %d\n",hasAlpha, color);
 	bool flag = false;
 	int16_t y = pt->y - ry;
 	if (y < 0) {
@@ -207,12 +208,14 @@ void Graphics::drawEllipse(uint8 color, bool hasAlpha, const Point *pt, int16 rx
 }
 
 void Graphics::fillArea(uint8 color, bool hasAlpha) {
-//	debug(DBG_VIDEO, "Graphics::fillArea()");
+if(hasAlpha)
+	emu_printf("Graphics::fillArea() %d color %d\n",hasAlpha, color);
 	int16_t *pts = _areaPoints;
 	uint8_t *dst = _layer + (_cry + *pts++) * VIDEO_PITCH + _crx;
 	int16_t x1 = *pts++;
 	if (x1 >= 0) {
-		if (hasAlpha && color > 0xC7) {
+//		if (hasAlpha && color > 0xC7) {
+		if (hasAlpha  && color > 12) {
 			do {
 				const int16_t x2 = MIN<int16_t>(_crw - 1, *pts++);
 				for (; x1 <= x2; ++x1) {
@@ -236,7 +239,8 @@ void Graphics::fillArea(uint8 color, bool hasAlpha) {
 }
 
 void Graphics::drawSegment(uint8 color, bool hasAlpha, int16 ys, const Point *pts, uint8 numPts) {
-//	debug(DBG_VIDEO, "Graphics::drawSegment()");
+if(hasAlpha)
+	emu_printf("Graphics::drawSegment() %d color %d\n",hasAlpha, color);
 	int16_t xmin, xmax, ymin, ymax;
 	xmin = xmax = pts[0].x;
 	ymin = ymax = pts[0].y;
@@ -343,7 +347,8 @@ static void drawPolygonHelper2(int32 &x, int16 &y, int32 &step, int16 *&pts, int
 }
 
 void Graphics::drawPolygon(uint8 color, bool hasAlpha, const Point *pts, uint8 numPts) {
-//	emu_printf("Graphics::drawPolygon(%d,%d,x%d,y%d,%d)\n",color,hasAlpha,pts->x,pts->y,numPts);
+	if(hasAlpha)
+	emu_printf("Graphics::drawPolygon(%d,%d,x%d,y%d,%d)\n",color,hasAlpha,pts->x,pts->y,numPts);
 //	assert(numPts * 4 < 0x100);
 	if(numPts * 4 >= 0x100)
 	{
