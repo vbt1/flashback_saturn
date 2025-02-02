@@ -422,14 +422,15 @@ void Cutscene::drawCreditsText() {
 	}
 	if (_creditsTextCounter <= 0) {
 		uint8_t code;
-		const bool isMac = _res->isMac();
-		if (isMac && _creditsTextLen <= 0) {
+//		const bool isMac = _res->isMac();
+		if (/*isMac &&*/ _creditsTextLen <= 0) {
 			const uint8_t *p = _res->getCreditsString(_creditsTextIndex++);
 			if (!p) {
+//				emu_printf("no text\n");
 				return;
 			}
 			_creditsTextCounter = 60;
-			_creditsTextPosX = p[0];
+			_creditsTextPosX = p[0]+1;
 			_creditsTextPosY = p[1];
 			_creditsTextLen = p[2];
 			_textCurPtr = p + 2;
@@ -437,7 +438,7 @@ void Cutscene::drawCreditsText() {
 		} else {
 			code = *_textCurPtr;
 		}
-		if (code == 0x7D && isMac) {
+		if (code == 0x7D /*&& isMac*/) {
 			++_textCurPtr;
 			code = *_textCurPtr++;
 			_creditsTextLen -= 2;
@@ -479,6 +480,7 @@ void Cutscene::drawCreditsText() {
 	} else {
 		_creditsTextCounter -= 10;
 	}
+	hasText = true;
 	drawText((_creditsTextPosX - 1) * 8, _creditsTextPosY * 8, _textBuf, 0xEF, _vid->_frontLayer, kTextJustifyLeft);
 }
 
@@ -662,15 +664,8 @@ void Cutscene::op_drawCaptionText() {
 		if (strId != 0xFFFF) {
 			const uint8_t *str = _res->getCineString(strId);
 			if (str) {
-#ifdef SUBTITLE_SPRITE
-				_vid->_w=480;
-				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
-//				drawText(0, 0, str, 0xEF, (uint8_t *)_vid->_txt2Layer, kTextJustifyAlign);
-				_vid->_w=512;
-#else
 				hasText = true;
 				drawText(0, 129, str, 0xEF, _vid->_frontLayer, kTextJustifyAlign);
-#endif
 			}
 		} else if (_id == kCineEspions) {
 			// cutscene relies on drawCaptionText opcodes for timing
@@ -1190,13 +1185,7 @@ void Cutscene::op_drawTextAtPos() {
 			if (str) {
 				hasText = true;
 				const uint8_t color = 0xD0 + (strId >> 0xC);
-#ifdef SUBTITLE_SPRITE
-				_vid->_w=480;
-				drawText(x/2, y, str, color, (uint8_t *)_vid->_txt1Layer, kTextJustifyAlign);
-				_vid->_w=512;
-#else
 				drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
-#endif
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {

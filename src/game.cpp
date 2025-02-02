@@ -126,7 +126,7 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:*/
-		end1 = 564000+49000;
+		end1 = 564000+50000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -226,8 +226,7 @@ for (int i=36;i<100;i++)
 				_menu.handleTitleScreen();
 /*				break;
 			}*/
-		//slPrint("_mix.stopMusic",slLocate(3,13));			
-			_mix.stopMusic(); // vbt à remettre
+		_mix.stopMusic(); // vbt à remettre
 		memset(_vid._frontLayer, 0, 512*448);
 		_skillLevel = _menu._skill;
 		_currentLevel = _menu._level;
@@ -238,8 +237,7 @@ for (int i=36;i<100;i++)
 //		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
 //			_stub->clearWidescreen();
 //		}
-		//slPrint("_currentLevel",slLocate(3,13));
-//emu_printf("_currentLevel %d\n",_currentLevel);	
+//emu_printf("_currentLevel %d\n",_currentLevel);
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
 			_vid.setTextPalette();
@@ -398,12 +396,10 @@ heapWalk();
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			{
-//slPrint("unpauseMusic",slLocate(3,13));					
 				_mix.unpauseMusic(); // vbt : on reprend où la musique était
 			}
 			else
 			{
-//slPrint("playMusic",slLocate(3,13));
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 			}
 		}
@@ -421,7 +417,6 @@ heapWalk();
 	if (_blinkingConradCounter != 0) {
 		--_blinkingConradCounter;
 	}
-//slPrint("updateScreen1",slLocate(3,13));	
 	_vid.updateScreen();
 //	updateTiming();
 	drawStoryTexts();
@@ -439,7 +434,6 @@ heapWalk();
 	
 	if(_cut._stop)
 	{
-//slPrint("_cut._stop",slLocate(3,13));		
 		if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			_mix.unpauseMusic(); // vbt : on reprend où la musique était
 		else
@@ -538,7 +532,11 @@ void Game::playCutscene(int id) {
 				}
 			}
 		}
-*/		
+*/
+		if (_cut._id == 0x3D) {
+//			playCutsceneSeq("CREDITS.SEQ");
+			_cut._interrupted = false;
+		}
 		/*if (_res.isAmiga()) {
 			const int num = Cutscene::_musicTableAmiga[_cut._id * 2];
 			if (num != 0xFF) {
