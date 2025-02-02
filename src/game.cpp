@@ -40,6 +40,7 @@ extern Uint8 *save_current_lwram;
 extern Uint8 *soundAddr;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
 bool has4mb = false;
+void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
 
@@ -125,7 +126,7 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:*/
-		end1 = 564000+48000;
+		end1 = 564000+49000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -138,7 +139,7 @@ void Game::run() {
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 			
 _vid.setTextPalette();
-_vid.drawString("Loading Please wait", 20, 40, 0xE7);
+SAT_preloadCDfiles();
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.load_TEXT();
 #ifdef DEBUG
@@ -1700,8 +1701,8 @@ void Game::loadLevelData() {
 		sat_free(_res._cine_off);
 
 		_vid.setTextPalette();
-		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);		
-		_vid.drawString("Loading Please wait", 20, 40, 0xE7);
+//		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
+		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
@@ -2626,4 +2627,12 @@ void Game::SAT_preloadSpc() {
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration spc : %d\n",e-s);
 #endif
+}
+
+void Game::SAT_preloadCDfiles() {
+	_vid.drawString("Loading Please wait", 20, 40, 0xE5);	
+	_res.MAC_closeMainFile();
+	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
+	_cut.playSet(current_lwram, 0x2B14);
+	_res.MAC_reopenMainFile();
 }

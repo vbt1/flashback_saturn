@@ -540,8 +540,8 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 		Point pt;
 		pt.x = READ_BE_UINT16(data) + x; data += 2;
 		pt.y = READ_BE_UINT16(data) + y; data += 2;
-		uint16_t rx = READ_BE_UINT16(data); data += 2;
-		uint16_t ry = READ_BE_UINT16(data); data += 2;
+		int16_t rx = READ_BE_UINT16(data); data += 2;
+		int16_t ry = READ_BE_UINT16(data); data += 2;
 		//scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &pt, rx, ry);
 	} else if (numVertices == 0) {
@@ -1603,8 +1603,8 @@ void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, con
 		uint8_t color = paletteLut[p[offset]]; offset += 2;
 
 		if (verticesCount == 255) {
-			int rx = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
-			int ry = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
+			int16_t rx = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
+			int16_t ry = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 			Point pt;
 			pt.x = x + ix;
 			pt.y = y + iy;

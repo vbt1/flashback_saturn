@@ -402,6 +402,7 @@ struct Game {
 	void SAT_preloadSpc();
 	void SAT_preloadPerso();
 	void SAT_preloadIcon();
+	void SAT_preloadCDfiles();
 };
 
 #endif // GAME_H__

@@ -19,7 +19,7 @@ extern unsigned int end1;
 #include "util.h"
 #include "saturn_print.h"
 
-uint8_t *decodeLzss(File &f,const char *name, const uint8_t *_scratchBuffer, uint32_t &decodedSize) {
+uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 
 //emu_printf("lzss %s %05d\n", name, decodedSize);
    // Read the decoded size

@@ -884,9 +884,9 @@ void Resource::free_OBJ() {
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (_objectNodesMap[i] != prevNode) {
 			ObjectNode *curNode = _objectNodesMap[i];
+			prevNode = curNode;
 			sat_free(curNode->objects);
 			sat_free(curNode);
-			prevNode = curNode;
 		}
 		_objectNodesMap[i] = 0;
 	}
@@ -1096,7 +1096,7 @@ emu_printf("Resource::load_POL()\n");
 */
 void Resource::load_CMP(File *pf) {
 //	emu_printf("load_CMP\n");
-	int len = pf->size();
+	const int len = pf->size();
 	save_current_lwram = (uint8_t *)current_lwram;
 	uint8_t *tmp = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(len);
@@ -1182,10 +1182,10 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
-//		emu_printf("decodeResourceMacText1 %s found\n", buf);
+		emu_printf("decodeResourceMacText1 %s found\n", buf);
 		return decodeResourceMacData(entry, false);
 	} else { // CD version
-//		emu_printf("decodeResourceMacText1 %s not found\n", buf);
+		emu_printf("decodeResourceMacText1 %s not found\n", buf);
 		if (strcmp(name, "Flashback") == 0) {
 			name = "Game";
 		}
@@ -1220,7 +1220,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	uint8_t *data = 0;
 	if (decompressLzss) {
 //emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
-		data = decodeLzss(_mac->_f, entry->name, _scratchBuffer, _resourceMacDataSize);
+		data = decodeLzss(_mac->_f, entry->name, _resourceMacDataSize);
 		/*if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}*/
@@ -1395,7 +1395,7 @@ void Resource::MAC_unloadLevelData() {
 	_str = 0;
 }
 
-static const int _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red palette: 32
+static const uint8_t _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red palette: 32
 static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5-2" };
 
 void Resource::MAC_loadLevelData(int level) {
@@ -1412,7 +1412,7 @@ void Resource::MAC_loadLevelData(int level) {
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
 	ptr = decodeResourceMacData(name, true);
-	assert(READ_BE_UINT16(ptr) == 0xE6);
+	assert(READ_BE_UINT16(ptr) == NUM_OBJECTS);
 	decodeOBJ(ptr, _resourceMacDataSize);
 
 	// .ANI
@@ -1690,11 +1690,14 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 
 void Resource::MAC_loadCutsceneText() {
 	_cine_txt = decodeResourceMacText("Movie", "strings");
+	emu_printf("_cine_txt %p\n",_cine_txt);
 	_cine_off = 0; // offsets are prepended to _cine_txt
 }
 
 void Resource::MAC_loadCreditsText() {
-	_credits = decodeResourceMacText("Credit", "strings");
+	if (!_credits) {
+		_credits = decodeResourceMacText("Credit", "strings");
+	}
 }
 
 void Resource::MAC_loadSounds() {
@@ -1706,7 +1709,6 @@ void Resource::MAC_loadSounds() {
 		-1, 57
 	};
 //	_numSfx = NUM_SFXS;
-//	_sfxList = (SoundFx *)sat_calloc(_numSfx, sizeof(SoundFx));
 	_sfxList = (SoundFx *)hwram_ptr;
 	hwram_ptr += NUM_SFXS * sizeof(SoundFx);
 
@@ -1717,7 +1719,7 @@ void Resource::MAC_loadSounds() {
 	const int soundType = _mac->_sndIndex;
 	assert(soundType != -1);
 	uint8_t *p = (uint8_t *)0x25A04000;
-	
+	static const int kGain = 2;
 	for (int i = 0; i < NUM_SFXS; ++i) {
 		const int num = table[i];
 		if (num != -1) {
@@ -1732,16 +1734,12 @@ void Resource::MAC_loadSounds() {
 
 			_mac->_f.read(p, dataSize);
 			for (int j = 0; j < dataSize; ++j) {
-				p[j] ^= 0x80;
+				p[j] = ((int8_t)(p[j] ^ 0x80)) / kGain;
 			}
 			_sfxList[i].len = READ_BE_UINT32(buf + 0x12);
 			_sfxList[i].freq = READ_BE_UINT16(buf + 0x16);
 			_sfxList[i].data = p;
 //			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
-		
-/*			if(dataSize<0x900)
-			p += 0x900;
-			else*/
 			p += SAT_ALIGN8(dataSize);
 		}
 	}
