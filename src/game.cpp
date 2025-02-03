@@ -137,8 +137,42 @@ void Game::run() {
 	
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
-			
-_vid.setTextPalette();
+		_vid.setTextPalette();
+//	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
+	int x= 0;
+	int y=0;
+for (int i=0;i<106;i++)
+{
+//	_vid.MAC_drawStringChar(_vid._frontLayer, 512, x, y, _res._fnt, 0xe5, i+32);
+	_vid.MAC_drawStringChar(_vid._frontLayer, 512, x, y, _res._fnt, 0xe5, i+32);
+/*
+	DecodeBuffer buf{};
+	buf.ptr = _vid._frontLayer;
+	buf.type = 2; // obligatoire	
+	buf.w = 512;
+	buf.pitch = 512;
+	buf.h = 448;
+	buf.x = x;
+	buf.y = y;
+	
+	buf.setPixel = Video::MAC_setPixelFG;
+//	_vid._MAC_fontFrontColor = 0xe5;
+//	_vid._MAC_fontShadowColor = _vid._charShadowColor;
+	_res.MAC_decodeImageData(_res._fnt, i, &buf, 0xff);
+*/
+	_stub->copyRect(x, (y<<1), 512, 16, _vid._frontLayer, 512);
+	x+=8;
+	if(x>=256)
+	{
+	x=0;
+	y+=8;
+	}
+	
+slSynch();	
+}		
+			while(1);
+
+
 SAT_preloadCDfiles();
 _stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.load_TEXT();
