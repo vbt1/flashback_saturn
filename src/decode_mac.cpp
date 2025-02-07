@@ -31,7 +31,7 @@ uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 
     // Cache strstr results
     bool isJunky = strstr(name, "Junky") || strstr(name, "Alien") || strstr(name, "Replicant");
-    bool isRoom = strstr(name, "Room");
+    bool isRoom = strstr(name, "Room") || strstr(name, "Font");
 	bool isControl = strstr(name, "Title 6");
 
     // Memory allocation logic

@@ -1182,10 +1182,10 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
-		emu_printf("decodeResourceMacText1 %s found\n", buf);
+//		emu_printf("decodeResourceMacText1 %s found\n", buf);
 		return decodeResourceMacData(entry, false);
-	} else { // CD version
-		emu_printf("decodeResourceMacText1 %s not found\n", buf);
+	} /*else { // CD version
+//		emu_printf("decodeResourceMacText1 %s not found\n", buf);
 		if (strcmp(name, "Flashback") == 0) {
 			name = "Game";
 		}
@@ -1193,7 +1193,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
 //		emu_printf("decodeResourceMacText2 %s\n", buf);
 		return decodeResourceMacData(buf, false);
-	}
+	}*/
 }
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
@@ -1266,7 +1266,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 }
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask) {
-//emu_printf("MAC_decodeImageData %p %p %i\n",ptr,dst,i);	
+//emu_printf("MAC_decodeImageData %p %p %i %x\n",ptr,dst,i,READ_BE_UINT16(ptr));	
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
 //	assert(sig == 0xC211 || sig == 0xC103);
@@ -1690,14 +1690,12 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 
 void Resource::MAC_loadCutsceneText() {
 	_cine_txt = decodeResourceMacText("Movie", "strings");
-	emu_printf("_cine_txt %p\n",_cine_txt);
+//	emu_printf("_cine_txt %p\n",_cine_txt);
 	_cine_off = 0; // offsets are prepended to _cine_txt
 }
 
 void Resource::MAC_loadCreditsText() {
-	if (!_credits) {
-		_credits = decodeResourceMacText("Credit", "strings");
-	}
+	_credits = decodeResourceMacText("Credit", "strings");
 }
 
 void Resource::MAC_loadSounds() {

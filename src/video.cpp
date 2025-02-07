@@ -1,6 +1,6 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x65000
+#define VRAM_MAX 0x66000
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -372,7 +372,7 @@ void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, i
 		dst += 256;
 	}
 }
-*/
+
 void Video::drawChar(uint8 c, int16 y, int16 x) {
 //	emu_printf("Video::drawChar(0x%X, %d, %d)\n", c, y, x);
 	y *= 8;
@@ -410,6 +410,7 @@ void Video::drawChar(uint8 c, int16 y, int16 x) {
 		dst += 256 - 8;
 	}
 }
+*/
 /*
 void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
 	dst += y * pitch + x;
@@ -435,33 +436,170 @@ void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8
 	}
 }
 */
-static uint8_t _MAC_fontFrontColor;
-static uint8_t _MAC_fontShadowColor;
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+    if (chr < 32) return;
+
+    const unsigned char *srcData = src + ((chr - 32) << 8);
+    dst += (y * 2) * 512 + (x * 2);
+
+    register const unsigned char front = color;
+    register const unsigned char shadow = _charShadowColor;
+
+    for (int i = 0; i < 16; i++, dst += 496) {  // Move dst by (512 - 16) in one step
+        for (int j = 0; j < 4; j++) 
+		{
+			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
+			 srcData++;
+			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
+			 srcData++;
+			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
+			 srcData++;
+			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
+			 srcData++;
+        }
+    }
+}
+
+/*
+
+    if (chr < 32) return;
+
+    // Get source data pointer - keeping byte alignment for big-endian
+    const uint8_t* srcData = src + ((chr - 32) << 8);
+    
+    // Calculate base destination pointer
+    dst += (uint32_t)(y * _layerScale) * 512 + (x * _layerScale);
+    
+    // Cache colors and comparisons in registers
+    register const uint8_t front = color;
+    register const uint8_t shadow = _charShadowColor;
+    register const uint8_t shadow_check = 0xC0;
+    register const uint8_t front_check = 0xC1;
+    
+    // Pre-calculate row skip once
+    const int rowSkip = 512 - 16;
+    
+    // Process 16 rows - unroll by 2 for better pipeline usage
+    for (int i = 0; i < 16; i += 2) {
+        // First row
+        #define PROCESS_4_PIXELS(N) \
+            register uint8_t p0##N = *srcData++; \
+            register uint8_t p1##N = *srcData++; \
+            register uint8_t p2##N = *srcData++; \
+            register uint8_t p3##N = *srcData++; \
+            \
+            *dst = (p0##N == shadow_check) ? shadow : \
+                  (p0##N == front_check) ? front : *dst; \
+            dst++; \
+            *dst = (p1##N == shadow_check) ? shadow : \
+                  (p1##N == front_check) ? front : *dst; \
+            dst++; \
+            *dst = (p2##N == shadow_check) ? shadow : \
+                  (p2##N == front_check) ? front : *dst; \
+            dst++; \
+            *dst = (p3##N == shadow_check) ? shadow : \
+                  (p3##N == front_check) ? front : *dst; \
+            dst++;
+
+        // Process first row (16 pixels in 4 chunks)
+        PROCESS_4_PIXELS(0)
+        PROCESS_4_PIXELS(1)
+        PROCESS_4_PIXELS(2)
+        PROCESS_4_PIXELS(3)
+        
+        dst += rowSkip;
+
+        // Process second row (16 pixels in 4 chunks)
+        PROCESS_4_PIXELS(4)
+        PROCESS_4_PIXELS(5)
+        PROCESS_4_PIXELS(6)
+        PROCESS_4_PIXELS(7)
+        
+        dst += rowSkip;
+    }
+    #undef PROCESS_4_PIXELS
+}
+*/
+/*
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+    if (chr < 32) return;
+
+    // Get source data pointer - keeping byte alignment for big-endian
+    const uint8_t* srcData = src + ((chr - 32) << 8);
+    
+    // Calculate base destination pointer
+    dst += (uint32_t)(y * _layerScale) * 512 + (x * _layerScale);
+    
+    // Cache colors in registers
+    register const uint8_t front = color;
+    register const uint8_t shadow = _charShadowColor;
+    
+    // Process 16 rows
+    for (int i = 0; i < 16; i++) {
+        // Process each row in 4-byte chunks (16 pixels = 4 chunks)
+        for (int j = 0; j < 4; j++) {
+            // In big-endian, bytes are in natural order
+            register uint8_t p0 = *srcData++;
+            register uint8_t p1 = *srcData++;
+            register uint8_t p2 = *srcData++;
+            register uint8_t p3 = *srcData++;
+            
+            // Process 4 pixels sequentially
+            *dst = (p0 == 0xC0) ? shadow : 
+                  (p0 == 0xC1) ? front : *dst;
+            dst++;
+            
+            *dst = (p1 == 0xC0) ? shadow : 
+                  (p1 == 0xC1) ? front : *dst;
+            dst++;
+            
+            *dst = (p2 == 0xC0) ? shadow : 
+                  (p2 == 0xC1) ? front : *dst;
+            dst++;
+            
+            *dst = (p3 == 0xC0) ? shadow : 
+                  (p3 == 0xC1) ? front : *dst;
+            dst++;
+        }
+        
+        // Move to next row
+        dst += 512 - 16;
+    }
+}
+*/
+/*
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-//	emu_printf("Video::MAC_drawStringChar\n");	
-	DecodeBuffer buf{};
-	buf.ptr = dst;
-	buf.w = _w;
-	buf.pitch = pitch;
-	buf.type = 2; // obligatoire
-	buf.h = _h;
-	buf.x = x * _layerScale;
-	buf.y = y * _layerScale;
-	
-//	emu_printf("Video::drawString('w %d h %d x %d y %d p %d scale%d chr %d)\n", _w,_h,x,y,buf.pitch,_layerScale,chr);
-	buf.setPixel = Video::MAC_setPixelFont;
-	_MAC_fontFrontColor = color;
-	_MAC_fontShadowColor = _charShadowColor;
-//	assert(chr >= 32);
-	if(chr<32)
-		return;
-	_res->MAC_decodeImageData(_res->_fnt, chr - 32, &buf, 0xff);
-}
+    if (chr < 32) return;
+
+    // Get source data pointer - keeping byte alignment for big-endian
+    const uint8_t* srcData = src + ((chr - 32) << 8);
+    
+    // Calculate base destination pointer
+    dst += (uint32_t)(y * _layerScale) * 512 + (x * _layerScale);
+    
+    // Cache colors in registers
+    register const uint8_t front = color;
+    register const uint8_t shadow = _charShadowColor;
+    
+    // Single loop - process all 256 pixels (16x16)
+    // Every 16 pixels we need to add pitch-16 to dst
+    for (int i = 0; i < 256; i++) {
+        register uint8_t pixel = *srcData++;
+        
+        *dst = (pixel == 0xC0) ? shadow : 
+              (pixel == 0xC1) ? front : *dst;
+        dst++;
+        
+        // Move to next row after every 16 pixels
+        if ((i & 15) == 15) {
+            dst += 512 - 16;
+        }
+    }
+}*/
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
-//	memset4_fast(&_frontLayer[((y<<1)-1)*_w], 0xC0,16*_w);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;
 	while (1) {
@@ -469,7 +607,8 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		if (c == 0 || c == 0xB || c == 0xA) {
 			break;
 		}
-		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+//		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+		this->MAC_drawStringChar(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
 		++len;
 	}
 	_stub->copyRect(x, (y<<1), _w, 16, _frontLayer, _w);	
@@ -566,7 +705,7 @@ void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	const int offset = y * buf->pitch + x;
 	buf->ptr[offset] = color;
 }
-
+/*
 void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	y += buf->y;
 	x += buf->x;	
@@ -581,7 +720,7 @@ void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 		break;
 	}
 }
-/*
+
 void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
 
 	const int offset2 = y * buf->pitch/2 + x/2;
@@ -721,7 +860,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
 // Helper function to copy sprite to VRAM
 uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSize) {
-    if (position_vram + dataSize > VRAM_MAX + 0x1A000) {
+    if (position_vram + dataSize > VRAM_MAX + 0x19000) {
         position_vram = position_vram_aft_monster;
     }
 

@@ -312,64 +312,18 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 	return ret;
 }
 
-#ifdef SUBTITLE_SPRITE
-void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
-	debug(DBG_CUT, "Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)", x, y, color, textJustify);
-	int len = 0;
-	if (p != _textBuf && _res->isMac()) {
-		len = *p++;
-	} else {
-		while (p[len] != 0xA && p[len]) {
-			++len;
-		}
-	}
-	Video::drawCharFunc dcf = _vid->_drawChar;
-	const uint8_t *fnt = _res->_fnt;
-	uint16_t lastSep = 0;
-	if (textJustify != kTextJustifyLeft) {
-		lastSep = findTextSeparators(p, len);
-		if (textJustify != kTextJustifyCenter) {
-			lastSep = /*(_res->_lang == LANG_JP) ? 20 :*/ 30;
-		}
-	}
-	const uint8_t *sep = _textSep;
-//	y += 20; // vbt : vait un vide de 20 lignes
-	x += /*(_res->_lang == LANG_JP) ? 0 :*/ 4;
-	int16_t yPos = y/2;
-	int16_t xPos = x/2;
-	if (textJustify != kTextJustifyLeft) {
-		xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W); // pas de x2 sur CHAR_W
-	}
-	for (int i = 0; i < len && p[i] != 0xA; ++i) {
-		if (isNewLineChar(p[i], _res)) {
-			yPos += (Video::CHAR_H);
-			xPos = x/2;
-			if (textJustify != kTextJustifyLeft) {
-				xPos += ((lastSep - *sep++) / 2) * (Video::CHAR_W);
-			}
-		} else if (p[i] == 0x20) {
-			xPos += (Video::CHAR_W);
-		} else if (p[i] == 0x9) {
-			// ignore tab
-		} else {
-			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i], 1);
-			xPos += (Video::CHAR_W);
-		}
-	}
-}
-#else
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
 //emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
 //	memset(&_vid->_frontLayer[y*_vid->_w],0x00,512*(440-y)); // vbt : à voir
 	int len = 0;
-	if (p != _textBuf && _res->isMac()) {
+	if (p != _textBuf /*&& _res->isMac()*/) {
 		len = *p++;
 	} else {
 		while (p[len] != 0xA && p[len]) {
 			++len;
 		}
 	}
-	Video::drawCharFunc dcf = _vid->_drawChar;
+//	Video::drawCharFunc dcf = _vid->_drawChar;
 	const uint8_t *fnt = /*(_res->_lang == LANG_JP) ? Video::_font8Jp :*/ _res->_fnt;
 	uint16_t lastSep = 0;
 	if (textJustify != kTextJustifyLeft) {
@@ -399,12 +353,13 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 		} else if (p[i] == 0x9) {
 			// ignore tab
 		} else {
-			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
+//			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
+			_vid->MAC_drawStringChar(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
 			xPos += Video::CHAR_W;
 		}
 	}
 }
-#endif
+
 void Cutscene::clearBackPage() {
 //	emu_printf("_clearScreen %d\n",_clearScreen);
 //	if(_clearScreen)
@@ -1728,4 +1683,3 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	}
 	_stop = true; // pour reprendre la musique
 }
-

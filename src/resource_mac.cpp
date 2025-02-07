@@ -5,6 +5,7 @@ extern "C" {
 #include <sl_def.h>	
 #include "sat_mem_checker.h"
 extern Uint8 *hwram_ptr;
+void	*malloc(size_t);
 }
 
 #include <assert.h>

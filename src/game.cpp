@@ -1,5 +1,5 @@
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x65000
+#define VRAM_MAX 0x66000
 #define PCM_VOICE 18
 //#define VIDEO_PLAYER 1
 //#define DEBUG 1
@@ -126,7 +126,7 @@ void Game::run() {
 		_res.load("FB_TXT", Resource::OT_FNT);
 		break;
 	case kResourceTypeMac:*/
-		end1 = 564000+50000;
+		end1 = 564000+50000-10000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -138,43 +138,24 @@ void Game::run() {
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 		_vid.setTextPalette();
-//	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-	int x= 0;
-	int y=0;
-for (int i=0;i<106;i++)
-{
-//	_vid.MAC_drawStringChar(_vid._frontLayer, 512, x, y, _res._fnt, 0xe5, i+32);
-	_vid.MAC_drawStringChar(_vid._frontLayer, 512, x, y, _res._fnt, 0xe5, i+32);
-/*
-	DecodeBuffer buf{};
-	buf.ptr = _vid._frontLayer;
-	buf.type = 2; // obligatoire	
-	buf.w = 512;
-	buf.pitch = 512;
-	buf.h = 448;
-	buf.x = x;
-	buf.y = y;
-	
-	buf.setPixel = Video::MAC_setPixelFG;
-//	_vid._MAC_fontFrontColor = 0xe5;
-//	_vid._MAC_fontShadowColor = _vid._charShadowColor;
-	_res.MAC_decodeImageData(_res._fnt, i, &buf, 0xff);
-*/
-	_stub->copyRect(x, (y<<1), 512, 16, _vid._frontLayer, 512);
-	x+=8;
-	if(x>=256)
-	{
-	x=0;
-	y+=8;
-	}
-	
-slSynch();	
-}		
-			while(1);
 
+		const uint8_t* spriteData = _res._fnt;
+		_res._fnt = hwram_ptr;
 
-SAT_preloadCDfiles();
-_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
+		DecodeBuffer buf{};
+		buf.setPixel =  _vid.MAC_setPixel;
+		buf.w = Video::CHAR_W*2;
+		buf.h = Video::CHAR_H*2;
+		
+		for (int i=0;i<106;i++)
+		{
+			buf.ptr = (uint8_t*)hwram_ptr;
+			memset(buf.ptr, 0, buf.w * buf.h);
+			_res.MAC_decodeImageData(spriteData, i, &buf, 0xff);
+			hwram_ptr+=256;
+		}		
+		_vid.drawString("Loading Please wait", 20, 40, 0xE5);
+		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.load_TEXT();
 #ifdef DEBUG
 	_stub->initTimeStamp();
@@ -1734,7 +1715,7 @@ void Game::loadLevelData() {
 
 		_vid.setTextPalette();
 //		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
-		SAT_preloadCDfiles();
+//		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
