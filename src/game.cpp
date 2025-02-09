@@ -744,6 +744,7 @@ bool Game::handleConfigPanel() {
 /*		break;
 	}*/
 	_stub->_pi.quit = false;
+	_stub->_pi.escape = false;
 
 	_menu._charVar3 = 0xE4;
 	_menu._charVar4 = 0xE5;
@@ -753,16 +754,18 @@ bool Game::handleConfigPanel() {
 	enum { MENU_ITEM_ABORT = 1, MENU_ITEM_LOAD = 2, MENU_ITEM_SAVE = 3 };
 	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
+
+	_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+
 	while (!_stub->_pi.quit) {
 		_menu.drawString(_res.getMenuString(LocaleData::LI_18_RESUME_GAME), y + 2, 9, colors[0]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 4, 9, colors[1]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 6, 9, colors[2]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_21_SAVE_GAME), y + 8, 9, colors[3]);
-		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+//		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
 		_menu.drawString(buf, y + 10, 9, 1);
-		
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 		_stub->sleep(80);
@@ -942,6 +945,7 @@ void Game::printSaveStateCompleted() {
 		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE6);
 	}
 }
+int hasLevelText = false;
 
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
@@ -949,7 +953,16 @@ void Game::drawLevelTexts() {
 	if (obj == 0) {
 		obj = col_findCurrentCollidingObject(pge, 0xFF, 5, 9, &pge);
 	}
+	
+	if(hasLevelText)
+	{
+		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
+		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+		hasLevelText = false;
+	}
+	
 	if (obj > 0) {
+		hasLevelText = true;		
 //		_printLevelCodeCounter = 0;
 		if (_textToDisplay == 0xFFFF) {
 			uint8_t icon_num = obj - 1;
@@ -961,7 +974,7 @@ void Game::drawLevelTexts() {
 //	emu_printf("drawLevelTexts %s\n",toto);
 			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			drawString(str, 176, 26, 0xE6, true);
-		
+
 			if (icon_num == 2) {
 				printSaveStateCompleted();
 				return;
@@ -969,12 +982,9 @@ void Game::drawLevelTexts() {
 		}/* else {
 			_currentInventoryIconNum = obj - 1;
 		}*/
+		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
 	}
-	else
-	{
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
-	}
-	_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+
 	_saveStateCompleted = false;
 }
 
@@ -1093,6 +1103,7 @@ sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot-
 _vid.drawString(toto, 1, 78, 0xE7);
 			emu_printf("start play slot %d ca %04x pcm size %d sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,voiceSegmentLen,slot->sa,slot->lsa,slot->lea);
 */
+emu_printf("draw story text\n");	
 			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
@@ -1136,6 +1147,7 @@ _vid.drawString(toto, 1, 88, 0xE7);
 				++str;
 			}*/
 		}
+emu_printf("clean storytext\n");			
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
@@ -2032,6 +2044,7 @@ void Game::handleInventory() {
 //			slSynch();
 		}
 		// vbt : n'efface que le menu
+emu_printf("clean menu2\n");			
 		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);
 		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
@@ -2495,6 +2508,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //			if(max_val-min_val>=0 && max_val-min_val<=16)
 //emu_printf("%03d mn %d mx %d diff %d\n",j, min_val,max_val,max_val-min_val);
 			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+emu_printf("clean menu3\n");				
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 			int oldcgaddr = sprData->cgaddr;
 

@@ -508,7 +508,10 @@ void Cutscene::op_waitForSync() {
 		_frameDelay = fetchNextCmdByte() * 4;
 		sync(_frameDelay);
 		if(_id != 17)
+		{
+//			emu_printf("copy front1\n");
 			_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
+		}
 	}
 }
 
@@ -1385,10 +1388,12 @@ void Cutscene::unload() {
 	{
 		_vid->SAT_cleanSprites();
 #ifndef SUBTITLE_SPRITE
+//			emu_printf("clean front1\n");
 		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
 		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 #endif
-		Color clut[512];
+//		Color clut[512];
+		Color *clut = (Color *)hwram_screen;
 		_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
 		_res->MAC_copyClut16(clut, 0x1D, 0x38);
 
@@ -1693,7 +1698,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 // vbt correction des couleurs			
 			c.r = ((paletteBuffer[j] & 0xF00) >> 6) | t;
 			c.g = ((paletteBuffer[j] & 0x0F0) >> 2) | t;
-			c.b = ((paletteBuffer[j] & 0x00F) << 2) | t;			
+			c.b = ((paletteBuffer[j] & 0x00F) << 2) | t;
 			
 			_stub->setPaletteEntry(0x1C0 + j, &c);
 		}

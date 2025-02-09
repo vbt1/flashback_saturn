@@ -170,8 +170,8 @@ struct SystemStub_SDL : SystemStub {
 	virtual void sleep(uint32 duration);
 	virtual uint32 getTimeStamp();
 	virtual void initTimeStamp();
-	virtual void startAudio(AudioCallback callback, void *param);
-	virtual void stopAudio();
+//	virtual void startAudio(AudioCallback callback, void *param);
+//	virtual void stopAudio();
 	virtual uint32 getOutputSampleRate();
 //	virtual void *createMutex();
 	virtual void destroyMutex(void *mutex);
@@ -357,7 +357,9 @@ void SystemStub_SDL::processEvents() {
 			else if (PAD_PUSH_RTRIG)
 				_pi.rtrig = true;
 
-			if (PAD_PUSH_Z)
+			if (PAD_PULL_Z)
+				_pi.escape = false;
+			else if (PAD_PUSH_Z)
 				_pi.escape = true;
 			break;
 		default:
@@ -382,9 +384,8 @@ uint32 SystemStub_SDL::getTimeStamp() {
 void SystemStub_SDL::initTimeStamp() {
 	ticker = 0;
 }
-
-void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 #ifdef SOUND
+void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 	mix = (Mixer*)param;
 
 	memset(ring_bufs, 0, SND_BUFFER_SIZE * 2 * SND_BUF_SLOTS);
@@ -400,11 +401,8 @@ void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 	// start playing
 	PCM_Start(pcm[0]); 
 	PCM_EntryNext(pcm[1]);
-#endif
 }
-
 void SystemStub_SDL::stopAudio() {
-#ifdef SOUND
 	audioEnabled = 0;
 
 	// Stopping playback
@@ -420,8 +418,8 @@ void SystemStub_SDL::stopAudio() {
 
 
 	return;
-#endif
 }
+#endif
 
 uint32 SystemStub_SDL::getOutputSampleRate() {
 	return SOUND_SAMPLE_RATE;

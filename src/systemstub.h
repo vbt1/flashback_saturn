@@ -76,8 +76,8 @@ struct SystemStub {
 	virtual uint32 getTimeStamp() = 0;
 	virtual void initTimeStamp();
 	
-	virtual void startAudio(AudioCallback callback, void *param) = 0;
-	virtual void stopAudio() = 0;
+//	virtual void startAudio(AudioCallback callback, void *param) = 0;
+//	virtual void stopAudio() = 0;
 	virtual uint32 getOutputSampleRate() = 0;
 
 //	virtual void *createMutex() = 0;

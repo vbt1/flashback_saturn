@@ -265,7 +265,7 @@ struct Resource {
 	const uint8_t *getCineString(int num) const {
 //		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_cine_txt);
-emu_printf("getCineString num : %d count %d %p\n",num,count,_cine_txt);			
+//emu_printf("getCineString num : %d count %d %p\n",num,count,_cine_txt);			
 			assert(num < count);
 			const int offset = READ_BE_UINT16(_cine_txt + 2 + num * 2);
 			return _cine_txt + offset;
