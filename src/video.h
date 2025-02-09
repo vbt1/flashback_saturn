@@ -65,12 +65,12 @@ struct Video {
 //	uint8_t *_screenBlocks; //[(GAMESCREEN_W*2 / SCREENBLOCK_W) * (GAMESCREEN_H*2 / SCREENBLOCK_H)];
 	bool _fullRefresh;
 //	uint8_t _shakeOffset;
-	drawCharFunc _drawChar;
+//	drawCharFunc _drawChar;
 	
 	Video(Resource *res, SystemStub *stub);
 	~Video();
 
-	void markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale);
+//	void markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale);
 	void updateScreen();
 	void fullRefresh();
 	void fadeOut();
@@ -82,17 +82,18 @@ struct Video {
 	void copyLevelMap(uint16 room);
 	void decodeLevelMap(uint16 sz, const uint8_t *src, uint8_t *dst);
 	void setLevelPalettes();
-	void drawSpriteSub1(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
-	void drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
-	void drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
-	void drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
-	void drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
-	void drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+//	void drawSpriteSub1(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+//	void drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+//	void drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+//	void drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+//	void drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
+//	void drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask);
 	//void PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr;
 	void MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr);
+	void MAC_drawStringCharRow(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, int row);
 	void drawChar(uint8_t c, int16 y, int16 x);
 	const char *drawString(const char *str, int16_t x, int16_t y, uint8_t col);
-	const char *drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col);
+//	const char *drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col);
 	void drawStringLen(const char *str, int len, int x, int y, uint8_t color);
 	void MAC_decodeMap(int level, int room);
 	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);

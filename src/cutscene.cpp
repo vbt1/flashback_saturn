@@ -32,6 +32,12 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern void vblIn();
 //extern volatile Uint8 audioEnabled;
+
+int previousLen=0;
+uint8_t *previousP=NULL;
+int sameP = false;
+int sameText = false;
+
 /*
 static void scalePoints(Point *pt, int count, int scale) {
 //	scale = 1; //vbt force la valeur
@@ -73,9 +79,12 @@ void Cutscene::sync(int frameDelay) {
 	if (pause > 0) {
 		_stub->sleep(pause);
 	}
+	//else
+/*	if (pause<=0)
+		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
 	else
-emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
-		
+		_stub->sleep(pause);
+*/
 	_tstamp = _stub->getTimeStamp();
 }
 
@@ -117,6 +126,14 @@ struct DecodeBuffer {
 void Cutscene::updateScreen() {
 //--------------------------
 DecodeBuffer buf{};
+
+	if(hasText && !sameText)
+	{
+		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
+		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte
+		hasText = false;
+	}
+
 	sync(_frameDelay - 1);
 	SWAP(_frontPage, _backPage);
 
@@ -166,22 +183,9 @@ DecodeBuffer buf{};
 	}
     slSetSprite(&user_sprite, toFIXED2(240));
 
-#ifdef SUBTITLE_SPRITE
-_vid->SAT_displaySprite(_vid->_txt1Layer,-240-64, -121, 70, 480); // vbt à remettre
-#endif
 	slSynch();
 	updatePalette();
-#ifdef SUBTITLE_SPRITE
-	memset((uint8_t *)_vid->_txt2Layer,0, 480*70);	// au mauvais endroit à corriger ou adresse de texte pas bonne ne jamais remettre
-	SWAP(_vid->_txt1Layer, _vid->_txt2Layer); // vbt à remettre
-#else
-	if(hasText)
-	{
-		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
-		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte
-		hasText = false;
-	}
-#endif
+
 	transferAux=0;
 
 #ifdef DEBUG_CUTSCENE
@@ -316,6 +320,8 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 //emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d)\n", x, y, color, textJustify);
 //	memset(&_vid->_frontLayer[y*_vid->_w],0x00,512*(440-y)); // vbt : à voir
 	int len = 0;
+	int sameP = (previousP == p);
+	previousP = (uint8_t *)p;
 	if (p != _textBuf /*&& _res->isMac()*/) {
 		len = *p++;
 	} else {
@@ -323,6 +329,18 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			++len;
 		}
 	}
+
+	if(previousLen==len && sameP)
+	{
+		sameText = 1;
+//		emu_printf("same text no need to read it\n");
+		return;
+	}
+	previousLen = len;
+	sameText = false;
+	
+//emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, len=%d)\n", x, y, color, len);
+	
 //	Video::drawCharFunc dcf = _vid->_drawChar;
 	const uint8_t *fnt = /*(_res->_lang == LANG_JP) ? Video::_font8Jp :*/ _res->_fnt;
 	uint16_t lastSep = 0;
@@ -352,7 +370,8 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			xPos += Video::CHAR_W;
 		} else if (p[i] == 0x9) {
 			// ignore tab
-		} else {
+		} else
+		{
 //			(_vid->*dcf)(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
 			_vid->MAC_drawStringChar(page, _vid->_w, xPos, yPos, fnt, color, p[i]);
 			xPos += Video::CHAR_W;
@@ -369,6 +388,7 @@ void Cutscene::clearBackPage() {
 
 void Cutscene::drawCreditsText() {
 //emu_printf("drawCreditsText\n");
+//	_stub->initTimeStamp();
 	if (_creditsKeepText) {
 		if (_creditsSlowText) {
 			return;
@@ -436,7 +456,11 @@ void Cutscene::drawCreditsText() {
 		_creditsTextCounter -= 10;
 	}
 	hasText = true;
+	unsigned int s = _stub->getTimeStamp();	
 	drawText((_creditsTextPosX - 1) * 8, _creditsTextPosY * 8, _textBuf, 0xEF, _vid->_frontLayer, kTextJustifyLeft);
+	unsigned int e = _stub->getTimeStamp();
+//	if(e-s!=0)
+//	emu_printf("--duration drawCreditsText : %d\n",e-s);	
 }
 
 void Cutscene::op_markCurPos() {
@@ -475,11 +499,10 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = /*_res->isDOS() ? 20 :*/ 60;
 			}
-			DMA_ScuMemCopy(_backPage, _frontPage, IMG_SIZE);
 			drawCreditsText();
-			updateScreen();
+//			updateScreen();
 		} while (--n);
-		clearBackPage();
+//		clearBackPage();
 		_creditsSlowText = false;
 	} else {
 		_frameDelay = fetchNextCmdByte() * 4;
@@ -615,11 +638,13 @@ void Cutscene::op_drawCaptionText() {
 	uint16_t strId = fetchNextCmdWord();
 	if (!_creditsSequence) {
 
-		const int h = 128;
+//		const int h = 128;
 		if (strId != 0xFFFF) {
 			const uint8_t *str = _res->getCineString(strId);
 			if (str) {
 				hasText = true;
+//				sameText = false;
+				previousP = NULL;
 				drawText(0, 129, str, 0xEF, _vid->_frontLayer, kTextJustifyAlign);
 			}
 		} else if (_id == kCineEspions) {
@@ -1139,6 +1164,8 @@ void Cutscene::op_drawTextAtPos() {
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				hasText = true;
+//				sameText = false;
+				previousP = NULL;
 				const uint8_t color = 0xD0 + (strId >> 0xC);
 				drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
 			}
@@ -1205,7 +1232,9 @@ void Cutscene::op_handleKeys() {
 		n = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
 		if (_res->isMac()) {
 			const int count = READ_BE_UINT16(_cmdPtr);
-			assert(n < count);
+//			assert(n < count);
+			if(n>=count)
+				return;
 			_cmdPtr += n;
 			_cmdPtrBak = _cmdPtr;
 			return;
@@ -1412,6 +1441,7 @@ slSynch();
 }
 
 void Cutscene::playCredits() {
+//	emu_printf("Cutscene::playCredits()\n");
 //	if (_res->isMac()) {
 		_res->MAC_loadCreditsText();
 		_creditsTextIndex = 0;
@@ -1644,7 +1674,9 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 					}
 				}
 				if (!found) {
-					assert(paletteLutSize < kMaxPaletteSize);
+//					assert(paletteLutSize < kMaxPaletteSize);
+					if(paletteLutSize >= kMaxPaletteSize)
+						return;
 					paletteLut[k] = 0xC0 + paletteLutSize;
 					paletteBuffer[paletteLutSize++] = tempPalette[k];
 				}

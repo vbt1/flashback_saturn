@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x66000
 /*
@@ -63,7 +63,7 @@ Video::Video(Resource *res, SystemStub *stub)
 		_drawChar = &Video::PC_drawStringChar;
 		break;
 	case kResourceTypeMac:*/
-		_drawChar = &Video::MAC_drawStringChar;
+//		_drawChar = &Video::MAC_drawStringChar;
 /*		break;
 	}*/
 }
@@ -75,32 +75,7 @@ Video::~Video() {
 //	sat_free(_tempLayer2);
 //	sat_free(_screenBlocks);
 }
-/*
-void Video::markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale) {
-//	emu_printf( "Video::markBlockAsDirty2(%d, %d, %d, %d)\n", x, y, w, h);
-	int bx1 = scale * x / SCREENBLOCK_W;
-	int by1 = scale * y / SCREENBLOCK_H;
-	int bx2 = scale * (x + w - 1) / SCREENBLOCK_W;
-	int by2 = scale * (y + h - 1) / SCREENBLOCK_H;
-	if (bx1 < 0) {
-		bx1 = 0;
-	}
-	if (bx2 > (_w / SCREENBLOCK_W) - 1) {
-		bx2 = (_w / SCREENBLOCK_W) - 1;
-	}
-	if (by1 < 0) {
-		by1 = 0;
-	}
-	if (by2 > (_h / SCREENBLOCK_H) - 1) {
-		by2 = (_h / SCREENBLOCK_H) - 1;
-	}
-	for (; by1 <= by2; ++by1) {
-		for (int i = bx1; i <= bx2; ++i) {
-			_screenBlocks[by1 * (_w / SCREENBLOCK_W) + i] = 2;
-		}
-	}
-}
-*/
+
 void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
@@ -245,24 +220,6 @@ void Video::setPalette0xF() {
 }
 
 /*
-static void DOS_decodeMapPlane(int sz, const uint8_t *src, uint8_t *dst) {
-	//	debug(DBG_VIDEO, "Video::decodeLevelMap() sz = 0x%X", sz);
-	const uint8_t *end = src + sz;
-	while (src < end) {
-		int code = (int8_t)*src++;
-		if (code < 0) {
-			const int len = 1 - code;
-			memset(dst, *src++, len);
-			dst += len;
-		} else {
-			++code;
-			memcpy(dst, src, code);
-			src += code;
-			dst += code;
-		}
-	}
-}
-
 void Video::setLevelPalettes() {
 	//	debug(DBG_VIDEO, "Video::setLevelPalettes()");
 	if (_unkPalSlot2 == 0) {
@@ -294,148 +251,7 @@ void Video::setLevelPalettes() {
 	setTextPalette();
 }
 */
-/*
-void Video::drawSpriteSub1(const uint8 *src, uint8 *dst, int pitch, int h, int w, uint8 colMask) {
-//	emu_printf("Video::drawSpriteSub1(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (src[i] != 0) {
-				dst[i] = src[i] | colMask;
-			}
-		}
-		src += pitch;
-		dst += 256;
-	}
-}
 
-void Video::drawSpriteSub2(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-//	emu_printf("Video::drawSpriteSub2(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (src[-i] != 0) {
-				dst[i] = src[-i] | colMask;
-			}
-		}
-		src += pitch;
-		dst += 256;
-	}
-}
-
-void Video::drawSpriteSub3(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-//	emu_printf("Video::drawSpriteSub3(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (src[i] != 0 && !(dst[i] & 0x80)) {
-				dst[i] = src[i] | colMask;
-			}
-		}
-		src += pitch;
-		dst += 256;
-	}
-}
-
-void Video::drawSpriteSub4(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-//	emu_printf("Video::drawSpriteSub4(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (src[-i] != 0 && !(dst[i] & 0x80)) {
-				dst[i] = src[-i] | colMask;
-			}
-		}
-		src += pitch;
-		dst += 256;
-	}
-}
-
-void Video::drawSpriteSub5(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-//	emu_printf("Video::drawSpriteSub5(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (src[i * pitch] != 0 && !(dst[i] & 0x80)) {
-				dst[i] = src[i * pitch] | colMask;
-			}
-		}
-		++src;
-		dst += 256;
-	}
-}
-
-void Video::drawSpriteSub6(const uint8_t *src, uint8_t *dst, int pitch, int h, int w, uint8_t colMask) {
-//	emu_printf("Video::drawSpriteSub6(0x%X, 0x%X, 0x%X, 0x%X)\n", pitch, w, h, colMask);
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (src[-i * pitch] != 0 && !(dst[i] & 0x80)) {
-				dst[i] = src[-i * pitch] | colMask;
-			}
-		}
-		++src;
-		dst += 256;
-	}
-}
-
-void Video::drawChar(uint8 c, int16 y, int16 x) {
-//	emu_printf("Video::drawChar(0x%X, %d, %d)\n", c, y, x);
-	y *= 8;
-	x *= 8;
-	const uint8 *src = _res->_fnt + (c - 32) * 32;
-	uint8 *dst = _frontLayer + x + 256 * y;
-	for (int h = 0; h < 8; ++h) {
-		for (int i = 0; i < 4; ++i) {
-			uint8 c1 = (*src & 0xF0) >> 4;
-			uint8 c2 = (*src & 0x0F) >> 0;
-			++src;
-
-			if (c1 != 0) {
-				if (c1 != 2) {
-					*dst = _charFrontColor;
-				} else {
-					*dst = _charShadowColor;
-				}
-			} else if (_charTransparentColor != 0xFF) {
-				*dst = _charTransparentColor;
-			}
-			++dst;
-
-			if (c2 != 0) {
-				if (c2 != 2) {
-					*dst = _charFrontColor;
-				} else {
-					*dst = _charShadowColor;
-				}
-			} else if (_charTransparentColor != 0xFF) {
-				*dst = _charTransparentColor;
-			}
-			++dst;
-		}
-		dst += 256 - 8;
-	}
-}
-*/
-/*
-void Video::PC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, bool is4Bpp) {
-	dst += y * pitch + x;
-//	assert(chr >= 32);
-	if(chr < 32)
-		return;
-	src += (chr - 32) * 8 * 4;
-	for (int y = 0; y < 8; ++y) {
-		for (int x = 0; x < 4; ++x) {
-			const uint8_t c1 = src[x] >> 4;
-			if (c1 != 0) {
-				*dst = (c1 == 15) ? color : (0xE0 + c1);
-			}
-			++dst;
-			const uint8_t c2 = src[x] & 15;
-			if (c2 != 0) {
-				*dst = (c2 == 15) ? color : (0xE0 + c2);
-			}
-			++dst;
-		}
-		src += 4;
-		dst += pitch - CHAR_W;
-	}
-}
-*/
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
 
@@ -459,7 +275,28 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
         }
     }
 }
+/*
+void Video::MAC_drawStringCharRow(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, int row) {
+    if (chr < 32) return;
 
+    const unsigned char *srcData = src + ((chr - 32) << 8) + (row * 4);
+    dst += (y * 512) + (x * 2);
+
+    register const unsigned char front = color;
+    register const unsigned char shadow = _charShadowColor;
+
+    for (int col = 0; col < 4; col++) {
+        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
+        srcData++;
+        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
+        srcData++;
+        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
+        srcData++;
+        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
+        srcData++;
+    }
+}
+*/
 /*
 
     if (chr < 32) return;
@@ -635,7 +472,7 @@ const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8
 void Video::drawStringLen(const char *str, int len, int x, int y, uint8_t color) {
 	const uint8_t *fnt = _res->_fnt;
 	for (int i = 0; i < len; ++i) {
-		(this->*_drawChar)(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
+		MAC_drawStringChar(_frontLayer, _w, x + i * CHAR_W, y, fnt, color, str[i]);
 	}
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H , GAMESCREEN_W * GAMESCREEN_H * 4);
 }

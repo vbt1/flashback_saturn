@@ -215,40 +215,33 @@ void Graphics::drawEllipse(uint8 color, bool hasAlpha, const Point *pt, int16 rx
 }
 
 void Graphics::fillArea(uint8 color, bool hasAlpha) {
-//if(hasAlpha)
-//	emu_printf("Graphics::fillArea() %d color %d\n",hasAlpha, color);
-	int16_t *pts = _areaPoints;
-	uint8_t *dst = _layer + (_cry + *pts++) * VIDEO_PITCH + _crx;
-	int16_t x1 = *pts++;
-	if (x1 >= 0) {
-//		if (hasAlpha && color > 0xC7) {
-		if (hasAlpha  && color > 7) {
-			do {
-				const int16_t x2 = MIN<int16_t>(_crw - 1, *pts++);
-				for (; x1 <= x2; ++x1) {
-//					*(dst + x1) |= color & 8;
-					/*if(color==15)
-						*(dst + x1) = 0;
-					else*/
-					*(dst + x1) |= color & 8;
-					if(*(dst + x1)==8)
-						*(dst + x1)=15;
-				}
-				dst += VIDEO_PITCH;
-				x1 = *pts++;
-			} while (x1 >= 0);
-		} else {
-			do {
-				const int16_t x2 = MIN<int16_t>(_crw - 1, *pts++);
-				if (x1 <= x2) {
-					const int len = x2 - x1 + 1;
-					memset(dst + x1, color, len);
-				}
-				dst += VIDEO_PITCH;
-				x1 = *pts++;
-			} while (x1 >= 0);
-		}
-	}
+    int16_t *pts = _areaPoints;
+    uint8_t *dst = _layer + (_cry + *pts++) * VIDEO_PITCH + _crx;
+    int16_t x1 = *pts++;
+    
+    if (x1 < 0) return;
+    
+    const uint8_t mask = hasAlpha ? ~7 : 0xFF;
+    const int16_t maxW = _crw - 1;
+    
+    // Combine both loops to reduce code size and branch prediction misses
+    do {
+        int16_t x2 = MIN<int16_t>(maxW, *pts++);
+        if (x1 <= x2) {
+            uint8_t *curDst = dst + x1;
+            const int len = x2 - x1 + 1;
+            
+            if (hasAlpha && color > 7) {
+                for (unsigned char i = 0; i < len; i++) {
+                    curDst[i] = (curDst[i] | (color & mask)) == 8 ? 15 : (curDst[i] | (color & mask));
+                }
+            } else {
+                memset(curDst, color, len);
+            }
+        }
+        dst += VIDEO_PITCH;
+        x1 = *pts++;
+    } while (x1 >= 0);
 }
 
 void Graphics::drawSegment(uint8 color, bool hasAlpha, int16 ys, const Point *pts, uint8 numPts) {
