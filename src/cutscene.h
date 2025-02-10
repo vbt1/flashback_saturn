@@ -159,5 +159,4 @@ struct Cutscene {
 	void drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, const uint8_t *paletteLut);
 	void playSet(const uint8_t *p, int offset);
 };
-
 #endif // __CUTSCENE_H__

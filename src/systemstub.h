@@ -81,9 +81,9 @@ struct SystemStub {
 	virtual uint32 getOutputSampleRate() = 0;
 
 //	virtual void *createMutex() = 0;
-	virtual void destroyMutex(void *mutex) = 0;
-	virtual void lockMutex(void *mutex) = 0;
-	virtual void unlockMutex(void *mutex) = 0;
+//	virtual void destroyMutex(void *mutex) = 0;
+//	virtual void lockMutex(void *mutex) = 0;
+//	virtual void unlockMutex(void *mutex) = 0;
 	
 	virtual void setPalette(uint8 *palette, uint16 colors) = 0;
 	virtual void setup_input (void) = 0;

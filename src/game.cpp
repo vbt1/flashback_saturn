@@ -34,10 +34,16 @@ extern "C" {
 #define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
 #define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
 #define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
+#define TVSTAT	(*(Uint16 *)0x25F80004)
 
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 extern Uint8 *soundAddr;
+extern volatile Uint32 ticker;
+extern volatile Uint8  tick_wrap;
+extern Uint8 tickPerVblank;
+unsigned char frame_x = 0;
+unsigned char frame_y = 0;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
 bool has4mb = false;
 void	*malloc(size_t);
@@ -92,6 +98,36 @@ static Uint32 getFreeSaveBlocks(void) {
 	
 	return sttb.freeblock;
 }
+/*
+inline void timeTick() {
+	if(ticker > (0xFFFFFFFF - tickPerVblank)) {
+		tick_wrap ^= 1;
+		ticker = 0;
+	} else {
+		ticker += tickPerVblank;
+	}
+}
+
+static SystemStub *_st = SystemStub_SDL_create();
+void vblIn (void) {
+	// Process input
+		frame_y++;
+		char xx[30];
+		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
+		
+		if(frame_y==hz)
+		{
+			sprintf(xx,"%02d/%02d",frame_x,hz);
+			//xxxxxxxxxxxxx
+			frame_y = 0;
+		}
+
+	
+	_st->processEvents();
+	_st->updateScreen(0);
+	timeTick();
+}
+*/
 
 /* *** */
 
@@ -115,17 +151,14 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 void Game::run() {
 
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
+//	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
+
 //emu_printf("_randSeed\n");
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram	
 //emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
 
-/*	switch (_res._type) {
-	case kResourceTypeDOS:
-		_res.load("FB_TXT", Resource::OT_FNT);
-		break;
-	case kResourceTypeMac:*/
 		end1 = 564000+50000-10000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
@@ -468,6 +501,7 @@ heapWalk();
 		}
 	}*/
 //	_vid.SAT_displayPalette();
+	frame_x++;
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*
@@ -2661,3 +2695,12 @@ void Game::SAT_preloadCDfiles() {
 	_cut.playSet(current_lwram, 0x2B14);
 	_res.MAC_reopenMainFile();
 }
+/**
+static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 
+static void process_cmd()
+{
+	tingyInstance->process_commands();
+//	slave_done_flag = true;
+}
+**/
+

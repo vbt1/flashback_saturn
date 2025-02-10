@@ -17,6 +17,7 @@ extern "C"
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
+extern Uint8 frame_x;
 void *memset4_fast(void *, long, size_t);
 Uint8 transferAux=0;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
@@ -30,7 +31,6 @@ extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
-extern void vblIn();
 //extern volatile Uint8 audioEnabled;
 
 int previousLen=0;
@@ -182,7 +182,7 @@ DecodeBuffer buf{};
 		a[7] = (b[15]) | (b[14] << 4);
 	}
     slSetSprite(&user_sprite, toFIXED2(240));
-
+	frame_x++;
 	slSynch();
 	updatePalette();
 

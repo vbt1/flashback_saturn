@@ -22,12 +22,17 @@ extern "C" {
 #include "sat_mem_checker.h"
 #include "cdtoc.h"
 void	*malloc(size_t);
+volatile Uint32 ticker = 0;
+volatile Uint8  tick_wrap = 0;
+Uint8 tickPerVblank = 0;
+extern unsigned char frame_x;
+extern unsigned char frame_y;
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
 
 #include "sys.h"
-#include "mixer.h"
+//#include "mixer.h"
 #include "systemstub.h"
 
  #include "saturn_print.h"
@@ -92,7 +97,7 @@ extern void snd_init();
 #define PAD_PULL_LTRIG  (!(pull & PER_DGT_TL))
 #define PAD_PULL_RTRIG  (!(pull & PER_DGT_TR))
 #define PAD_PULL_START (!(pull & PER_DGT_ST))
-
+/*
 typedef struct {
 	volatile Uint8 access;
 } SatMutex;
@@ -101,7 +106,7 @@ typedef struct {
 	uint16 x, y;
 	uint16 w, h;
 } SAT_Rect;
-
+*/
 /* Required for audio sound buffers */
 Uint8 buffer_filled[2];
 Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
@@ -111,7 +116,7 @@ static PcmHn pcm[2];
 #endif
 Uint8 curBuf = 0;
 Uint8 curSlot = 0;
-static Mixer *mix = NULL;
+//static Mixer *mix = NULL;
 static volatile Uint8 audioEnabled = 1;
 
 /* CDDA */
@@ -121,12 +126,10 @@ CDTableOfContents toc;
 //CdcPos	posdata;
 CdcStat statdata;
 
-static uint8 tickPerVblank = 0;
+
 
 /* Required for timing */
 static SystemStub *sys = NULL;
-static volatile Uint32 ticker = 0;
-static volatile	Uint8  tick_wrap = 0;
 
 /* FUNCTIONS */
 #ifdef SOUND
@@ -149,7 +152,7 @@ struct SystemStub_SDL : SystemStub {
 		JOYSTICK_COMMIT_VALUE = 3200
 	};
 
-	uint8 _overscanColor;
+//	uint8 _overscanColor;
 	uint16 _pal[512];
 	uint16 _screenW, _screenH;
 
@@ -174,16 +177,16 @@ struct SystemStub_SDL : SystemStub {
 //	virtual void stopAudio();
 	virtual uint32 getOutputSampleRate();
 //	virtual void *createMutex();
-	virtual void destroyMutex(void *mutex);
-	virtual void lockMutex(void *mutex);
-	virtual void unlockMutex(void *mutex);
+//	virtual void destroyMutex(void *mutex);
+//	virtual void lockMutex(void *mutex);
+//	virtual void unlockMutex(void *mutex);
 	virtual void setup_input (void); // Setup input controllers
 
 	virtual void setPalette(uint8 *palette, uint16 colors);
 	void prepareGfxMode();
 	void cleanupGfxMode();
 	void forceGfxRedraw();
-	void drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch);
+//	void drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch);
 
 	void load_audio_driver(void);
 	void init_cdda(void);
@@ -266,7 +269,7 @@ void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 }
 
 void SystemStub_SDL::setOverscanColor(uint8 i) {
-	_overscanColor = i;
+//	_overscanColor = i;
 	memset((void*)VDP2_VRAM_A0, i, 512*448);
 }
 
@@ -435,7 +438,7 @@ void *SystemStub_SDL::createMutex() {
 #endif
 	return mtx;
 }
-*/
+
 void SystemStub_SDL::destroyMutex(void *mutex) {
 	sat_free(mutex);
 	return;
@@ -463,7 +466,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 #endif
 	return;
 }
-
+*/
 void SystemStub_SDL::prepareGfxMode() {
 	slTVOff(); // Turn off display for initialization
 
@@ -527,10 +530,10 @@ void SystemStub_SDL::cleanupGfxMode() {
 void SystemStub_SDL::forceGfxRedraw() {
 	return;
 }
-
+/*
 void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch) {
 	return;
-}
+}*/
 // Store the info on connected peripheals inside an array
 void SystemStub_SDL::setup_input (void) {
 	if ((Per_Connect1 + Per_Connect2) == 0) {
@@ -643,6 +646,18 @@ void vblIn (void) {
 	//static Uint8 counter = 0;
 //emu_printf("vblIn\n");
 	// Process input
+	char xx[30];
+	uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
+	frame_y++;
+	
+	if(frame_y>=hz)
+	{
+		sprintf(xx,"%02d/%02d\n",frame_x,hz);
+		frame_x=0;
+		emu_printf(xx);
+		frame_y = 0;
+	}
+
 	sys->processEvents();
 	sys->updateScreen(0);
 	timeTick();
