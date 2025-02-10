@@ -657,5 +657,3 @@ const char *Menu::getLevelPassword(int level, int skill) const {
 	return _passwordsDOS[skill * LEVELS_COUNT + level];
 }
 */
-
-

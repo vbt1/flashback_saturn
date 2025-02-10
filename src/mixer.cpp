@@ -39,7 +39,7 @@ void Mixer::init() {
 void Mixer::free() {
 //	setPremixHook(0, 0);
 	//stopAll();
-	_stub->stopAudio();
+//	_stub->stopAudio();
 //	_stub->destroyMutex(_mutex);
 }
 /*
