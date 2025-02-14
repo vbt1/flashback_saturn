@@ -654,7 +654,7 @@ void vblIn (void) {
 	{
 		sprintf(xx,"%02d/%02d\n",frame_x,hz);
 		frame_x=0;
-		emu_printf(xx);
+//		emu_printf(xx);
 		frame_y = 0;
 	}
 

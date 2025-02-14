@@ -980,7 +980,7 @@ void Game::printSaveStateCompleted() {
 	}
 }
 int hasLevelText = false;
-
+int previousObj = -1;
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
@@ -990,8 +990,13 @@ void Game::drawLevelTexts() {
 	
 	if(hasLevelText)
 	{
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
-		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+//		emu_printf("_textToDisplay %x obj %d\n",_textToDisplay,obj);
+		if(previousObj!=obj)
+		{
+//			emu_printf("erase %x obj %d\n",_textToDisplay,obj);
+			memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
+			_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+		}
 		hasLevelText = false;
 	}
 	
@@ -1006,7 +1011,7 @@ void Game::drawLevelTexts() {
 //			char toto [256];
 //			memcpy(&toto[1],str,*str);
 //	emu_printf("drawLevelTexts %s\n",toto);
-			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
+//			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			drawString(str, 176, 26, 0xE6, true);
 
 			if (icon_num == 2) {
@@ -1018,7 +1023,7 @@ void Game::drawLevelTexts() {
 		}*/
 		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
 	}
-
+	previousObj = obj;
 	_saveStateCompleted = false;
 }
 
@@ -2421,7 +2426,10 @@ void Game::clearSaveSlots(uint8 level) {
 
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
 //	emu_printf("AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p\n", stateNum, x, y, dataPtr, pge);
-	assert(stateNum < 4);
+//	assert(stateNum < 4);
+	if(stateNum >= 4)
+		return;
+	
 	AnimBufferState *state = _states[stateNum];
 	state->x = x;
 	state->y = y;

@@ -525,7 +525,7 @@ void Menu::handleTitleScreen() {
 	while (!_stub->_pi.quit) {
 
 		int selectedItem = -1;
-		int previousLanguage = currentLanguage;
+//		int previousLanguage = currentLanguage;
 
 		if (_nextScreen == SCREEN_TITLE) {
 			_vid->fadeOut();
@@ -606,19 +606,19 @@ void Menu::handleTitleScreen() {
 			_nextScreen = SCREEN_TITLE;
 			continue;
 		}
-
+/*
 		if (previousLanguage != currentLanguage) {
 			_res->setLanguage(languages[currentLanguage].lang);
 			// clear previous language text
 			memcpy(_vid->_frontLayer, _vid->_backLayer, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H * 4);
 		}
-
+*/
 		// draw the options
 		const int yPos = 26 - menuItemsCount * 2;
 		for (int i = 0; i < menuItemsCount; ++i) {
 			drawString(_res->getMenuString(menuItems[i].str), yPos + i * 2, 20, (i == currentEntry) ? 2 : 3);
 		}
-
+/*
 		// draw the language flag in the top right corner
 		if (previousLanguage != currentLanguage) {
 			_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
@@ -629,6 +629,7 @@ void Menu::handleTitleScreen() {
 // VBt : ) remettre			
 //			_stub->copyRectRgb24(flagX, flagY, flagW, flagH, languages[currentLanguage].bitmap16x12);
 		}
+		*/
 //		_vid->updateScreen();
 //			memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
 			_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);

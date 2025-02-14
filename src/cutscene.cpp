@@ -1621,7 +1621,10 @@ static const int kMaxPaletteSize = 32;
 void Cutscene::playSet(const uint8_t *p, int offset) {
 	SetShape backgroundShapes[kMaxShapesCount];
 	const int bgCount = READ_BE_UINT16(p + offset); offset += 2;
-	assert(bgCount <= kMaxShapesCount);
+//	assert(bgCount <= kMaxShapesCount);
+	if(bgCount > kMaxShapesCount)
+		return;
+	
 	for (int i = 0; i < bgCount; ++i) {
 		uint16_t nextOffset = readSetShapeOffset(p, offset);
 		backgroundShapes[i].offset = offset;
@@ -1630,7 +1633,10 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	}
 	SetShape foregroundShapes[kMaxShapesCount];
 	const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
-	assert(fgCount <= kMaxShapesCount);
+//	assert(fgCount <= kMaxShapesCount);
+	if(fgCount > kMaxShapesCount)
+		return;
+
 	for (int i = 0; i < fgCount; ++i) {
 		uint16_t nextOffset = readSetShapeOffset(p, offset);
 		foregroundShapes[i].offset = offset;

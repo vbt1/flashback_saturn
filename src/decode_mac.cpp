@@ -15,6 +15,7 @@ extern Uint8 *current_lwram;
 extern unsigned int end1;
 }
 
+
 #include "decode_mac.h"
 #include "util.h"
 #include "saturn_print.h"
