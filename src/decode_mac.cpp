@@ -39,10 +39,10 @@ uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 	if(strncmp("intro", name, 5) == 0 
 		|| strncmp("logo", name, 4) == 0 
 		|| strncmp("espion", name, 5) == 0)
-		{
+	{
         dst = (uint8_t *)current_lwram;
         current_lwram += alignedSize;
-		}
+	}
 
     else if (isJunky) {
         // Special case for "Junky"
@@ -168,18 +168,28 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 //			if (cursor+count <=kMask && offset+count <=kMask)
 //			if(max_pos + count <= kMask)
 			if(cursor <= 4077 && offset <= 4077)
-//		if(max_pos <= 4077)
 			{
 				uint8_t *dst = &window[cursor];
 				uint8_t *src = &window[offset];
-
-				for (size_t i = 0; i < count; ++i) {
+				// Unroll the loop by 8 for better pipelining on SuperH2
+				int i = 0;
+				for (; i < count-7; i += 8) {
+					dst[i] = src[i];
+					dst[i+1] = src[i+1];
+					dst[i+2] = src[i+2];
+					dst[i+3] = src[i+3];
+					dst[i+4] = src[i+4];
+					dst[i+5] = src[i+5];
+					dst[i+6] = src[i+6];
+					dst[i+7] = src[i+7];
+				}
+				// Handle remaining bytes
+				for (; i < count; i++) {
 					dst[i] = src[i];
 				}
 				cursor += count;
-//				cursor &= kMask;
 				x += count-1;
-				count=0;
+				count = 0;
 				continue;
 			}
 //------------------------
