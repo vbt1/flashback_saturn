@@ -67,20 +67,26 @@ uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
 
     uint8_t* const end = dst + decodedSize;
     uint8_t* cur = dst;
+
     while (cur < end) {
         uint8_t code = f.readByte();
         for (int i = 0; i < 8 && cur < end; ++i) {
             if ((code & 1) == 0) {
                 *cur++ = f.readByte();
             } else {
-
                 uint16_t offset = f.readUint16BE();
                 const int len = (offset >> 12) + 3;
                 offset &= 0xFFF;
 				uint8_t* src = cur - offset - 1;
-                for (int j = 0; j < len; ++j) {
-                    cur[j] = src[j];
-                }
+//				emu_printf("name %s len %d\n",name, len);
+				cur[0] = src[0];
+				cur[1] = src[1];
+				cur[2] = src[2];
+
+				// Handle remaining bytes
+				for (unsigned char i =3; i < len; i++) {
+					cur[i] = src[i];
+				}
 				cur+=len;
             }
             code >>= 1;
@@ -198,6 +204,7 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 			offset &= kMask;
 			--count;
 		}
+		
 		DMA_ScuMemCopy(buf->ptr, window, w);
 		buf->ptr += w;
     }
@@ -273,7 +280,8 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 							offset = y * (buf->h>>1) + (x>>1);
 							memset(&buf->ptr[offset],(color&0x0f)|color<<4,((count)>>1));
 							if(count&1)
-								buf->ptr[offset+(count>>1)]=((color&0x0f)<<4);
+//								buf->ptr[offset+(count>>1)]=((color&0x0f)<<4);
+								buf->ptr[offset+(count>>1)]=(color<<4); // vbt : à valider
 							x+=count;
 							break;
 						}
