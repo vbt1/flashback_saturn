@@ -2,7 +2,8 @@
 #define VRAM_MAX 0x66000
 #define PCM_VOICE 18
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
+//#define DEBUG2 1
 //#define REDUCE_4BPP 1
 /*
  * REminiscence - Flashback interpreter
@@ -159,7 +160,7 @@ void Game::run() {
 //emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
 
-		end1 = 564000+50000-10000;
+		end1 = 564000+50000-1000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -609,6 +610,8 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
+		
+#if 0 
 		if (/*_res.isMac() &&*/ !(id == 0x48 || id == 0x49)) { // continue or score screens
 			// restore palette entries modified by the cutscene player (0xC and 0xD)
 			Color palette[32];
@@ -627,6 +630,7 @@ void Game::playCutscene(int id) {
 			_stub->setPaletteEntry(66, &palette[31]);
 			_stub->setPaletteEntry(67, &palette[32]);
 		}
+#endif
 		if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
@@ -1142,7 +1146,7 @@ sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot-
 _vid.drawString(toto, 1, 78, 0xE7);
 			emu_printf("start play slot %d ca %04x pcm size %d sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,voiceSegmentLen,slot->sa,slot->lsa,slot->lea);
 */
-emu_printf("draw story text\n");	
+//emu_printf("draw story text\n");	
 			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
@@ -1186,7 +1190,7 @@ _vid.drawString(toto, 1, 88, 0xE7);
 				++str;
 			}*/
 		}
-emu_printf("clean storytext\n");			
+//emu_printf("clean storytext\n");			
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 		_textToDisplay = 0xFFFF;
@@ -1766,7 +1770,7 @@ void Game::loadLevelData() {
 
 		_vid.setTextPalette();
 //		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
-//		SAT_preloadCDfiles();
+		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
@@ -2083,7 +2087,7 @@ void Game::handleInventory() {
 //			slSynch();
 		}
 		// vbt : n'efface que le menu
-emu_printf("clean menu2\n");			
+//emu_printf("clean menu2\n");			
 		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);
 		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
@@ -2443,6 +2447,7 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 
 void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer* buf, int x, int y, uint8_t color)) 
 {
+//	emu_printf("SAT_loadSpriteData\n");
 	const int count = READ_BE_UINT16(spriteData + 2);
 	DecodeBuffer buf{};
 	if( setPixelFunc == _vid.MAC_setPixel4Bpp)
@@ -2499,14 +2504,16 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 						if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
 							max_val=buf.ptr[i];
 					}
-
+						emu_printf("min_val %d max_val %d\n",min_val,max_val);
+						
 					if((max_val-(min_val>>4)*16)<16)
 					{
-						for (int j=0;j<(buf.w * buf.h);j+=2)
+						emu_printf("reducin color for spc %d\n",j);
+						for (int k=0;k<(buf.w * buf.h);k+=2)
 						{
-							uint8_t	value1=(buf.ptr[j + 1]);
-							uint8_t	value2 = ((buf.ptr[j])) ;
-							buf.ptr[j / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
+							uint8_t	value1=(buf.ptr[k + 1]);
+							uint8_t	value2 = ((buf.ptr[k])) ;
+							buf.ptr[k / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
 						}
 						dataSize = SAT_ALIGN((buf.w * buf.h) /2);
 						sprData->color = (min_val>>4);
@@ -2541,7 +2548,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 					current_dram2 += SAT_ALIGN(dataSize);
 				}
 			}
-#ifdef DEBUG
+#ifdef DEBUG2
 			buf.x = 200 - sprData->x;
 			buf.y = 240 - sprData->y;
 			char debug_info[60];
@@ -2550,7 +2557,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //			if(max_val-min_val>=0 && max_val-min_val<=16)
 //emu_printf("%03d mn %d mx %d diff %d\n",j, min_val,max_val,max_val-min_val);
 			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-emu_printf("clean menu3\n");				
+//emu_printf("clean menu3\n");				
 			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
 			int oldcgaddr = sprData->cgaddr;
 
@@ -2640,7 +2647,7 @@ void Game::SAT_preloadMonsters() {
 //			sat_free(_res._monster);
 //			_res._monster = 0;
 
-#ifdef DEBUG					
+#ifdef DEBUG2					
 			Color palette[512];
 			// on l'appelle juste pour la palette				
 			_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
@@ -2675,7 +2682,7 @@ void Game::SAT_preloadMonsters() {
 }
 
 void Game::SAT_preloadSpc() {
-#ifdef DEBUG
+#ifdef DEBUG2
 		Color clut[512];
 		_res.MAC_setupRoomClut(_currentLevel, _currentRoom, clut);		
 
@@ -2698,10 +2705,11 @@ void Game::SAT_preloadSpc() {
 
 void Game::SAT_preloadCDfiles() {
 	_vid.drawString("Loading Please wait", 20, 40, 0xE5);	
-	_res.MAC_closeMainFile();
+/*	_res.MAC_closeMainFile();
 	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
 	_cut.playSet(current_lwram, 0x2B14);
 	_res.MAC_reopenMainFile();
+*/
 }
 /**
 static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 

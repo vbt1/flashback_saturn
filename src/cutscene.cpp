@@ -1724,5 +1724,14 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 			_interrupted = true;
 		}
 	}
+	
+	// restore palette entries modified by the cutscene player
+	Color palette[32];
+	_res->MAC_copyClut16(palette, 0, 0x37);
+	_res->MAC_copyClut16(palette, 1, 0x38);
+			for (int i = 0; i < 32; ++i) {
+		_stub->setPaletteEntry(0x1C0 + i, &palette[i]);
+	}
+	
 	_stop = true; // pour reprendre la musique
 }
