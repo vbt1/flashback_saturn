@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000 // ne pas toucher
 /*
@@ -650,7 +650,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 //			emu_printf("decompressed just copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.h);
         }
         // Display sprite
-        SAT_displaySprite(spriteData, buf, data);
+        SAT_displaySprite(spriteData, buf);
 		spriteData.cgaddr = oldcgaddr;
     } 
     // Handle standard sprite data (not monster or spc)
@@ -690,7 +690,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 //			emu_printf("frame %d cgaddr=%06x %d h %d h not rounded %d\n",frame, spriteData.cgaddr,buf.h, READ_BE_UINT16(dataPtr), buf.h-READ_BE_UINT16(dataPtr));
 //			emu_printf("decompression and copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.h);
             // Display sprite
-            SAT_displaySprite(spriteData, buf, data);
+            SAT_displaySprite(spriteData, buf);
 //			SAT_displaySprite((uint8_t *)(cgaddr*8), buf.x-320, buf.y-224, buf.w, buf.h);
         }
     }
@@ -722,7 +722,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
 
-void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf, const uint8_t *data) {
+void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf) {
     // emu_printf("SAT_displaySprite\n");
     SPRITE user_sprite{};
     user_sprite.CTRL = buf.xflip ? (1 << 4) : 0;

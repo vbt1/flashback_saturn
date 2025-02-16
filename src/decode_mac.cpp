@@ -13,6 +13,9 @@ extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern unsigned int end1;
+extern Uint8 frame_x;
+extern Uint8 frame_y;
+extern Uint8 frame_z;
 }
 
 
@@ -135,7 +138,8 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 
 //	slTVOff(); on le fait bien avant
 	w*=8;
-    for (unsigned short y = 0; y < h/8; ++y) 
+	h/=8;
+    for (unsigned short y = 0; y < h; ++y) 
 	{
 		for (int x = 0; x < w; x++) 
 		{
@@ -209,6 +213,8 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 		buf->ptr += w;
     }
 	slTVOn();
+	frame_y = frame_x = 0;
+	frame_z = 30;
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
@@ -293,7 +299,14 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                         break;
                 }
 			} else {
-				for (int i = 0; i < count; ++i) {
+				int i = 0;
+				for (; i < count-3; i+=4) {
+					setPixeli(x++, y, *src++, buf);
+					setPixeli(x++, y, *src++, buf);
+					setPixeli(x++, y, *src++, buf);
+					setPixeli(x++, y, *src++, buf);
+				}
+				for (; i < count; ++i) {
 					setPixeli(x++, y, *src++, buf);
 				}
 			}

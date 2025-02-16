@@ -45,6 +45,7 @@ extern volatile Uint8  tick_wrap;
 extern Uint8 tickPerVblank;
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
+unsigned char frame_z = 0;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
 bool has4mb = false;
 void	*malloc(size_t);
@@ -186,6 +187,14 @@ void Game::run() {
 			buf.ptr = (uint8_t*)hwram_ptr;
 			memset(buf.ptr, 0, buf.w * buf.h);
 			_res.MAC_decodeImageData(spriteData, i, &buf, 0xff);
+			if(i>=16 & i<26)
+			{
+			// on copie dans vdp1
+				TEXTURE tx = TEXDEF(16, 16, position_vram);
+				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*16);
+				position_vram += (256*4)>>2;
+				position_vram_aft_monster = position_vram;
+			}
 			hwram_ptr+=256;
 		}		
 		SAT_preloadCDfiles();
@@ -500,6 +509,20 @@ heapWalk();
 	}*/
 //	_vid.SAT_displayPalette();
 	frame_x++;
+	unsigned char c1 = frame_z/10;
+	unsigned char c2 = frame_z%10;
+	SPRITE user_sprite;
+	user_sprite.CTRL = 0;
+	user_sprite.COLR = 0;		
+	user_sprite.PMOD = CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+	user_sprite.SRCA = 0x200+32*c1;
+	user_sprite.SIZE = 0x210;
+	user_sprite.XA   = 224;
+	user_sprite.YA   = -220;
+	slSetSprite(&user_sprite, 130*65536);	// à remettre // ennemis et objets
+	user_sprite.SRCA = 0x200+32*c2;
+	user_sprite.XA   = 240;
+	slSetSprite(&user_sprite, 130*65536);	// à remettre // ennemis et objets	
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*
@@ -633,6 +656,9 @@ void Game::playCutscene(int id) {
 			_cut.playCredits();
 		}
 		_mix.stopMusic();
+	
+		frame_y = frame_x = 0;
+		frame_z = 30;
 	}
 	else
 	{  // vbt pour les niveaux sans video
@@ -857,6 +883,10 @@ bool Game::handleConfigPanel() {
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 	}
+	
+	frame_y = frame_x = 0;
+	frame_z = 30;
+	
 	return (current == MENU_ITEM_ABORT);
 }
 
@@ -1194,6 +1224,8 @@ _vid.drawString(toto, 1, 88, 0xE7);
 		_stub->_pi.quit = false;
 
 		_mix.unpauseMusic();
+		frame_y = frame_x = 0;
+		frame_z = 30;		
 	}
 }
 
@@ -1752,7 +1784,7 @@ void Game::loadLevelData() {
 #endif
 //	case kResourceTypeMac:
 		hwram_ptr = hwram+50000;
-		position_vram = position_vram_aft_monster = 0; // vbt correction
+		position_vram = position_vram_aft_monster = 10*256; // vbt correction
 		if (has4mb)
 			current_dram2 = (Uint8 *)0x22600000+ (_vid._w * _vid._h);
 //		memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
@@ -2092,6 +2124,9 @@ void Game::handleInventory() {
 			pge_setCurrentInventoryObject(selected_pge);
 		}
 		playSound(66, 0);
+
+		frame_y = frame_x = 0;
+		frame_z = 30;		
 	}
 }
 /*
@@ -2563,7 +2598,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				sprData->cgaddr = (int)(0x75000/8);
 			}
 
-			_vid.SAT_displaySprite(*sprData, buf,spriteData);
+			_vid.SAT_displaySprite(*sprData, buf);
 			sprData->cgaddr=oldcgaddr;
 			slSynch();
 #endif

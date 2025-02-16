@@ -18,6 +18,8 @@ extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 extern Uint8 frame_x;
+extern Uint8 frame_y;
+extern Uint8 frame_z;
 void *memset4_fast(void *, long, size_t);
 Uint8 transferAux=0;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
@@ -216,7 +218,6 @@ DecodeBuffer buf{};
 	}	
 
 	_vid->SAT_displaySprite((uint8_t *)(cgaddr1*8),-320,-224, 128, 240);
-//	SAT_displaySprite(spriteData, buf, data);
 
 	int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
 
@@ -1734,4 +1735,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	}
 	
 	_stop = true; // pour reprendre la musique
+	
+	frame_y = frame_x = 0;
+	frame_z = 30;
 }

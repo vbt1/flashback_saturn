@@ -4,6 +4,8 @@
  */
 //#define SLAVE_SOUND 1
 //#define SOUND 1
+#define FONT_ADDR 0x25c01000
+
 extern "C" {
 #include <sl_def.h>
 #include <string.h>	
@@ -27,6 +29,7 @@ volatile Uint8  tick_wrap = 0;
 Uint8 tickPerVblank = 0;
 extern unsigned char frame_x;
 extern unsigned char frame_y;
+extern unsigned char frame_z;
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
@@ -641,23 +644,23 @@ inline void timeTick() {
 		ticker += tickPerVblank;
 	}
 }
-
 void vblIn (void) {
 	//static Uint8 counter = 0;
 //emu_printf("vblIn\n");
 	// Process input
-	char xx[30];
+//	char xx[30];
 	uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
 	frame_y++;
 	
 	if(frame_y>=hz)
 	{
-		sprintf(xx,"%02d/%02d\n",frame_x,hz);
-		frame_x=0;
+//		sprintf(xx,"%02d/%02d\n",frame_x,hz);
+		frame_z = frame_x;
+		frame_x = 0;
 //		emu_printf(xx);
+//5c01000
 		frame_y = 0;
 	}
-
 	sys->processEvents();
 	sys->updateScreen(0);
 	timeTick();
