@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x66000
+#define VRAM_MAX 0x65000 // ne pas toucher
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -448,7 +448,8 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 		this->MAC_drawStringChar(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
 		++len;
 	}
-	_stub->copyRect(x, (y<<1), _w, 16, _frontLayer, _w);	
+//	_stub->copyRect(x, (y<<1), _w, 16, _frontLayer, _w);	
+// vbt à voir s'il faut garder le copyrect
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }

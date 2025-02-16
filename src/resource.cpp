@@ -505,6 +505,7 @@ void Resource::unload(int objType) {
 void Resource::load(const char *objName, int objType, const char *ext) {
 //	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
+	char _entryName[14];
 	File f;
 		
 	switch (objType) {
@@ -956,7 +957,7 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 			assert(on->num_objects == objectsCount[iObj]);			
 //#ifdef WITH_MEM_MALLOC
 #if 0
-			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
+//			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
 //emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
 			on->objects = (Object *)current_lwram;

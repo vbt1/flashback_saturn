@@ -1,5 +1,5 @@
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x66000
+#define VRAM_MAX 0x65000 // ne pas toucher
 #define PCM_VOICE 18
 //#define VIDEO_PLAYER 1
 #define DEBUG 1
@@ -188,8 +188,7 @@ void Game::run() {
 			_res.MAC_decodeImageData(spriteData, i, &buf, 0xff);
 			hwram_ptr+=256;
 		}		
-		_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
+		SAT_preloadCDfiles();
 		_res.load_TEXT();
 #ifdef DEBUG
 	_stub->initTimeStamp();
@@ -234,11 +233,9 @@ hwram = (uint8_t *)hwram_ptr;
 		}
 	}*/
 // vbt : clean front layer	
-//	memset(_vid._frontLayer, 0x00, 512*448);
-//	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //	_stub->updateScreen(0);
-memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h);
-_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h);
+	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 #ifdef VIDEO_PLAYER
 for (int i=36;i<100;i++)
 	playCutscene(i);
@@ -932,14 +929,13 @@ bool Game::handleContinueAbort() {
 		}
 */
 		if (_stub->_pi.enter) {
-			_vid._layerScale=2;
 			_stub->_pi.enter = false;
 			memset4_fast(_vid._frontLayer,0x00,_vid._w*_vid._h);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_vid.SAT_cleanSprites();
 			return (current_color == 0);
 		}
-//		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+		_stub->copyRect(0, 0, _vid._w, 400, _vid._frontLayer, _vid._w);
 
 		static const int COLOR_STEP = 8;
 		static const int COLOR_MIN = 16;
@@ -1003,7 +999,7 @@ void Game::drawLevelTexts() {
 		}
 		hasLevelText = false;
 	}
-	
+
 	if (obj > 0) {
 		hasLevelText = true;		
 //		_printLevelCodeCounter = 0;
@@ -1020,7 +1016,7 @@ void Game::drawLevelTexts() {
 
 			if (icon_num == 2) {
 				printSaveStateCompleted();
-				return;
+//				return;
 			}
 		}/* else {
 			_currentInventoryIconNum = obj - 1;
@@ -2704,7 +2700,8 @@ void Game::SAT_preloadSpc() {
 }
 
 void Game::SAT_preloadCDfiles() {
-	_vid.drawString("Loading Please wait", 20, 40, 0xE5);	
+	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
+	_stub->copyRect(40, 80, _vid._w, 16, _vid._frontLayer, _vid._w);	
 /*	_res.MAC_closeMainFile();
 	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
 	_cut.playSet(current_lwram, 0x2B14);
