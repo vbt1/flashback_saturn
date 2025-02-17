@@ -905,18 +905,18 @@ bool Game::handleContinueAbort() {
 	while (timeout >= 0 && !_stub->_pi.quit) {
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
-		_vid.drawString(str, (256 - strlen(str) * 8) / 2, 64, 0xE3);
+		_vid.drawString(str, (264 - strlen(str) * 8) / 2, 76, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_02_TIME);
 		
-		sprintf(textBuf, "%s : %d", str, timeout / 10);
-		memset(&_vid._frontLayer[(140<<1)*512],0x00,14*512);
-		_vid.drawString(textBuf, 90, 140, 0xE3);
+		sprintf(textBuf, "%s: %d", str, timeout / 10);
+		memset(&_vid._frontLayer[(127<<1)*512],0x00,14*512);
+		_vid.drawString(textBuf, 61, 127, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_03_CONTINUE);
-		_vid.drawString(str, 45, 96, colors[0]);
+		_vid.drawString(str, 61, 104, colors[0]);
 		str = _res.getMenuString(LocaleData::LI_04_ABORT);
-		_vid.drawString(str, 150, 96, colors[1]);
-		sprintf(textBuf, "SCORE  %08lu", _score);
-		_vid.drawString(textBuf, 90, 180, 0xE3);
+		_vid.drawString(str, 166, 104, colors[1]);
+		sprintf(textBuf, "SCORE: %lu", _score);
+		_vid.drawString(textBuf, 64, 153, 0xE3);
 
 //emu_printf("SAT_displayCutscene\n");
 //		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
@@ -1225,7 +1225,7 @@ _vid.drawString(toto, 1, 88, 0xE7);
 
 		_mix.unpauseMusic();
 		frame_y = frame_x = 0;
-		frame_z = 30;		
+		frame_z = 30;
 	}
 }
 

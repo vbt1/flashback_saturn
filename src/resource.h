@@ -121,7 +121,7 @@ struct Resource {
 	uint32_t (*_readUint32)(const void *);
 	const char *_dataPath;
 
-	char _entryName[32];
+//	char _entryName[32];
 	uint8_t *_fnt;
 //	uint8_t *_mbk;
 	uint8_t *_icn;

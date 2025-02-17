@@ -1213,7 +1213,7 @@ const char *const LocaleData::_textsTableFR[LocaleData::LI_NUM] = {
 };
 #else
 const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
-	"CONTINUE OR ABORT THIS GAME ?",
+	"CONTINUE OR ABORT THIS GAME?",
 	"TIME",
 	"CONTINUE",
 	"ABORT",
