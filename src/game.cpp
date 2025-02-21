@@ -302,7 +302,6 @@ for (int i=36;i<100;i++)
 			_vid.setPalette0xF();
 //			_stub->setOverscanColor(0xE0);
 			_stub->setOverscanColor(0x00);
-			
 			memset(_vid._backLayer, 0xE0, 512*448);
 			_vid._unkPalSlot1 = 0;
 			_vid._unkPalSlot2 = 0;
@@ -396,11 +395,9 @@ heapWalk();
 //					memset(_vid._frontLayer,0x00,512*400);
 //					_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 //					_stub->_pi.enter = false;
-					if (_validSaveState) {
-						if (!loadGameState(0)) {
-							return;
-						}
-					} else {
+				if (_validSaveState && loadGameState(kIngameSaveSlot)) {
+					// ingame save
+				} else {
 //					clearStateRewind();
 					loadLevelData();
 // vbt : si on continue voir comment éviter de recharger les ennemis
