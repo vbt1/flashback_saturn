@@ -820,7 +820,7 @@ bool Game::handleConfigPanel() {
 		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 4, 9, colors[1]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 6, 9, colors[2]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_21_SAVE_GAME), y + 8, 9, colors[3]);
-//		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
 		_menu.drawString(buf, y + 10, 9, 1);
@@ -1007,7 +1007,7 @@ void Game::printSaveStateCompleted() {
 	}
 }
 int hasLevelText = false;
-int previousObj = -1;
+int previousText_num = -1;
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
@@ -1017,8 +1017,8 @@ void Game::drawLevelTexts() {
 	
 	if(hasLevelText)
 	{
-//		emu_printf("_textToDisplay %x obj %d\n",_textToDisplay,obj);
-		if(previousObj!=obj)
+//		emu_printf("_textToDisplay %x obj %d num %d\n",_textToDisplay,obj,pge->init_PGE->text_num);
+		if(previousText_num!=pge->init_PGE->text_num)
 		{
 //			emu_printf("erase %x obj %d\n",_textToDisplay,obj);
 			memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
@@ -1050,7 +1050,7 @@ void Game::drawLevelTexts() {
 		}*/
 		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
 	}
-	previousObj = obj;
+	previousText_num = pge->init_PGE->text_num;
 	_saveStateCompleted = false;
 }
 
