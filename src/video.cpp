@@ -46,7 +46,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	}
 	else
 	{
-		_frontLayer = (uint8_t *)sat_malloc(_w * _h);
+		_frontLayer = (uint8_t *)0x2aeff8;//sat_malloc(_w * _h);
 	}
 
 	memset(&_frontLayer[0], 0, _w * _h);
