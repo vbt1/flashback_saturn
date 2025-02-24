@@ -109,26 +109,6 @@ inline void timeTick() {
 		ticker += tickPerVblank;
 	}
 }
-
-static SystemStub *_st = SystemStub_SDL_create();
-void vblIn (void) {
-	// Process input
-		frame_y++;
-		char xx[30];
-		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
-		
-		if(frame_y==hz)
-		{
-			sprintf(xx,"%02d/%02d",frame_x,hz);
-			//xxxxxxxxxxxxx
-			frame_y = 0;
-		}
-
-	
-	_st->processEvents();
-	_st->updateScreen(0);
-	timeTick();
-}
 */
 
 /* *** */
@@ -161,7 +141,7 @@ void Game::run() {
 //emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
 
-		end1 = 564000+50000-1000;
+		end1 = 564000+50000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -1797,7 +1777,7 @@ void Game::loadLevelData() {
 //		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
-		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
+//		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		_res.MAC_loadLevelData(_currentLevel);
 		SAT_preloadMonsters();
 		SAT_preloadSpc();
@@ -1968,12 +1948,13 @@ uint16_t Game::getRandomNumber() {
 
 void Game::changeLevel() {
 	_vid.fadeOut();
+		slTVOn();
 //	clearStateRewind();
 	loadLevelData();
 	loadLevelRoom();
 	_vid.setPalette0xF();
 	_vid.setTextPalette();
-	_vid.fullRefresh();
+//	_vid.fullRefresh();
 }
 
 void Game::handleInventory() {
