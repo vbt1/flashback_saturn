@@ -1653,7 +1653,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
 		const uint32_t timestamp = _stub->getTimeStamp();
 
-		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
+//		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
 
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
@@ -1696,7 +1696,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 
 			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY, paletteLut);
 		}
-
+	
 		for (int j = 0; j < paletteLutSize; ++j) {
 //			Color c = Video::AMIGA_convertColor(paletteBuffer[j]);
 			
@@ -1725,7 +1725,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 			_interrupted = true;
 		}
 	}
-	
+	_vid->SAT_cleanSprites();	
 	// restore palette entries modified by the cutscene player
 	Color palette[32];
 	_res->MAC_copyClut16(palette, 0, 0x37);
