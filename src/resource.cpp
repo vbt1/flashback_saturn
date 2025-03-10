@@ -1709,7 +1709,7 @@ void Resource::MAC_loadSounds() {
 	};
 //	_numSfx = NUM_SFXS;
 	_sfxList = (SoundFx *)hwram_ptr;
-	hwram_ptr += NUM_SFXS * sizeof(SoundFx);
+	hwram_ptr += (NUM_SFXS+1) * sizeof(SoundFx);
 
 	if (!_sfxList) {
 		return;
@@ -1742,6 +1742,14 @@ void Resource::MAC_loadSounds() {
 			p += SAT_ALIGN8(dataSize);
 		}
 	}
+	
+	_sfxList[NUM_SFXS].len = 8005;
+	_sfxList[NUM_SFXS].freq = 8000;
+	_sfxList[NUM_SFXS].data = p;
+	GFS_Load(GFS_NameToId((int8_t *)"GAMESAVE.PCM"),0,(void *)p,_sfxList[NUM_SFXS].len);
+//			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
+	p += SAT_ALIGN8(_sfxList[NUM_SFXS].len);	
+	
 	soundAddr = p;
 }
 

@@ -1,3 +1,5 @@
+#define NUM_SFXS 66
+#define PCM_VOICE 18
 #pragma once
 
 #include <stdint.h>

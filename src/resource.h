@@ -93,7 +93,7 @@ struct Resource {
 	};
 
 	enum {
-		NUM_SFXS = 66,
+//		NUM_SFXS = 66,
 //		NUM_BANK_BUFFERS = 50,
 //		NUM_CUTSCENE_TEXTS = 117,
 		NUM_OBJECTS = 230,

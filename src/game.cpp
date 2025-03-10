@@ -361,24 +361,13 @@ void Game::mainLoop() {
 			memset(_vid._frontLayer, 0x00, 512*448);
 			memset(_vid._backLayer, 0x00, 512*448);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//			_stub->updateScreen(0);
-//			_res.clearLevelRes(); // vbt : ajout, on a perdu on libère tout	
 			playCutscene(_cut._deathCutsceneId);
-
-#ifdef HEAP_WALK
-heapWalk();
-#endif
 			if (!handleContinueAbort()) {
-//				memset(_vid._frontLayer,0x00,512*400);
-//				_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//				_stub->_pi.enter = false;
 				playCutscene(0x41);
 				_endLoop = true;
 			} else {
-//					memset(_vid._frontLayer,0x00,512*400);
-//					_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-//					_stub->_pi.enter = false;
 				if (_validSaveState && loadGameState(kIngameSaveSlot)) {
+					emu_printf ("end loading with success\n");
 					// ingame save
 				} else {
 //					clearStateRewind();
@@ -499,10 +488,10 @@ heapWalk();
 	user_sprite.SIZE = 0x210;
 	user_sprite.XA   = 224;
 	user_sprite.YA   = -220;
-	slSetSprite(&user_sprite, 130*65536);	// à remettre // ennemis et objets
+	slSetSprite(&user_sprite, 130<<16);	// à remettre // ennemis et objets
 	user_sprite.SRCA = 0x200+32*c2;
 	user_sprite.XA   = 240;
-	slSetSprite(&user_sprite, 130*65536);	// à remettre // ennemis et objets	
+	slSetSprite(&user_sprite, 130<<16);	// à remettre // ennemis et objets	
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*
@@ -1872,7 +1861,7 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 }
 
 int channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-#define NUM_SFXS 66
+
 void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < NUM_SFXS) {
 		SoundFx *sfx = &_res._sfxList[num];
