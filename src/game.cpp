@@ -1,6 +1,6 @@
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000 // ne pas toucher
-#define PCM_VOICE 18
+
 //#define VIDEO_PLAYER 1
 #define DEBUG 1
 //#define DEBUG2 1
@@ -49,10 +49,13 @@ unsigned char frame_z = 0;
 Uint8 *current_dram2=(Uint8 *)0x22600000;
 bool has4mb = false;
 void	*malloc(size_t);
-			  
+//void LZ_Uncompress(const uint8_t *in, uint8_t *out, unsigned int insize);			  
+//#include "lz4hc.h"
 }
-extern int lz77_compress(const unsigned char *input, unsigned char *output, int input_size);
-extern int lz77_decompress(const unsigned char *input, unsigned char *output, int compressed_size);					   
+
+extern int fastlz2_compress(const void* input, int length, void* output);
+extern int fastlz2_decompress(const void* input, int length, void* output, int maxout);
+
 extern void sat_restart_audio(void);
 
 //extern volatile Uint8 audioEnabled;
@@ -2160,15 +2163,28 @@ bool Game::saveGameState(uint8 slot) {
 //	Uint32 BackUpRamWork[2048];
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
-	Uint8  *rle_buf		 = (Uint8  *)hwram_screen;//(Uint8  *)_res._scratchBuffer; //_res._scratchBuffer;//hwram_screen;
-	Uint32 *libBakBuf    = (Uint32 *)(_res._scratchBuffer+SAV_BUFSIZE);
-	Uint32 *BackUpRamWork= (Uint32 *)(_res._scratchBuffer+SAV_BUFSIZE+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(_res._scratchBuffer+SAV_BUFSIZE+0x4000+0x2000);
-	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));	
+	Uint8  *rle_buf		 = (Uint8  *)_res._scratchBuffer; //_res._scratchBuffer;//hwram_screen;
+	Uint32 *libBakBuf    = (Uint32 *)(_res._scratchBuffer+10000);
+	Uint32 *BackUpRamWork= (Uint32 *)(_res._scratchBuffer+10000+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(_res._scratchBuffer+10000+0x6000);
+//	memset(sbuf.buffer, 0, 20000);	
+//	memset(rle_buf, 0, 40000);	
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
 //	int cmprSize = LZ_Compress(sbuf.buffer, rle_buf, sbuf.idx);
-	int cmprSize = lz77_compress(sbuf.buffer, rle_buf, sbuf.idx);
+//	int cmprSize = lz77_compress(sbuf.buffer, rle_buf, sbuf.idx);
+//Uint32 cmprSize=0;
+/*
+LOCAL void lzrw3a_compress_compress
+	(UBYTE *p_wrk_mem,
+	UBYTE *p_src_first,
+	ULONG src_len,
+	UBYTE *p_dst_first,
+	ULONG* p_dst_len)
+*/
+
+//lzrw3a_compress_compress(hwram_screen+10000,sbuf.buffer, sbuf.idx, rle_buf,&cmprSize);
+int cmprSize =fastlz2_compress((const void*) sbuf.buffer, sbuf.idx, (void*)rle_buf);
 
 	PER_SMPC_RES_DIS(); // Disable reset
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
@@ -2227,10 +2243,12 @@ bool Game::loadGameState(uint8 slot) {
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
 	Uint8  *rle_buf		 = (Uint8  *)hwram_screen;//(Uint8  *)_res._scratchBuffer; //_res._scratchBuffer;//hwram_screen;
-	Uint32 *libBakBuf    = (Uint32 *)(_res._scratchBuffer+SAV_BUFSIZE);
-	Uint32 *BackUpRamWork= (Uint32 *)(_res._scratchBuffer+SAV_BUFSIZE+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(_res._scratchBuffer+SAV_BUFSIZE+0x4000+0x2000);
-	memset(sbuf.buffer, 0, sizeof(SAV_BUFSIZE));
+	Uint32 *libBakBuf    = (Uint32 *)(_res._scratchBuffer);
+	Uint32 *BackUpRamWork= (Uint32 *)(_res._scratchBuffer+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(_res._scratchBuffer+0x6000);
+//	memset(sbuf.buffer, 0, 20000);	
+//	memset(rle_buf, 0, 40000);
+
 	Uint32 i;
 	int32 status;
 
@@ -2245,10 +2263,11 @@ bool Game::loadGameState(uint8 slot) {
 
 	BUP_Dir(0, (Uint8*)stateFile, 1, dir);
 
-	Uint32 cmprSize = dir[0].datasize;
+	int cmprSize = dir[0].datasize;
 
 //	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
-	lz77_decompress(rle_buf, sbuf.buffer, cmprSize);
+//	lz77_decompress(rle_buf, sbuf.buffer, cmprSize);
+	fastlz2_decompress(rle_buf,cmprSize,sbuf.buffer,100000);
 	loadState(&sbuf);
 	return success;
 }
