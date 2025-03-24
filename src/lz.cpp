@@ -267,6 +267,7 @@ static void _LZ_Uncompress_Single(unsigned char *in, unsigned char *out, unsigne
 {
     unsigned char marker, symbol;
     unsigned int i, inpos, outpos, length, offset;
+    unsigned int max_outsize = 15000; // Or pass as parameter from LZW header (2984?)
     
     if(insize < 1)
         return;
@@ -278,20 +279,24 @@ static void _LZ_Uncompress_Single(unsigned char *in, unsigned char *out, unsigne
         symbol = in[inpos++];
         if(symbol == marker) {
             if(inpos < insize && in[inpos] == 0) {
+                if(outpos >= max_outsize) break; // Prevent overflow
                 out[outpos++] = marker;
                 inpos++;
             } else {
                 inpos += _LZ_ReadVarSize(&length, &in[inpos]);
                 inpos += _LZ_ReadVarSize(&offset, &in[inpos]);
+                if(outpos + length > max_outsize) break; // Prevent overflow
                 for(i = 0; i < length; i++) {
                     out[outpos] = out[outpos - offset];
                     outpos++;
                 }
             }
         } else {
+            if(outpos >= max_outsize) break; // Prevent overflow
             out[outpos++] = symbol;
         }
     }
+    emu_printf("LZ stage output size: %d\n", outpos);
 }
 
 extern unsigned char *hwram_screen;
@@ -556,7 +561,7 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
 int LZ_Compress(unsigned char *in, unsigned char *out, unsigned int insize) {
     unsigned char *temp_buffer = TEMP_BUFFER_ADDR;
     int lz_size, final_size;
-    
+     emu_printf("LZ stage input size: %d\n", insize);   
     if (insize < 1 || insize > TEMP_BUFFER_SIZE)
         return -1;
         
