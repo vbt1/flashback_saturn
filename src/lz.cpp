@@ -309,46 +309,41 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
     emu_printf("Starting LZW compression, insize=%u\n", insize);
     if (insize < 1) return 0;
 
-    // Dictionary structure
     struct DictEntry {
         unsigned int prefix;
         unsigned char symbol;
     } *dict = (struct DictEntry *)hwram_screen;
 
-    // Initialize dictionary with single character entries
     for (int i = 0; i < 256; i++) {
-        dict[i].prefix = 0xFFFFFFFF;  // Invalid prefix
+        dict[i].prefix = 0xFFFFFFFF;
         dict[i].symbol = (unsigned char)i;
     }
 
-    unsigned int dict_size = LZW_FIRST_CODE;  // Start after special codes
+    unsigned int dict_size = LZW_FIRST_CODE;
     unsigned int inpos = 0;
-    unsigned int outpos = 4;  // First 4 bytes for original size
+    unsigned int outpos = 4; // Reserve space for size header
     unsigned int bit_buffer = 0;
     int bit_count = 0;
     int code_size = LZW_START_BITS;
 
-    // Store original size in header
+    // Write input size header
     out[0] = (insize >> 24) & 0xFF;
     out[1] = (insize >> 16) & 0xFF;
     out[2] = (insize >> 8) & 0xFF;
     out[3] = insize & 0xFF;
 
-    // Write clear code at start
-    bit_buffer |= LZW_CLEAR_CODE;
+    // Write initial clear code
+    bit_buffer = LZW_CLEAR_CODE;
     bit_count = code_size;
     emu_printf("Write initial clear code %u, code_size=%d\n", LZW_CLEAR_CODE, code_size);
-    
-    // Start with first character
+
     unsigned int current_code = in[0];
-    inpos = 1;  // Already processed first character
-    
-    // Process remaining input
+    inpos = 1;
+
     while (inpos < insize) {
         unsigned char next_symbol = in[inpos++];
-        unsigned int next_code = 0xFFFFFFFF;  // Invalid code
-        
-        // Search for current string + next symbol in dictionary
+        unsigned int next_code = 0xFFFFFFFF;
+
         for (unsigned int i = LZW_FIRST_CODE; i < dict_size; i++) {
             if (dict[i].prefix == current_code && dict[i].symbol == next_symbol) {
                 next_code = i;
@@ -357,80 +352,82 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
         }
 
         if (next_code != 0xFFFFFFFF) {
-            // Found in dictionary, continue with longer string
             current_code = next_code;
         } else {
-            // Not found, output current code
+            // Write current_code
+            if (bit_count + code_size > 32) {
+                while (bit_count >= 8) {
+                    out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
+                    bit_count -= 8;
+                    bit_buffer &= (1U << bit_count) - 1;
+                }
+            }
             bit_buffer = (bit_buffer << code_size) | current_code;
             bit_count += code_size;
-            
-            // Output complete bytes from bit buffer
             while (bit_count >= 8) {
                 out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
                 bit_count -= 8;
                 bit_buffer &= (1U << bit_count) - 1;
             }
 
-            // Add new entry to dictionary if space allows
             if (dict_size < LZW_DICT_SIZE) {
                 dict[dict_size].prefix = current_code;
                 dict[dict_size].symbol = next_symbol;
                 dict_size++;
-                
-                // Increase code size when dictionary fills current bit width
                 if (dict_size >= (1U << code_size) && code_size < LZW_MAX_BITS) {
                     code_size++;
                     emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
                 }
-            } 
-            // Reset dictionary when full
-            else {
-                // Write clear code
+            } else {
+                // Clear dictionary
                 bit_buffer = (bit_buffer << code_size) | LZW_CLEAR_CODE;
                 bit_count += code_size;
-                
                 while (bit_count >= 8) {
                     out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
                     bit_count -= 8;
                     bit_buffer &= (1U << bit_count) - 1;
                 }
-                
-                // Reset dictionary and code size
                 dict_size = LZW_FIRST_CODE;
                 code_size = LZW_START_BITS;
             }
-            
-            // Start new string with current symbol
             current_code = next_symbol;
         }
     }
 
-    // Output final code
+    // Write final code
+    if (bit_count + code_size > 32) {
+        while (bit_count >= 8) {
+            out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
+            bit_count -= 8;
+            bit_buffer &= (1U << bit_count) - 1;
+        }
+    }
     bit_buffer = (bit_buffer << code_size) | current_code;
     bit_count += code_size;
     emu_printf("Write final code %u\n", current_code);
-    
-    // Write out complete bytes
-    while (bit_count >= 8) {
-        out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-        bit_count -= 8;
-        bit_buffer &= (1U << bit_count) - 1;
-    }
-    
+
     // Write end code
+    if (bit_count + code_size > 32) {
+        while (bit_count >= 8) {
+            out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
+            bit_count -= 8;
+            bit_buffer &= (1U << bit_count) - 1;
+        }
+    }
     bit_buffer = (bit_buffer << code_size) | LZW_END_CODE;
     bit_count += code_size;
     emu_printf("Write end code %u\n", LZW_END_CODE);
-    
-    // Flush any remaining bits with padding
-    if (bit_count > 0) {
-        out[outpos++] = (bit_buffer << (8 - bit_count)) & 0xFF;
+
+    // Flush remaining bits
+    while (bit_count > 0) {
+        out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
+        bit_count -= 8;
+        if (bit_count < 0) bit_count = 0; // Avoid underflow
     }
 
     emu_printf("LZW compression done, compressed size=%u\n", outpos);
     return outpos;
 }
-
 // Fixed LZW decompression algorithm
 static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int insize, unsigned int *out_size) {
     emu_printf("Starting LZW decompression, insize=%u\n", insize);
@@ -440,76 +437,68 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
     }
 
     unsigned int inpos = 0;
-    *out_size = (in[inpos] << 24) | (in[inpos + 1] << 16) | 
-                (in[inpos + 2] << 8) | in[inpos + 3];
+    *out_size = (in[inpos] << 24) | (in[inpos + 1] << 16) | (in[inpos + 2] << 8) | in[inpos + 3];
     inpos += 4;
-    
+
     emu_printf("Expected output size=%u\n", *out_size);
     if (*out_size == 0) return 0;
 
-    // Dictionary for string reconstruction
-    struct {
+    struct DictEntry {
         unsigned int prefix;
         unsigned char symbol;
-    } dict[LZW_DICT_SIZE];
-    
-    // Buffer for string construction
-    unsigned char *string_buffer = TEMP_BUFFER_ADDR + TEMP_BUFFER_SIZE/2;
-    
-    // Initialize dictionary with single character entries
+    } *dict = (struct DictEntry *)hwram_screen;
+
+    unsigned char *string_buffer = TEMP_BUFFER_ADDR + TEMP_BUFFER_SIZE / 2;
+
     for (int i = 0; i < 256; i++) {
-        dict[i].prefix = 0xFFFFFFFF;  // Invalid prefix
+        dict[i].prefix = 0xFFFFFFFF;
         dict[i].symbol = (unsigned char)i;
     }
 
-    unsigned int dict_size = LZW_FIRST_CODE;  // Start after special codes (258)
+    unsigned int dict_size = LZW_FIRST_CODE;
     unsigned int outpos = 0;
     unsigned int bit_buffer = 0;
     int bit_count = 0;
     int code_size = LZW_START_BITS;
 
-    // Fill bit buffer from input
+    // Read initial bits
     while (bit_count < code_size && inpos < insize) {
         bit_buffer = (bit_buffer << 8) | in[inpos++];
         bit_count += 8;
     }
-    
-    // Read first code (should be CLEAR_CODE)
+    if (bit_count < code_size) {
+        emu_printf("Not enough bits for initial code\n");
+        return -1;
+    }
+
     unsigned int code = (bit_buffer >> (bit_count - code_size)) & ((1U << code_size) - 1);
     bit_count -= code_size;
     bit_buffer &= (1U << bit_count) - 1;
-    
+
     if (code != LZW_CLEAR_CODE) {
         emu_printf("Error: First code is not CLEAR_CODE (got %u)\n", code);
         return -1;
     }
-    
-    // Main decompression loop
+
     unsigned int old_code = 0xFFFFFFFF;
     unsigned char first_char = 0;
 
     while (inpos < insize || bit_count >= code_size) {
-        // Read next code
         while (bit_count < code_size && inpos < insize) {
             bit_buffer = (bit_buffer << 8) | in[inpos++];
             bit_count += 8;
         }
-        
-        if (bit_count < code_size) {
-            emu_printf("End of input reached prematurely\n");
-            break;
-        }
-        
+        if (bit_count < code_size) break; // End of stream
+
         code = (bit_buffer >> (bit_count - code_size)) & ((1U << code_size) - 1);
         bit_count -= code_size;
         bit_buffer &= (1U << bit_count) - 1;
-        
-        // Handle special codes
+
         if (code == LZW_END_CODE) {
             emu_printf("END_CODE reached\n");
             break;
         }
-        
+
         if (code == LZW_CLEAR_CODE) {
             emu_printf("CLEAR_CODE - Reset dictionary\n");
             dict_size = LZW_FIRST_CODE;
@@ -517,81 +506,51 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
             old_code = 0xFFFFFFFF;
             continue;
         }
-        
-        // Handle regular codes
-        if (old_code == 0xFFFFFFFF) {
-            if (code >= 256) {
-                emu_printf("Error: Invalid first code after clear: %u\n", code);
-                return -2;
-            }
-            
-            // Output single character
-            out[outpos++] = (unsigned char)code;
-            first_char = (unsigned char)code;
-            old_code = code;
-            continue;
-        }
-        
-        unsigned int string_length = 0;
-        unsigned int current_code = code;
-        
-        // Handle the KwKwK special case
+
         if (code > dict_size) {
             emu_printf("Error: Code %u exceeds dict_size %u\n", code, dict_size);
             return -3;
         }
-        
+
+        unsigned int string_length = 0;
+        unsigned int current_code = code;
+
         if (code == dict_size) {
-            // Special case: code not yet in dictionary, construct it
             current_code = old_code;
-            while (current_code < LZW_DICT_SIZE && current_code >= 256) {
+            while (current_code >= 256) {
                 string_buffer[string_length++] = dict[current_code].symbol;
                 current_code = dict[current_code].prefix;
             }
             string_buffer[string_length++] = (unsigned char)current_code;
-            string_buffer[string_length++] = first_char; // Add the first character of the previous string
+            string_buffer[string_length++] = first_char;
         } else {
-            // Decode string by walking backwards through dictionary
-            while (current_code < LZW_DICT_SIZE && current_code >= 256) {
+            while (current_code >= 256) {
                 string_buffer[string_length++] = dict[current_code].symbol;
                 current_code = dict[current_code].prefix;
             }
             string_buffer[string_length++] = (unsigned char)current_code;
         }
-        
-        // First character of the string (last one decoded)
+
         first_char = string_buffer[string_length - 1];
-        
-        // Output string in reverse order
         for (int i = string_length - 1; i >= 0; i--) {
-            if (outpos < *out_size) {
-                out[outpos++] = string_buffer[i];
-            } else {
-                emu_printf("Warning: Output buffer overflow\n");
-                break;
-            }
+            if (outpos < *out_size) out[outpos++] = string_buffer[i];
         }
-        
-        // Add new code to dictionary
+
         if (dict_size < LZW_DICT_SIZE) {
             dict[dict_size].prefix = old_code;
             dict[dict_size].symbol = first_char;
             dict_size++;
-            
-            // Increase code size when dictionary fills current bit width
             if (dict_size >= (1U << code_size) && code_size < LZW_MAX_BITS) {
                 code_size++;
                 emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
             }
         }
-        
         old_code = code;
     }
-    
+
     emu_printf("LZW decompression complete, decompressed size=%u\n", outpos);
     return outpos;
 }
-
 
 // Wrapper functions to use the LZW compression and decompression
 int LZ_Compress(unsigned char *in, unsigned char *out, unsigned int insize) {
@@ -624,9 +583,11 @@ void LZ_Uncompress(unsigned char *in, unsigned char *out, unsigned int insize) {
     int lzw_result = _LZW_Uncompress(in, temp_buffer, insize, &lz_size);
     if (lzw_result > 0) {
         emu_printf("LZW stage decompressed size: %d\n", lz_size);
+//		while(1);
         _LZ_Uncompress_Single(temp_buffer, out, lz_size);
     } else {
         emu_printf("LZW decompression failed with code: %d\n", lzw_result);
+//		while(1);
     }
 }
 
