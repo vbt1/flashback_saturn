@@ -1835,7 +1835,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d segamem %08d dram used %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+(_vid._w*_vid._h),((int)current_dram2)-0x22600000);
+emu_printf("hwram free %08d lwram used %08d segamem %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+(_vid._w*_vid._h));
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
@@ -2212,7 +2212,7 @@ bool Game::saveGameState(uint8 slot) {
 		if (verify == 0)
 			success = true;
 	}
-
+	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h); // utilisé pour la compression
 	return success;
 }
 
@@ -2681,7 +2681,7 @@ void Game::SAT_preloadMonsters() {
 	}
 #ifdef DEBUG
 	unsigned int e = _stub->getTimeStamp();
-	emu_printf("--duration ennemies : %d\n",e-s);
+	emu_printf("--duration enn : %d\n",e-s);
 #endif
 }
 
