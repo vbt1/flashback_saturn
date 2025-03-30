@@ -17,6 +17,7 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/util.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \
+		$(SRCDIR)/lzwlib.cpp \
 		$(SRCDIR)/lz.cpp \
 		$(SRCDIR)/cinit.cpp \
 		$(SRCDIR)/pcm.cpp

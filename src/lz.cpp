@@ -3,7 +3,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void emu_printf(const char *format, ...);
+//extern void emu_printf(const char *format, ...);
+#include "lzwlib.h"
+
 #define LZ_MAX_OFFSET 32768*2
 #ifndef LZ_MIN_MATCH
   #define LZ_MIN_MATCH 4
@@ -16,12 +18,6 @@ extern void emu_printf(const char *format, ...);
 #define TEMP_BUFFER_SIZE 65536
 #define HASH_TABLE_ADDR ((unsigned int *)0x2aeff8)
 #define TEMP_BUFFER_ADDR ((unsigned char *)(0x2aeff8 + HASH_TABLE_SIZE))
-
-// LZW-specific defines
-#define LZW_DICT_SIZE 4096
-#define LZW_MAX_CODE (LZW_DICT_SIZE - 1)
-#define LZW_CLEAR_CODE 256
-#define LZW_START_BITS 9
 
 // External memory region
 extern unsigned char *hwram_screen;
@@ -67,7 +63,9 @@ static int _LZ_Compress_Single(unsigned char *in, unsigned char *out, unsigned i
     unsigned int inpos, outpos, bytesleft, i;
     unsigned int maxoffset, offset;
     unsigned int bestlength, length;
-    unsigned int histogram[256];
+//    unsigned int histogram[256];
+    unsigned int *histogram = (unsigned int *)hwram_screen;
+
     unsigned char *ptr1, *ptr2;
     
     if(insize < 1)
@@ -296,303 +294,27 @@ static void _LZ_Uncompress_Single(unsigned char *in, unsigned char *out, unsigne
             out[outpos++] = symbol;
         }
     }
-    emu_printf("LZ stage output size: %d\n", outpos);
+    //emu_printf("LZ stage output size: %d\n", outpos);
 }
 
 extern unsigned char *hwram_screen;
 
-// LZW-specific defines
-#define LZW_DICT_SIZE 4096
-#define LZW_CLEAR_CODE 256
-#define LZW_END_CODE 257
-#define LZW_FIRST_CODE 258
-#define LZW_MAX_BITS 12
-#define LZW_START_BITS 9
-
-// Fixed LZW compression algorithm
-static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int insize) {
-    emu_printf("Starting LZW compression, insize=%u\n", insize);
-    if (insize < 1) return 0;
-
-    struct DictEntry {
-        unsigned int prefix;
-        unsigned char symbol;
-    } *dict = (struct DictEntry *)hwram_screen;
-
-    for (int i = 0; i < 256; i++) {
-        dict[i].prefix = 0xFFFFFFFF;
-        dict[i].symbol = (unsigned char)i;
-    }
-
-    unsigned int dict_size = LZW_FIRST_CODE;
-    unsigned int inpos = 0;
-    unsigned int outpos = 4; // Reserve space for size header
-    unsigned int bit_buffer = 0;
-    int bit_count = 0;
-    int code_size = LZW_START_BITS;
-
-    // Write input size header
-    out[0] = (insize >> 24) & 0xFF;
-    out[1] = (insize >> 16) & 0xFF;
-    out[2] = (insize >> 8) & 0xFF;
-    out[3] = insize & 0xFF;
-
-    // Write initial clear code
-    bit_buffer = LZW_CLEAR_CODE;
-    bit_count = code_size;
-    emu_printf("Write initial clear code %u, code_size=%d\n", LZW_CLEAR_CODE, code_size);
-
-    unsigned int current_code = in[0];
-    inpos = 1;
-
-    while (inpos < insize) {
-        unsigned char next_symbol = in[inpos++];
-        unsigned int next_code = 0xFFFFFFFF;
-
-        for (unsigned int i = LZW_FIRST_CODE; i < dict_size; i++) {
-            if (dict[i].prefix == current_code && dict[i].symbol == next_symbol) {
-                next_code = i;
-                break;
-            }
-        }
-
-        if (next_code != 0xFFFFFFFF) {
-            current_code = next_code;
-        } else {
-            // Write current_code
-            if (bit_count + code_size > 32) {
-                while (bit_count >= 8) {
-                    out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-                    bit_count -= 8;
-                    bit_buffer &= (1U << bit_count) - 1;
-                }
-            }
-            bit_buffer = (bit_buffer << code_size) | current_code;
-            bit_count += code_size;
-            while (bit_count >= 8) {
-                out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-                bit_count -= 8;
-                bit_buffer &= (1U << bit_count) - 1;
-            }
-
-            if (dict_size < LZW_DICT_SIZE) {
-                dict[dict_size].prefix = current_code;
-                dict[dict_size].symbol = next_symbol;
-                dict_size++;
-                if (dict_size >= (1U << code_size) && code_size < LZW_MAX_BITS) {
-                    code_size++;
-                    emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
-                }
-            } else {
-                // Clear dictionary
-                bit_buffer = (bit_buffer << code_size) | LZW_CLEAR_CODE;
-                bit_count += code_size;
-                while (bit_count >= 8) {
-                    out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-                    bit_count -= 8;
-                    bit_buffer &= (1U << bit_count) - 1;
-                }
-                dict_size = LZW_FIRST_CODE;
-                code_size = LZW_START_BITS;
-            }
-            current_code = next_symbol;
-        }
-    }
-
-    // Write final code
-    if (bit_count + code_size > 32) {
-        while (bit_count >= 8) {
-            out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-            bit_count -= 8;
-            bit_buffer &= (1U << bit_count) - 1;
-        }
-    }
-    bit_buffer = (bit_buffer << code_size) | current_code;
-    bit_count += code_size;
-    emu_printf("Write final code %u\n", current_code);
-
-    // Write end code
-    if (bit_count + code_size > 32) {
-        while (bit_count >= 8) {
-            out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-            bit_count -= 8;
-            bit_buffer &= (1U << bit_count) - 1;
-        }
-    }
-    bit_buffer = (bit_buffer << code_size) | LZW_END_CODE;
-    bit_count += code_size;
-    emu_printf("Write end code %u\n", LZW_END_CODE);
-
-    // Flush remaining bits
-    while (bit_count > 0) {
-        out[outpos++] = (bit_buffer >> (bit_count - 8)) & 0xFF;
-        bit_count -= 8;
-        if (bit_count < 0) bit_count = 0; // Avoid underflow
-    }
-
-    emu_printf("LZW compression done, compressed size=%u\n", outpos);
-    return outpos;
-}
-// Fixed LZW decompression algorithm
-static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int insize, unsigned int *out_size) {
-    emu_printf("Starting LZW decompression, insize=%u\n", insize);
-    if (insize < 4) {
-        emu_printf("Input too small (%u < 4)\n", insize);
-        return 0;
-    }
-
-    unsigned int inpos = 0;
-    *out_size = (in[inpos] << 24) | (in[inpos + 1] << 16) | (in[inpos + 2] << 8) | in[inpos + 3];
-    inpos += 4;
-
-    emu_printf("Expected output size=%u\n", *out_size);
-    if (*out_size == 0) return 0;
-
-    struct DictEntry {
-        unsigned int prefix;
-        unsigned char symbol;
-    } *dict = (struct DictEntry *)hwram_screen;
-
-    unsigned char *string_buffer = TEMP_BUFFER_ADDR + TEMP_BUFFER_SIZE / 2;
-
-    for (int i = 0; i < 256; i++) {
-        dict[i].prefix = 0xFFFFFFFF;
-        dict[i].symbol = (unsigned char)i;
-    }
-
-    unsigned int dict_size = LZW_FIRST_CODE;
-    unsigned int outpos = 0;
-    unsigned int bit_buffer = 0;
-    int bit_count = 0;
-    int code_size = LZW_START_BITS;
-
-    // Read initial bits
-    while (bit_count < code_size && inpos < insize) {
-        bit_buffer = (bit_buffer << 8) | in[inpos++];
-        bit_count += 8;
-    }
-    if (bit_count < code_size) {
-        emu_printf("Not enough bits for initial code\n");
-        return -1;
-    }
-
-    unsigned int code = (bit_buffer >> (bit_count - code_size)) & ((1U << code_size) - 1);
-    bit_count -= code_size;
-    bit_buffer &= (1U << bit_count) - 1;
-
-    if (code != LZW_CLEAR_CODE) {
-        emu_printf("Error: First code is not CLEAR_CODE (got %u)\n", code);
-        return -1;
-    }
-
-    unsigned int old_code = 0xFFFFFFFF;
-    unsigned char first_char = 0;
-
-    while (inpos < insize || bit_count >= code_size) {
-        while (bit_count < code_size && inpos < insize) {
-            bit_buffer = (bit_buffer << 8) | in[inpos++];
-            bit_count += 8;
-        }
-        if (bit_count < code_size) break; // End of stream
-
-        code = (bit_buffer >> (bit_count - code_size)) & ((1U << code_size) - 1);
-        bit_count -= code_size;
-        bit_buffer &= (1U << bit_count) - 1;
-
-        if (code == LZW_END_CODE) {
-            emu_printf("END_CODE reached\n");
-            break;
-        }
-
-        if (code == LZW_CLEAR_CODE) {
-            emu_printf("CLEAR_CODE - Reset dictionary\n");
-            dict_size = LZW_FIRST_CODE;
-            code_size = LZW_START_BITS;
-            old_code = 0xFFFFFFFF;
-            continue;
-        }
-
-        if (code > dict_size) {
-            emu_printf("Error: Code %u exceeds dict_size %u\n", code, dict_size);
-            return -3;
-        }
-
-        unsigned int string_length = 0;
-        unsigned int current_code = code;
-
-        if (code == dict_size) {
-            current_code = old_code;
-            while (current_code >= 256) {
-                string_buffer[string_length++] = dict[current_code].symbol;
-                current_code = dict[current_code].prefix;
-            }
-            string_buffer[string_length++] = (unsigned char)current_code;
-            string_buffer[string_length++] = first_char;
-        } else {
-            while (current_code >= 256) {
-                string_buffer[string_length++] = dict[current_code].symbol;
-                current_code = dict[current_code].prefix;
-            }
-            string_buffer[string_length++] = (unsigned char)current_code;
-        }
-
-        first_char = string_buffer[string_length - 1];
-        for (int i = string_length - 1; i >= 0; i--) {
-            if (outpos < *out_size) out[outpos++] = string_buffer[i];
-        }
-
-        if (dict_size < LZW_DICT_SIZE) {
-            dict[dict_size].prefix = old_code;
-            dict[dict_size].symbol = first_char;
-            dict_size++;
-            if (dict_size >= (1U << code_size) && code_size < LZW_MAX_BITS) {
-                code_size++;
-                emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
-            }
-        }
-        old_code = code;
-    }
-
-    emu_printf("LZW decompression complete, decompressed size=%u\n", outpos);
-    return outpos;
-}
-
 // Wrapper functions to use the LZW compression and decompression
 int LZ_Compress(unsigned char *in, unsigned char *out, unsigned int insize) {
     unsigned char *temp_buffer = TEMP_BUFFER_ADDR;
-    int lz_size, final_size;
-     emu_printf("LZ stage input size: %d\n", insize);   
-    if (insize < 1 || insize > TEMP_BUFFER_SIZE)
-        return -1;
-        
+    int lz_size;
+     //emu_printf("LZ stage input size: %d\n", insize);   
     lz_size = _LZ_Compress_Single(in, temp_buffer, insize);
-    if (lz_size <= 0 || lz_size > TEMP_BUFFER_SIZE)
-        return -2;
-    
-    emu_printf("LZ stage compressed size: %d\n", lz_size);
-    final_size = _LZW_Compress(temp_buffer, out, lz_size);
-    if (final_size <= 0)
-        return -3;
-    
-    emu_printf("Final compressed size: %d\n", final_size);
-    return final_size;
+    //emu_printf("LZ stage compressed size: %d\n", lz_size);
+	return lzw_compress(out, temp_buffer, lz_size);
 }
 
 void LZ_Uncompress(unsigned char *in, unsigned char *out, unsigned int insize) {
     unsigned char *temp_buffer = TEMP_BUFFER_ADDR;
-    unsigned int lz_size;
-    
-    if (insize < 4 || insize > TEMP_BUFFER_SIZE)
-        return;
-        
-    int lzw_result = _LZW_Uncompress(in, temp_buffer, insize, &lz_size);
+	int lzw_result = lzw_decompress(temp_buffer, in, insize);
     if (lzw_result > 0) {
-        emu_printf("LZW stage decompressed size: %d\n", lz_size);
-//		while(1);
-        _LZ_Uncompress_Single(temp_buffer, out, lz_size);
-    } else {
-        emu_printf("LZW decompression failed with code: %d\n", lzw_result);
-//		while(1);
+        //emu_printf("LZW stage decompressed size: %d\n", lzw_result);
+        _LZ_Uncompress_Single(temp_buffer, out, lzw_result);
     }
 }
 
