@@ -81,10 +81,10 @@ void emu_printf(const char *format, ...)
 #define CARTRAM_ID_NONE     0
 #define CARTRAM_ID_8M       0x5a
 #define CARTRAM_ID_32M      0x5c
-Uint32 CartRAMsize = 0;
-Sint16 cartRAMdetected = 0;
 
 Sint16 CartRAM_init(Uint8 cs) {
+	Uint32 CartRAMsize = 0;
+	Sint16 cartRAMdetected = 0;
 	Uint32 setReg, refReg, *DRAM0, *DRAM1;
 	Uint8 id;
 	

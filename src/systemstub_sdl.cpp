@@ -54,7 +54,7 @@ extern void snd_init();
 #define SYS_CDINIT2() ((**(void(**)(void))0x600029c)())
 
 /* Needed for audio */
-#define SND_BUFFER_SIZE (4096)
+#define SND_BUFFER_SIZE (1024)
 #define SND_BUF_SLOTS 1
 
 /* Needed for video */
@@ -111,7 +111,7 @@ typedef struct {
 } SAT_Rect;
 */
 /* Required for audio sound buffers */
-Uint8 buffer_filled[2];
+//Uint8 buffer_filled[2];
 Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
 #ifdef SOUND
 static PcmWork pcm_work[2];
@@ -223,8 +223,8 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 0;
 #else
-	buffer_filled[0] = 0;
-	buffer_filled[1] = 0;
+//	buffer_filled[0] = 0;
+//	buffer_filled[1] = 0;
 #endif
 	if(isNTSC())
 		tickPerVblank = 17;
@@ -645,20 +645,15 @@ inline void timeTick() {
 	}
 }
 void vblIn (void) {
-	//static Uint8 counter = 0;
 //emu_printf("vblIn\n");
 	// Process input
-//	char xx[30];
 	uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
 	frame_y++;
 	
 	if(frame_y>=hz)
 	{
-//		sprintf(xx,"%02d/%02d\n",frame_x,hz);
 		frame_z = frame_x;
 		frame_x = 0;
-//		emu_printf(xx);
-//5c01000
 		frame_y = 0;
 	}
 	sys->processEvents();

@@ -492,7 +492,7 @@ void Video::MAC_decodeMap(int level, int room) {
 	unsigned int s = _stub->getTimeStamp();	
 	_res->MAC_loadLevelRoom(level, room, &buf);
 	unsigned int e = _stub->getTimeStamp();
-	emu_printf("--duration background : %d\n",e-s);
+	emu_printf("--duration bg : %d\n",e-s);
 
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
