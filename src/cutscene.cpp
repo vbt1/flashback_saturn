@@ -1270,7 +1270,7 @@ void Cutscene::mainLoop(uint16_t num) {
 	
 	if (_id != 0x4A && !_creditsSequence) {
 //		_ply->play(_musicTableDOS[_id],0);
-emu_printf("_id %d _musicTableDOS %d\n",_id,_musicTableDOS[_id]);
+emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		_mix.playMusic(_musicTableDOS[_id]);
 	}
 	if(_id == 0x4A)

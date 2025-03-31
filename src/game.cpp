@@ -370,7 +370,7 @@ void Game::mainLoop() {
 				_endLoop = true;
 			} else {
 				if (_validSaveState && loadGameState(kIngameSaveSlot)) {
-					emu_printf ("end loading with success\n");
+//					emu_printf ("end loading with success\n");
 					// ingame save
 				} else {
 //					clearStateRewind();
@@ -592,7 +592,7 @@ void Game::playCutscene(int id) {
 				_mix.playMusic(num);
 			}
 		}*/
-		emu_printf("_cut._id %d _musicTableDOS %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
+		emu_printf("_cut._id %d _music %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
 		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
@@ -1835,7 +1835,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d segamem %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+(_vid._w*_vid._h));
+emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+(_vid._w*_vid._h));
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
@@ -2669,7 +2669,7 @@ void Game::SAT_preloadMonsters() {
 					_res._monster = _res.decodeResourceMacData(data[i].name, true);
 #ifdef DEBUG
 	unsigned int se = _stub->getTimeStamp();
-	emu_printf("--lzss %d ennemies : %d\n",i,se-st);	
+	emu_printf("--lzss %d enn : %d\n",i,se-st);	
 #endif	
 					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen, _vid.MAC_setPixel4Bpp);
 
