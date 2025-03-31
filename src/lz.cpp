@@ -4,7 +4,7 @@
 extern "C" {
 #include "lzwlib.h"
 #endif
-extern void emu_printf(const char *format, ...);
+//extern void //emu_printf(const char *format, ...);
 #define LZ_MAX_OFFSET 32768*2
 #ifndef LZ_MIN_MATCH
   #define LZ_MIN_MATCH 4
@@ -297,7 +297,7 @@ static void _LZ_Uncompress_Single(unsigned char *in, unsigned char *out, unsigne
             out[outpos++] = symbol;
         }
     }
-    emu_printf("LZ stage output size: %d\n", outpos);
+    //emu_printf("LZ stage output size: %d\n", outpos);
 }
 
 extern unsigned char *hwram_screen;
@@ -312,7 +312,7 @@ extern unsigned char *hwram_screen;
 
 // Fixed LZW compression algorithm
 static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int insize) {
-    emu_printf("Starting LZW compression, insize=%u\n", insize);
+    //emu_printf("Starting LZW compression, insize=%u\n", insize);
     if (insize < 1) return 0;
 
     struct DictEntry {
@@ -341,7 +341,7 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
     // Write initial clear code
     bit_buffer = LZW_CLEAR_CODE;
     bit_count = code_size;
-    emu_printf("Write initial clear code %u, code_size=%d\n", LZW_CLEAR_CODE, code_size);
+    //emu_printf("Write initial clear code %u, code_size=%d\n", LZW_CLEAR_CODE, code_size);
 
     unsigned int current_code = in[0];
     inpos = 1;
@@ -382,7 +382,7 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
                 dict_size++;
                 if (dict_size >= (1U << code_size) && code_size < LZW_MAX_BITS) {
                     code_size++;
-                    emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
+                    //emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
                 }
             } else {
                 // Clear dictionary
@@ -410,7 +410,7 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
     }
     bit_buffer = (bit_buffer << code_size) | current_code;
     bit_count += code_size;
-    emu_printf("Write final code %u\n", current_code);
+    //emu_printf("Write final code %u\n", current_code);
 
     // Write end code
     if (bit_count + code_size > 32) {
@@ -422,7 +422,7 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
     }
     bit_buffer = (bit_buffer << code_size) | LZW_END_CODE;
     bit_count += code_size;
-    emu_printf("Write end code %u\n", LZW_END_CODE);
+    //emu_printf("Write end code %u\n", LZW_END_CODE);
 
     // Flush remaining bits
     while (bit_count > 0) {
@@ -431,14 +431,14 @@ static int _LZW_Compress(unsigned char *in, unsigned char *out, unsigned int ins
         if (bit_count < 0) bit_count = 0; // Avoid underflow
     }
 
-    emu_printf("LZW compression done, compressed size=%u\n", outpos);
+    //emu_printf("LZW compression done, compressed size=%u\n", outpos);
     return outpos;
 }
 // Fixed LZW decompression algorithm
 static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int insize, unsigned int *out_size) {
-    emu_printf("Starting LZW decompression, insize=%u\n", insize);
+    //emu_printf("Starting LZW decompression, insize=%u\n", insize);
     if (insize < 4) {
-        emu_printf("Input too small (%u < 4)\n", insize);
+        //emu_printf("Input too small (%u < 4)\n", insize);
         return 0;
     }
 
@@ -446,7 +446,7 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
     *out_size = (in[inpos] << 24) | (in[inpos + 1] << 16) | (in[inpos + 2] << 8) | in[inpos + 3];
     inpos += 4;
 
-    emu_printf("Expected output size=%u\n", *out_size);
+    //emu_printf("Expected output size=%u\n", *out_size);
     if (*out_size == 0) return 0;
 
     struct DictEntry {
@@ -473,7 +473,7 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
         bit_count += 8;
     }
     if (bit_count < code_size) {
-        emu_printf("Not enough bits for initial code\n");
+        //emu_printf("Not enough bits for initial code\n");
         return -1;
     }
 
@@ -482,7 +482,7 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
     bit_buffer &= (1U << bit_count) - 1;
 
     if (code != LZW_CLEAR_CODE) {
-        emu_printf("Error: First code is not CLEAR_CODE (got %u)\n", code);
+        //emu_printf("Error: First code is not CLEAR_CODE (got %u)\n", code);
         return -1;
     }
 
@@ -501,12 +501,12 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
         bit_buffer &= (1U << bit_count) - 1;
 
         if (code == LZW_END_CODE) {
-            emu_printf("END_CODE reached\n");
+            //emu_printf("END_CODE reached\n");
             break;
         }
 
         if (code == LZW_CLEAR_CODE) {
-            emu_printf("CLEAR_CODE - Reset dictionary\n");
+            //emu_printf("CLEAR_CODE - Reset dictionary\n");
             dict_size = LZW_FIRST_CODE;
             code_size = LZW_START_BITS;
             old_code = 0xFFFFFFFF;
@@ -514,7 +514,7 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
         }
 
         if (code > dict_size) {
-            emu_printf("Error: Code %u exceeds dict_size %u\n", code, dict_size);
+            //emu_printf("Error: Code %u exceeds dict_size %u\n", code, dict_size);
             return -3;
         }
 
@@ -548,13 +548,13 @@ static int _LZW_Uncompress(unsigned char *in, unsigned char *out, unsigned int i
             dict_size++;
             if (dict_size >= (1U << code_size) && code_size < LZW_MAX_BITS) {
                 code_size++;
-                emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
+                //emu_printf("Increased code_size to %d at dict_size=%u\n", code_size, dict_size);
             }
         }
         old_code = code;
     }
 
-    emu_printf("LZW decompression complete, decompressed size=%u\n", outpos);
+    //emu_printf("LZW decompression complete, decompressed size=%u\n", outpos);
     return outpos;
 }
 
