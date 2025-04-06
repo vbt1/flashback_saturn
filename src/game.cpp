@@ -2448,49 +2448,41 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 	++_curPos[stateNum];
 	++_states[stateNum];
 }
-void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color))
+
+void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color)) 
 {
-//	emu_printf("SAT_loadSpriteData\n");
-	const int count = READ_BE_UINT16(spriteData + 2);
-	DecodeBuffer buf{};
-	if( setPixelFunc == _vid.MAC_setPixel4Bpp)
-		buf.type = 1;
-	buf.setPixel = setPixelFunc;
-			
-	for (unsigned int j = 0; j < count; j++) {
-		const uint8_t* dataPtr = _res.MAC_getImageData(spriteData, j);
+    const int count = READ_BE_UINT16(spriteData + 2);
+    DecodeBuffer buf{};
+    buf.setPixel = setPixelFunc;
+    buf.type = (setPixelFunc == _vid.MAC_setPixel4Bpp) ? 1 : 0;
 
-		if (dataPtr) {
-			buf.dst_w = READ_BE_UINT16(dataPtr + 2) & 0xff;
-			buf.dst_h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
-			buf.ptr = destPtr;
+    const bool isSpc = (spriteData == _res._spc);
+    const bool isMonster = (spriteData == _res._monster);
 
-			if(!has4mb && spriteData==_res._spc)
-				if(j!=616 && j!=273)
-				{
-					continue;
-				}
-			memset(buf.ptr, 0, buf.dst_w * buf.dst_h);
+    for (unsigned int j = 0; j < count; j++) {
+        const uint8_t* dataPtr = _res.MAC_getImageData(spriteData, j);
+        if (!dataPtr) continue;
 
-			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
+        buf.dst_w = READ_BE_UINT16(dataPtr + 2) & 0xff;
+        buf.dst_h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
+        buf.ptr = destPtr;
 
-			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
+        if (!has4mb && isSpc && j != 616 && j != 273) continue;
 
-			sprData->size = (buf.dst_h / 8) << 8 | buf.dst_w;
-			sprData->x_flip = (uint8_t)-(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.dst_h - READ_BE_UINT16(dataPtr)));
-			
-			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
-			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
+        memset(buf.ptr, 0, buf.dst_w * buf.dst_h);
+        _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
-//			buf.w = sprData->size & 0xFF;
-//			buf.h = (sprData->size >> 8) * 8;
+        SAT_sprite* sprData = &_res._sprData[baseIndex + j];
+        sprData->size = (buf.dst_h / 8) << 8 | buf.dst_w;
+        uint16_t height = READ_BE_UINT16(dataPtr); // Cache height
+        uint16_t xPos = READ_BE_UINT16(dataPtr + 4); // Cache x position
+        sprData->x_flip = (uint8_t)-(xPos - height - 1 - (buf.dst_h - height));
+        sprData->x = xPos;
+        sprData->y = READ_BE_UINT16(dataPtr + 6);
 
-			size_t dataSize = SAT_ALIGN((buf.dst_w * buf.dst_h) / ((buf.type==1) ? 2 : 1));
+        size_t dataSize = SAT_ALIGN((buf.dst_w * buf.dst_h) / (buf.type == 1 ? 2 : 1));
+        sprData->color = isMonster ? 5 : -1;
 
-			if (spriteData == _res._monster)
-				sprData->color = 5;
-			else
-				sprData->color = -1;
 //------------------------------------
 #ifdef REDUCE_4BPP
 			if(!has4mb)
@@ -2524,33 +2516,29 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				}
 			}
 #endif
-//------------------------------------if(buf.h!=352 && j!=273)
-// on precharge ascenseur et metro
-			if ((position_vram + dataSize) <= VRAM_MAX || j==616 || j==273) {
-				TEXTURE tx = TEXDEF(buf.dst_w, buf.dst_h, position_vram);
-				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
-				sprData->cgaddr = (int)tx.CGadr;
-				position_vram += (dataSize*4)>>2;
-				position_vram_aft_monster = position_vram;
-			}
-			else {
-				if(!has4mb)
-//						if((int)current_lwram < (int)_vid._frontLayer)
-				{
-					if((int)current_lwram+dataSize > (int)_vid._frontLayer)
-						emu_printf("ALERT : it doesn't fit!!!%d x %d\n", buf.dst_w, buf.dst_h);
-					
-					DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
-					sprData->cgaddr = (int)current_lwram;
-					current_lwram += SAT_ALIGN(dataSize);
-				}
-				else
-				{
-					DMA_ScuMemCopy(current_dram2, (void*)buf.ptr, dataSize);
-					sprData->cgaddr = (int)current_dram2;
-					current_dram2 += SAT_ALIGN(dataSize);
-				}
-			}
+
+        if ((position_vram + dataSize) <= VRAM_MAX || j == 616 || j == 273) {
+            TEXTURE tx = TEXDEF(buf.dst_w, buf.dst_h, position_vram);
+            DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), buf.ptr, dataSize);
+            sprData->cgaddr = (int)tx.CGadr;
+            position_vram += dataSize;
+            position_vram_aft_monster = position_vram;
+        } else if (!has4mb) {
+            if ((int)current_lwram + dataSize <= (int)_vid._frontLayer) {
+                DMA_ScuMemCopy(current_lwram, buf.ptr, dataSize);
+                sprData->cgaddr = (int)current_lwram;
+                current_lwram += SAT_ALIGN(dataSize);
+            } else {
+                DMA_ScuMemCopy(current_dram2, buf.ptr, dataSize);
+                sprData->cgaddr = (int)current_dram2;
+                current_dram2 += SAT_ALIGN(dataSize);
+            }
+        } else {
+            DMA_ScuMemCopy(current_dram2, buf.ptr, dataSize);
+            sprData->cgaddr = (int)current_dram2;
+            current_dram2 += SAT_ALIGN(dataSize);
+        }
+    }
 #ifdef DEBUG2
 			buf.x = 200 - sprData->x;
 			buf.y = 240 - sprData->y;
@@ -2574,9 +2562,8 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 			sprData->cgaddr=oldcgaddr;
 			slSynch();
 #endif
-		}
-	}
 }
+
 /*
 void Game::SAT_preloadIcon()
 {

@@ -23,50 +23,52 @@ extern Uint8 frame_z;
 #include "util.h"
 #include "saturn_print.h"
 
-uint8_t *decodeLzss(File &f,const char *name, uint32_t &decodedSize) {
+static uint8_t* allocate_memory(const char* name, uint32_t alignedSize) {
+    uint8_t* dst;
 
-//emu_printf("lzss %s %05d\n", name, decodedSize);
-   // Read the decoded size
+    if (name[0] == 'i' && name[1] == 'n' && name[2] == 't' && name[3] == 'r' && name[4] == 'o') {
+        dst = (uint8_t*)current_lwram;
+        current_lwram += alignedSize;
+    }
+    else if (name[0] == 'l' && name[1] == 'o' && name[2] == 'g' && name[3] == 'o') {
+        dst = (uint8_t*)current_lwram;
+        current_lwram += alignedSize;
+    }
+    else if (name[0] == 'e' && name[1] == 's' && name[2] == 'p' && name[3] == 'i' && name[4] == 'o') {
+        dst = (uint8_t*)current_lwram;
+        current_lwram += alignedSize;
+    }
+    else if (strstr(name, "Junky") || strstr(name, "Alien") || strstr(name, "Replicant")) {
+        dst = (uint8_t*)current_lwram;
+        current_lwram += 4;
+    }
+    else if (strstr(name, "Room") || strstr(name, "Font")) {
+        dst = (uint8_t*)hwram_screen;
+    }
+    else if (strstr(name, "Title 6")) {
+        GFS_Load(GFS_NameToId((int8_t*)"CONTROLS.BIN"), 0, (void*)(current_lwram + 36352), 147456);
+        dst = (uint8_t*)NULL;
+    }
+    else if (((int)hwram_ptr) + alignedSize < end1) {
+        dst = (uint8_t*)hwram_ptr;
+        hwram_ptr += alignedSize;
+    }
+    else {
+        dst = (uint8_t*)current_lwram;
+        current_lwram += alignedSize;
+    }
+
+    return dst;
+}
+
+uint8_t* decodeLzss(File& f, const char* name, uint32_t& decodedSize) {
+    // Read decodedSize as 4 bytes (big-endian)
     decodedSize = f.readUint32BE();
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
-    // Pointer for memory allocation
-    uint8_t *dst;
-
-    // Cache strstr results
-    bool isJunky = strstr(name, "Junky") || strstr(name, "Alien") || strstr(name, "Replicant");
-    bool isRoom = strstr(name, "Room") || strstr(name, "Font");
-	bool isControl = strstr(name, "Title 6");
-
-    // Memory allocation logic
-	if(strncmp("intro", name, 5) == 0 
-		|| strncmp("logo", name, 4) == 0 
-		|| strncmp("espion", name, 5) == 0)
-	{
-        dst = (uint8_t *)current_lwram;
-        current_lwram += alignedSize;
-	}
-
-    else if (isJunky) {
-        // Special case for "Junky"
-        dst = (uint8_t *)current_lwram;
-        current_lwram += 4;
-    } else if (isRoom) {
-        // Allocates from hwram_screen
-        dst = (uint8_t *)hwram_screen;
-    } else if (isControl) {
-        // Allocates from lwram_screen
-		GFS_Load(GFS_NameToId((int8_t *)"CONTROLS.BIN"),0,(void *)current_lwram+36352,147456);
-        dst = (uint8_t *)NULL;
-    } else if (((int)hwram_ptr) + alignedSize < end1) {
-        // Allocates from hwram_ptr if there's enough space
-        dst = (uint8_t *)hwram_ptr;
-        hwram_ptr += alignedSize;
-    } else {
-        // Fallback to current_lwram
-        dst = (uint8_t *)current_lwram;
-        current_lwram += alignedSize;
-    }
+    // Allocate memory
+    uint8_t* dst = allocate_memory(name, alignedSize);
+    if (!dst) return NULL; // Handle special case (e.g., "Title 6")
 
     uint8_t* const end = dst + decodedSize;
     uint8_t* cur = dst;
@@ -135,83 +137,77 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
     uint8_t count = 0;
     unsigned short offset = 0;
     static uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
+//	uint8_t *window = (uint8_t *)(((uintptr_t)hwram_screen+ 50031) & ~31);
 
 //	slTVOff(); on le fait bien avant
 	w*=8;
 	h/=8;
-    for (unsigned short y = 0; y < h; ++y) 
-	{
-		for (int x = 0; x < w; x++) 
-		{
-            if (count == 0) {
-                uint8_t carry = bits & 1;
+
+for (unsigned short y = 0; y < h; ++y) {
+    for (int x = 0; x < w; x++) {
+        if (count == 0) {
+            // Revert to original bitstream parsing
+            uint8_t carry = bits & 1;
+            bits >>= 1;
+            if (bits == 0) {
+                bits = *src++;
+                if (carry) bits |= 0x100;
+                carry = bits & 1;
                 bits >>= 1;
-                if (bits == 0) {
-                    bits = *src++;
-                    if (carry) {
-                        bits |= 0x100;
-                    }
-                    carry = bits & 1;
-                    bits >>= 1;
-                }
-
-                if (!carry) {
-                    uint8_t color = *src++;
-
-					if(mask!=0xff) // cas ecran niveau
-					{
-                        color = remap[color] ? remap[color] : color;
-					}
-
-                    window[cursor++] = color;
-                    cursor &= kMask;
-                    continue;
-                }
-                offset = READ_BE_UINT16(src); src += 2;
-                count = 3 + (offset >> 12);
- //               offset &= kMask;
-                offset = (cursor - offset - 1) & kMask;
             }
-//------------------------
-//			unsigned short max_pos = (cursor > offset) ? cursor : offset;
-//			unsigned short max_pos = (cursor > offset) ? cursor : offset;
-//			if (cursor+count <=kMask && offset+count <=kMask)
-//			if(max_pos + count <= kMask)
-			if(cursor <= 4077 && offset <= 4077)
-			{
-				uint8_t *dst = &window[cursor];
-				uint8_t *src = &window[offset];
-				// Unroll the loop by 8 for better pipelining on SuperH2
-				int i = 0;
-				for (; i < count-7; i += 8) {
-					dst[i] = src[i];
-					dst[i+1] = src[i+1];
-					dst[i+2] = src[i+2];
-					dst[i+3] = src[i+3];
-					dst[i+4] = src[i+4];
-					dst[i+5] = src[i+5];
-					dst[i+6] = src[i+6];
-					dst[i+7] = src[i+7];
-				}
-				// Handle remaining bytes
-				for (; i < count; i++) {
-					dst[i] = src[i];
-				}
-				cursor += count;
-				x += count-1;
-				count = 0;
-				continue;
-			}
-//------------------------
-			window[cursor++] = window[offset++];
-			cursor &= kMask;
-			offset &= kMask;
-			--count;
-		}
-		
-		DMA_ScuMemCopy(buf->ptr, window, w);
-		buf->ptr += w;
+
+            if (!carry) {
+                uint8_t color = *src++;
+                if (mask != 0xFF) {
+                    color = remap[color] ? remap[color] : color;
+                }
+                window[cursor++] = color;
+                cursor &= kMask;
+                continue;
+            }
+
+            offset = ((unsigned short)src[0] << 8) | src[1]; // Big-endian read
+            src += 2;
+            count = 3 + (offset >> 12);
+            offset = (cursor - (offset & kMask) - 1) & kMask;
+        }
+
+        if (cursor <= 4077 && offset <= 4077) {
+            uint8_t *dst = window + cursor;
+            const uint8_t *src_win = window + offset;
+
+            // Optimized copy with 8-byte unrolling
+            int i = 0;
+            for (; i <= count - 8; i += 8) {
+                dst[i] = src_win[i];
+                dst[i + 1] = src_win[i + 1];
+                dst[i + 2] = src_win[i + 2];
+                dst[i + 3] = src_win[i + 3];
+                dst[i + 4] = src_win[i + 4];
+                dst[i + 5] = src_win[i + 5];
+                dst[i + 6] = src_win[i + 6];
+                dst[i + 7] = src_win[i + 7];
+            }
+            for (; i < count; i++) {
+                dst[i] = src_win[i];
+            }
+
+            cursor += count;
+            cursor &= kMask;
+            x += count - 1; // Restore original x increment
+            count = 0;
+            continue;
+        }
+
+        window[cursor++] = window[offset++];
+        cursor &= kMask;
+        offset &= kMask;
+        count--;
     }
+    DMA_ScuMemCopy(buf->ptr, window, w);
+    buf->ptr += w;
+}
+
 	slTVOn();
 	frame_y = frame_x = 0;
 	frame_z = 30;
