@@ -181,11 +181,11 @@ void Menu::displayTitleScreenMac(int num) {
 		memset(buf.ptr, 0, w * h);
 		break;
 	}
-	buf.pitch = buf.w = _vid->_w;
+	buf.pitch = buf.dst_w = _vid->_w;
 	buf.type = 2;
-	buf.h = _vid->_h;
-	buf.x = (_vid->_w - w) / 2;
-	buf.y = (_vid->_h - h) / 2;
+	buf.dst_h = _vid->_h;
+	buf.dst_x = (_vid->_w - w) / 2;
+	buf.dst_y = (_vid->_h - h) / 2;
 	buf.setPixel = Video::MAC_setPixelFG;
 	memset(_vid->_backLayer, 0, w * h);
 	_res->MAC_loadTitleImage(num, &buf);

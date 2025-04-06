@@ -165,13 +165,13 @@ void Game::run() {
 
 		DecodeBuffer buf{};
 		buf.setPixel =  _vid.MAC_setPixel;
-		buf.w = Video::CHAR_W*2;
-		buf.h = Video::CHAR_H*2;
+		buf.dst_w = Video::CHAR_W*2;
+		buf.dst_h = Video::CHAR_H*2;
 		
 		for (int i=0;i<106;i++)
 		{
 			buf.ptr = (uint8_t*)hwram_ptr;
-			memset(buf.ptr, 0, buf.w * buf.h);
+			memset(buf.ptr, 0, buf.dst_w * buf.dst_h);
 			_res.MAC_decodeImageData(spriteData, i, &buf, 0xff);
 			if(i>=16 & i<26)
 			{
@@ -2462,8 +2462,8 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 		const uint8_t* dataPtr = _res.MAC_getImageData(spriteData, j);
 
 		if (dataPtr) {
-			buf.w = READ_BE_UINT16(dataPtr + 2) & 0xff;
-			buf.h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
+			buf.dst_w = READ_BE_UINT16(dataPtr + 2) & 0xff;
+			buf.dst_h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
 			buf.ptr = destPtr;
 
 			if(!has4mb && spriteData==_res._spc)
@@ -2471,14 +2471,14 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 				{
 					continue;
 				}
-			memset(buf.ptr, 0, buf.w * buf.h);
+			memset(buf.ptr, 0, buf.dst_w * buf.dst_h);
 
 			_res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
 			SAT_sprite* sprData = (SAT_sprite*)&_res._sprData[baseIndex + j];
 
-			sprData->size = (buf.h / 8) << 8 | buf.w;
-			sprData->x_flip = (uint8_t)-(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.h - READ_BE_UINT16(dataPtr)));
+			sprData->size = (buf.dst_h / 8) << 8 | buf.dst_w;
+			sprData->x_flip = (uint8_t)-(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - 1 - (buf.dst_h - READ_BE_UINT16(dataPtr)));
 			
 			sprData->x = (int16_t)READ_BE_UINT16(dataPtr + 4);
 			sprData->y = (int16_t)READ_BE_UINT16(dataPtr + 6);
@@ -2486,7 +2486,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //			buf.w = sprData->size & 0xFF;
 //			buf.h = (sprData->size >> 8) * 8;
 
-			size_t dataSize = SAT_ALIGN((buf.w * buf.h) / ((buf.type==1) ? 2 : 1));
+			size_t dataSize = SAT_ALIGN((buf.dst_w * buf.dst_h) / ((buf.type==1) ? 2 : 1));
 
 			if (spriteData == _res._monster)
 				sprData->color = 5;
@@ -2501,7 +2501,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 
 				if(spriteData== _res._spc)
 				{
-					for (int i=0;i<(buf.w * buf.h);i++)
+					for (int i=0;i<(buf.dst_w * buf.dst_h);i++)
 					{
 						if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
 							min_val=buf.ptr[i];
@@ -2528,7 +2528,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //------------------------------------if(buf.h!=352 && j!=273)
 // on precharge ascenseur et metro
 			if ((position_vram + dataSize) <= VRAM_MAX || j==616 || j==273) {
-				TEXTURE tx = TEXDEF(buf.w, buf.h, position_vram);
+				TEXTURE tx = TEXDEF(buf.dst_w, buf.dst_h, position_vram);
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, dataSize);
 				sprData->cgaddr = (int)tx.CGadr;
 				position_vram += (dataSize*4)>>2;
@@ -2539,7 +2539,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 //						if((int)current_lwram < (int)_vid._frontLayer)
 				{
 					if((int)current_lwram+dataSize > (int)_vid._frontLayer)
-						emu_printf("ALERT : it doesn't fit!!!%d x %d\n", buf.w, buf.h);
+						emu_printf("ALERT : it doesn't fit!!!%d x %d\n", buf.dst_w, buf.dst_h);
 					
 					DMA_ScuMemCopy(current_lwram, (void*)buf.ptr, dataSize);
 					sprData->cgaddr = (int)current_lwram;

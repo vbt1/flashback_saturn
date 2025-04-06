@@ -221,50 +221,57 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 //emu_printf("decodeC211 src strt %p w %d h %d\n",src, w, h);
 	struct {
 		const uint8_t *ptr;
-		int repeatCount;
-	} stack[512];
-	int y = 0;
+		uint16_t repeatCount;
+	} stack[16];
 	int x = 0;
 	int sp = 0;
-
-//	while (1) {
-//    const uint8_t *srcEnd = src + w * h;  // Calculate end of the source buffer
-//    while (src < srcEnd) {
-    while (1) {
+	uint8_t *dst = buf->clip_buf ? buf->clip_buf : buf->ptr;
+	while (1) {
 		const uint8_t code = *src++;
-        if (code & 0x80) {
-			++y;
+		if ((code & 0x80) != 0) {
+			dst += w;
 			x = 0;
 		}
-	
 		int count = code & 0x1F;
 		if (count == 0) {
 			count = READ_BE_UINT16(src); src += 2;
-//			count = ((uint16_t*)src)[0]; src += 2;
 		}
-        if (!(code & 0x40)) {
-            if (!(code & 0x20)) {
-				if (count == 1) {
-//					assert(sp > 0);
-					if(sp <= 0)
-						break;
-					--stack[sp - 1].repeatCount;
-					if (stack[sp - 1].repeatCount >= 0) {
-						src = stack[sp - 1].ptr;
-					} else {
-						--sp;
-					}
+		switch (code & 0x60) {
+		case 0x00:
+			if (count == 1) {
+				assert(sp > 0);
+				--stack[sp - 1].repeatCount;
+				if (stack[sp - 1].repeatCount != 0) {
+					src = stack[sp - 1].ptr;
 				} else {
-//					assert(sp < ARRAYSIZE(stack));
-					if(sp >= ARRAYSIZE(stack))
-						break;
-					stack[sp].ptr = src;
-					stack[sp].repeatCount = count - 1;
-					++sp;
+					--sp;
 				}
 			} else {
-				x += count;
+				assert(sp < ARRAYSIZE(stack));
+				stack[sp].ptr = src;
+				assert(count > 0);
+				stack[sp].repeatCount = count;
+				++sp;
 			}
+			break;
+		case 0x20:
+			x += count;
+			break;
+		case 0x40:
+			if (count == 1) {
+				return;
+			}
+			memset(dst + x, *src++, count);
+			x += count;
+			break;
+		case 0x60:
+			memcpy(dst + x, src, count);
+			src += count;
+			x += count;
+			break;
+		}
+	}
+/*					
 		} else {
             if (!(code & 0x20)) {
 				if (count == 1) {
@@ -312,5 +319,6 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
 			}
 		}
 	}
+*/
 //emu_printf("decodeC211 end\n");
 }

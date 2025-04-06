@@ -57,6 +57,7 @@ Cutscene::Cutscene(Resource *res, SystemStub *stub, Video *vid)
 	: _mix(stub), _res(res), _stub(stub), _vid(vid) {
 //	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
+	_isConcavePolygonShape = false;
 }
 
 const uint8_t *Cutscene::getCommandData() const {
@@ -115,27 +116,18 @@ void Cutscene::updatePalette() {
 		_newPal = false;
 	}
 }
-struct DecodeBuffer {
-	uint8_t *ptr;
-	int w, h, pitch;
-	int x, y;
-	bool xflip;
-	uint8_t type;
 
-	void (*setPixel)(DecodeBuffer *buf, int x, int y, uint8_t color);
-//	void *dataPtr;
-};
 void Cutscene::updateScreen() {
 //--------------------------
+#ifdef DEBUG_CUTSCENE
 DecodeBuffer buf{};
-
+#endif
 	if(hasText && !sameText)
 	{
 		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte
 		hasText = false;
 	}
-
 	sync(_frameDelay - 1);
 	SWAP(_frontPage, _backPage);
 
@@ -466,7 +458,7 @@ void Cutscene::drawCreditsText() {
 
 void Cutscene::op_markCurPos() {
 	//emu_printf("Cutscene::op_markCurPos()\n");
-	_cmdPtrBak = _cmdPtr;
+	_cmdStartPtr = _cmdPtr;
 	_frameDelay = 5;
 	if (!_creditsSequence) {
 		if (_id == kCineDebut) {
@@ -516,6 +508,10 @@ void Cutscene::op_waitForSync() {
 	}
 }
 
+void Cutscene::checkShape(uint16_t shapeOffset) {
+	_isConcavePolygonShape = /*_res->isMac() &&*/ _id == kCineLogos && (shapeOffset & 0x7FF) == 2;
+}
+
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 //emu_printf("Cutscene::drawShape()1\n");
 	_gfx.setLayer(_backPage, _vid->_w);
@@ -558,7 +554,11 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 			}
 		}
 		//scalePoints(_vertices, numVertices, _vid->_layerScale);
-		_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices);
+		if (_isConcavePolygonShape) {
+			_gfx.floodFill(_primitiveColor, _vertices, numVertices);
+		} else {
+			_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices);
+		}
 	}
 }
 
@@ -572,6 +572,7 @@ void Cutscene::op_drawShape() {
 		x = fetchNextCmdWord();
 		y = fetchNextCmdWord();
 	}
+	checkShape(shapeOffset);
 
 	const uint8_t *shapeOffsetTable    = _polPtr + READ_BE_UINT16(_polPtr + 0x02);
 	const uint8_t *shapeDataTable      = _polPtr + READ_BE_UINT16(_polPtr + 0x0E);
@@ -580,7 +581,6 @@ void Cutscene::op_drawShape() {
 
 	const uint8_t *shapeData = shapeDataTable + READ_BE_UINT16(shapeOffsetTable + (shapeOffset & 0x7FF) * 2);
 	uint16_t primitiveCount = READ_BE_UINT16(shapeData); shapeData += 2;
-
 	while (primitiveCount--) {
 		uint16_t verticesOffset = READ_BE_UINT16(shapeData); shapeData += 2;
 		const uint8_t *primitiveVertices = verticesDataTable + READ_BE_UINT16(verticesOffsetTable + (verticesOffset & 0x3FFF) * 2);
@@ -799,7 +799,11 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
 		//scalePoints(_vertices, numVertices, _vid->_layerScale);
-		_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices);
+		if (_isConcavePolygonShape) {
+			_gfx.floodFill(_primitiveColor, _vertices, numVertices);
+		} else {
+			_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices);
+		}
 	}
 }
 
@@ -815,6 +819,7 @@ void Cutscene::op_drawShapeScale() {
 		x = fetchNextCmdWord();
 		y = fetchNextCmdWord();
 	}
+	checkShape(shapeOffset);
 
 	uint16_t zoom = fetchNextCmdWord() + 512;
 	_shape_ix = fetchNextCmdByte();
@@ -1020,7 +1025,11 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
 		//scalePoints(_vertices, numVertices + 1, _vid->_layerScale);
-		_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices + 1);
+		if (_isConcavePolygonShape) {
+			_gfx.floodFill(_primitiveColor, _vertices, numVertices);
+		} else {
+			_gfx.drawPolygon(_primitiveColor, _hasAlphaColor, _vertices, numVertices + 1);
+		}
 	}
 }
 
@@ -1036,6 +1045,7 @@ void Cutscene::op_drawShapeScaleRotate() {
 		x = fetchNextCmdWord();
 		y = fetchNextCmdWord();
 	}
+	checkShape(shapeOffset);
 
 	uint16_t zoom = 512;
 	if (shapeOffset & 0x4000) {
@@ -1175,7 +1185,7 @@ void Cutscene::op_drawTextAtPos() {
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
-				if ((_cmdPtr - _cmdPtrBak) == 0xA) {
+				if ((_cmdPtr - _cmdStartPtr) == 0xA) {
 //					_stub->copyRect(0, 224, 512, 224, _frontPage, _vid->_w);				
 				} else {
 					_stub->sleep(15);
@@ -1219,32 +1229,13 @@ void Cutscene::op_handleKeys() {
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
 	_stub->_pi.shift = false;
-	int16_t n = fetchNextCmdWord();
+	const int16_t n = fetchNextCmdWord();
 	if (n < 0) {
-		n = -n - 1;
-		if (_varKey == 0) {
-			_stop = true;
-			return;
-		}
-		if (_varKey != n) {
-			_cmdPtr = _cmdPtrBak;
-			return;
-		}
-		_varKey = 0;
-		--n;
-		_cmdPtr = getCommandData();
-		n = READ_BE_UINT16(_cmdPtr + 2 + n * 2);
-		if (_res->isMac()) {
-			const int count = READ_BE_UINT16(_cmdPtr);
-//			assert(n < count);
-			if(n>=count)
-				return;
-			_cmdPtr += n;
-			_cmdPtrBak = _cmdPtr;
-			return;
-		}
+		debug(DBG_CUT, "Cutscene::op_handleKeys n:%d", n);
+		_stop = true;
+		return;
 	}
-	_cmdPtr = _cmdPtrBak = getCommandData() + n + _baseOffset;
+	_cmdPtr = _cmdStartPtr = getCommandData() + n + _baseOffset;
 }
 
 uint8_t Cutscene::fetchNextCmdByte() {
@@ -1303,20 +1294,17 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		}
 		p += _baseOffset;
 	}
-#if 0
-	for (int i = 0; i < count; ++i) {
-		fprintf(stdout, "cutscene start point %d offset 0x%x, base 0x%x\n", i, READ_BE_UINT16(p + 2 + i * 2), (count + 1) * 2);
-	}
-#endif
-	_varKey = 0;
-	_cmdPtr = _cmdPtrBak = p + offset;
+	_cmdPtr = _cmdStartPtr = p + offset;
 	_polPtr = getPolygonData();
+//	debug(DBG_CUT, "_baseOffset = %d offset = %d count = %d", _baseOffset, offset, count);
 
 	_paletteNum = -1;
+	_isConcavePolygonShape = false;
 //	_drawMemoSetShapes = (_id == kCineMemo);
 //	_memoSetOffset = 0;
 	while (!_stub->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
+//		debug(DBG_CUT, "Cutscene::play() opcode = 0x%X (%d)", op, (op >> 2));
 		if (op & 0x80) {
 			break;
 		}
@@ -1696,7 +1684,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 
 			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY, paletteLut);
 		}
-	
+
 		for (int j = 0; j < paletteLutSize; ++j) {
 //			Color c = Video::AMIGA_convertColor(paletteBuffer[j]);
 			
