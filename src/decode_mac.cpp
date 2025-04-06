@@ -178,7 +178,8 @@ for (unsigned short y = 0; y < h; ++y) {
 
             // Optimized copy with 8-byte unrolling
             int i = 0;
-            for (; i <= count - 8; i += 8) {
+
+            for (; i < count - 8; i += 8) {
                 dst[i] = src_win[i];
                 dst[i + 1] = src_win[i + 1];
                 dst[i + 2] = src_win[i + 2];
