@@ -2448,6 +2448,19 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 	++_curPos[stateNum];
 	++_states[stateNum];
 }
+#ifdef DEBUG2
+void debugSpriteDisplay(SAT_sprite* sprData, DecodeBuffer& buf, int j, int count) {
+    buf.x = 200 - sprData->x;
+    buf.y = 240 - sprData->y;
+    char debug_info[60];
+    sprintf(debug_info, "%03d/%03d 0x%08x %d %d ", j, count - 1, sprData->cgaddr, buf.dst_w, buf.dst_h);
+    _vid.drawString(debug_info, 4, 60, 0xE7);
+    _stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
+    memset4_fast(&_vid._frontLayer[40 * _vid._w], 0x00, _vid._w * _vid._h);
+    _vid.SAT_displaySprite(*sprData, buf);
+    slSynch();
+}
+#endif
 
 void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color)) 
 {
@@ -2463,105 +2476,75 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         const uint8_t* dataPtr = _res.MAC_getImageData(spriteData, j);
         if (!dataPtr) continue;
 
-        buf.dst_w = READ_BE_UINT16(dataPtr + 2) & 0xff;
-        buf.dst_h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
+        uint16_t width = READ_BE_UINT16(dataPtr + 2) & 0xff;
+        uint16_t height_raw = READ_BE_UINT16(dataPtr);
+        uint16_t height = (height_raw + 7) & ~7;
+        uint16_t xPos = READ_BE_UINT16(dataPtr + 4);
+        uint16_t yPos = READ_BE_UINT16(dataPtr + 6);
+
+        buf.dst_w = width;
+        buf.dst_h = height;
         buf.ptr = destPtr;
 
         if (!has4mb && isSpc && j != 616 && j != 273) continue;
 
-        memset(buf.ptr, 0, buf.dst_w * buf.dst_h);
+        memset(buf.ptr, 0, width * height); // Optimize if possible
         _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
         SAT_sprite* sprData = &_res._sprData[baseIndex + j];
-        sprData->size = (buf.dst_h / 8) << 8 | buf.dst_w;
-        uint16_t height = READ_BE_UINT16(dataPtr); // Cache height
-        uint16_t xPos = READ_BE_UINT16(dataPtr + 4); // Cache x position
-        sprData->x_flip = (uint8_t)-(xPos - height - 1 - (buf.dst_h - height));
+        sprData->size = (height / 8) << 8 | width;
+        sprData->x_flip = (uint8_t)-(xPos - height_raw - 1 - (height - height_raw));
         sprData->x = xPos;
-        sprData->y = READ_BE_UINT16(dataPtr + 6);
+        sprData->y = yPos;
 
-        size_t dataSize = SAT_ALIGN((buf.dst_w * buf.dst_h) / (buf.type == 1 ? 2 : 1));
+        size_t dataSize = SAT_ALIGN((width * height) / (buf.type == 1 ? 2 : 1));
         sprData->color = isMonster ? 5 : -1;
 
-//------------------------------------
 #ifdef REDUCE_4BPP
-			if(!has4mb)
-			{
-				int min_val=256;
-				int max_val=0;
-
-				if(spriteData== _res._spc)
-				{
-					for (int i=0;i<(buf.dst_w * buf.dst_h);i++)
-					{
-						if (buf.ptr[i]<min_val && buf.ptr[i]!=0)
-							min_val=buf.ptr[i];
-						if (buf.ptr[i]>max_val && buf.ptr[i]!=255)
-							max_val=buf.ptr[i];
-					}
-						emu_printf("min_val %d max_val %d\n",min_val,max_val);
-						
-					if((max_val-(min_val>>4)*16)<16)
-					{
-						emu_printf("reducin color for spc %d\n",j);
-						for (int k=0;k<(buf.w * buf.h);k+=2)
-						{
-							uint8_t	value1=(buf.ptr[k + 1]);
-							uint8_t	value2 = ((buf.ptr[k])) ;
-							buf.ptr[k / 2] = (value1& 0x0f) | (value2& 0x0f) << 4;
-						}
-						dataSize = SAT_ALIGN((buf.w * buf.h) /2);
-						sprData->color = (min_val>>4);
-					}
-				}
-			}
+        if (!has4mb && isSpc) {
+            int min_val = 256, max_val = 0;
+            size_t pixel_count = width * height;
+            for (int i = 0; i < pixel_count; i++) {
+                uint8_t val = buf.ptr[i];
+                if (val != 0 && val < min_val) min_val = val;
+                if (val != 255 && val > max_val) max_val = val;
+            }
+            if ((max_val - (min_val >> 4) * 16) < 16) {
+                for (int k = 0; k < pixel_count; k += 2) {
+                    uint8_t value1 = buf.ptr[k + 1];
+                    uint8_t value2 = buf.ptr[k];
+                    buf.ptr[k / 2] = (value1 & 0x0f) | ((value2 & 0x0f) << 4);
+                }
+                dataSize = SAT_ALIGN(pixel_count / 2);
+                sprData->color = (min_val >> 4);
+            }
+        }
 #endif
 
+        void* target;
+        int cgaddr;
         if ((position_vram + dataSize) <= VRAM_MAX || j == 616 || j == 273) {
-            TEXTURE tx = TEXDEF(buf.dst_w, buf.dst_h, position_vram);
-            DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), buf.ptr, dataSize);
-            sprData->cgaddr = (int)tx.CGadr;
+            TEXTURE tx = TEXDEF(width, height, position_vram);
+            target = (void*)(SpriteVRAM + (tx.CGadr << 3));
+            cgaddr = (int)tx.CGadr;
             position_vram += dataSize;
             position_vram_aft_monster = position_vram;
-        } else if (!has4mb) {
-            if ((int)current_lwram + dataSize <= (int)_vid._frontLayer) {
-                DMA_ScuMemCopy(current_lwram, buf.ptr, dataSize);
-                sprData->cgaddr = (int)current_lwram;
+        } else {
+            target = (has4mb || (int)current_lwram + dataSize > (int)_vid._frontLayer) ? current_dram2 : current_lwram;
+            cgaddr = (int)target;
+            if (target == current_lwram) {
                 current_lwram += SAT_ALIGN(dataSize);
             } else {
-                DMA_ScuMemCopy(current_dram2, buf.ptr, dataSize);
-                sprData->cgaddr = (int)current_dram2;
                 current_dram2 += SAT_ALIGN(dataSize);
             }
-        } else {
-            DMA_ScuMemCopy(current_dram2, buf.ptr, dataSize);
-            sprData->cgaddr = (int)current_dram2;
-            current_dram2 += SAT_ALIGN(dataSize);
         }
-    }
+        DMA_ScuMemCopy(target, buf.ptr, dataSize);
+        sprData->cgaddr = cgaddr;
+
 #ifdef DEBUG2
-			buf.x = 200 - sprData->x;
-			buf.y = 240 - sprData->y;
-			char debug_info[60];
-			sprintf(debug_info,"%03d/%03d 0x%08x %d %d ",j,count-1, sprData->cgaddr, buf.w,buf.h);
-			_vid.drawString(debug_info, 4, 60, 0xE7);
-//			if(max_val-min_val>=0 && max_val-min_val<=16)
-//emu_printf("%03d mn %d mx %d diff %d\n",j, min_val,max_val,max_val-min_val);
-			_stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-//emu_printf("clean menu3\n");				
-			memset4_fast(&_vid._frontLayer[40*_vid._w],0x00,_vid._w* _vid._h);
-			int oldcgaddr = sprData->cgaddr;
-
-			if (!((position_vram + dataSize) <= VRAM_MAX || buf.h==352))
-			{
-				DMA_ScuMemCopy((void*)SpriteVRAM+0x75000,(void*)sprData->cgaddr,dataSize);
-				sprData->cgaddr = (int)(0x75000/8);
-			}
-
-			_vid.SAT_displaySprite(*sprData, buf);
-			sprData->cgaddr=oldcgaddr;
-			slSynch();
+        debugSpriteDisplay(sprData, buf, j, count);
 #endif
+    }
 }
 
 /*
