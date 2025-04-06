@@ -727,9 +727,10 @@ gfx_fillArea:
 	fillArea(color, hasAlpha);
 }
 
-static int16_t _pointsQueue[8192];
+//static int16_t _pointsQueue[8192];
 
 void Graphics::floodFill(uint8_t color, const Point *pts, uint8_t numPts) {
+	int16_t *_pointsQueue = (int16_t *)hwram_screen+16384;
 //	assert(numPts >= 3);
 	if(numPts < 3)
 	{
@@ -756,7 +757,7 @@ void Graphics::floodFill(uint8_t color, const Point *pts, uint8_t numPts) {
 		}
 	}
 	const uint32_t size = (xmax - xmin + 1) * 2 * (ymax - ymin + 1) * 2;
-	if (size > sizeof(_pointsQueue) / sizeof(int16_t)) {
+	if (size > 8192) {
 		return;
 	}
 	int start_x = pts[0].x + 1;
