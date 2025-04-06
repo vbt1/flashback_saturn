@@ -2448,8 +2448,7 @@ void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t
 	++_curPos[stateNum];
 	++_states[stateNum];
 }
-
-void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer* buf, int x, int y, uint8_t color)) 
+void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color))
 {
 //	emu_printf("SAT_loadSpriteData\n");
 	const int count = READ_BE_UINT16(spriteData + 2);

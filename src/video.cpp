@@ -520,24 +520,25 @@ void Video::MAC_decodeMap(int level, int room) {
 	}
 }
 
-void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-    color &= 0x0f;
-	const int offset = y * (buf->dst_h>>1) + (x>>1);	
-	if(x&1)
-		buf->ptr[offset] |= (color);
-	else
-	{
-		buf->ptr[offset] = (color<<4);
-	}
+void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
+    color &= 0x0F;
+    uint16_t offset = (y * (buf->dst_h >> 1)) + (x >> 1);  // Use uint16_t
+    if (x & 1) {
+        buf->ptr[offset] |= color;
+    } else {
+        buf->ptr[offset] = (color << 4);
+    }
 }
 
-void Video::MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color) {
-//	const int offset = (y-buf->y) * buf->h + (x-buf->x);	
-	const int offset = y * buf->dst_h + x;	
-	buf->ptr[offset] = color;
+void Video::MAC_setPixel(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
+    uint16_t offset = (y * buf->dst_h) + x;  // Use uint16_t
+    buf->ptr[offset] = color;
 }
 
-void Video::MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color) {
+void Video::MAC_setPixelFG(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
+//    uint16_t offset = (y + buf->dst_y) * buf->pitch + (x + buf->dst_x);  // Precompute if possible
+//    buf->ptr[offset] = color;
+
 	y += buf->dst_y;
 	x += buf->dst_x;
 	const int offset = y * buf->pitch + x;

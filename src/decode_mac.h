@@ -15,7 +15,8 @@ struct DecodeBuffer {
 	bool xflip;
 	uint8_t type;
 //	int orig_w, orig_h;
-	void (*setPixel)(DecodeBuffer *buf, int x, int y, uint8_t color);
+//	void (*setPixel)(DecodeBuffer *buf, int x, int y, uint8_t color);
+	void (*setPixel)(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color);
 //	void *dataPtr;
 //	int clip_x, clip_y;
 //	int clip_w, clip_h;

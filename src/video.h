@@ -96,11 +96,11 @@ struct Video {
 //	const char *drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col);
 	void drawStringLen(const char *str, int len, int x, int y, uint8_t color);
 	void MAC_decodeMap(int level, int room);
-	static void MAC_setPixel(DecodeBuffer *buf, int x, int y, uint8_t color);
-	static void MAC_setPixelFG(DecodeBuffer *buf, int x, int y, uint8_t color);	
-	static void MAC_setPixel4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
-	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
-	static void MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
+	static void MAC_setPixel(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color);
+	static void MAC_setPixelFG(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color);	
+	static void MAC_setPixel4Bpp(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color);
+//	static void MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color);
+//	static void MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color);
 	void fillRect(int x, int y, int w, int h, uint8_t color);
 	void MAC_drawFG(int x, int y, const uint8_t *data, int frame);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip);
