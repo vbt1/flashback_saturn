@@ -370,7 +370,6 @@ void Game::mainLoop() {
 				_endLoop = true;
 			} else {
 				if (_validSaveState && loadGameState(kIngameSaveSlot)) {
-//					emu_printf ("end loading with success\n");
 					// ingame save
 				} else {
 //					clearStateRewind();
@@ -2217,8 +2216,8 @@ bool Game::saveGameState(uint8 slot) {
 }
 
 bool Game::loadGameState(uint8 slot) {
-	bool success = false;
-	char stateFile[20];
+//	bool success = false;
+	char stateFile[8];
 	makeGameStateName(slot, stateFile);
 
 	BupConfig conf[3];
@@ -2242,7 +2241,6 @@ bool Game::loadGameState(uint8 slot) {
 		BUP_Init(libBakBuf, BackUpRamWork, conf);
 		status = BUP_Read(0, (Uint8*)stateFile, rle_buf);
 	PER_SMPC_RES_ENA(); // Enable reset
-
 	if (status != 0)
 		return false;
 
@@ -2252,7 +2250,7 @@ bool Game::loadGameState(uint8 slot) {
 //emu_printf("cmprSize %d\n",cmprSize);
 	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
 	loadState(&sbuf);
-	return success;
+	return true;
 }
 
 void Game::saveState(SAVE_BUFFER *sbuf) {
