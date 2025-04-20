@@ -665,13 +665,14 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 			if(data == _res->_perso)
 			{
 				buf.type = 1;
-				buf.setPixel = MAC_setPixel4Bpp;
+//				buf.setPixel = MAC_setPixel4Bpp;
 				dataSize >>= 1;
 				spriteData.color = 4;//64;
 			}
 			else // icons _icn
 			{
-				buf.setPixel = MAC_setPixel;
+				buf.type = 0;
+//				buf.setPixel = MAC_setPixel;
 				spriteData.color = -1;
 			}
 			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
