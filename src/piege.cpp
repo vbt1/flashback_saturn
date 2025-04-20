@@ -1456,6 +1456,7 @@ int Game::pge_op_setCollisionState2(ObjectOpcodeArgs *args) {
 
 int Game::pge_op_saveState(ObjectOpcodeArgs *args) {
 	_saveStateCompleted = true;
+	pcm_sample_stop(PCM_VOICE);
 	_validSaveState = saveGameState(kIngameSaveSlot);
 	if (_validSaveState /*&& g_options.play_gamesaved_sound*/) {
 		SoundFx *sfx = &_res._sfxList[NUM_SFXS];		
