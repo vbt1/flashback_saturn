@@ -482,9 +482,8 @@ void Video::MAC_decodeMap(int level, int room) {
 	DecodeBuffer buf{};
 
 	buf.ptr = _backLayer;
-	buf.dst_w = /*buf.pitch =*/ _w;
+	buf.dst_w = _w;
 	buf.dst_h = _h;
-//	buf.setPixel = Video::MAC_setPixel;
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
@@ -520,22 +519,6 @@ void Video::MAC_decodeMap(int level, int room) {
 	}
 }
 
-void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
-    color &= 0x0F;
-    uint16_t offset = (y * (buf->dst_h >> 1)) + (x >> 1);  // Use uint16_t
-    if (x & 1) {
-        buf->ptr[offset] |= color;
-    } else {
-        buf->ptr[offset] = (color << 4);
-    }
-}
-// ne pas commenter
-/*
-void Video::MAC_setPixel(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
-    uint16_t offset = (y * buf->dst_h) + x;  // Use uint16_t
-    buf->ptr[offset] = color;
-}*/
-
 void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 	uint8_t *p = _frontLayer + y * _layerScale * _w + x * _layerScale;
 	for (int j = 0; j < h * _layerScale; ++j) {
@@ -565,8 +548,8 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 		DecodeBuffer buf{};
 		buf.dst_w  = _w;
 		buf.dst_h  = _h;
-		buf.dst_x  = x;
-		buf.dst_y  = y;
+		buf.dst_x  = x * _layerScale;
+		buf.dst_y  = y * _layerScale;
 
 		buf.type	 = 2;
 		buf.ptr      = _frontLayer;
