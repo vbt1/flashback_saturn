@@ -2461,15 +2461,17 @@ void debugSpriteDisplay(SAT_sprite* sprData, DecodeBuffer& buf, int j, int count
 }
 #endif
 
-void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr, void (*setPixelFunc)(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color)) 
+void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr) 
 {
     const int count = READ_BE_UINT16(spriteData + 2);
     DecodeBuffer buf{};
 //    buf.setPixel = setPixelFunc;
-    buf.type = (setPixelFunc == _vid.MAC_setPixel4Bpp) ? 1 : 0;
+//    buf.type = (setPixelFunc == _vid.MAC_setPixel4Bpp) ? 1 : 0;
 
     const bool isSpc = (spriteData == _res._spc);
     const bool isMonster = (spriteData == _res._monster);
+
+    buf.type = (isMonster) ? 1 : 0;
 
     for (unsigned int j = 0; j < count; j++) {
         const uint8_t* dataPtr = _res.MAC_getImageData(spriteData, j);
@@ -2639,7 +2641,7 @@ void Game::SAT_preloadMonsters() {
 	unsigned int se = _stub->getTimeStamp();
 	emu_printf("--lzss %d enn : %d\n",i,se-st);	
 #endif	
-					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen, _vid.MAC_setPixel4Bpp);
+					SAT_loadSpriteData(_res._monster, data[i].index, hwram_screen);
 
 					break; // Break out of the loop once the monster is found and processed.
 				}
@@ -2668,7 +2670,7 @@ void Game::SAT_preloadSpc() {
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
 #endif
-	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen, _vid.MAC_setPixel);
+	SAT_loadSpriteData(_res._spc, _res.NUM_SPRITES, hwram_screen);
 #ifdef DEBUG
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration spc : %d\n",e-s);

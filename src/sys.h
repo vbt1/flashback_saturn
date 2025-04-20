@@ -33,9 +33,12 @@ inline uint16_t READ_BE_UINT16(const void *ptr) {
 	return (b[0] << 8) | b[1];
 }
 
-inline uint32_t READ_BE_UINT32(const void *ptr) {
-	const uint8_t *b = (const uint8_t *)ptr;
-	return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+inline __attribute__((always_inline)) uint32_t READ_BE_UINT32(const void *ptr) {
+    if ((uintptr_t)ptr & 3) {
+        const uint8_t *b = (const uint8_t *)ptr;
+        return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+    }
+    return *(const uint32_t *)ptr;
 }
 
 inline uint16_t READ_LE_UINT16(const void *ptr) {

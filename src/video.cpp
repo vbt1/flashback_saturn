@@ -530,58 +530,11 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t 
     }
 }
 // ne pas commenter
+/*
 void Video::MAC_setPixel(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
     uint16_t offset = (y * buf->dst_h) + x;  // Use uint16_t
     buf->ptr[offset] = color;
-}
-/*
-void Video::MAC_setPixelFG(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
-//    uint16_t offset = (y + buf->dst_y) * buf->pitch + (x + buf->dst_x);  // Precompute if possible
-//    buf->ptr[offset] = color;
-
-	y += buf->dst_y;
-	x += buf->dst_x;
-	const unsigned int offset = (y * buf->dst_w) + x;
-	buf->ptr[offset] = color;
-}
-
-void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
-	y += buf->y;
-	x += buf->x;	
-	buf->type = 2; // obligatoire
-	const int offset = y * buf->pitch + x;
-	switch (color) {
-	case 0xC0:
-		buf->ptr[offset] = _MAC_fontShadowColor;
-		break;
-	case 0xC1:
-		buf->ptr[offset] = _MAC_fontFrontColor;
-		break;
-	}
-}
-
-void Video::MAC_setPixelFont4Bpp(DecodeBuffer *buf, int x, int y, uint8_t color) {
-
-	const int offset2 = y * buf->pitch/2 + x/2;
-	uint8_t col;
-
-	switch (color) {
-	case 0xC0:
-		col = _MAC_fontShadowColor;
-		break;
-	case 0xC1:
-		col = _MAC_fontFrontColor;
-		break;
-	}
-
-	col&=0x0f;// -= 0xD0;
-	
-	if(x&1)
-		buf->ptr[offset2] |= col;
-	else
-		buf->ptr[offset2] = (col<<4);
-}
-*/
+}*/
 
 void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 	uint8_t *p = _frontLayer + y * _layerScale * _w + x * _layerScale;
@@ -592,12 +545,17 @@ void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
 }
 
 static void fixOffsetDecodeBuffer(DecodeBuffer *buf, const uint8_t *dataPtr) {
-        if (buf->xflip) {
-		buf->dst_x += (int16_t)(READ_BE_UINT16(dataPtr + 4) - READ_BE_UINT16(dataPtr) - (buf->dst_h-READ_BE_UINT16(dataPtr)));
-        } else {
-		buf->dst_x -= (int16_t)READ_BE_UINT16(dataPtr + 4);
-        }
-        buf->dst_y -= (int16_t)READ_BE_UINT16(dataPtr + 6);
+    // Cache big-endian reads
+    uint16_t offset0 = READ_BE_UINT16(dataPtr + 0); //(dataPtr[0] << 8) | dataPtr[1];   // dataPtr + 0
+    uint16_t offset4 = READ_BE_UINT16(dataPtr + 4); //(dataPtr[4] << 8) | dataPtr[5];   // dataPtr + 4
+    uint16_t offset6 = READ_BE_UINT16(dataPtr + 6); //(dataPtr[6] << 8) | dataPtr[7];   // dataPtr + 6
+
+    // Update dst_x: xflip ? (offset4 - offset0 - (dst_h - offset0)) : -offset4
+    int16_t dx = buf->xflip ? (offset4 - offset0 - (buf->dst_h - offset0)) : -offset4;
+    buf->dst_x += dx;
+
+    // Update dst_y
+    buf->dst_y -= (int16_t)offset6;
 }
 
 void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
@@ -605,95 +563,79 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 //emu_printf("MAC_drawFG %p %d %p\n",data,frame,dataPtr);
 	if (dataPtr) {
 		DecodeBuffer buf{};
-		buf.dst_w  = /*buf.pitch =*/ _w;
+		buf.dst_w  = _w;
 		buf.dst_h  = _h;
-		buf.dst_x  = x * _layerScale;
-		buf.dst_y  = y * _layerScale;
-//		fixOffsetDecodeBuffer(&buf, dataPtr);
+		buf.dst_x  = x;
+		buf.dst_y  = y;
 
-//		buf.setPixel = MAC_setPixelFG;
 		buf.type	 = 2;
 		buf.ptr      = _frontLayer;
 		_res->MAC_decodeImageData(data, frame, &buf, 0xff);
 	}
 }
+
 void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip) {
-    DecodeBuffer buf{};
+    DecodeBuffer buf = {};
     buf.xflip = xflip;
     buf.dst_x = x * _layerScale;
     buf.dst_y = y * _layerScale;
+    SAT_sprite spriteData;
 
-    const int index = (data == _res->_spc) ? _res->NUM_SPRITES + frame : anim_number;
-    SAT_sprite &spriteData = _res->_sprData[index];
-// voir comment ne pas utiliser _sprData sur _res->_spc!
-    // Handle sprite data for monster or spc (special sprite)
-    if (data == _res->_monster || (data == _res->_spc && has4mb) || index ==1903 || index ==1560) {
-        buf.dst_x += (buf.xflip ? -spriteData.x_flip : -spriteData.x);
+    // Determine sprite type and index
+    bool is_spc = (data == _res->_spc);
+    bool is_monster = (data == _res->_monster);
+    bool is_special = is_spc && (has4mb || anim_number == 1903 || anim_number == 1560);
+    int index = is_spc ? _res->NUM_SPRITES + frame : anim_number;
 
+    // Handle sprite data
+    const uint8_t *dataPtr = data;
+    if (is_monster || is_special) {
+        spriteData = _res->_sprData[index];
+        buf.dst_x += (xflip ? -spriteData.x_flip : -spriteData.x);
         if (buf.dst_x >= 512) return;
-
         buf.dst_w = spriteData.size & 0xFF;
         buf.dst_h = (spriteData.size >> 8) * 8;
         buf.dst_y -= spriteData.y;
+        dataPtr = (uint8_t *)spriteData.cgaddr;
+    } else {
+        dataPtr = _res->MAC_getImageData(data, frame);
+        if (!dataPtr) return;
+        buf.dst_w = (dataPtr[2] << 8 | dataPtr[3]) & 0xFF; // Inline READ_BE_UINT16
+        buf.dst_h = ((dataPtr[0] << 8 | dataPtr[1]) + 7) & ~7;
+        buf.ptr = hwram_screen;
+        buf.type = (data == _res->_perso) ? 1 : 0;
+        spriteData.color = (data == _res->_perso) ? 4 : -1;
+        spriteData.size = (buf.dst_h / 8) << 8 | buf.dst_w;
+    }
 
-		int oldcgaddr = spriteData.cgaddr;
+    // Compute data size
+    size_t dataSize = buf.dst_w * buf.dst_h;
+    if (buf.type == 1) dataSize >>= 1;
+    dataSize = (dataSize + 7) & ~7; // Inline SAT_ALIGN
 
-        // Copy sprite to VRAM if necessary
+    // Process sprite
+    int oldcgaddr = spriteData.cgaddr;
+    if (is_monster || is_special) {
         if (spriteData.cgaddr > 0x10000) {
-            size_t dataSize = SAT_ALIGN(buf.dst_w * buf.dst_h);
-			if(spriteData.color!=-1)
-			{
-				dataSize>>=1;
-			}
-            spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)spriteData.cgaddr, buf, dataSize);
 //			emu_printf("decompressed just copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.dst_h);
+            spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)oldcgaddr, buf, dataSize);
         }
-        // Display sprite
-        SAT_displaySprite(spriteData, buf);
-		spriteData.cgaddr = oldcgaddr;
-    } 
-    // Handle standard sprite data (not monster or spc)
-    else {
-        const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
+    } else {
+        // Clear and decode (optimized clear)
+        uint8_t *ptr = buf.ptr;
+        for (size_t i = 0; i < dataSize; i++) {
+            ptr[i] = 0;
+        }
+        fixOffsetDecodeBuffer(&buf, dataPtr);
+        _res->MAC_decodeImageData(data, frame, &buf, 0xFF);
+        spriteData.cgaddr = SAT_copySpriteToVram(buf.ptr, buf, dataSize);
+    }
 
-        if (dataPtr) {
-            buf.dst_w = READ_BE_UINT16(dataPtr + 2) & 0xff;
-            buf.dst_h = (READ_BE_UINT16(dataPtr) + 7) & ~7;
-            buf.ptr = hwram_screen;
-			size_t dataSize = buf.dst_w * buf.dst_h;
-
-			if(data == _res->_perso)
-			{
-				buf.type = 1;
-//				buf.setPixel = MAC_setPixel4Bpp;
-				dataSize >>= 1;
-				spriteData.color = 4;//64;
-			}
-			else // icons _icn
-			{
-				buf.type = 0;
-//				buf.setPixel = MAC_setPixel;
-				spriteData.color = -1;
-			}
-			dataSize = SAT_ALIGN(dataSize); // vbt : déjà arrondi avec la hauteur
-			fixOffsetDecodeBuffer(&buf, dataPtr);
-            memset(buf.ptr, 0x00, dataSize);
-
-            // Decode sprite data and set size
-            _res->MAC_decodeImageData(data, frame, &buf, 0xff);
-            spriteData.size = (buf.dst_h / 8) << 8 | buf.dst_w;
-
-            // Copy to VRAM
-//            int cgaddr = SAT_copySpriteToVram((uint8_t *)buf.ptr, buf, dataSize);
-            spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)buf.ptr, buf, dataSize);
-//			vbt_size+=dataSize;
+    // Display sprite
 //			emu_printf("frame %d cgaddr=%06x %d h %d h not rounded %d\n",frame, spriteData.cgaddr,buf.dst_h, READ_BE_UINT16(dataPtr), buf.dst_h-READ_BE_UINT16(dataPtr));
 //			emu_printf("decompression and copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.dst_h);
-            // Display sprite
-            SAT_displaySprite(spriteData, buf);
-//			SAT_displaySprite((uint8_t *)(cgaddr*8), buf.dst_x-320, buf.dst_y-224, buf.dst_w, buf.dst_h);
-        }
-    }
+    SAT_displaySprite(spriteData, buf);
+    spriteData.cgaddr = oldcgaddr;
 }
 
 // Helper function to copy sprite to VRAM
@@ -760,6 +702,39 @@ void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned shor
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
 
+/*
+void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w) {
+    // Validate dimensions
+    size_t size = h * w;
+//    if (size > IMG_SIZE || size > VRAM_MAX - (0x80000 - IMG_SIZE)) return;
+
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = (w / 8) << 8 | h; // w / 8
+    user_sprite.CTRL = 0x2000; // FUNC_Sprite | _ZmCC
+    user_sprite.XA = x;
+    user_sprite.YA = y;
+    user_sprite.XB = x + (w << 1);
+    user_sprite.YB = y + (h << 1);
+    user_sprite.GRDA = 0;
+    user_sprite.SRCA = (0x80000 - IMG_SIZE) >> 3; // spriteVramOffset / 8
+
+    uint8_t *dst = (uint8_t *)SpriteVRAM + (0x80000 - IMG_SIZE);
+    uint8_t *src = front ? hwram_screen : _res->_scratchBuffer;
+
+    // Manual copy for small transfers, DMA for large
+    if (size < 256) {
+        for (size_t i = 0; i < size; i++) {
+            dst[i] = src[i];
+        }
+    } else {
+        DMA_ScuMemCopy(dst, src, size);
+    }
+
+    slSetSprite(&user_sprite, toFIXED2(240)); // Inline toFIXED2(240)
+}
+*/
 void Video::SAT_cleanSprites()
 {
 	SPRITE user_sprite;

@@ -83,11 +83,11 @@ void Cutscene::sync(int frameDelay) {
 		_stub->sleep(pause);
 	}
 	//else
-/*	if (pause<=0)
+	if (pause<=0)
 		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
 	else
 		_stub->sleep(pause);
-*/
+
 	_tstamp = _stub->getTimeStamp();
 }
 
