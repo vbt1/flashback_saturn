@@ -163,8 +163,9 @@ void Game::run() {
 		const uint8_t* spriteData = _res._fnt;
 		_res._fnt = hwram_ptr;
 
+
 		DecodeBuffer buf{};
-		buf.setPixel =  _vid.MAC_setPixel;
+//		buf.setPixel =  _vid.MAC_setPixel;
 		buf.dst_w = Video::CHAR_W*2;
 		buf.dst_h = Video::CHAR_H*2;
 		
@@ -2464,7 +2465,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 {
     const int count = READ_BE_UINT16(spriteData + 2);
     DecodeBuffer buf{};
-    buf.setPixel = setPixelFunc;
+//    buf.setPixel = setPixelFunc;
     buf.type = (setPixelFunc == _vid.MAC_setPixel4Bpp) ? 1 : 0;
 
     const bool isSpc = (spriteData == _res._spc);

@@ -482,9 +482,9 @@ void Video::MAC_decodeMap(int level, int room) {
 	DecodeBuffer buf{};
 
 	buf.ptr = _backLayer;
-	buf.dst_w = buf.pitch = _w;
+	buf.dst_w = /*buf.pitch =*/ _w;
 	buf.dst_h = _h;
-	buf.setPixel = Video::MAC_setPixel;
+//	buf.setPixel = Video::MAC_setPixel;
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
@@ -529,22 +529,22 @@ void Video::MAC_setPixel4Bpp(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t 
         buf->ptr[offset] = (color << 4);
     }
 }
-
+// ne pas commenter
 void Video::MAC_setPixel(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
     uint16_t offset = (y * buf->dst_h) + x;  // Use uint16_t
     buf->ptr[offset] = color;
 }
-
+/*
 void Video::MAC_setPixelFG(DecodeBuffer *buf, uint16_t x, uint16_t y, uint8_t color) {
 //    uint16_t offset = (y + buf->dst_y) * buf->pitch + (x + buf->dst_x);  // Precompute if possible
 //    buf->ptr[offset] = color;
 
 	y += buf->dst_y;
 	x += buf->dst_x;
-	const int offset = y * buf->pitch + x;
+	const unsigned int offset = (y * buf->dst_w) + x;
 	buf->ptr[offset] = color;
 }
-/*
+
 void Video::MAC_setPixelFont(DecodeBuffer *buf, int x, int y, uint8_t color) {
 	y += buf->y;
 	x += buf->x;	
@@ -605,13 +605,13 @@ void Video::MAC_drawFG(int x, int y, const uint8_t *data, int frame) {
 //emu_printf("MAC_drawFG %p %d %p\n",data,frame,dataPtr);
 	if (dataPtr) {
 		DecodeBuffer buf{};
-		buf.dst_w  = buf.pitch = _w;
+		buf.dst_w  = /*buf.pitch =*/ _w;
 		buf.dst_h  = _h;
 		buf.dst_x  = x * _layerScale;
 		buf.dst_y  = y * _layerScale;
 //		fixOffsetDecodeBuffer(&buf, dataPtr);
 
-		buf.setPixel = MAC_setPixelFG;
+//		buf.setPixel = MAC_setPixelFG;
 		buf.type	 = 2;
 		buf.ptr      = _frontLayer;
 		_res->MAC_decodeImageData(data, frame, &buf, 0xff);
