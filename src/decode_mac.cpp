@@ -103,13 +103,6 @@ uint8_t* decodeLzss(File& f, const char* name, uint32_t& decodedSize) {
 	return dst;
 }
 
-inline void setPixeli(int x, int y, uint8_t color, DecodeBuffer *buf) {
-	y += buf->dst_y;
-	x += buf->dst_x;
-	const int offset = (y * 512) + x;
-	buf->ptr[offset] = color;
-}
-
 #define CS1(x)                  (0x24000000UL + (x))
 
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
@@ -218,41 +211,39 @@ const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
-//emu_printf("decodeC211 src strt %p w %d h %d\n",src, w, h);
-    const uint8_t *ptrs[4];      // Reduced stack size to fit in registers/cache
-    uint16_t counts[8];
+    const uint8_t *ptrs[4];
+    uint16_t counts[4];
     uint8_t *dst = buf->ptr;
-    uint16_t x = 0, y = 0;       // 16-bit to match typical SH-2 data sizes
-    uint16_t sp = 0;             // Use uint16_t for consistency
-
-    uint16_t row_offset = y * (buf->dst_h >> (buf->type == 1)); // Precompute row offset (4bpp: >>1, 8bpp: >>0)
+    uint16_t x = 0, y = 0, sp = 0;
+    uint32_t row_offset = 0;
 
     while (1) {
         uint8_t code = *src++;
         if (code & 0x80) {
             y++;
             x = 0;
-            row_offset = y * (buf->dst_h >> (buf->type == 1)); // Update row offset
+            // Stride: buf->dst_h >> 1 for 4bpp, buf->dst_h for type == 0, buf->dst_w for type == 2
+            row_offset = (buf->type == 1 ? y * (buf->dst_h >> 1) : 
+                         (buf->type == 2 ? (y + buf->dst_y) * buf->dst_w : y * buf->dst_h));
         }
 
         uint16_t count = code & 0x1F;
         if (count == 0) {
-            count = (src[0] << 8) | src[1]; // Inline READ_BE_UINT16
+            count = (src[0] << 8) | src[1];
             src += 2;
         }
 
-        uint8_t op_type = code & 0x60;
-        switch (op_type) {
+        switch (code & 0x60) {
         case 0x00: // Repeat
             if (count == 1) {
-                if (sp == 0) return; // Early exit
+                if (sp == 0) return;
                 if (--counts[sp - 1] != 0) {
                     src = ptrs[sp - 1];
                 } else {
                     sp--;
                 }
             } else {
-                if (sp >= 4) return; // Bounds check
+                if (sp >= 4) return;
                 ptrs[sp] = src;
                 counts[sp] = count;
                 sp++;
@@ -264,26 +255,31 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
             break;
 
         case 0x40: // Fill
-            if (count == 1) return; // Early exit
+            if (count == 1) return;
             {
                 uint8_t color = *src++;
                 if (buf->type == 1) { // 4bpp
-                    color &= 0x0F;
-                    uint16_t offset = row_offset + (x >> 1);
+                    uint8_t *target = dst + row_offset + (x >> 1);
                     uint8_t odd = x & 1;
+                    color &= 0x0F;
                     for (uint16_t i = 0; i < count; i++) {
-                        uint8_t cur_x = x + i;
-                        dst[offset] = odd ? (dst[offset] | color) : (color << 4);
-                        offset += odd;
+                        *target = odd ? (*target | color) : (color << 4);
+                        target += odd;
                         odd = !odd;
                     }
-				}
-				else if (buf->type == 2) { // 8bpp menu
-//					memset(dst + x + buf->dst_x + ((y+ buf->dst_y) * 512), *src++, count);
-                    for (uint16_t i = 0; i < count; i++) {
-                        setPixeli(x + i, y, color, buf);
+                } else if (buf->type == 2) { // 8bpp menu
+                    uint8_t *target = dst + row_offset + x + buf->dst_x;
+                    uint16_t i;
+                    for (i = 0; i + 3 < count; i += 4) {
+                        target[i] = color;
+                        target[i + 1] = color;
+                        target[i + 2] = color;
+                        target[i + 3] = color;
                     }
-                } else { // 8bpp
+                    for (; i < count; i++) {
+                        target[i] = color;
+                    }
+                } else { // 8bpp font
                     uint8_t *target = dst + row_offset + x;
                     uint16_t i;
                     for (i = 0; i + 3 < count; i += 4) {
@@ -301,40 +297,45 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
             break;
 
         case 0x60: // Copy
-			if (buf->type == 1) { // 4bpp
-				uint16_t offset = row_offset + (x >> 1);
-				uint8_t odd = x & 1;
-				uint16_t i;
-				for (i = 0; i + 1 < count; i += 2) {
-					uint8_t color1 = *src++ & 0x0F;
-					uint8_t color2 = *src++ & 0x0F;
-					dst[offset] = (color1 << 4) | color2;
-					offset++;
-				}
-				if (i < count) {
-					uint8_t color = *src++ & 0x0F;
-					dst[offset] = odd ? (dst[offset] | color) : (color << 4);
-				}
-			} else if (buf->type == 2) { // 8bpp menu
-				for (uint16_t i = 0; i < count; i++) {
-					setPixeli(x + i, y, *src++, buf);
-				}
-			}
-			else { // 8bpp
-				uint8_t *target = dst + row_offset + x;
-				uint16_t i;
-				for (i = 0; i + 3 < count; i += 4) {
-					target[i] = *src++;
-					target[i + 1] = *src++;
-					target[i + 2] = *src++;
-					target[i + 3] = *src++;
-				}
-				for (; i < count; i++) {
-					target[i] = *src++;
-				}
-			}
-			x += count;
-
+            if (buf->type == 1) { // 4bpp
+                uint8_t *target = dst + row_offset + (x >> 1);
+                uint8_t odd = x & 1;
+                uint16_t i;
+                for (i = 0; i + 1 < count; i += 2) {
+                    uint8_t color1 = *src++ & 0x0F;
+                    uint8_t color2 = *src++ & 0x0F;
+                    *target++ = (color1 << 4) | color2;
+                }
+                if (i < count) {
+                    uint8_t color = *src++ & 0x0F;
+                    *target = odd ? (*target | color) : (color << 4);
+                }
+            } else if (buf->type == 2) { // 8bpp menu
+                uint8_t *target = dst + row_offset + x + buf->dst_x;
+                uint16_t i;
+                for (i = 0; i + 3 < count; i += 4) {
+                    target[i] = *src++;
+                    target[i + 1] = *src++;
+                    target[i + 2] = *src++;
+                    target[i + 3] = *src++;
+                }
+                for (; i < count; i++) {
+                    target[i] = *src++;
+                }
+            } else { // 8bpp font
+                uint8_t *target = dst + row_offset + x;
+                uint16_t i;
+                for (i = 0; i + 3 < count; i += 4) {
+                    target[i] = *src++;
+                    target[i + 1] = *src++;
+                    target[i + 2] = *src++;
+                    target[i + 3] = *src++;
+                }
+                for (; i < count; i++) {
+                    target[i] = *src++;
+                }
+            }
+            x += count;
             break;
         }
     }
