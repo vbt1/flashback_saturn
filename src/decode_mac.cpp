@@ -267,20 +267,8 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                         target += odd;
                         odd = !odd;
                     }
-                } else if (buf->type == 2) { // 8bpp menu
-                    uint8_t *target = dst + row_offset + x + buf->dst_x;
-                    uint16_t i;
-                    for (i = 0; i + 3 < count; i += 4) {
-                        target[i] = color;
-                        target[i + 1] = color;
-                        target[i + 2] = color;
-                        target[i + 3] = color;
-                    }
-                    for (; i < count; i++) {
-                        target[i] = color;
-                    }
-                } else { // 8bpp font
-                    uint8_t *target = dst + row_offset + x;
+                } else { // 8bpp font or menu
+                    uint8_t *target = dst + row_offset + x + (buf->type == 2 ? buf->dst_x : 0);
                     uint16_t i;
                     for (i = 0; i + 3 < count; i += 4) {
                         target[i] = color;
@@ -310,20 +298,8 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     uint8_t color = *src++ & 0x0F;
                     *target = odd ? (*target | color) : (color << 4);
                 }
-            } else if (buf->type == 2) { // 8bpp menu
-                uint8_t *target = dst + row_offset + x + buf->dst_x;
-                uint16_t i;
-                for (i = 0; i + 3 < count; i += 4) {
-                    target[i] = *src++;
-                    target[i + 1] = *src++;
-                    target[i + 2] = *src++;
-                    target[i + 3] = *src++;
-                }
-                for (; i < count; i++) {
-                    target[i] = *src++;
-                }
-            } else { // 8bpp font
-                uint8_t *target = dst + row_offset + x;
+            } else { // 8bpp font or menu
+                uint8_t *target = dst + row_offset + x + (buf->type == 2 ? buf->dst_x : 0);
                 uint16_t i;
                 for (i = 0; i + 3 < count; i += 4) {
                     target[i] = *src++;
