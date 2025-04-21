@@ -28,7 +28,7 @@ typedef signed int int32;
 
 #define OPEN_CSH_VAR(a) (((int)&a | 0x20000000))
 
-inline uint16_t READ_BE_UINT16(const void *ptr) {
+inline __attribute__((always_inline)) uint16_t READ_BE_UINT16(const void *ptr) {
 	const uint8_t *b = (const uint8_t *)ptr;
 	return (b[0] << 8) | b[1];
 }

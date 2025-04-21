@@ -1623,6 +1623,11 @@ void Resource::MAC_unloadCutscene() {
 #ifdef USE_SLAVE
 volatile bool slave_done_flag = false;
 
+typedef struct {
+    Resource* resource; // Pointer to Resource instance
+    const char* cutscene; // Cutscene name
+} SlaveData;
+
 void wait_for_slave()
 {
     // Busy wait for the slave ready flag to be true
@@ -1639,41 +1644,48 @@ void wait_for_slave()
 }
 
 char *cut=NULL;
+/*
 static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 
 static void process_cmd()
 {
 	tingyInstance->process_commands();
 //	slave_done_flag = true;
 }
+*/
 
-void Resource::process_commands()
-{
-	char name[32];
-	snprintf(name, sizeof(name), "%s movie", cut);
-	stringLowerCase(name);
-//	emu_printf("MAC_loadCutscene2 %s\n",name);	
-	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
-	if (!cmdEntry) {
-		current_lwram = (uint8_t *)save_current_lwram;
-		return;
-	}
-	_cmd = decodeResourceMacData(cmdEntry, true);
-    // Signal that the slave has completed its work
-//    slave_done_flag = true;
+static void process_commands(void* arg) {
+    SlaveData* data = static_cast<SlaveData*>(arg);
+    Resource* resource = data->resource;
+    const char* cutscene = data->cutscene;
+
+    emu_printf("slSlaveFunc process_commands\n");
+
+    char name[32];
+    snprintf(name, sizeof(name), "%s movie", cutscene);
+    stringLowerCase(name);
+    const ResourceMacEntry* cmdEntry = resource->_mac->findEntry(name);
+    if (!cmdEntry) {
+        current_lwram = (uint8_t*)save_current_lwram;
+        slave_done_flag = true;
+        return;
+    }
+    resource->_cmd = resource->decodeResourceMacData(cmdEntry, true);
+    emu_printf("slSlaveFunc process_commands end\n");
+
+    slave_done_flag = true;
 }
 
-void Resource::process_polygons(const char *cutscene)
-{
-//		emu_printf("process_polygons\n");	
-	char name[32];
-	snprintf(name, sizeof(name), "%s polygons", cutscene);
-	stringLowerCase(name);
-	const ResourceMacEntry *polEntry = _mac->findEntry(name);
-	if (!polEntry) {
-		current_lwram = (uint8_t *)save_current_lwram;		
-		return;
-	}
-	_pol = decodeResourceMacData(polEntry, true);
+void Resource::process_polygons(const char* cutscene) {
+    char name[32];
+
+    snprintf(name, sizeof(name), "%s polygons", cutscene);
+    stringLowerCase(name);
+    const ResourceMacEntry* polEntry = _mac->findEntry(name);
+    if (!polEntry) {
+        current_lwram = (uint8_t*)save_current_lwram;
+        return;
+    }
+    _pol = decodeResourceMacData(polEntry, true);
 }
 
 #endif
@@ -1687,21 +1699,21 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 	
 
 #ifdef USE_SLAVE
-	cut = (char *)cutscene;
-    // Process the second half of the array on the slave CPU
-		emu_printf("slSlaveFunc\n");	
+    // Prepare data for slave CPU
+    SlaveData slaveData = { this, cutscene };
 
-    slSlaveFunc(process_cmd, NULL);
-		emu_printf("process_polygons2\n");
-    // Process the first half of the array on the Master CPU
-    process_polygons(cutscene);
-		emu_printf("wait_for_slave\n");
+    emu_printf("slSlaveFunc\n");
+    // Pass process_commands and slaveData to slSlaveFunc
+    slSlaveFunc(reinterpret_cast<void (*)()>(process_commands), &slaveData);
+    emu_printf("wait_for_slave\n");
+    wait_for_slave(); // Wait for slave to complete
 
-    // Waiting for the slave to finish before continuing
-//    wait_for_slave();
-		emu_printf("slCashPurge\n");
-    // Clear the Master CPU cache otherwise the updated values by the Slave might not be seen by the Master
-    slCashPurge();
+    emu_printf("process_polygons\n");
+    process_polygons(cutscene); // Run on master CPU
+
+
+    emu_printf("slCashPurge\n");
+    slCashPurge(); // Ensure cache coherence
 
 
 #else

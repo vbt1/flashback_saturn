@@ -321,7 +321,7 @@ struct Resource {
 	void MAC_loadCutsceneText();
 	void MAC_loadCreditsText();
 	void MAC_loadSounds();
-	void process_commands();
+//	static void process_commands(void* arg);
 	void process_polygons(const char *cutscene);
 	void MAC_closeMainFile();
 	void MAC_reopenMainFile();
