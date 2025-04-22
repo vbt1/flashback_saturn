@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -23,177 +23,179 @@ extern "C" {
 #include "saturn_print.h"
 
 struct File_impl {
-	bool _ioErr;
-	File_impl() : _ioErr(false) {}
-	virtual bool open(const char *path, const char *mode) = 0;
-	virtual void close() = 0;
-	virtual uint32_t size() = 0;
-	inline virtual void seek(int32_t off) = 0;
-	inline virtual void read(void *ptr, uint32_t len) = 0;
-	virtual void write(void *ptr, uint32_t len) = 0;
+    bool _ioErr;
+    File_impl() : _ioErr(false) {}
+    virtual bool open(const char *path, const char *mode) = 0;
+    virtual void close() = 0;
+    virtual uint32_t size() = 0;
+    virtual void seek(int32_t off) = 0;
+    virtual void read(void *ptr, uint32_t len) = 0;
+    virtual void write(void *ptr, uint32_t len) = 0;
 };
 
 struct stdFile : File_impl {
-	GFS_FILE *_fp;
-	stdFile() : _fp(0) {}
-	bool open(const char *path, const char *mode) {
-		_ioErr = false;
-		_fp = sat_fopen(path);
-		return (_fp != NULL);
-	}
-	void close() {
-		if (_fp) {
-			sat_fclose(_fp);
-			_fp = 0;
-		}
-	}
-	uint32_t size() {
-		uint32_t sz = 0;
-		if (_fp) {
-			sz = _fp->f_size;
-		}
-		return sz;
-	}
-	inline void seek(int32_t off) {
-//		emu_printf("seek\n");
-		if (_fp) {
-//			emu_printf("sat_seek\n");
-			sat_fseek(_fp, off, SEEK_SET);
-		}
-	}
-	inline void read(void *ptr, uint32_t len) {
-		if (_fp) {
-			uint32_t r = sat_fread(ptr, 1, len, _fp);
-			if (r != len) {
-				_ioErr = true;
-			}
-		}
-	}
-	void write(void *ptr, uint32_t len) {
-		if (_fp) {
-			uint32_t r = 0;
-			if (r != len) {
-				_ioErr = true;
-			}
-		}
-	}
+    GFS_FILE *_fp;
+    uint8_t _buffer[32]; // Small buffer for sequential reads
+    uint32_t _bufPos;
+    uint32_t _bufLen;
+
+    stdFile() : _fp(0), _bufPos(0), _bufLen(0) {}
+
+    bool open(const char *path, const char *mode) {
+        _ioErr = false;
+        _fp = sat_fopen(path);
+        _bufPos = 0;
+        _bufLen = 0;
+        return _fp != NULL;
+    }
+
+    void close() {
+        if (_fp) {
+            sat_fclose(_fp);
+            _fp = 0;
+        }
+        _bufPos = 0;
+        _bufLen = 0;
+    }
+
+    uint32_t size() {
+        return _fp ? _fp->f_size : 0;
+    }
+
+    void seek(int32_t off) {
+        if (_fp) {
+            sat_fseek(_fp, off, SEEK_SET);
+            _bufPos = 0;
+            _bufLen = 0; // Invalidate buffer on seek
+        }
+    }
+
+    void read(void *ptr, uint32_t len) {
+        uint8_t *dst = (uint8_t *)ptr;
+        uint32_t remaining = len;
+
+        // Use buffered data first
+        while (remaining > 0 && _bufPos < _bufLen) {
+            *dst++ = _buffer[_bufPos++];
+            remaining--;
+        }
+
+        // Read directly if request is large
+        if (remaining >= sizeof(_buffer)) {
+            if (_fp) {
+                uint32_t r = sat_fread(dst, 1, remaining, _fp);
+                if (r != remaining) {
+                    _ioErr = true;
+                }
+            }
+            return;
+        }
+
+        // Refill buffer for small reads
+        if (_fp && remaining > 0) {
+            _bufLen = sat_fread(_buffer, 1, sizeof(_buffer), _fp);
+            _bufPos = 0;
+            if (_bufLen == 0) {
+                _ioErr = true;
+                return;
+            }
+            uint32_t to_copy = remaining < _bufLen ? remaining : _bufLen;
+            memcpy(dst, _buffer, to_copy);
+            _bufPos += to_copy;
+        }
+    }
+
+    void write(void *ptr, uint32_t len) {
+        if (_fp) {
+            uint32_t r = 0; // Adjust if writing is needed
+            if (r != len) {
+                _ioErr = true;
+            }
+        }
+    }
 };
 
 File::File() {
-	_impl = new stdFile;
+    _impl = new stdFile;
 }
 
 File::~File() {
-	if (_impl) {
-		_impl->close();
-		delete _impl;
-	}
+    if (_impl) {
+        _impl->close();
+        delete _impl;
+    }
 }
 
 bool File::open(const char *filename, const char *directory, const char *mode) {
-	_impl->close();
-//emu_printf("File::open(%s)\n",filename);	
-	memset(name, 0, 50);
-//	char buf[512];
-//	sprintf(buf, "%s/%s", directory, filename);
-//	char *p = buf + strlen(directory) + 1;
-//	string_lower(p);
-	bool opened = _impl->open(filename, mode);
-	snprintf(name, 49, "%s", filename);	
-//	if (!opened) { // let's try uppercase
-//		string_upper(p);
-//		opened = _impl->open(buf, mode);
-//	}
-	return opened;
+    _impl->close();
+    memset(name, 0, 50);
+    bool opened = _impl->open(filename, mode);
+    snprintf(name, 49, "%s", filename);
+    return opened;
 }
 
 void File::close() {
-//emu_printf("File::close()\n");	
-	if (_impl) {
-		_impl->close();
-	}
+    if (_impl) {
+        _impl->close();
+    }
 }
 
 bool File::ioErr() const {
-	return _impl->_ioErr;
+    return _impl->_ioErr;
 }
 
 uint32_t File::size() {
-	return _impl->size();
+    return _impl->size();
 }
 
 void File::seek(int32_t off) {
-	_impl->seek(off);
+    _impl->seek(off);
 }
 
 void File::read(void *ptr, uint32_t len) {
-//emu_printf("File::read %p\n",ptr);		
-	_impl->read(ptr, len);
-//emu_printf("File::read done\n");
-}
-inline void File::readInline(void *ptr, uint32_t len) {
-//emu_printf("File::read %p\n",ptr);		
-	_impl->read(ptr, len);
-//emu_printf("File::read done\n");
-}
-uint8_t File::readByte() {
-	uint8_t b;
-	readInline(&b, 1);
-	return b;
-}
-/*
- uint16_t File::readUint16LE() {
-	uint8_t lo = readByte();
-	uint8_t hi = readByte();
-	return (hi << 8) | lo;
+    _impl->read(ptr, len);
 }
 
-uint32_t File::readUint32LE() {
-	uint16_t lo = readUint16LE();
-	uint16_t hi = readUint16LE();
-	return (hi << 16) | lo;
+void File::readInline(void *ptr, uint32_t len) {
+    _impl->read(ptr, len);
 }
-*/
+
+uint8_t File::readByte() {
+    uint8_t b;
+    _impl->read(&b, 1);
+    return b;
+}
+
 uint16_t File::readUint16BE() {
-/*	uint8_t hi = readByte();
-	uint8_t lo = readByte();
-	return (hi << 8) | lo;
-*/
-	uint16_t value;
-	readInline(&value, 2);
-//	emu_printf("readUint16BE %04X\n",value);		
-	return value;
+    uint16_t value;
+    _impl->read(&value, 2);
+    return value;
 }
 
 uint32_t File::readUint32BE() {
-/*	uint16_t hi = readUint16BE();
-	uint16_t lo = readUint16BE();
-emu_printf("readUint32BE %04X\n",(hi << 16) | lo);	
-	return (hi << 16) | lo;*/
-	uint32_t value;
-	readInline(&value, 4);
-//emu_printf("readUint32BE %04X\n",value);		
-	return value;
+    uint32_t value;
+    _impl->read(&value, 4);
+    return value;
 }
 
 void File::write(void *ptr, uint32_t len) {
-	_impl->write(ptr, len);
+    _impl->write(ptr, len);
 }
 
 void File::writeByte(uint8_t b) {
-	write(&b, 1);
+    write(&b, 1);
 }
 
 void File::writeUint16BE(uint16_t n) {
-	writeByte(n >> 8);
-	writeByte(n & 0xFF);
+    writeByte(n >> 8);
+    writeByte(n & 0xFF);
 }
 
 void File::writeUint32BE(uint32_t n) {
-	writeUint16BE(n >> 16);
-	writeUint16BE(n & 0xFFFF);
+    writeUint16BE(n >> 16);
+    writeUint16BE(n & 0xFFFF);
 }
 
-char* File::fileName(void) {
-	return name;
+char* File::fileName() {
+    return name;
 }
