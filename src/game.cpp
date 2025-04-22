@@ -1,6 +1,6 @@
 #define PRELOAD_MONSTERS 1
 #define VRAM_MAX 0x65000 // ne pas toucher
-
+//#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
 #define DEBUG 1
 //#define DEBUG2 1
@@ -2677,21 +2677,48 @@ void Game::SAT_preloadSpc() {
 #endif
 }
 
+#ifdef USE_SLAVE
+volatile bool slave_done_flag = false;
+
+typedef struct {
+    Cutscene* cut; // Pointer to Resource instance
+//    const char* current_lwram; // address in ram
+} SlaveData;
+
+void wait_for_slave()
+{
+    while (!*((volatile bool *)(&slave_done_flag + 0x20000000)));
+    // Resetting the slave done flag to false for the next operation
+    slave_done_flag = false;
+}
+
+static void process_commands(void* arg) {
+    SlaveData* data = static_cast<SlaveData*>(arg);
+    Cutscene* cut = data->cut;
+
+    emu_printf("slSlaveFunc process_commands %p\n", 0x200000);
+	cut->playSet((const uint8_t *)0x200000, 0x2B14);
+    emu_printf("slSlaveFunc process_commands end\n");
+    slave_done_flag = true;
+}
+#endif
+
 void Game::SAT_preloadCDfiles() {
 	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-	_stub->copyRect(40, 80, _vid._w, 16, _vid._frontLayer, _vid._w);	
-/*	_res.MAC_closeMainFile();
-	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
-	_cut.playSet(current_lwram, 0x2B14);
-	_res.MAC_reopenMainFile();
-*/
-}
-/**
-static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 
-static void process_cmd()
-{
-	tingyInstance->process_commands();
-//	slave_done_flag = true;
-}
-**/
+	_stub->copyRect(40, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
 
+#ifdef USE_SLAVE	
+	_res.MAC_closeMainFile();
+	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
+	_res.MAC_reopenMainFile();
+//	_cut.playSet(current_lwram, 0x2B14);
+    SlaveData slaveData = { &_cut };
+current_lwram+=SAT_ALIGN(21623);
+    emu_printf("slSlaveFunc %p\n", current_lwram);
+    // Pass process_commands and slaveData to slSlaveFunc
+    slSlaveFunc(reinterpret_cast<void (*)()>(process_commands), &slaveData);
+    emu_printf("wait_for_slave\n");
+ //   wait_for_slave(); // Wait for slave to complete
+    emu_printf("wait_for_slave end\n");
+#endif
+}

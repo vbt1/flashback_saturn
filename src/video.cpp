@@ -735,7 +735,7 @@ void Video::SAT_cleanSprites()
 	user_sprite.GRDA=0;
 
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-	slSynch();
+	slSynch(); // vbt à remettre
 }
 /*
 void Video::SAT_displayPalette()

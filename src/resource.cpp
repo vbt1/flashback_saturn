@@ -1213,7 +1213,6 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
 //	emu_printf("Resource::decodeResourceMacData 'seek %d entry %p file %p'\n",_mac->_dataOffset + entry->dataOffset, entry,_mac->_f);	
-//	assert(entry);
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
@@ -1229,9 +1228,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
 		if(strncmp("Title", entry->name, 5) == 0 
 		|| strcmp("Flashback colors", entry->name) == 0 
-//		|| strncmp("intro", entry->name, 5) == 0 
-//		|| strncmp("logo", entry->name, 4) == 0 
-//		|| strncmp("espion", entry->name, 5) == 0 
 		)
 		{
 //			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
@@ -1239,7 +1235,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 		else
 		{
-//			data = (uint8_t *)sat_malloc(_resourceMacDataSize);
 			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
 			{
 //				emu_printf("hwram_ptr ");				
@@ -1643,16 +1638,6 @@ void wait_for_slave()
     slave_done_flag = false;
 }
 
-char *cut=NULL;
-/*
-static Resource *tingyInstance = new Resource(".", (ResourceType)kResourceTypeMac, (Language)LANG_EN); 
-static void process_cmd()
-{
-	tingyInstance->process_commands();
-//	slave_done_flag = true;
-}
-*/
-
 static void process_commands(void* arg) {
     SlaveData* data = static_cast<SlaveData*>(arg);
     Resource* resource = data->resource;
@@ -1714,8 +1699,6 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 
     emu_printf("slCashPurge\n");
     slCashPurge(); // Ensure cache coherence
-
-
 #else
 // vbt :  paraléliser les décodages !!!
 	snprintf(name, sizeof(name), "%s movie", cutscene);

@@ -1403,10 +1403,11 @@ void Cutscene::prepare() {
 	_backPage = (uint8_t *)_res->_scratchBuffer;
 	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
-slSynch();
+emu_printf("slSynch\n");
+slSynch(); // VBT : à remettre
 	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
 	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
-//emu_printf("prepare cutscene\n");	
+emu_printf("prepare cutscene\n");	
 	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
@@ -1632,15 +1633,15 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		foregroundShapes[i].size = nextOffset - offset;
 		offset = nextOffset + 45;
 	}
-
 	prepare();
 	_gfx.setLayer(_backPage, _vid->_w);
 
 	offset = 10;
 	const int frames = READ_BE_UINT16(p + offset); offset += 2;
+	
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
 		const uint32_t timestamp = _stub->getTimeStamp();
-
+emu_printf("frame %d/%d\n",i,frames);
 //		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
 
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
@@ -1655,7 +1656,6 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		for (int j = 0; j < 16; ++j) {
 			paletteLut[j] = 0xC0 + j;
 		}
-
 		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
 		for (int j = 0; j < count; ++j) {
 			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
@@ -1701,9 +1701,8 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
 		_stub->updateScreen(0);
 */
-
 		_vid->SAT_displayCutscene(0,0, 0, 128, 240);
-		slSynch();
+		slSynch(); // VBT à remettre
 		updatePalette();
 		const int diff = 90 - (_stub->getTimeStamp() - timestamp);
 		_stub->sleep((diff < 16) ? 16 : diff);
