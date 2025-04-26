@@ -1,3 +1,5 @@
+#pragma GCC optimize ("O2")
+
 extern "C" {
 
 #include <string.h>
@@ -25,7 +27,7 @@ Sint32 gfsDirN;
 #include "saturn_print.h"
 
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define CACHE_SIZE (SECTOR_SIZE * 30)
+#define CACHE_SIZE (SECTOR_SIZE * 8)
 
 static char satpath[25];
 //static char current_path[15][16];

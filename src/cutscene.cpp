@@ -79,15 +79,16 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
+#if 0
 	if (pause > 0) {
 		_stub->sleep(pause);
 	}
-	//else
+#else
 	if (pause<=0)
 		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
 	else
 		_stub->sleep(pause);
-
+#endif
 	_tstamp = _stub->getTimeStamp();
 }
 
@@ -1403,11 +1404,11 @@ void Cutscene::prepare() {
 	_backPage = (uint8_t *)_res->_scratchBuffer;
 	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
-emu_printf("slSynch\n");
+//emu_printf("slSynch\n");
 slSynch(); // VBT : à remettre
 	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
 	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
-emu_printf("prepare cutscene\n");	
+//emu_printf("prepare cutscene\n");	
 	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);

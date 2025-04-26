@@ -103,6 +103,7 @@ uint8_t* decodeLzss(File& f, const char* name, uint32_t& decodedSize) {
 	return dst;
 }
 
+
 #define CS1(x)                  (0x24000000UL + (x))
 
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {

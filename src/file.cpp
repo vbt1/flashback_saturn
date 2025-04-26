@@ -1,3 +1,5 @@
+#pragma GCC optimize ("O2")
+
 /* REminiscence - Flashback interpreter
  * Copyright (C) 2005-2007 Gregory Montoir
  *
@@ -35,7 +37,7 @@ struct File_impl {
 
 struct stdFile : File_impl {
     GFS_FILE *_fp;
-    uint8_t _buffer[32]; // Small buffer for sequential reads
+    uint8_t _buffer[160] __attribute__ ((aligned (4)));
     uint32_t _bufPos;
     uint32_t _bufLen;
 
