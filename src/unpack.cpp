@@ -68,7 +68,7 @@ bool bytekiller_unpack(uint8_t *dst, int dstSize, const uint8_t *src, int srcSiz
 	uc.src = src + srcSize - 4;
 	uc.size = READ_BE_UINT32(uc.src); uc.src -= 4;
 	if (uc.size > dstSize) {
-		warning("Unexpected unpack size %d, buffer size %d", uc.size, dstSize);
+//		warning("Unexpected unpack size %d, buffer size %d", uc.size, dstSize);
 		return false;
 	}
 	uc.dst = dst + uc.size - 1;

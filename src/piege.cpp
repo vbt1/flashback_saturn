@@ -297,7 +297,7 @@ int Game::pge_execute(LivePGE *live_pge, InitPGE *init_pge, const Object *obj) {
 //		debug(DBG_PGE, "pge_execute op1=0x%X", obj->opcode1);
 		op = _pge_opcodeTable[obj->opcode1];
 		if (!op) {
-			warning("Game::pge_execute() missing call to pge_opcode 0x%X", obj->opcode1);
+//			warning("Game::pge_execute() missing call to pge_opcode 0x%X", obj->opcode1);
 			return 0;
 		}
 		if (!((this->*op)(&args) & 0xFF))
@@ -310,7 +310,7 @@ int Game::pge_execute(LivePGE *live_pge, InitPGE *init_pge, const Object *obj) {
 //		debug(DBG_PGE, "pge_execute op2=0x%X", obj->opcode2);
 		op = _pge_opcodeTable[obj->opcode2];
 		if (!op) {
-			warning("Game::pge_execute() missing call to pge_opcode 0x%X", obj->opcode2);
+//			warning("Game::pge_execute() missing call to pge_opcode 0x%X", obj->opcode2);
 			return 0;
 		}
 		if (!((this->*op)(&args) & 0xFF))
@@ -325,7 +325,7 @@ int Game::pge_execute(LivePGE *live_pge, InitPGE *init_pge, const Object *obj) {
 		if (op) {
 			(this->*op)(&args);
 		} else {
-			warning("Game::pge_execute() missing call to pge_opcode 0x%X", obj->opcode3);
+//			warning("Game::pge_execute() missing call to pge_opcode 0x%X", obj->opcode3);
 		}
 	}
 	live_pge->obj_type = obj->init_obj_type;

@@ -14,7 +14,6 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/decode_mac.cpp \
 		$(SRCDIR)/staticres.cpp \
 		$(SRCDIR)/systemstub_sdl.cpp \
-		$(SRCDIR)/util.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \
 		$(SRCDIR)/lzwlib.cpp \

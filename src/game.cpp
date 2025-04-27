@@ -1063,7 +1063,7 @@ void Game::drawStoryTexts() {
 						textColor = 0xEB;
 						break;
 					default:
-						warning("Unhandled MAC text color code 0x%x", str[1]);
+//						warning("Unhandled MAC text color code 0x%x", str[1]);
 						break;
 					}
 					str += 2;
@@ -1928,7 +1928,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	} else if (num == 77) {
 		// triggered when Conrad draw his gun
 	} else {
-		warning("Unknown sound num %d", num);
+//		warning("Unknown sound num %d", num);
 	}
 }
 

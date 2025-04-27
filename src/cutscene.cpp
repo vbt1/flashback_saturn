@@ -126,7 +126,7 @@ DecodeBuffer buf{};
 	if(hasText && !sameText)
 	{
 		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
-		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte
+		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte du bas
 		hasText = false;
 	}
 	sync(_frameDelay - 1);
@@ -503,7 +503,6 @@ void Cutscene::op_waitForSync() {
 		sync(_frameDelay);
 		if(_id != 17)
 		{
-//			emu_printf("copy front1\n");
 			_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 		}
 	}
@@ -1232,7 +1231,7 @@ void Cutscene::op_handleKeys() {
 	_stub->_pi.shift = false;
 	const int16_t n = fetchNextCmdWord();
 	if (n < 0) {
-		debug(DBG_CUT, "Cutscene::op_handleKeys n:%d", n);
+//		emu_printf("Cutscene::op_handleKeys n:%d\n", n);
 		_stop = true;
 		return;
 	}
@@ -1290,7 +1289,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		} else if (count != 0) {
 			const int startOffset = READ_BE_UINT16(p + 2);
 			if (startOffset != 0) {
-				warning("startOffset %d count %d num %d", startOffset, count, num);
+				emu_printf("startOffset %d count %d num %d\n", startOffset, count, num);
 			}
 		}
 		p += _baseOffset;
@@ -1347,6 +1346,8 @@ bool Cutscene::load(uint16_t cutName) {
 		_res->load(name, Resource::OT_CMP);
 		_res->MAC_reopenMainFile();
 	}
+// fix bug on dispkaying key cutscene
+	memset4_fast(&_vid->_frontLayer[96*_vid->_w], 0x00,(_vid->_h-128)*_vid->_w);
 	slTVOn();	
 /*	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration MAC_loadCutscene : %d\n",e-s);
@@ -1378,7 +1379,7 @@ void Cutscene::unload() {
 	{
 		_vid->SAT_cleanSprites();
 #ifndef SUBTITLE_SPRITE
-//			emu_printf("clean front1\n");
+//			emu_printf("clean front1\n"); // efface les sous-titres
 		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x00,_vid->_w* (_vid->_h-128));
 		_stub->copyRect(0, 96, _vid->_w, _vid->_h-128, _vid->_frontLayer, _vid->_w);
 #endif

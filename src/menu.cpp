@@ -72,7 +72,7 @@ void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t colorConfig
 }
 
 void Menu::drawString2(const char *str, int16_t y, int16_t x) {
-	debug(DBG_MENU, "Menu::drawString2()");
+//	debug(DBG_MENU, "Menu::drawString2()");
 	const int w = Video::CHAR_W;
 	const int h = Video::CHAR_H;
 	int len = 0;
@@ -525,7 +525,7 @@ void Menu::handleTitleScreen() {
 	while (!_stub->_pi.quit) {
 
 		int selectedItem = -1;
-//		int previousLanguage = currentLanguage;
+		int previousLanguage = currentLanguage;
 
 		if (_nextScreen == SCREEN_TITLE) {
 			_vid->fadeOut();
@@ -538,7 +538,8 @@ void Menu::handleTitleScreen() {
 			_nextScreen = -1;
 		}
 
-/*		if (g_options.enable_language_selection) {
+//		if (g_options.enable_language_selection) 
+		{
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 				if (currentLanguage != 0) {
@@ -546,6 +547,7 @@ void Menu::handleTitleScreen() {
 				} else {
 					currentLanguage = ARRAYSIZE(languages) - 1;
 				}
+				emu_printf("language left %d\n",currentLanguage);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
@@ -554,8 +556,9 @@ void Menu::handleTitleScreen() {
 				} else {
 					currentLanguage = 0;
 				}
+				emu_printf("language right %d\n",currentLanguage);
 			}
-		}*/
+		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (currentEntry != 0) {
@@ -606,13 +609,13 @@ void Menu::handleTitleScreen() {
 			_nextScreen = SCREEN_TITLE;
 			continue;
 		}
-/*
+
 		if (previousLanguage != currentLanguage) {
 			_res->setLanguage(languages[currentLanguage].lang);
 			// clear previous language text
 			memcpy(_vid->_frontLayer, _vid->_backLayer, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H * 4);
 		}
-*/
+
 		// draw the options
 		const int yPos = 26 - menuItemsCount * 2;
 		for (int i = 0; i < menuItemsCount; ++i) {
