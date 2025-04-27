@@ -54,7 +54,7 @@ struct Mixer {
 		MUSIC_TRACK = 1000,
 		NUM_CHANNELS = 4,
 		FRAC_BITS = 12,
-		MAX_VOLUME = 7
+		MAX_VOLUME = 32
 	};
 
 //	void *_mutex;

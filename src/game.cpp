@@ -1869,8 +1869,8 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < NUM_SFXS) {
 		SoundFx *sfx = &_res._sfxList[num];
 		if (sfx->data) {
-//		emu_printf("play sound %02d/%d\n",num,_res._numSfx);
-			const int volume = Mixer::MAX_VOLUME >> (2 * softVol);
+//		emu_printf("play sound %02d volume : softVol %d calc : %d\n",num,softVol, (Mixer::MAX_VOLUME >> (2 * softVol))-1);
+			const int volume = (Mixer::MAX_VOLUME >> (2 * softVol))-1;
 
 			int i=0;
 // vbtvbt
