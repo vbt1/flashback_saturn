@@ -84,7 +84,7 @@ struct Game {
 //	const char *_savePath;
 	uint32_t _cheats;
 
-	const uint8_t *_stringsTable;
+//	const uint8_t *_stringsTable;
 	const char **_textsTable;
 	uint8_t _currentLevel;
 	uint8_t _skillLevel;

@@ -91,18 +91,18 @@ void Resource::init() {
 	_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 	_mac->load();
 }
-/*
+
 void Resource::setLanguage(Language lang) {
 	if (_lang != lang) {
 		_lang = lang;
 		// reload global language specific data files
-		free_TEXT();
+//		free_TEXT();
 		load_TEXT();
-		free_CINE();
-		load_CINE();
+//		free_CINE();
+//		load_CINE();
 	}
 }
-
+/*
 bool Resource::fileExists(const char *filename) {
 	File f;
 	if (f.open(_entryName, _dataPath, "rb")) {
@@ -311,13 +311,13 @@ static const char *getCineName(Language lang, ResourceType type) {
 		return "ENG";
 	}
 }
-
-void Resource::load_CINE() {
+*/
+//void Resource::load_CINE() {
 //	const char *prefix = getCineName(_lang, _type);
 //	emu_printf("Resource::load_CINE('%s')\n", prefix);
 
 //	File f;
-			
+/*			
 	switch (_type) {
 	case kResourceTypeDOS:
 
@@ -370,12 +370,12 @@ void Resource::load_CINE() {
 			error("Cannot load '%s'", _entryName);
 		}
 		break;
-	case kResourceTypeMac:
-		MAC_loadCutsceneText();
-		break;
-	}
-}
-
+	case kResourceTypeMac:*/
+//		MAC_loadCutsceneText();
+//		break;
+//	}
+//}
+/*
 void Resource::free_CINE() {
 	sat_free(_cine_off);
 	_cine_off = 0;
@@ -384,20 +384,15 @@ void Resource::free_CINE() {
 }
 */
 void Resource::load_TEXT() {
-#if 1
-
-#ifdef LANGFR
-	_stringsTable = LocaleData::_stringsTableFR;
-	_textsTable = LocaleData::_textsTableFR;
-#else
-//	_stringsTable = LocaleData::_stringsTableEN;
-
-	uint8_t *_stringsTable = (uint8_t *)current_lwram;
-	int loaded = GFS_Load(GFS_NameToId((int8_t *)"LANGEN.DAT"),0,(void *)_stringsTable,3446);
-	current_lwram += 3448;
-
-	_textsTable = LocaleData::_textsTableEN;
-#endif
+	_textsTable = 0;
+	switch (_lang) {
+	case LANG_FR:
+		_textsTable = LocaleData::_textsTableFR;
+		break;
+	case LANG_EN:
+		_textsTable = LocaleData::_textsTableEN;
+		break;
+	}
 #else	
 	File f;
 	// Load game strings
@@ -497,7 +492,7 @@ void Resource::unload(int objType) {
 		_pol = 0;
 		break;
 	default:
-		error("Unimplemented Resource::unload() type %d", objType);
+//		error("Unimplemented Resource::unload() type %d", objType);
 		break;
 	}
 }
@@ -1179,13 +1174,13 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 }
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
-	char buf[256];
+	char buf[32];
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
 //		emu_printf("decodeResourceMacText1 %s found\n", buf);
 		return decodeResourceMacData(entry, false);
-	} /*else { // CD version
+	} else { // CD version
 //		emu_printf("decodeResourceMacText1 %s not found\n", buf);
 		if (strcmp(name, "Flashback") == 0) {
 			name = "Game";
@@ -1194,7 +1189,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
 //		emu_printf("decodeResourceMacText2 %s\n", buf);
 		return decodeResourceMacData(buf, false);
-	}*/
+	}
 }
 
 uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {

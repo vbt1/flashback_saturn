@@ -208,6 +208,7 @@ void Game::run() {
 //				SAT_preloadPerso();
 // vbt : refaire le chargement des sons
 		_res.MAC_loadSounds(); // vbt déplacé
+// à redeplacer
 		_res.MAC_loadCutsceneText(); // vbt déplacé
 /*		break;
 	}

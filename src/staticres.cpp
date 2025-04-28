@@ -1185,7 +1185,7 @@ const uint8_t LocaleData::_stringsTableDE[] = {
 	0x48, 0x5D, 0x52, 0x45, 0x4E, 0x20, 0x44, 0x49, 0x52, 0x2E, 0x00
 };
 */
-#ifdef LANGFR
+
 const char *const LocaleData::_textsTableFR[LocaleData::LI_NUM] = {
 	"CONTINUER OU ABANDONNER ?",
 	"TEMPS",
@@ -1211,7 +1211,7 @@ const char *const LocaleData::_textsTableFR[LocaleData::LI_NUM] = {
 	"PARTIE",
 	"DEMO"
 };
-#else
+
 const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
 	"CONTINUE OR ABORT THIS GAME?",
 	"TIME",
@@ -1237,7 +1237,7 @@ const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
 	"SLOT",
 	"DEMO"
 };
-#endif
+
 /*
 const char *const LocaleData::_textsTableDE[LocaleData::LI_NUM] = {
 	"WEITERSPIELEN ODER ABBRECHEN ?",

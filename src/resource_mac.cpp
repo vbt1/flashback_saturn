@@ -60,14 +60,14 @@ void ResourceMac::load() {
 				break;
 			}
 		}
-	} /*else { // MacBinary
+	} else { // MacBinary
 		//debug(DBG_INFO, "Load Macintosh data from MacBinary");
-		emu_printf("Load Macintosh data from MacBinary\n");
+//		emu_printf("Load Macintosh data from MacBinary\n");
 		_f.seek(83);
 		uint32_t dataSize = _f.readUint32BE();
 		uint32_t resourceOffset = 128 + ((dataSize + 127) & ~127);
 		loadResourceFork(resourceOffset, dataSize);
-	}*/
+	}
 }
 
 void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {

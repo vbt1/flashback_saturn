@@ -37,7 +37,7 @@ struct File_impl {
 
 struct stdFile : File_impl {
     GFS_FILE *_fp;
-    uint8_t _buffer[160] __attribute__ ((aligned (4)));
+    uint8_t _buffer[144] __attribute__ ((aligned (4)));
     uint32_t _bufPos;
     uint32_t _bufLen;
 
