@@ -388,8 +388,10 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	Uint32 start_sector = (stream->f_seek_pos)/SECTOR_SIZE;
 	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector
 //emu_printf("start_sector %d skip_bytes %d\n",start_sector,skip_bytes);
-
+// version floppy
 //	if(start_sector == 3303 || start_sector == 3351 || start_sector == 3399 || start_sector == 3458)
+// version cd
+	if(start_sector == 3093 || start_sector == 3115 || start_sector == 3163 || start_sector == 3223 || start_sector == 3272)
 //
 	{
 	//	emu_printf("start_sector %d skip_bytes %d\n",start_sector,skip_bytes);

@@ -384,6 +384,7 @@ void Resource::free_CINE() {
 }
 */
 void Resource::load_TEXT() {
+#if 1
 	_textsTable = 0;
 	switch (_lang) {
 	case LANG_FR:

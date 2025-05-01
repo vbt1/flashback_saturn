@@ -161,6 +161,8 @@ void Menu::displayTitleScreenMac(int num) {
 	slBMPaletteNbg1(2); // passage à la palette non recalculée	
 
 	DecodeBuffer buf{};
+	buf.ptr = _vid->_frontLayer;
+	
 	switch (num) {
 	case kMacTitleScreen_MacPlay:
 //emu_printf("loading macplay\n");
@@ -172,7 +174,6 @@ void Menu::displayTitleScreenMac(int num) {
 	case kMacTitleScreen_Flashback:
 	case kMacTitleScreen_LeftEye:
 	case kMacTitleScreen_RightEye:
-		buf.ptr = _vid->_frontLayer;
 		memset(_vid->_frontLayer, 0, w * h);
 		h = 448;
 		break;
@@ -199,7 +200,7 @@ void Menu::displayTitleScreenMac(int num) {
 		}
 	}
 
-/*	if (num == kMacTitleScreen_MacPlay) {
+	if (num == kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		for (int i = 0; i < 2; ++i) {
 			_res->MAC_copyClut16(palette, 0, 55 + i);
@@ -212,12 +213,12 @@ void Menu::displayTitleScreenMac(int num) {
 		Color c;
 		c.r = c.g = c.b = 0;
 		_stub->setPaletteEntry(0, &c);
-	} else*/ if (num == kMacTitleScreen_Flashback) {
+	} else if (num == kMacTitleScreen_Flashback) {
 		_vid->setTextPalette();
 //		_mix->playMusic(1); // vbt : déplacé, musique du menu
 	}
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
-/*	
+	
 	if (num == kMacTitleScreen_MacPlay || num == kMacTitleScreen_Presage) 
 	{
 //		_vid->fullRefresh();
@@ -233,10 +234,10 @@ void Menu::displayTitleScreenMac(int num) {
 				_stub->_pi.enter = false;
 				break;
 			}
-			_stub->copyRect(24, 24, 440, 10*24, _vid->_frontLayer, _vid->_w);
+			_stub->copyRect(24, 0, 448, h, _vid->_frontLayer, _vid->_w);
 			_stub->updateScreen(0);			
 		} while (!_stub->_pi.quit);
-	}*/
+	}
 }
 
 void Menu::handleInfoScreen() {

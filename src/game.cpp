@@ -222,13 +222,13 @@ hwram = (uint8_t *)hwram_ptr;
 		return;
 	}
 #endif
-/*
+
 	if (_res.isMac()) {
 		_menu.displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
 		if (!_stub->_pi.quit) {
 			_menu.displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
-	}*/
+	}
 // vbt : clean front layer	
 //	_stub->updateScreen(0);
 	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h);
