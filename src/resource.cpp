@@ -25,7 +25,6 @@ extern Uint8 *soundAddr;
 extern unsigned int end1;
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
-extern bool has4mb;
 void *malloc(size_t);
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
@@ -85,8 +84,7 @@ Resource::~Resource() {
 
 void Resource::init() {
 	uint16_t size = NUM_SPRITES;
-//	if (has4mb)
-		size += NUM_SPC;
+	size += NUM_SPC;
 	_sprData = (SAT_sprite *)malloc(size * sizeof(SAT_sprite));
 	_mac = new ResourceMac(ResourceMac::FILENAME2, _dataPath);
 	_mac->load();
@@ -98,6 +96,7 @@ void Resource::setLanguage(Language lang) {
 		// reload global language specific data files
 //		free_TEXT();
 		load_TEXT();
+		_cine_txt = (_lang == LANG_FR) ? _cine_txtFR : _cine_txtEN;
 //		free_CINE();
 //		load_CINE();
 	}
@@ -1179,7 +1178,6 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
 	if (entry) {
-//		emu_printf("decodeResourceMacText1 %s found\n", buf);
 		return decodeResourceMacData(entry, false);
 	} else { // CD version
 //		emu_printf("decodeResourceMacText1 %s not found\n", buf);
@@ -1188,8 +1186,19 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		}
 		const char *language = (_lang == LANG_FR) ? "French" : "English";
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
-//		emu_printf("decodeResourceMacText2 %s\n", buf);
-		return decodeResourceMacData(buf, false);
+		emu_printf("decodeResourceMacText name %s\n", name);
+		if(strstr(name, "Movie"))
+		{
+			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "French");
+			_cine_txtFR = decodeResourceMacData(buf, false);
+			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "English");
+			_cine_txtEN = decodeResourceMacData(buf, false);
+			return (_lang == LANG_FR) ? _cine_txtFR : _cine_txtEN;
+		}
+		else
+		{
+			return decodeResourceMacData(buf, false);
+		}
 	}
 }
 

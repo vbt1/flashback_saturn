@@ -15,8 +15,6 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
-extern Uint8 *current_dram2;
-extern bool has4mb;
 void	*malloc(size_t);
 }
 #include "file.h"
@@ -38,16 +36,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_layerScale = /*(_res->_type == kResourceTypeMac) ?*/ 2 /*: 1*/; // Macintosh version is 512x448
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
-
-	if(has4mb)
-	{
-		_frontLayer = (uint8 *)current_dram2;
-		current_dram2 += (_w * _h);
-	}
-	else
-	{
-		_frontLayer = (uint8_t *)0x2aeff8;//sat_malloc(_w * _h);
-	}
+	_frontLayer = (uint8_t *)0x2aeff8;//sat_malloc(_w * _h);
 
 	memset(&_frontLayer[0], 0, _w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -567,7 +556,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
     // Determine sprite type and index
     bool is_spc = (data == _res->_spc);
     bool is_monster = (data == _res->_monster);
-    bool is_special = is_spc && (has4mb || anim_number == 1903 || anim_number == 1560);
+    bool is_special = is_spc && (anim_number == 1903 || anim_number == 1560);
     int index = is_spc ? _res->NUM_SPRITES + frame : anim_number;
 
     // Handle sprite data

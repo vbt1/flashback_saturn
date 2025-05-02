@@ -46,16 +46,8 @@ extern Uint8 tickPerVblank;
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
-Uint8 *current_dram2=(Uint8 *)0x22600000;
-bool has4mb = false;
 void	*malloc(size_t);
-//void LZ_Uncompress(const uint8_t *in, uint8_t *out, unsigned int insize);			  
-//#include "lz4hc.h"
 }
-
-extern int fastlz2_compress(const void* input, int length, void* output);
-extern int fastlz2_decompress(const void* input, int length, void* output, int maxout);
-
 extern void sat_restart_audio(void);
 
 //extern volatile Uint8 audioEnabled;
@@ -78,7 +70,6 @@ extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
-extern Uint8 *current_dram2;
 extern unsigned int end1;
 }
 static SAVE_BUFFER sbuf;
@@ -1758,8 +1749,6 @@ void Game::loadLevelData() {
 //	case kResourceTypeMac:
 		hwram_ptr = hwram+50000;
 		position_vram = position_vram_aft_monster = 10*256; // vbt correction
-		if (has4mb)
-			current_dram2 = (Uint8 *)0x22600000+ (_vid._w * _vid._h);
 //		memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //heapWalk();		
 		sat_free(_res._spc); // on ne vire pas
@@ -2488,7 +2477,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         buf.dst_h = height;
         buf.ptr = destPtr;
 
-        if (!has4mb && isSpc && j != 616 && j != 273) continue;
+        if (isSpc && j != 616 && j != 273) continue;
 
         memset(buf.ptr, 0, width * height); // Optimize if possible
         _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
@@ -2503,7 +2492,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         sprData->color = isMonster ? 5 : -1;
 
 #ifdef REDUCE_4BPP
-        if (!has4mb && isSpc) {
+        if (isSpc) {
             int min_val = 256, max_val = 0;
             size_t pixel_count = width * height;
             for (int i = 0; i < pixel_count; i++) {
@@ -2532,13 +2521,9 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
             position_vram += dataSize;
             position_vram_aft_monster = position_vram;
         } else {
-            target = (has4mb || (int)current_lwram + dataSize > (int)_vid._frontLayer) ? current_dram2 : current_lwram;
+            target = current_lwram;
             cgaddr = (int)target;
-            if (target == current_lwram) {
-                current_lwram += SAT_ALIGN(dataSize);
-            } else {
-                current_dram2 += SAT_ALIGN(dataSize);
-            }
+            current_lwram += SAT_ALIGN(dataSize);
         }
         DMA_ScuMemCopy(target, buf.ptr, dataSize);
         sprData->cgaddr = cgaddr;

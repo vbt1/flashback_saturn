@@ -161,6 +161,8 @@ struct Resource {
 //	uint8_t *_cineStrings[NUM_CUTSCENE_TEXTS];
 	uint8_t *_cine_off;
 	uint8_t *_cine_txt;
+	uint8_t *_cine_txtFR;
+	uint8_t *_cine_txtEN;
 //	uint8_t *_voiceBuf;
 //	char **_extTextsTable;
 	const char *const *_textsTable;
