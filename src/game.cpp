@@ -422,6 +422,7 @@ void Game::mainLoop() {
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 			}
 		}
+		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
@@ -1122,7 +1123,7 @@ void Game::drawStoryTexts() {
 			{
 				uint32_t address = (uint32_t)soundAddr;
 //				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
-				pcm_sample_t pcm = {.addr = address, .vol = Mixer::MAX_VOLUME, .bit = pcm_sample_8bit};
+				pcm_sample_t pcm = {.addr = address, .vol = (Mixer::MAX_VOLUME>>1)-1, .bit = pcm_sample_8bit};
 				pcm_prepare_sample(&pcm, PCM_VOICE, voiceSegmentLen);
 	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
 				pcm_sample_set_samplerate(PCM_VOICE, 11035);

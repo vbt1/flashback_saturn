@@ -1186,7 +1186,7 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		}
 		const char *language = (_lang == LANG_FR) ? "French" : "English";
 		snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, language);
-		emu_printf("decodeResourceMacText name %s\n", name);
+//		emu_printf("decodeResourceMacText name %s\n", name);
 		if(strstr(name, "Movie"))
 		{
 			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "French");

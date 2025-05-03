@@ -32,7 +32,7 @@ unsigned int end1 = 0;
 void ss_main(void) {
 	const int version = kResourceTypeMac;
 	int levelNum = 0;
-	const Language language = (Language)LANG_FR;
+	const Language language = (Language)LANG_EN;
 	
 	SystemStub *stub = SystemStub_SDL_create();
 

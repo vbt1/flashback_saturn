@@ -1407,8 +1407,8 @@ void Cutscene::prepare() {
 slTVOff();
 //emu_printf("slSynch\n");
 slSynch(); // VBT : à remettre
-	memset4_fast(&_vid->_frontLayer[52*_vid->_w], 0x00,16*_vid->_w);
-	_stub->copyRect(0, 52, 480, 16, _vid->_frontLayer, _vid->_w);
+	memset4_fast(&_vid->_frontLayer[51*_vid->_w], 0x00,16*_vid->_w);
+	_stub->copyRect(0, 51, 480, 16, _vid->_frontLayer, _vid->_w);
 //emu_printf("prepare cutscene\n");	
 	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
