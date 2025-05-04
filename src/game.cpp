@@ -1047,7 +1047,7 @@ void Game::drawStoryTexts() {
 					textSegmentsCount = *str++;
 				}
 				int len = *str++;
-				if (*str == '@') {
+				if (*str == '@' /* Floppy version */ || *str == '~' /* CD version */) {
 					switch (str[1]) {
 					case '1':
 						textColor = 0xE9;
