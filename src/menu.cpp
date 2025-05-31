@@ -387,7 +387,7 @@ bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	_vid->fadeOut();
 	loadPicture("menu2");
-memset(_vid->_frontLayer, 0, 512*448);	
+memset(_vid->_frontLayer, 0, _vid->_layerSize);	
 //	_vid->fullRefresh();
 	int currentSkill = _skill;
 	int currentLevel = _level;

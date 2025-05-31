@@ -36,6 +36,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_layerScale = /*(_res->_type == kResourceTypeMac) ?*/ 2 /*: 1*/; // Macintosh version is 512x448
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
+	_layerSize = _w * _h;
 	_frontLayer = (uint8_t *)0x2aeff8;//sat_malloc(_w * _h);
 
 	memset(&_frontLayer[0], 0, _w * _h);
@@ -244,26 +245,29 @@ void Video::setLevelPalettes() {
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
 
-    const unsigned char *srcData = src + ((chr - 32) << 8);
+    const uint8_t *srcData = src + ((chr - 32) << 8);
     dst += (y * 2) * 512 + (x * 2);
+    const uint8_t front = color;
+    const uint8_t shadow = _charShadowColor;
 
-    register const unsigned char front = color;
-    register const unsigned char shadow = _charShadowColor;
-
-    for (int i = 0; i < 16; i++, dst += 496) {  // Move dst by (512 - 16) in one step
-        for (int j = 0; j < 4; j++) 
-		{
-			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
-			 srcData++;
-			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
-			 srcData++;
-			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
-			 srcData++;
-			 *dst++ = (*srcData) == 0xC0 ? shadow : (*srcData) == 0xC1 ? front : *dst;
-			 srcData++;
+    for (int i = 0; i < 16; i++, dst += 496) {
+        for (int j = 0; j < 4; j++) {
+            uint8_t src_val = *srcData++;
+            *dst = src_val == 0xC0 ? shadow : (src_val == 0xC1 ? front : *dst);
+            dst++;
+            src_val = *srcData++;
+            *dst = src_val == 0xC0 ? shadow : (src_val == 0xC1 ? front : *dst);
+            dst++;
+            src_val = *srcData++;
+            *dst = src_val == 0xC0 ? shadow : (src_val == 0xC1 ? front : *dst);
+            dst++;
+            src_val = *srcData++;
+            *dst = src_val == 0xC0 ? shadow : (src_val == 0xC1 ? front : *dst);
+            dst++;
         }
     }
 }
+
 /*
 void Video::MAC_drawStringCharRow(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, int row) {
     if (chr < 32) return;

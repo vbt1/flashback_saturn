@@ -50,7 +50,7 @@ struct Video {
 	SystemStub *_stub;
 
 	int _w, _h;
-//	int _layerSize;
+	int _layerSize;
 	int _layerScale; // 1 for Amiga/PC, 2 for Macintosh
 	uint8_t *_frontLayer;//[GAMESCREEN_W * GAMESCREEN_H*4];
 //	uint8_t _backLayer[GAMESCREEN_W * GAMESCREEN_H*2];

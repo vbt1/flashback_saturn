@@ -220,9 +220,7 @@ hwram = (uint8_t *)hwram_ptr;
 			_menu.displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
-// vbt : clean front layer	
-//	_stub->updateScreen(0);
-	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h);
+	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._layerSize);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 #ifdef VIDEO_PLAYER
 for (int i=36;i<100;i++)
@@ -230,7 +228,7 @@ for (int i=36;i<100;i++)
 #endif
 	playCutscene(0x40);
 	playCutscene(0x0D);
-	
+
 /*
 	// global resources
 	switch (_res._type) {
@@ -239,7 +237,6 @@ for (int i=36;i<100;i++)
 		_res.load("GLOBAL", Resource::OT_SPC);
 		_res.load("PERSO", Resource::OT_SPR);
 		_res.load_SPR_OFF("PERSO", _res._spr1);
-		_res.load_FIB("GLOBAL");
 		break;
 	case kResourceTypeMac:
 //emu_printf("MAC_loadIconData\n");
@@ -251,17 +248,10 @@ for (int i=36;i<100;i++)
 		break;
 	}
 */
-//	bool presentMenu = true; //((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
 	while (!_stub->_pi.quit) {
-
-//			_mix.playMusic(1); // vbt : à remplacer
-
-//				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
-				_menu.handleTitleScreen();
-/*				break;
-			}*/
+		_menu.handleTitleScreen();
 		_mix.stopMusic(); // vbt à remettre
-		memset(_vid._frontLayer, 0, 512*448);
+		memset(_vid._frontLayer, 0, _vid._layerSize);
 		_skillLevel = _menu._skill;
 		_currentLevel = _menu._level;
 
@@ -281,7 +271,7 @@ for (int i=36;i<100;i++)
 			_vid.setPalette0xF();
 //			_stub->setOverscanColor(0xE0);
 			_stub->setOverscanColor(0x00);
-			memset(_vid._backLayer, 0xE0, 512*448);
+			memset(_vid._backLayer, 0xE0, _vid._layerSize);
 			_vid._unkPalSlot1 = 0;
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
@@ -354,8 +344,8 @@ void Game::mainLoop() {
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
 // vbt : clean front layer	
-			memset(_vid._frontLayer, 0x00, 512*448);
-			memset(_vid._backLayer, 0x00, 512*448);
+			memset(_vid._frontLayer, 0x00, _vid._layerSize);
+			memset(_vid._backLayer, 0x00, _vid._layerSize);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			playCutscene(_cut._deathCutsceneId);
 			if (!handleContinueAbort()) {
@@ -925,7 +915,7 @@ bool Game::handleContinueAbort() {
 */
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
-			memset4_fast(_vid._frontLayer,0x00,_vid._w*_vid._h);
+			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_vid.SAT_cleanSprites();
 			return (current_color == 0);
