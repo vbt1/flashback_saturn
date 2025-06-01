@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("O3")
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -31,6 +31,28 @@ void Graphics::drawPoint(uint8_t color, const Point *pt) {
 	}
 }
 
+void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
+    int16_t x = pt1->x + _crx, y = pt1->y + _cry;
+    int16_t dx = pt2->x - pt1->x, dy = pt2->y - pt1->y;
+    int16_t sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+    dx = dx < 0 ? -dx : dx;
+    dy = dy < 0 ? -dy : dy;
+
+    int16_t err = (dx > dy ? dx : -dy) / 2, e2;
+    uint8_t *layerBase = _layer + _cry * VIDEO_PITCH + _crx;
+
+    for (;;) {
+        if ((uint16_t)x < _crw && (uint16_t)y < _crh) {
+            layerBase[y * VIDEO_PITCH + x] = color;
+        }
+        if (x == pt2->x + _crx && y == pt2->y + _cry) break;
+        e2 = err;
+        if (e2 > -dx) { err -= dy; x += sx; }
+        if (e2 < dy) { err += dx; y += sy; }
+    }
+}
+
+/*
 void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
 //	debug(DBG_VIDEO, "Graphics::drawLine()");
 	int16_t dxincr1 = 1;
@@ -91,7 +113,7 @@ void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
 		}
 	}
 }
-
+*/
 void Graphics::addEllipseRadius(int16_t y, int16_t x1, int16_t x2) {
 //	debug(DBG_VIDEO, "Graphics::addEllipseRadius()");
 	if (y >= 0 && y <= _crh) {
@@ -215,29 +237,24 @@ void Graphics::drawEllipse(uint8_t color, bool hasAlpha, const Point *pt, int16_
 }
 
 void Graphics::fillArea(uint8_t color, bool hasAlpha) {
-//	debug(DBG_VIDEO, "Graphics::fillArea()");
-	int16_t *pts = _areaPoints;
-    uint8_t *dst = _layer + (_cry + *pts++) * VIDEO_PITCH + _crx;
-	int16_t x1 = *pts++;
-    
+    int16_t *pts = _areaPoints;
+    uint8_t *dst = _layer + (*pts++ + _cry) * VIDEO_PITCH + _crx;
+    int16_t x1 = *pts++;
     if (x1 < 0) return;
-    
-    const uint8_t mask = hasAlpha ? ~7 : 0xFF;
-    const int16_t maxW = _crw - 1;
-    
-    // Combine both loops to reduce code size and branch prediction misses
+
     do {
-        int16_t x2 = MIN<int16_t>(maxW, *pts++);
+        int16_t x2 = *pts++;
+        if (x2 > _crw - 1) x2 = _crw - 1;
         if (x1 <= x2) {
-            uint8_t *curDst = dst + x1;
-            const int len = x2 - x1 + 1;
-            
+            uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
             if (hasAlpha && color > 7) {
-                for (unsigned char i = 0; i < len; i++) {
-                    curDst[i] = (curDst[i] | (color & mask)) == 8 ? 15 : (curDst[i] | (color & mask));
+                uint8_t mask = color & ~7;
+                while (curDst < end) {
+                    uint8_t val = *curDst | mask;
+                    *curDst++ = val == 8 ? 15 : val;
                 }
             } else {
-                memset(curDst, color, len);
+                memset(curDst, color, end - curDst);
             }
         }
         dst += VIDEO_PITCH;
@@ -248,34 +265,23 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
 void Graphics::drawSegment(uint8_t color, bool hasAlpha, int16_t ys, const Point *pts, uint8_t numPts) {
 //if(hasAlpha)
 //	emu_printf("Graphics::drawSegment() %d color %d\n",hasAlpha, color);
-	int16_t xmin, xmax, ymin, ymax;
-	xmin = xmax = pts[0].x;
-	ymin = ymax = pts[0].y;
-	for (int i = 1; i < numPts; ++i) {
-		int16_t x = pts[i].x;
-		int16_t y = pts[i].y;
-		if ((xmin << 16) + ymin > (x << 16) + y) {
-			xmin = x;
-			ymin = y;
-		}
-		if ((xmax << 16) + ymax < (x << 16) + y) {
-			xmax = x;
-			ymax = y;
-		}
-	}
-	if (xmin < 0) {
-		xmin = 0;
-	}
-	if (xmax >= _crw) {
-		xmax = _crw - 1;
-	}
-	_areaPoints[0] = ys;
-	_areaPoints[1] = xmin;
-	_areaPoints[2] = xmax;
-	_areaPoints[3] = -1;
-	fillArea(color, hasAlpha);
+    int16_t xmin = pts[0].x, xmax = xmin;
+    for (uint8_t i = 1; i < numPts; ++i) {
+        int16_t x = pts[i].x;
+        if (x < xmin) xmin = x;
+        else if (x > xmax) xmax = x;
+    }
+    if (xmin < 0) xmin = 0;
+    if (xmax >= _crw) xmax = _crw - 1;
+    if (xmin <= xmax) {
+        _areaPoints[0] = ys;
+        _areaPoints[1] = xmin;
+        _areaPoints[2] = xmax;
+        _areaPoints[3] = -1;
+        fillArea(color, hasAlpha);
+    }
 }
-
+/*
 void Graphics::drawPolygonOutline(uint8_t color, const Point *pts, uint8_t numPts) {
 //	debug(DBG_VIDEO, "Graphics::drawPolygonOutline()");
 	assert(numPts >= 2);
@@ -284,11 +290,23 @@ void Graphics::drawPolygonOutline(uint8_t color, const Point *pts, uint8_t numPt
 		drawLine(color, &pts[i], &pts[i + 1]);
 	}
 	drawLine(color, &pts[i], &pts[0]);
+}*/
+void Graphics::drawPolygonOutline(uint8_t color, const Point *pts, uint8_t numPts) {
+//	debug(DBG_VIDEO, "Graphics::drawPolygonOutline()");
+    if (numPts < 2) return;
+    const Point *p1 = pts;
+    const Point *p2 = pts + 1;
+    for (uint8_t i = 0; i < numPts; ++i) {
+        drawLine(color, p1, p2);
+        p1 = p2;
+        p2 = (i == numPts - 2) ? pts : p2 + 1;
+    }
 }
+
 
 static int32_t calcPolyStep1(int16_t dx, int16_t dy) {
 //	debug(DBG_VIDEO, "Graphics::calcPolyStep1()");
-	assert(dy != 0);
+    if (dy == 0) return 0;
 	int32_t a = dx * 256;
 	if ((a >> 16) < dy) {
 		a = ((int16_t)(a / dy)) * 256;
@@ -300,7 +318,7 @@ static int32_t calcPolyStep1(int16_t dx, int16_t dy) {
 
 static int32_t calcPolyStep2(int16_t dx, int16_t dy) {
 //	debug(DBG_VIDEO, "Graphics::calcPolyStep2()");
-	assert(dy != 0);
+    if (dy == 0) return 0;
 	int32_t a = dx * 256;
 	if ((a >> 16) < dy) {
 		a = ((int16_t)(a / dy)) * 256;

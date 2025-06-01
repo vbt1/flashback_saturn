@@ -1,4 +1,4 @@
-
+//#pragma GCC optimize ("O2")
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -119,130 +119,83 @@ void Cutscene::updatePalette() {
 }
 
 void Cutscene::updateScreen() {
-//--------------------------
 #ifdef DEBUG_CUTSCENE
 DecodeBuffer buf{};
 #endif
-	if(hasText && !sameText)
-	{
-		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
-		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte du bas
-		hasText = false;
-	}
-	sync(_frameDelay - 1);
-	SWAP(_frontPage, _backPage);
+    if (hasText && !sameText) {
+        _stub->copyRect(16, 96, 480, _vid->_h - 128, _vid->_frontLayer, _vid->_w);
+        if (!((uintptr_t)&_vid->_frontLayer[96 * _vid->_w] & 3)) {
+            uint32_t *dst = (uint32_t *)&_vid->_frontLayer[96 * _vid->_w];
+            for (size_t i = 0; i < (_vid->_w * 320) / 4; i++) {
+                dst[i] = 0;
+            }
+        } else {
+            memset(&_vid->_frontLayer[96 * _vid->_w], 0, _vid->_w * 320);
+        }
+        hasText = false;
+    }
+    sync(_frameDelay - 1);
+    SWAP(_frontPage, _backPage);
 
     SPRITE user_sprite;
     user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
     user_sprite.COLR = 0xC0;
     user_sprite.SIZE = (240 / 8) << 8 | 128;
-
     user_sprite.CTRL = FUNC_Sprite | _ZmCC;
     user_sprite.XA = 0;
     user_sprite.YA = 0;
     user_sprite.XB = 0 + (240 << 1);
     user_sprite.YB = 0 + (128 << 1);
-	
     user_sprite.GRDA = 0;
-	size_t spriteVramOffset = 0x80000 - (IMG_SIZE/2);
+    size_t spriteVramOffset = 0x80000 - (IMG_SIZE / 2);
 
-	if (transferAux)
-	{
-		slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), 240 * 64);
-	}
-	user_sprite.SRCA = spriteVramOffset / 8;
-    slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-
-	user_sprite.COLR = 0xD0; // vbt mauvaise palette
-	spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage==_res->_scratchBuffer)? (IMG_SIZE/2):0);
-	user_sprite.SRCA = spriteVramOffset / 8;
-
-    unsigned int i;
-    uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
-    uint8_t *back = (uint8_t *)_frontPage;
-    
-	// Unroll the loop by processing 8 elements at a time
-	for (i = 0; i < IMG_SIZE; i += 16) {
-		uint8_t *b = back + i;
-		uint8_t *a = aux + (i / 2);
-
-		// Process 8 pairs of bytes
-		a[0] = (b[1]) | (b[0] << 4);
-		a[1] = (b[3]) | (b[2] << 4);
-		a[2] = (b[5]) | (b[4] << 4);
-		a[3] = (b[7]) | (b[6] << 4);
-		a[4] = (b[9]) | (b[8] << 4);
-		a[5] = (b[11]) | (b[10] << 4);
-		a[6] = (b[13]) | (b[12] << 4);
-		a[7] = (b[15]) | (b[14] << 4);
-	}
+    if (transferAux) {
+        slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), 240 * 64);
+    }
+    user_sprite.SRCA = spriteVramOffset / 8;
     slSetSprite(&user_sprite, toFIXED2(240));
-	frame_x++;
-	slSynch();
-	updatePalette();
 
-	transferAux=0;
+    user_sprite.COLR = 0xD0;
+    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == _res->_scratchBuffer) ? (IMG_SIZE / 2) : 0);
+    user_sprite.SRCA = spriteVramOffset / 8;
+
+    // Main pixel packing with buffering
+    uint8_t *temp = (uint8_t *)0x06080000; // Work RAM buffer
+    packPixels(_frontPage, temp, IMG_SIZE);
+    slTransferEntry(temp, (void*)(SpriteVRAM + spriteVramOffset), IMG_SIZE / 2);
+
+    slSetSprite(&user_sprite, toFIXED2(240));
+    frame_x++;
+    slSynch();
+    updatePalette();
+    transferAux = 0;
 
 #ifdef DEBUG_CUTSCENE
- #define SAT_ALIGN(a) ((a+3)&~3)
-	buf.w=240;
-	buf.h=128;
-	position_vram = 0x1000;
-	size_t dataSize = SAT_ALIGN(buf.w * buf.h);
+    #define SAT_ALIGN(a) ((a+3)&~3)
+    buf.w = 240;
+    buf.h = 128;
+    position_vram = 0x1000;
+    size_t dataSize = SAT_ALIGN(buf.w * buf.h);
     int cgaddr1 = _vid->SAT_copySpriteToVram((uint8_t *)_backPage, buf, dataSize);
-	
-    uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1*8);  // Use pointers to avoid array indexing overhead
-    uint8_t *back2 = (uint8_t *)_backPage;
-    
-	// Unroll the loop by processing 8 elements at a time
-	for (i = 0; i < IMG_SIZE; i += 16) {
-		uint8_t *b = back2 + i;
-		uint8_t *a = aux2 + (i / 2);
 
-		// Process 8 pairs of bytes
-		a[0] = (b[1]) | (b[0] << 4);
-		a[1] = (b[3]) | (b[2] << 4);
-		a[2] = (b[5]) | (b[4] << 4);
-		a[3] = (b[7]) | (b[6] << 4);
-		a[4] = (b[9]) | (b[8] << 4);
-		a[5] = (b[11]) | (b[10] << 4);
-		a[6] = (b[13]) | (b[12] << 4);
-		a[7] = (b[15]) | (b[14] << 4);
-	}	
+    // Debug loop for _backPage
+    uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1 * 8);
+    packPixels(_backPage, temp, IMG_SIZE);
+    slTransferEntry(temp, aux2, IMG_SIZE / 2);
+    _vid->SAT_displaySprite((uint8_t *)(cgaddr1 * 8), -320, -224, 128, 240);
 
-	_vid->SAT_displaySprite((uint8_t *)(cgaddr1*8),-320,-224, 128, 240);
+    int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
 
-	int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
+    // Debug loop for _frontPage
+    uint8_t *aux1 = (uint8_t *)(SpriteVRAM + cgaddr3 * 8);
+    packPixels(_frontPage, temp, IMG_SIZE);
+    slTransferEntry(temp, aux1, IMG_SIZE / 2);
+    _vid->SAT_displaySprite((uint8_t *)(cgaddr3 * 8), -320, -96, 128, 240);
 
-    uint8_t *aux1 = (uint8_t *)(SpriteVRAM + cgaddr3*8);  // Use pointers to avoid array indexing overhead
-    uint8_t *back1 = (uint8_t *)_frontPage;
-    
-	// Unroll the loop by processing 8 elements at a time
-	for (i = 0; i < IMG_SIZE; i += 16) {
-		uint8_t *b = back1 + i;
-		uint8_t *a = aux1 + (i / 2);
-
-		// Process 8 pairs of bytes
-		a[0] = (b[1]) | (b[0] << 4);
-		a[1] = (b[3]) | (b[2] << 4);
-		a[2] = (b[5]) | (b[4] << 4);
-		a[3] = (b[7]) | (b[6] << 4);
-		a[4] = (b[9]) | (b[8] << 4);
-		a[5] = (b[11]) | (b[10] << 4);
-		a[6] = (b[13]) | (b[12] << 4);
-		a[7] = (b[15]) | (b[14] << 4);
-	}
-
-
-
-	_vid->SAT_displaySprite((uint8_t *)(cgaddr3*8),-320,-96, 128, 240);	
-
-int cgaddr2 = _vid->SAT_copySpriteToVram((uint8_t *)_auxPage, buf, dataSize);
-	_vid->SAT_displaySprite((uint8_t *)(cgaddr2*8),-320,32, 128, 240);
-	
-position_vram = 0x1000;
+    int cgaddr2 = _vid->SAT_copySpriteToVram((uint8_t *)_auxPage, buf, dataSize);
+    _vid->SAT_displaySprite((uint8_t *)(cgaddr2 * 8), -320, 32, 128, 240);
+    position_vram = 0x1000;
 #endif
-
 }
 
 #if 0
@@ -562,63 +515,57 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 	}
 }
 
+void Cutscene::packPixels(uint8_t *back, uint8_t *aux, size_t size) {
+	uint32_t *b = (uint32_t *)back;
+	for (size_t i = 0, j = 0; i < size / 4; i += 2, j += 4) {
+		uint32_t b0 = b[i];
+		uint32_t b1 = b[i + 1];
+		aux[j]     = ((b0 >> 16) & 0xFF) | ((b0 >> 24) << 4);
+		aux[j + 1] = ((b0 >> 0)  & 0xFF) | ((b0 >> 8)  << 4);
+		aux[j + 2] = ((b1 >> 16) & 0xFF) | ((b1 >> 24) << 4);
+		aux[j + 3] = ((b1 >> 0)  & 0xFF) | ((b1 >> 8)  << 4);
+	}
+}
+
 void Cutscene::op_drawShape() {
-//emu_printf("Cutscene::op_drawShape()2 %d\n",_clearScreen);
+    int16_t x = 0, y = 0;
+    uint16_t shapeOffset = fetchNextCmdWord();
+    if (shapeOffset & 0x8000) {
+        x = fetchNextCmdWord();
+        y = fetchNextCmdWord();
+    }
+    checkShape(shapeOffset);
 
-	int16_t x = 0;
-	int16_t y = 0;
-	uint16_t shapeOffset = fetchNextCmdWord();
-	if (shapeOffset & 0x8000) {
-		x = fetchNextCmdWord();
-		y = fetchNextCmdWord();
-	}
-	checkShape(shapeOffset);
+    const uint8_t *shapeOffsetTable = _polPtr + READ_BE_UINT16(_polPtr + 0x02);
+    const uint8_t *shapeDataTable = _polPtr + READ_BE_UINT16(_polPtr + 0x0E);
+    const uint8_t *verticesOffsetTable = _polPtr + READ_BE_UINT16(_polPtr + 0x0A);
+    const uint8_t *verticesDataTable = _polPtr + READ_BE_UINT16(_polPtr + 0x12);
 
-	const uint8_t *shapeOffsetTable    = _polPtr + READ_BE_UINT16(_polPtr + 0x02);
-	const uint8_t *shapeDataTable      = _polPtr + READ_BE_UINT16(_polPtr + 0x0E);
-	const uint8_t *verticesOffsetTable = _polPtr + READ_BE_UINT16(_polPtr + 0x0A);
-	const uint8_t *verticesDataTable   = _polPtr + READ_BE_UINT16(_polPtr + 0x12);
+    const uint8_t *shapeData = shapeDataTable + READ_BE_UINT16(shapeOffsetTable + (shapeOffset & 0x7FF) * 2);
+    uint16_t primitiveCount = READ_BE_UINT16(shapeData);
+    shapeData += 2;
 
-	const uint8_t *shapeData = shapeDataTable + READ_BE_UINT16(shapeOffsetTable + (shapeOffset & 0x7FF) * 2);
-	uint16_t primitiveCount = READ_BE_UINT16(shapeData); shapeData += 2;
-	while (primitiveCount--) {
-		uint16_t verticesOffset = READ_BE_UINT16(shapeData); shapeData += 2;
-		const uint8_t *primitiveVertices = verticesDataTable + READ_BE_UINT16(verticesOffsetTable + (verticesOffset & 0x3FFF) * 2);
-		int16_t dx = 0;
-		int16_t dy = 0;
-		if (verticesOffset & 0x8000) {
-			dx = READ_BE_UINT16(shapeData); shapeData += 2;
-			dy = READ_BE_UINT16(shapeData); shapeData += 2;
-		}
-		_hasAlphaColor = (verticesOffset & 0x4000) != 0;
-		uint8_t color = *shapeData++;
-		/*if (_clearScreen == 0) {
-			color += 0x10;
-		}*/
-		_primitiveColor = color;// & 0x0f;
-		drawShape(primitiveVertices, x + dx, y + dy);
-	}
-	if (_clearScreen != 0) {
-//emu_printf("copy bg in aux\n");
-		unsigned int i;
-		uint8_t *back = _backPage;  // Use pointers to avoid array indexing overhead
-		uint8_t *aux = _auxPage;
-		
-		// Unroll the loop by processing 8 elements at a time
-		for (i = 0; i < IMG_SIZE; i += 16) {
-			// Process 8 pairs of bytes
-			aux[i / 2]       = (back[i + 1]) | (back[i] << 4);
-			aux[(i / 2) + 1] = (back[i + 3]) | (back[i + 2] << 4);
-			aux[(i / 2) + 2] = (back[i + 5]) | (back[i + 4] << 4);
-			aux[(i / 2) + 3] = (back[i + 7]) | (back[i + 6] << 4);
-			aux[(i / 2) + 4] = (back[i + 9]) | (back[i + 8] << 4);
-			aux[(i / 2) + 5] = (back[i + 11]) | (back[i + 10] << 4);
-			aux[(i / 2) + 6] = (back[i + 13]) | (back[i + 12] << 4);
-			aux[(i / 2) + 7] = (back[i + 15]) | (back[i + 14] << 4);
-		}
-		clearBackPage();
-		transferAux=1;
-	}
+    while (primitiveCount--) {
+        uint16_t verticesOffset = READ_BE_UINT16(shapeData);
+        shapeData += 2;
+        const uint8_t *primitiveVertices = verticesDataTable + READ_BE_UINT16(verticesOffsetTable + (verticesOffset & 0x3FFF) * 2);
+        int16_t dx = 0, dy = 0;
+        if (verticesOffset & 0x8000) {
+            dx = READ_BE_UINT16(shapeData);
+            shapeData += 2;
+            dy = READ_BE_UINT16(shapeData);
+            shapeData += 2;
+        }
+        _hasAlphaColor = (verticesOffset & 0x4000) != 0;
+        _primitiveColor = *shapeData++;
+        drawShape(primitiveVertices, x + dx, y + dy);
+    }
+
+    if (_clearScreen != 0) {
+        packPixels(_backPage, _auxPage, IMG_SIZE);
+        clearBackPage();
+        transferAux = 1;
+    }
 }
 
 static int _paletteNum = -1;

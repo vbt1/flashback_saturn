@@ -7,7 +7,6 @@ extern "C" {
 #include 	<sl_def.h>
 //#include "sega_mem.h"
 #include "gfs_wrap.h"
-void	*malloc(size_t);
 }
 #include "saturn_print.h"
 #include "sat_mem_checker.h"

@@ -15,7 +15,6 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
-void	*malloc(size_t);
 }
 #include "file.h"
 #include "decode_mac.h"

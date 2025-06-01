@@ -42,7 +42,7 @@ struct Video {
 	};
 
 	static const uint8_t _conradPal1[];
-	static const uint8_t _conradPal2[];
+//	static const uint8_t _conradPal2[];
 	static const uint8_t _textPal[];
 	static const uint8_t _palSlot0xF[];
 
