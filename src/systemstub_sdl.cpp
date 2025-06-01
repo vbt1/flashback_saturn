@@ -30,7 +30,6 @@ Uint8 tickPerVblank = 0;
 extern unsigned char frame_x;
 extern unsigned char frame_y;
 extern unsigned char frame_z;
-extern unsigned char demo;
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
@@ -658,8 +657,7 @@ void vblIn (void) {
 		frame_x = 0;
 		frame_y = 0;
 	}
-	if(!demo)
-		sys->processEvents();
+	sys->processEvents();
 	sys->updateScreen(0);
 	timeTick();
 }

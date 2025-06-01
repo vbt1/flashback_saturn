@@ -525,7 +525,7 @@ void Game::pge_addToCurrentRoomList(LivePGE *pge, uint8_t room) {
 }
 
 void Game::pge_getInput() {
-//	inp_update();
+	inp_update();
 	_inp_lastKeysHit = _stub->_pi.dirMask;
 	if ((_inp_lastKeysHit & 0xC) && (_inp_lastKeysHit & 0x3)) {
 		const uint8_t mask = (_inp_lastKeysHit & 0xF0) | (_inp_lastKeysHitLeftRight & 0xF);

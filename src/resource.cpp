@@ -137,8 +137,8 @@ void Resource::load_DEM(const char *filename) {
 	sat_free(_dem); _dem = 0;
 	_demLen = 0;
 	if (_mac) {
-			emu_printf("mac version\n");
-		char name[64];
+//			emu_printf("mac version\n");
+		char name[16];
 		if (0) {
 			// recorded inputs for levels 3 and 5 are not replayed correctly
 			snprintf(name, sizeof(name), "Demo Level %c", filename[4]);
@@ -147,7 +147,7 @@ void Resource::load_DEM(const char *filename) {
 		}
 		_dem = decodeResourceMacData(name, true);
 		_demLen = _resourceMacDataSize;
-		emu_printf("_dem %p _demLen %d name %s\n",_dem,_demLen,name);
+//		emu_printf("_dem %p _demLen %d name %s\n",_dem,_demLen,name);
 			
 		for (int i = 0; i < _demLen; ++i) {
 			uint8_t mask = 0;

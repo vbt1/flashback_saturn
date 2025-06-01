@@ -47,7 +47,6 @@ extern Uint8 tickPerVblank;
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
-unsigned char demo = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
@@ -136,10 +135,8 @@ void Game::run() {
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 //	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 
-//emu_printf("_randSeed\n");
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram	
-//emu_printf("_res.init\n");
 	_res.init();   // vbt : ajout pour la partie mac
 
 		end1 = 564000+50000;
@@ -211,7 +208,6 @@ void Game::run() {
 hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION
-//emu_printf("handleProtectionScreen\n");
 	while (!handleProtectionScreen());
 	if (_stub->_pi.quit) {
 		return;
@@ -243,11 +239,8 @@ for (int i=36;i<100;i++)
 		_res.load_SPR_OFF("PERSO", _res._spr1);
 		break;
 	case kResourceTypeMac:
-//emu_printf("MAC_loadIconData\n");
 		_res.MAC_loadIconData(); // vbt à faire bien avant // 19323 en HWRAM
-//emu_printf("MAC_loadPersoData\n");
 		_res.MAC_loadPersoData(); // taille 213124 lwr
-//emu_printf("MAC_loadSounds\n");
 		_res.MAC_loadSounds(); //à vbt à faire bien avant 
 		break;
 	}
@@ -257,9 +250,8 @@ for (int i=36;i<100;i++)
 #ifdef DEMO
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
-			demo = 1;
 			const char *fn = _demoInputs[_demoBin].name;
-			emu_printf("Loading inputs from '%s'\n", fn);
+//			emu_printf("Loading inputs from '%s'\n", fn);
 			_res.load_DEM(fn);
 			if (_res._demLen == 0) {
 				continue;
@@ -270,7 +262,6 @@ for (int i=36;i<100;i++)
 		} else
 #endif
 		{
-			demo = 0;
 			_demoBin = -1;
 			_skillLevel = _menu._skill;
 			_currentLevel = _menu._level;
@@ -285,7 +276,6 @@ for (int i=36;i<100;i++)
 //		if (_stub->hasWidescreen()) { // vbt à voir si on nettoie l'écran
 //			_stub->clearWidescreen();
 //		}
-//emu_printf("_currentLevel %d\n",_currentLevel);
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
 			_vid.setTextPalette();
@@ -306,11 +296,10 @@ for (int i=36;i<100;i++)
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-		//emu_printf("mainLoop _demoBin %d _inp_demPos %d _res._demLen %d\n",_demoBin,_inp_demPos,_res._demLen);
 				mainLoop();
 #ifdef DEMO
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
-					emu_printf("End of demo\n");
+//					emu_printf("End of demo\n");
 					// exit level
 					_endLoop = true;
 				}
@@ -389,7 +378,6 @@ void Game::mainLoop() {
 				}
 			}
 			slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
-//emu_printf("slsynch Game::mainLoop()\n");		
 			slSynch();
 			return;
 		}
@@ -817,7 +805,6 @@ bool Game::handleConfigPanel() {
 		_stub->updateScreen(0);
 		_stub->sleep(80);
 #ifdef DEMO
-emu_printf("inp_update1\n");
 		inp_update();
 #endif
 
@@ -1185,7 +1172,6 @@ _vid.drawString(toto, 1, 88, 0xE7);
 				}
 				next=(dbg_reg->ca+2)*4096;
 #ifdef DEMO
-emu_printf("inp_update2\n");
 				inp_update();
 #endif
 				_stub->sleep(80);
@@ -1366,16 +1352,10 @@ void Game::prepareAnimsHelper(LivePGE *pge, int16_t dx, int16_t dy) {
 }
 
 void Game::drawAnims() {
-//	emu_printf("Game::drawAnims()\n");
-//	_eraseBackground = false;
-//	emu_printf("drawAnimBuffer(2\n");	
 	drawAnimBuffer(2, _animBuffer2State);
-//emu_printf("drawAnimBuffer(1\n");		
 	drawAnimBuffer(1, _animBuffer1State);
-//emu_printf("drawAnimBuffer(0\n");		
 	drawAnimBuffer(0, _animBuffer0State);
 //	_eraseBackground = true;
-//emu_printf("drawAnimBuffer(3\n");		
 	drawAnimBuffer(3, _animBuffer3State);
 }
 
@@ -1832,8 +1812,6 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	}
 #ifdef DEMO
 	if (_demoBin != -1) {
-		
-emu_printf("_demoBin %d _demoInputs[_demoBin].room %d\n",_demoBin,_demoInputs[_demoBin].room);
 		_cut._id = 0xFFFF;
 		if (_demoInputs[_demoBin].room != 255) {
 			_pgeLive[0].room_location = _demoInputs[_demoBin].room;
@@ -2067,7 +2045,6 @@ void Game::handleInventory() {
 			_stub->updateScreen(0);
 			_stub->sleep(80);
 #ifdef DEMO
-emu_printf("inp_update3\n");
 			inp_update();
 #endif
 			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
@@ -2112,7 +2089,6 @@ emu_printf("inp_update3\n");
 //			slSynch();
 		}
 		// vbt : n'efface que le menu
-//emu_printf("clean menu2\n");			
 		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);
 		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
@@ -2129,10 +2105,8 @@ emu_printf("inp_update3\n");
 #ifdef DEMO
 void Game::inp_update() {
 //	_stub->processEvents();
-		emu_printf("_inp_demPos %d _res._demLen %d\n",_inp_demPos , _res._demLen);
 	if (_demoBin != -1 && _inp_demPos < _res._demLen) {
 		const int keymask = _res._dem[_inp_demPos++];
-		emu_printf("keymask %02x\n",keymask);
 		
 		_stub->_pi.dirMask = keymask & 0xF;
 		_stub->_pi.enter = (keymask & 0x10) != 0;

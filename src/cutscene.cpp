@@ -1643,7 +1643,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
 		const uint32_t timestamp = _stub->getTimeStamp();
-emu_printf("frame %d/%d\n",i,frames);
+//emu_printf("frame %d/%d\n",i,frames);
 //		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
 
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
