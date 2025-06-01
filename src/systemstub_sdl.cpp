@@ -30,6 +30,7 @@ Uint8 tickPerVblank = 0;
 extern unsigned char frame_x;
 extern unsigned char frame_y;
 extern unsigned char frame_z;
+extern unsigned char demo;
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
@@ -273,7 +274,8 @@ void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 
 void SystemStub_SDL::setOverscanColor(uint8 i) {
 //	_overscanColor = i;
-	memset((void*)VDP2_VRAM_A0, i, 512*448);
+	const int size = 512*448;
+	memset((void*)VDP2_VRAM_A0, i, size);
 }
 
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
@@ -656,7 +658,8 @@ void vblIn (void) {
 		frame_x = 0;
 		frame_y = 0;
 	}
-	sys->processEvents();
+	if(!demo)
+		sys->processEvents();
 	sys->updateScreen(0);
 	timeTick();
 }

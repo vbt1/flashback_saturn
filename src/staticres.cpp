@@ -410,12 +410,13 @@ const Cutscene::Text Cutscene::_enTextsTable[] = {
 	{ -1, 0}
 };
 #endif
+*/
 const Demo Game::_demoInputs[] = {
 	{ "demo1.bin",  0, 0x33, 0x60, 0x46 },
 	{ "demo51.bin", 5, 0x00, 0x60, 0xD6 },
 	{ "demo3.bin" , 2, 0xFF, 0x00, 0x00 }
 };
-*/
+
 const Level Game::_gameLevels[] = {
 	{ "level1", /*"level1",*/ 0x00, 1, 3 },
 	{ "level2", /*"level2",*/ 0x2F, 1, 4 },

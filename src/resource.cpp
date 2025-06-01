@@ -49,6 +49,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_dataPath = dataPath;
 	_type = type;
 	_lang = lang;
+//	_isDemo = false;
 //	_aba = 0;
 	_mac = 0;
 	_readUint16 = READ_BE_UINT16;
@@ -131,28 +132,42 @@ void Resource::clearLevelRes() {
 	sat_free(_cine_off);
 //	sat_free(_cine_txt);
 }
-/*
+
 void Resource::load_DEM(const char *filename) {
 	sat_free(_dem); _dem = 0;
 	_demLen = 0;
-	File f;
-	if (f.open(filename, _dataPath, "rb")) {
-		_demLen = f.size();
-	
-		_dem = (uint8_t *)sat_malloc(_demLen);
-		if (_dem) {
-			f.read(_dem, _demLen);
+	if (_mac) {
+			emu_printf("mac version\n");
+		char name[64];
+		if (0) {
+			// recorded inputs for levels 3 and 5 are not replayed correctly
+			snprintf(name, sizeof(name), "Demo Level %c", filename[4]);
+		} else {
+			snprintf(name, sizeof(name), "Demo Level 1");
 		}
-		f.close();
-	} else if (_aba) {
-		uint32_t size;
-		_dem = _aba->loadEntry(filename, &size);
-		if (_dem) {
-			_demLen = size;
+		_dem = decodeResourceMacData(name, true);
+		_demLen = _resourceMacDataSize;
+		emu_printf("_dem %p _demLen %d name %s\n",_dem,_demLen,name);
+			
+		for (int i = 0; i < _demLen; ++i) {
+			uint8_t mask = 0;
+			if (_dem[i] & 0x10) {
+				mask |= 0x40; // shift
+			}
+			if (_dem[i] & 0x20) {
+				mask |= 0x10; // enter
+			}
+			if (_dem[i] & 0x40) {
+				mask |= 0x20; // space
+			}
+			if (_dem[i] & 0x80) {
+				mask |= 0x80; // backspace
+			}
+			_dem[i] = mask | (_dem[i] & 0xF);
 		}
 	}
 }
-
+/*
 void Resource::load_FIB(const char *fileName) {
 //	debug(DBG_RES, "Resource::load_FIB('%s')", fileName);
 	static const uint8 fibonacciTable[] = {

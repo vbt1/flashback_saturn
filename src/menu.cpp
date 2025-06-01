@@ -94,7 +94,7 @@ void Menu::drawString2(const char *str, int16_t y, int16_t x) {
 		}
 /*		break;
 	}*/
-//	_vid->markBlockAsDirty(x * w, y * h, len * w, h, _vid->_h * _vid->_w);
+//	_vid->markBlockAsDirty(x * w, y * h, len * w, h, _vid->_layerSize);
 }
 
 void Menu::loadPicture(const char *prefix) {
@@ -114,7 +114,7 @@ void Menu::loadPicture(const char *prefix) {
 			if (strncmp(prefix, screens[i].prefix, strlen(screens[i].prefix)) == 0) {
 				displayTitleScreenMac(screens[i].num);
 				if (screens[i].num == kMacTitleScreen_Controls) {
-//					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
+//					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
 					_stub->copyRect(0, 0, _vid->_w, _vid->_h, current_lwram, _vid->_w);
 
 					displayTitleScreenMac(kMacTitleScreen_LeftEye);
@@ -147,7 +147,7 @@ void Menu::loadPicture(const char *prefix) {
 		_res->load_PAL_menu(prefix, _res->_scratchBuffer);
 		_stub->setPalette(_res->_scratchBuffer, 256);
 	}*/
-	memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_h * _vid->_w);
+	memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
 //	_vid->updateWidescreen();
 }
 
@@ -490,11 +490,9 @@ void Menu::handleTitleScreen() {
 	menuItems[menuItemsCount].str = LocaleData::LI_10_INFO;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_INFO;
 	++menuItemsCount;
-/*	if (!_res->isMac()) {
-		menuItems[menuItemsCount].str = LocaleData::LI_23_DEMO;
-		menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_DEMO;
-		++menuItemsCount;
-	}*/
+	menuItems[menuItemsCount].str = LocaleData::LI_23_DEMO;
+	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_DEMO;
+	++menuItemsCount;
 	menuItems[menuItemsCount].str = LocaleData::LI_11_QUIT;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_QUIT;
 	++menuItemsCount;
@@ -635,7 +633,7 @@ void Menu::handleTitleScreen() {
 		}
 		*/
 //		_vid->updateScreen();
-//			memset(_vid->_frontLayer,0x00,_vid->_w* _vid->_h);
+//			memset(_vid->_frontLayer,0x00,_vid->_layerSize);
 			_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();

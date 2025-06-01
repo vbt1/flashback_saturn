@@ -115,6 +115,7 @@ struct Resource {
 
 	ResourceType _type;
 	Language _lang;
+//	bool _isDemo;
 //	ResourceAba *_aba;
 	ResourceMac *_mac;
 	uint16_t (*_readUint16)(const void *);
@@ -173,8 +174,8 @@ struct Resource {
 //	uint8_t *_bankDataTail;
 //	BankSlot _bankBuffers[NUM_BANK_BUFFERS];
 //	int _bankBuffersCount;
-//	uint8_t *_dem;
-//	int _demLen;
+	uint8_t *_dem;
+	int _demLen;
 	uint32_t _resourceMacDataSize;
 //	int _clutSize;
 	Color _clut[kClutSize];

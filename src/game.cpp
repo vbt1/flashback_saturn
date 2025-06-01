@@ -3,6 +3,7 @@
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
 #define DEBUG 1
+#define DEMO 1
 //#define DEBUG2 1
 //#define REDUCE_4BPP 1
 /*
@@ -46,6 +47,7 @@ extern Uint8 tickPerVblank;
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
+unsigned char demo = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
@@ -115,10 +117,12 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 	_mix(stub), _res(dataPath, ver, lang), /*_sfxPly(&_mix),*/ _vid(&_res, stub),
 	_stub(stub)/*, _savePath(savePath)*/ {
 	_stateSlot = 1;
-//	_inp_demPos = 0;
+	_inp_demPos = 0;
 	_skillLevel = _menu._skill = kSkillNormal;
 	_currentLevel = _menu._level = level;
-//	_demoBin = -1;
+#ifdef DEMO
+	_demoBin = -1;
+#endif
 //	_widescreenMode = widescreenMode;
 //	_autoSave = autoSave;
 //	_rewindPtr = -1;
@@ -250,10 +254,30 @@ for (int i=36;i<100;i++)
 */
 	while (!_stub->_pi.quit) {
 		_menu.handleTitleScreen();
+#ifdef DEMO
+		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
+			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
+			demo = 1;
+			const char *fn = _demoInputs[_demoBin].name;
+			emu_printf("Loading inputs from '%s'\n", fn);
+			_res.load_DEM(fn);
+			if (_res._demLen == 0) {
+				continue;
+			}
+			_skillLevel = kSkillNormal;
+			_currentLevel = _demoInputs[_demoBin].level;
+			_randSeed = 0;
+		} else
+#endif
+		{
+			demo = 0;
+			_demoBin = -1;
+			_skillLevel = _menu._skill;
+			_currentLevel = _menu._level;
+		}
+	
 		_mix.stopMusic(); // vbt à remettre
 		memset(_vid._frontLayer, 0, _vid._layerSize);
-		_skillLevel = _menu._skill;
-		_currentLevel = _menu._level;
 
 		if (_stub->_pi.quit) {
 			break;
@@ -282,16 +306,19 @@ for (int i=36;i<100;i++)
 			_frameTimestamp = _stub->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
 			while (!_stub->_pi.quit && !_endLoop) {
-//		emu_printf("mainLoop\n");
+		//emu_printf("mainLoop _demoBin %d _inp_demPos %d _res._demLen %d\n",_demoBin,_inp_demPos,_res._demLen);
 				mainLoop();
-				/*if (_demoBin != -1 0 && _inp_demPos >= _res._demLen) {
+#ifdef DEMO
+				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
+					emu_printf("End of demo\n");
 					// exit level
 					_endLoop = true;
-				}*/
+				}
+#endif
 			}
 //			slTVOff();
 			_vid._fullRefresh = true;
-			memset4_fast(_vid._frontLayer,0x00,_vid._w*_vid._h);
+			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 			_vid.updateScreen();
 			_vid.SAT_cleanSprites();
 //on vide l'écran et les sprites
@@ -436,7 +463,11 @@ void Game::mainLoop() {
 	}
 	if (_stub->_pi.escape) {
 		_stub->_pi.escape = false;
-		if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
+#ifdef DEMO
+		if (_demoBin != -1 || handleConfigPanel()) {
+#else
+if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
+#endif
 			_endLoop = true;
 			return;
 		}
@@ -785,7 +816,10 @@ bool Game::handleConfigPanel() {
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 		_stub->sleep(80);
-//		inp_update();
+#ifdef DEMO
+emu_printf("inp_update1\n");
+		inp_update();
+#endif
 
 		int prev = current;
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -1150,6 +1184,10 @@ _vid.drawString(toto, 1, 88, 0xE7);
 					break;
 				}
 				next=(dbg_reg->ca+2)*4096;
+#ifdef DEMO
+emu_printf("inp_update2\n");
+				inp_update();
+#endif
 				_stub->sleep(80);
 			}
 
@@ -1792,8 +1830,10 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
-/*
+#ifdef DEMO
 	if (_demoBin != -1) {
+		
+emu_printf("_demoBin %d _demoInputs[_demoBin].room %d\n",_demoBin,_demoInputs[_demoBin].room);
 		_cut._id = 0xFFFF;
 		if (_demoInputs[_demoBin].room != 255) {
 			_pgeLive[0].room_location = _demoInputs[_demoBin].room;
@@ -1803,8 +1843,9 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 		} else {
 			_inp_demPos = 1;
 		}
-		_printLevelCodeCounter = 0;
-	}*/
+//		_printLevelCodeCounter = 0;
+	}
+#endif
 	for (uint16_t i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {
 			LivePGE *pge = &_pgeLive[i];
@@ -2025,8 +2066,10 @@ void Game::handleInventory() {
 			_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 			_stub->sleep(80);
-//			inp_update();
-
+#ifdef DEMO
+emu_printf("inp_update3\n");
+			inp_update();
+#endif
 			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 				if (current_line < num_lines - 1) {
@@ -2083,42 +2126,23 @@ void Game::handleInventory() {
 		frame_z = 30;		
 	}
 }
-/*
+#ifdef DEMO
 void Game::inp_update() {
-	if (_inp_replay && _inp_demo) {
-		uint8 keymask = _inp_demo->readByte();
-		if (_inp_demo->ioErr()) {
-			_inp_replay = false;
-		} else {
-			_stub->_pi.dirMask = keymask & 0xF;
-			_stub->_pi.enter = (keymask & 0x10) != 0;
-			_stub->_pi.space = (keymask & 0x20) != 0;
-			_stub->_pi.shift = (keymask & 0x40) != 0;
-			_stub->_pi.quit = (keymask & 0x80) != 0;
-		}
-	}
-	//_stub->processEvents();
-	if (_inp_record && _inp_demo) {
-		uint8 keymask = _stub->_pi.dirMask;
-		if (_stub->_pi.enter) {
-			keymask |= 0x10;
-		}
-		if (_stub->_pi.space) {
-			keymask |= 0x20;
-		}
-		if (_stub->_pi.shift) {
-			keymask |= 0x40;
-		}
-		if (_stub->_pi.quit) {
-			keymask |= 0x80;
-		}
-		_inp_demo->writeByte(keymask);
-		if (_inp_demo->ioErr()) {
-			_inp_record = false;
-		}
+//	_stub->processEvents();
+		emu_printf("_inp_demPos %d _res._demLen %d\n",_inp_demPos , _res._demLen);
+	if (_demoBin != -1 && _inp_demPos < _res._demLen) {
+		const int keymask = _res._dem[_inp_demPos++];
+		emu_printf("keymask %02x\n",keymask);
+		
+		_stub->_pi.dirMask = keymask & 0xF;
+		_stub->_pi.enter = (keymask & 0x10) != 0;
+		_stub->_pi.space = (keymask & 0x20) != 0;
+		_stub->_pi.shift = (keymask & 0x40) != 0;
+		_stub->_pi.backspace = (keymask & 0x80) != 0;
 	}
 }
-
+#endif
+/*
 void Game::makeGameDemoName(char *buf) {
 	sprintf(buf, "rs-level%d.demo", _currentLevel + 1);
 }
@@ -2193,7 +2217,7 @@ bool Game::saveGameState(uint8 slot) {
 		if (verify == 0)
 			success = true;
 	}
-	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._w*_vid._h); // utilisé pour la compression
+	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._layerSize); // utilisé pour la compression
 	return success;
 }
 
@@ -2436,7 +2460,7 @@ void debugSpriteDisplay(SAT_sprite* sprData, DecodeBuffer& buf, int j, int count
     sprintf(debug_info, "%03d/%03d 0x%08x %d %d ", j, count - 1, sprData->cgaddr, buf.dst_w, buf.dst_h);
     _vid.drawString(debug_info, 4, 60, 0xE7);
     _stub->copyRect(0, 20, _vid._w, 16, _vid._frontLayer, _vid._w);
-    memset4_fast(&_vid._frontLayer[40 * _vid._w], 0x00, _vid._w * _vid._h);
+    memset4_fast(&_vid._frontLayer[40 * _vid._w], 0x00, _vid._layerSize);
     _vid.SAT_displaySprite(*sprData, buf);
     slSynch();
 }
