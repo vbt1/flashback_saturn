@@ -353,7 +353,7 @@ void Cutscene::drawCreditsText() {
 		} else {
 			code = *_textCurPtr;
 		}
-		if (code == 0x7D /*&& isMac*/) {
+		if (code == 0x7D || code == 0x5E/*&& isMac*/) {
 			++_textCurPtr;
 			code = *_textCurPtr++;
 			_creditsTextLen -= 2;
