@@ -122,20 +122,14 @@ void Cutscene::updateScreen() {
 #ifdef DEBUG_CUTSCENE
 DecodeBuffer buf{};
 #endif
-    if (hasText && !sameText) {
-        _stub->copyRect(16, 96, 480, _vid->_h - 128, _vid->_frontLayer, _vid->_w);
-        if (!((uintptr_t)&_vid->_frontLayer[96 * _vid->_w] & 3)) {
-            uint32_t *dst = (uint32_t *)&_vid->_frontLayer[96 * _vid->_w];
-            for (size_t i = 0; i < (_vid->_w * 320) / 4; i++) {
-                dst[i] = 0;
-            }
-        } else {
-            memset(&_vid->_frontLayer[96 * _vid->_w], 0, _vid->_w * 320);
-        }
-        hasText = false;
-    }
-    sync(_frameDelay - 1);
-    SWAP(_frontPage, _backPage);
+	if(hasText && !sameText)
+	{
+		_stub->copyRect(16, 96, 480, _vid->_h-128, _vid->_frontLayer, _vid->_w);
+		memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 320); // nettoyeur de texte du bas
+		hasText = false;
+	}
+	sync(_frameDelay - 1);
+	SWAP(_frontPage, _backPage);
 
     SPRITE user_sprite;
     user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
@@ -147,23 +141,22 @@ DecodeBuffer buf{};
     user_sprite.XB = 0 + (240 << 1);
     user_sprite.YB = 0 + (128 << 1);
     user_sprite.GRDA = 0;
-    size_t spriteVramOffset = 0x80000 - (IMG_SIZE / 2);
+    size_t spriteVramOffset;
 
     if (transferAux) {
-        slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), 240 * 64);
+		const Uint16 size = 240 * 64;
+		spriteVramOffset = 0x80000 - (IMG_SIZE >> 1);
+        slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), size);
     }
     user_sprite.SRCA = spriteVramOffset / 8;
     slSetSprite(&user_sprite, toFIXED2(240));
 
     user_sprite.COLR = 0xD0;
-    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == _res->_scratchBuffer) ? (IMG_SIZE / 2) : 0);
+    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == _res->_scratchBuffer) ? (IMG_SIZE >> 1) : 0);
     user_sprite.SRCA = spriteVramOffset / 8;
 
-    // Main pixel packing with buffering
-    uint8_t *temp = (uint8_t *)0x06080000; // Work RAM buffer
-    packPixels(_frontPage, temp, IMG_SIZE);
-    slTransferEntry(temp, (void*)(SpriteVRAM + spriteVramOffset), IMG_SIZE / 2);
-
+    uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
+	packPixels(_frontPage, aux, IMG_SIZE);
     slSetSprite(&user_sprite, toFIXED2(240));
     frame_x++;
     slSynch();
@@ -176,13 +169,13 @@ DecodeBuffer buf{};
     buf.h = 128;
     position_vram = 0x1000;
     size_t dataSize = SAT_ALIGN(buf.w * buf.h);
-    int cgaddr1 = _vid->SAT_copySpriteToVram((uint8_t *)_backPage, buf, dataSize);
+    int cgaddr1 = 8 * _vid->SAT_copySpriteToVram((uint8_t *)_backPage, buf, dataSize);
 
     // Debug loop for _backPage
-    uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1 * 8);
+    uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1);
     packPixels(_backPage, temp, IMG_SIZE);
     slTransferEntry(temp, aux2, IMG_SIZE / 2);
-    _vid->SAT_displaySprite((uint8_t *)(cgaddr1 * 8), -320, -224, 128, 240);
+    _vid->SAT_displaySprite((uint8_t *)cgaddr1, -320, -224, 128, 240);
 
     int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
 
@@ -517,13 +510,20 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 
 void Cutscene::packPixels(uint8_t *back, uint8_t *aux, size_t size) {
 	uint32_t *b = (uint32_t *)back;
-	for (size_t i = 0, j = 0; i < size / 4; i += 2, j += 4) {
+	for (size_t i = 0, j = 0; i < size / 4; i += 4, j += 8) {
 		uint32_t b0 = b[i];
 		uint32_t b1 = b[i + 1];
+		uint32_t b2 = b[i + 2];
+		uint32_t b3 = b[i + 3];
+
 		aux[j]     = ((b0 >> 16) & 0xFF) | ((b0 >> 24) << 4);
 		aux[j + 1] = ((b0 >> 0)  & 0xFF) | ((b0 >> 8)  << 4);
 		aux[j + 2] = ((b1 >> 16) & 0xFF) | ((b1 >> 24) << 4);
 		aux[j + 3] = ((b1 >> 0)  & 0xFF) | ((b1 >> 8)  << 4);
+		aux[j + 4] = ((b2 >> 16) & 0xFF) | ((b2 >> 24) << 4);
+		aux[j + 5] = ((b2 >> 0)  & 0xFF) | ((b2 >> 8)  << 4);
+		aux[j + 6] = ((b3 >> 16) & 0xFF) | ((b3 >> 24) << 4);
+		aux[j + 7] = ((b3 >> 0)  & 0xFF) | ((b3 >> 8)  << 4);
 	}
 }
 

@@ -303,29 +303,16 @@ void Graphics::drawPolygonOutline(uint8_t color, const Point *pts, uint8_t numPt
     }
 }
 
-
-static int32_t calcPolyStep1(int16_t dx, int16_t dy) {
-//	debug(DBG_VIDEO, "Graphics::calcPolyStep1()");
+static int32_t calcPolyStep(int16_t dx, int16_t dy, bool zeroFraction) {
+//    if (dx == 0 || dy == 0) return 0;
     if (dy == 0) return 0;
-	int32_t a = dx * 256;
+	int32_t a = dx << 8;
 	if ((a >> 16) < dy) {
-		a = ((int16_t)(a / dy)) * 256;
+		return ((int16_t)(a / dy)) << 8;
 	} else {
-		a = ((a / 256) / dy) & 0xFFFF0000;
+		a = ((a >> 8) / dy);
+		return zeroFraction ? a & 0xFFFF0000 : a << 16;
 	}
-	return a;
-}
-
-static int32_t calcPolyStep2(int16_t dx, int16_t dy) {
-//	debug(DBG_VIDEO, "Graphics::calcPolyStep2()");
-    if (dy == 0) return 0;
-	int32_t a = dx * 256;
-	if ((a >> 16) < dy) {
-		a = ((int16_t)(a / dy)) * 256;
-	} else {
-		a = ((a / 256) / dy) << 16;
-	}
-	return a;
 }
 
 static void drawPolygonHelper1(int32_t &x, int16_t &y, int32_t &step, int16_t *&pts, int16_t *&start) {
@@ -346,7 +333,8 @@ static void drawPolygonHelper1(int32_t &x, int16_t &y, int32_t &step, int16_t *&
 	} while (dy <= 0 && start < pts);
 	x <<= 16;
 	if (dy > 0) {
-		step = calcPolyStep1(dx, dy);
+//		step = calcPolyStep1(dx, dy);
+		step = calcPolyStep(dx, dy, 1);
 	}
 }
 
@@ -367,7 +355,8 @@ static void drawPolygonHelper2(int32_t &x, int16_t &y, int32_t &step, int16_t *&
 	} while (dy <= 0 && start < pts);
 	x <<= 16;
 	if (dy > 0) {
-		step = calcPolyStep2(dx, dy);
+//		step = calcPolyStep2(dx, dy);
+		step = calcPolyStep(dx, dy, 0);
 	}
 }
 
@@ -450,7 +439,8 @@ void Graphics::drawPolygon(uint8_t color, bool hasAlpha, const Point *pts, uint8
 		assert(dy != 0);
 		a = y * dx / dy;
 		b = (x - a) << 16;
-		d = xstep1 = calcPolyStep1(dx, dy);
+//		d = xstep1 = calcPolyStep1(dx, dy);
+		d = xstep1 = calcPolyStep(dx, dy, 1);
 		if (d < 0) {
 			d = -d;
 		}
@@ -470,7 +460,8 @@ void Graphics::drawPolygon(uint8_t color, bool hasAlpha, const Point *pts, uint8
 		assert(dy != 0);
 		a = y0 * dx / dy;
 		f = (x0 - a) << 16;
-		d = xstep2 = calcPolyStep2(dx, dy);
+//		d = xstep2 = calcPolyStep2(dx, dy);
+		d = xstep2 = calcPolyStep(dx, dy, 0);
 		if (d < 0) {
 			d = -d;
 		}

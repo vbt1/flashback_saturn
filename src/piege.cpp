@@ -2,6 +2,7 @@
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
+#define DEMO 1
  extern "C" {
 #include 	<string.h>
 }
@@ -525,7 +526,9 @@ void Game::pge_addToCurrentRoomList(LivePGE *pge, uint8_t room) {
 }
 
 void Game::pge_getInput() {
+#ifdef DEMO
 	inp_update();
+#endif
 	_inp_lastKeysHit = _stub->_pi.dirMask;
 	if ((_inp_lastKeysHit & 0xC) && (_inp_lastKeysHit & 0x3)) {
 		const uint8_t mask = (_inp_lastKeysHit & 0xF0) | (_inp_lastKeysHitLeftRight & 0xF);
