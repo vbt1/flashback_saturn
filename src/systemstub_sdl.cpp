@@ -23,7 +23,6 @@ extern "C" {
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
 #include "cdtoc.h"
-void	*malloc(size_t);
 volatile Uint32 ticker = 0;
 volatile Uint8  tick_wrap = 0;
 Uint8 tickPerVblank = 0;
@@ -282,7 +281,8 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + y * pitch + x);
 
-	if (x == 0) {
+//	if (x == 0) {
+	if (w == pitch) {
 //		memcpyl(dstPtr, srcPtr, w * h);
 		DMA_ScuMemCopy(dstPtr, srcPtr, w * h);
 	} else {

@@ -248,6 +248,11 @@ for (int i=36;i<100;i++)
 	while (!_stub->_pi.quit) {
 		_menu.handleTitleScreen();
 #ifdef DEMO
+
+		hwram_ptr = hwram+50000;
+		position_vram = 0x1000;
+		current_lwram = (uint8_t *)save_current_lwram;
+
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
 			const char *fn = _demoInputs[_demoBin].name;
@@ -1756,7 +1761,7 @@ void Game::loadLevelData() {
 		break;
 #endif
 //	case kResourceTypeMac:
-		hwram_ptr = hwram+50000;
+//		hwram_ptr = hwram+50000;
 		position_vram = position_vram_aft_monster = 10*256; // vbt correction
 //		memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
 //heapWalk();		

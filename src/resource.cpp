@@ -136,7 +136,7 @@ void Resource::clearLevelRes() {
 void Resource::load_DEM(const char *filename) {
 	sat_free(_dem); _dem = 0;
 	_demLen = 0;
-	if (_mac) {
+//	if (_mac) {
 //			emu_printf("mac version\n");
 		char name[16];
 		if (0) {
@@ -147,8 +147,7 @@ void Resource::load_DEM(const char *filename) {
 		}
 		_dem = decodeResourceMacData(name, true);
 		_demLen = _resourceMacDataSize;
-//		emu_printf("_dem %p _demLen %d name %s\n",_dem,_demLen,name);
-			
+
 		for (int i = 0; i < _demLen; ++i) {
 			uint8_t mask = 0;
 			if (_dem[i] & 0x10) {
@@ -165,7 +164,7 @@ void Resource::load_DEM(const char *filename) {
 			}
 			_dem[i] = mask | (_dem[i] & 0xF);
 		}
-	}
+//	}
 }
 /*
 void Resource::load_FIB(const char *fileName) {
