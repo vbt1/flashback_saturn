@@ -1,5 +1,5 @@
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x65000 // ne pas toucher
+#define VRAM_MAX 0x64000 // ne pas toucher
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
 #define DEBUG 1
@@ -251,6 +251,7 @@ for (int i=36;i<100;i++)
 
 		hwram_ptr = hwram+50000;
 		position_vram = 0x1000;
+//		position_vram = position_vram_aft_monster = 10*256; // vbt correction
 		current_lwram = (uint8_t *)save_current_lwram;
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
@@ -900,7 +901,7 @@ bool Game::handleContinueAbort() {
 		_vid.drawString(textBuf, 64, 153, 0xE3);
 
 //emu_printf("SAT_displayCutscene\n");
-//		_vid.SAT_displayCutscene(0,0, 0, 128, 240);
+//		_vid.SAT_displayCutscene();
 //emu_printf("slsynch Game::handleContinueAbort()\n");
 //		slSynch();
 
@@ -1977,7 +1978,8 @@ void Game::handleInventory() {
 		int num_lines = (num_items - 1) / 4 + 1;
 		int current_line = 0;
 		bool display_score = false;
-		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
+
+		while (!_stub->_pi.backspace && !_stub->_pi.quit & !_cut._interrupted) {
 			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
 /*			switch (_res._type) {

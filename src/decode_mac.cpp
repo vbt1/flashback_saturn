@@ -25,7 +25,7 @@ extern Uint8 frame_z;
 
 static uint8_t* allocate_memory(const char* name, uint32_t alignedSize) {
     uint8_t* dst;
-
+/*
     if (name[0] == 'i' && name[1] == 'n' && name[2] == 't' && name[3] == 'r' && name[4] == 'o') {
         dst = (uint8_t*)current_lwram;
         current_lwram += alignedSize;
@@ -34,7 +34,7 @@ static uint8_t* allocate_memory(const char* name, uint32_t alignedSize) {
         dst = (uint8_t*)current_lwram;
         current_lwram += alignedSize;
     }
-    else if (name[0] == 'e' && name[1] == 's' && name[2] == 'p' && name[3] == 'i' && name[4] == 'o') {
+    else*/ if (name[0] == 'e' && name[1] == 's' && name[2] == 'p' && name[3] == 'i' && name[4] == 'o') {
         dst = (uint8_t*)current_lwram;
         current_lwram += alignedSize;
     }

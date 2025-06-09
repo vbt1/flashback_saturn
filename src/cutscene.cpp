@@ -568,7 +568,7 @@ void Cutscene::op_drawShape() {
     }
 }
 
-static int _paletteNum = -1;
+//static int _paletteNum = -1;
 
 void Cutscene::op_setPalette() {
 //	emu_printf("Cutscene::op_setPalette()\n");
@@ -581,7 +581,7 @@ void Cutscene::op_setPalette() {
 		_palBuf[0x20] = 0x0F;
 		_palBuf[0x21] = 0xFF;
 	}
-	_paletteNum = num;
+//	_paletteNum = num;
 }
 
 void Cutscene::op_drawCaptionText() {
@@ -1245,7 +1245,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 	_polPtr = getPolygonData();
 //	debug(DBG_CUT, "_baseOffset = %d offset = %d count = %d", _baseOffset, offset, count);
 
-	_paletteNum = -1;
+//	_paletteNum = -1;
 	_isConcavePolygonShape = false;
 //	_drawMemoSetShapes = (_id == kCineMemo);
 //	_memoSetOffset = 0;
@@ -1650,7 +1650,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _backPage, _vid->_w);
 		_stub->updateScreen(0);
 */
-		_vid->SAT_displayCutscene(0,0, 0, 128, 240);
+		_vid->SAT_displayCutscene();
 		slSynch(); // VBT à remettre
 		updatePalette();
 		const int diff = 90 - (_stub->getTimeStamp() - timestamp);

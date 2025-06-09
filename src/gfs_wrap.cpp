@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+//#pragma GCC optimize ("O2")
 
 extern "C" {
 
@@ -374,7 +374,7 @@ long sat_ftell(GFS_FILE *stream) {
 
 	return stream->f_seek_pos;
 }
-
+#if 0
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;
@@ -461,7 +461,85 @@ partial_cache:
 
 	return (readBytes - skip_bytes);
 }
-
+#else
+size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
+    // Early exit conditions - combined for better branch prediction
+    if (!ptr || !stream || !size || !nmemb) return 0;
+    
+    // Pre-calculate frequently used values
+    const Uint32 seek_pos = stream->f_seek_pos;
+    const Uint32 request_size = nmemb * size;
+    const Uint32 remaining = stream->f_size - seek_pos;
+    const Uint32 data_to_read = (request_size < remaining) ? request_size : remaining;
+    
+    // Early exit if no data to read
+    if (!data_to_read) return 0;
+    
+    // Cache hit check - most common path first
+    if (stream->file_hash == current_cached) {
+        const Uint32 cache_end = cache_offset + CACHE_SIZE;
+        
+        // Fast path: data completely within cache
+        if (seek_pos >= cache_offset && (seek_pos + data_to_read) <= cache_end) {
+            const Uint32 offset_in_cache = seek_pos - cache_offset;
+            memcpy(ptr, cache + offset_in_cache, data_to_read);
+            stream->f_seek_pos = seek_pos + data_to_read;
+            return data_to_read;
+        }
+        
+        // Cache miss - reload cache
+        if (data_to_read < CACHE_SIZE) {
+            const Uint32 start_sector = seek_pos / SECTOR_SIZE;
+            const Uint32 tot_sectors = GFS_ByteToSct(stream->fid, CACHE_SIZE);
+            
+            GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
+            GFS_Fread(stream->fid, tot_sectors, cache, CACHE_SIZE);
+            cache_offset = start_sector * SECTOR_SIZE;
+            
+            // Retry cache hit after reload
+            const Uint32 offset_in_cache = seek_pos - cache_offset;
+            memcpy(ptr, cache + offset_in_cache, data_to_read);
+            stream->f_seek_pos = seek_pos + data_to_read;
+            return data_to_read;
+        }
+    }
+    
+    // Direct read for large requests or cache misses
+    const Uint32 start_sector = seek_pos / SECTOR_SIZE;
+    const Uint32 skip_bytes = seek_pos & (SECTOR_SIZE - 1); // Use bitwise AND instead of modulo
+    
+    // Special sector handling (consolidated check)
+    static const Uint32 special_sectors[] = {3093, 3115, 3163, 3223, 3272};
+    for (int i = 0; i < 5; i++) {
+        if (start_sector == special_sectors[i]) {
+            GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
+            break;
+        }
+    }
+    
+    const Sint32 tot_bytes = data_to_read + skip_bytes;
+    const Sint32 tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
+    if (tot_sectors < 0) return 0;
+    
+    Uint32 bytes_read;
+    
+    if (skip_bytes) {
+        // Use aligned buffer for better performance
+        Uint8 *read_buffer = (Uint8*)current_lwram;
+        bytes_read = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
+        
+        memcpy(ptr, read_buffer + skip_bytes, data_to_read);
+        bytes_read = (bytes_read > skip_bytes) ? bytes_read - skip_bytes : 0;
+    } else {
+        // Direct read - no intermediate buffer needed
+        bytes_read = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
+        bytes_read = (bytes_read < data_to_read) ? bytes_read : data_to_read;
+    }
+    
+    stream->f_seek_pos = seek_pos + bytes_read;
+    return bytes_read;
+}
+#endif
 int sat_feof(GFS_FILE *stream) {
 	if((stream->f_size - 1) <= stream->f_seek_pos) return 1;
 	else return 0;

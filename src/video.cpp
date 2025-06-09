@@ -268,135 +268,6 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 }
 
 /*
-void Video::MAC_drawStringCharRow(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr, int row) {
-    if (chr < 32) return;
-
-    const unsigned char *srcData = src + ((chr - 32) << 8) + (row * 4);
-    dst += (y * 512) + (x * 2);
-
-    register const unsigned char front = color;
-    register const unsigned char shadow = _charShadowColor;
-
-    for (int col = 0; col < 4; col++) {
-        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
-        srcData++;
-        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
-        srcData++;
-        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
-        srcData++;
-        *dst++ = (*srcData == 0xC0) ? shadow : (*srcData == 0xC1) ? front : *dst;
-        srcData++;
-    }
-}
-*/
-/*
-
-    if (chr < 32) return;
-
-    // Get source data pointer - keeping byte alignment for big-endian
-    const uint8_t* srcData = src + ((chr - 32) << 8);
-    
-    // Calculate base destination pointer
-    dst += (uint32_t)(y * _layerScale) * 512 + (x * _layerScale);
-    
-    // Cache colors and comparisons in registers
-    register const uint8_t front = color;
-    register const uint8_t shadow = _charShadowColor;
-    register const uint8_t shadow_check = 0xC0;
-    register const uint8_t front_check = 0xC1;
-    
-    // Pre-calculate row skip once
-    const int rowSkip = 512 - 16;
-    
-    // Process 16 rows - unroll by 2 for better pipeline usage
-    for (int i = 0; i < 16; i += 2) {
-        // First row
-        #define PROCESS_4_PIXELS(N) \
-            register uint8_t p0##N = *srcData++; \
-            register uint8_t p1##N = *srcData++; \
-            register uint8_t p2##N = *srcData++; \
-            register uint8_t p3##N = *srcData++; \
-            \
-            *dst = (p0##N == shadow_check) ? shadow : \
-                  (p0##N == front_check) ? front : *dst; \
-            dst++; \
-            *dst = (p1##N == shadow_check) ? shadow : \
-                  (p1##N == front_check) ? front : *dst; \
-            dst++; \
-            *dst = (p2##N == shadow_check) ? shadow : \
-                  (p2##N == front_check) ? front : *dst; \
-            dst++; \
-            *dst = (p3##N == shadow_check) ? shadow : \
-                  (p3##N == front_check) ? front : *dst; \
-            dst++;
-
-        // Process first row (16 pixels in 4 chunks)
-        PROCESS_4_PIXELS(0)
-        PROCESS_4_PIXELS(1)
-        PROCESS_4_PIXELS(2)
-        PROCESS_4_PIXELS(3)
-        
-        dst += rowSkip;
-
-        // Process second row (16 pixels in 4 chunks)
-        PROCESS_4_PIXELS(4)
-        PROCESS_4_PIXELS(5)
-        PROCESS_4_PIXELS(6)
-        PROCESS_4_PIXELS(7)
-        
-        dst += rowSkip;
-    }
-    #undef PROCESS_4_PIXELS
-}
-*/
-/*
-void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
-    if (chr < 32) return;
-
-    // Get source data pointer - keeping byte alignment for big-endian
-    const uint8_t* srcData = src + ((chr - 32) << 8);
-    
-    // Calculate base destination pointer
-    dst += (uint32_t)(y * _layerScale) * 512 + (x * _layerScale);
-    
-    // Cache colors in registers
-    register const uint8_t front = color;
-    register const uint8_t shadow = _charShadowColor;
-    
-    // Process 16 rows
-    for (int i = 0; i < 16; i++) {
-        // Process each row in 4-byte chunks (16 pixels = 4 chunks)
-        for (int j = 0; j < 4; j++) {
-            // In big-endian, bytes are in natural order
-            register uint8_t p0 = *srcData++;
-            register uint8_t p1 = *srcData++;
-            register uint8_t p2 = *srcData++;
-            register uint8_t p3 = *srcData++;
-            
-            // Process 4 pixels sequentially
-            *dst = (p0 == 0xC0) ? shadow : 
-                  (p0 == 0xC1) ? front : *dst;
-            dst++;
-            
-            *dst = (p1 == 0xC0) ? shadow : 
-                  (p1 == 0xC1) ? front : *dst;
-            dst++;
-            
-            *dst = (p2 == 0xC0) ? shadow : 
-                  (p2 == 0xC1) ? front : *dst;
-            dst++;
-            
-            *dst = (p3 == 0xC0) ? shadow : 
-                  (p3 == 0xC1) ? front : *dst;
-            dst++;
-        }
-        
-        // Move to next row
-        dst += 512 - 16;
-    }
-}
-*/
-/*
 
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
@@ -554,63 +425,69 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
     buf.xflip = xflip;
     buf.dst_x = x * _layerScale;
     buf.dst_y = y * _layerScale;
-    SAT_sprite spriteData;
 
-    // Determine sprite type and index
-    bool is_spc = (data == _res->_spc);
+    // Compute the correct sprite index
+    int index = (data == _res->_spc) ? _res->NUM_SPRITES + frame : anim_number;
     bool is_monster = (data == _res->_monster);
-    bool is_special = is_spc && (anim_number == 1903 || anim_number == 1560);
-    int index = is_spc ? _res->NUM_SPRITES + frame : anim_number;
+    bool is_special = (index == 1903 || index == 1560);
 
-    // Handle sprite data
-    const uint8_t *dataPtr = data;
+    // Use reference to make sure changes apply
+    SAT_sprite &spriteData = _res->_sprData[index];
+
+    // Handle monster and special sprites
     if (is_monster || is_special) {
-        spriteData = _res->_sprData[index];
         buf.dst_x += (xflip ? -spriteData.x_flip : -spriteData.x);
         if (buf.dst_x >= 512) return;
+
         buf.dst_w = spriteData.size & 0xFF;
         buf.dst_h = (spriteData.size >> 8) * 8;
         buf.dst_y -= spriteData.y;
-        dataPtr = (uint8_t *)spriteData.cgaddr;
-    } else {
-        dataPtr = _res->MAC_getImageData(data, frame);
-        if (!dataPtr) return;
-        buf.dst_w = (dataPtr[2] << 8 | dataPtr[3]) & 0xFF; // Inline READ_BE_UINT16
-        buf.dst_h = ((dataPtr[0] << 8 | dataPtr[1]) + 7) & ~7;
-        buf.ptr = hwram_screen;
-        buf.type = (data == _res->_perso) ? 1 : 0;
-        spriteData.color = (data == _res->_perso) ? 4 : -1;
-        spriteData.size = (buf.dst_h / 8) << 8 | buf.dst_w;
-    }
 
-    // Compute data size
-    size_t dataSize = buf.dst_w * buf.dst_h;
-    if (buf.type == 1) dataSize >>= 1;
-    dataSize = (dataSize + 7) & ~7; // Inline SAT_ALIGN
+        int oldcgaddr = spriteData.cgaddr;
 
-    // Process sprite
-    int oldcgaddr = spriteData.cgaddr;
-    if (is_monster || is_special) {
+        // Decompressed sprite data is copied to VRAM
         if (spriteData.cgaddr > 0x10000) {
-//			emu_printf("decompressed just copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.dst_h);
+            size_t dataSize = buf.dst_w * buf.dst_h;
+            if (spriteData.color != -1) {
+                dataSize >>= 1;
+            }
+            dataSize = (dataSize + 7) & ~7; // Align to 8
             spriteData.cgaddr = SAT_copySpriteToVram((uint8_t *)oldcgaddr, buf, dataSize);
         }
-    } else {
-        // Clear and decode (optimized clear)
-        uint8_t *ptr = buf.ptr;
-        for (size_t i = 0; i < dataSize; i++) {
-            ptr[i] = 0;
+
+        // Display sprite
+        SAT_displaySprite(spriteData, buf);
+        spriteData.cgaddr = oldcgaddr;
+    } 
+    // Handle regular decoded sprites (perso, icn, etc.)
+    else {
+        const uint8_t *dataPtr = _res->MAC_getImageData(data, frame);
+        if (!dataPtr) return;
+
+        buf.dst_w = (dataPtr[2] << 8 | dataPtr[3]) & 0xFF;
+        buf.dst_h = ((dataPtr[0] << 8 | dataPtr[1]) + 7) & ~7;
+        buf.ptr = hwram_screen;
+
+        size_t dataSize = buf.dst_w * buf.dst_h;
+        if (data == _res->_perso) {
+            buf.type = 1;
+            dataSize >>= 1;
+            spriteData.color = 4;
+        } else {
+            spriteData.color = -1;
         }
+        dataSize = (dataSize + 7) & ~7; // Align to 8
+
+        memset(buf.ptr, 0x00, dataSize);
         fixOffsetDecodeBuffer(&buf, dataPtr);
         _res->MAC_decodeImageData(data, frame, &buf, 0xFF);
-        spriteData.cgaddr = SAT_copySpriteToVram(buf.ptr, buf, dataSize);
-    }
 
-    // Display sprite
-//			emu_printf("frame %d cgaddr=%06x %d h %d h not rounded %d\n",frame, spriteData.cgaddr,buf.dst_h, READ_BE_UINT16(dataPtr), buf.dst_h-READ_BE_UINT16(dataPtr));
-//			emu_printf("decompression and copy %d spc %d monster %d h %d\n", index, (data == _res->_spc), (data == _res->_monster),buf.dst_h);
-    SAT_displaySprite(spriteData, buf);
-    spriteData.cgaddr = oldcgaddr;
+        spriteData.size = (buf.dst_h / 8) << 8 | buf.dst_w;
+        spriteData.cgaddr = SAT_copySpriteToVram(buf.ptr, buf, dataSize);
+
+        // Display sprite
+        SAT_displaySprite(spriteData, buf);
+    }
 }
 
 // Helper function to copy sprite to VRAM
@@ -654,62 +531,28 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf) {
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
 
-void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w)
+void Video::SAT_displayCutscene()
 {
     SPRITE user_sprite;
     user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
     user_sprite.COLR = 0;
-    user_sprite.SIZE = (w / 8) << 8 | h;
+    user_sprite.SIZE = 0x1E80;
     user_sprite.CTRL = FUNC_Sprite | _ZmCC;
-    user_sprite.XA = x;
-    user_sprite.YA = y;
-    user_sprite.XB = x + (w << 1);
-    user_sprite.YB = y + (h << 1);
+    user_sprite.XA = 0;
+    user_sprite.YA = 0;
+    user_sprite.XB = 480;
+    user_sprite.YB = 256;
     user_sprite.GRDA = 0;
 
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
-//    const uint8_t* bufferOffset = _res->_scratchBuffer + (front ? 0 : IMG_SIZE);
-    const uint8_t* bufferOffset = (front ? hwram_screen : _res->_scratchBuffer);
 	user_sprite.SRCA = spriteVramOffset / 8;
 
-    memcpy((void *)(SpriteVRAM + spriteVramOffset), bufferOffset, h * w);
+	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)_res->_scratchBuffer, IMG_SIZE);
+//	slTransferEntry(_res->_scratchBuffer, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
 
-/*
-void Video::SAT_displayCutscene(unsigned char front, int x, int y, unsigned short h, unsigned short w) {
-    // Validate dimensions
-    size_t size = h * w;
-//    if (size > IMG_SIZE || size > VRAM_MAX - (0x80000 - IMG_SIZE)) return;
-
-    SPRITE user_sprite;
-    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
-    user_sprite.COLR = 0;
-    user_sprite.SIZE = (w / 8) << 8 | h; // w / 8
-    user_sprite.CTRL = 0x2000; // FUNC_Sprite | _ZmCC
-    user_sprite.XA = x;
-    user_sprite.YA = y;
-    user_sprite.XB = x + (w << 1);
-    user_sprite.YB = y + (h << 1);
-    user_sprite.GRDA = 0;
-    user_sprite.SRCA = (0x80000 - IMG_SIZE) >> 3; // spriteVramOffset / 8
-
-    uint8_t *dst = (uint8_t *)SpriteVRAM + (0x80000 - IMG_SIZE);
-    uint8_t *src = front ? hwram_screen : _res->_scratchBuffer;
-
-    // Manual copy for small transfers, DMA for large
-    if (size < 256) {
-        for (size_t i = 0; i < size; i++) {
-            dst[i] = src[i];
-        }
-    } else {
-        DMA_ScuMemCopy(dst, src, size);
-    }
-
-    slSetSprite(&user_sprite, toFIXED2(240)); // Inline toFIXED2(240)
-}
-*/
 void Video::SAT_cleanSprites()
 {
 	SPRITE user_sprite;
