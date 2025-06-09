@@ -1269,6 +1269,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		}
 	}
 //		//emu_printf("VBT cutmainLoop h\n");
+	_interrupted = false;
 	_stop=true;
 }
 

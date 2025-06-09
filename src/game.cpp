@@ -1948,8 +1948,8 @@ uint16_t Game::getRandomNumber() {
 }
 
 void Game::changeLevel() {
-	_vid.fadeOut();
-		slTVOn();
+//	_vid.fadeOut();  // create garbage at the end of level 4
+//		slTVOn();
 //	clearStateRewind();
 	loadLevelData();
 	loadLevelRoom();
@@ -2688,7 +2688,6 @@ static void process_commands(void* arg) {
 void Game::SAT_preloadCDfiles() {
 	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
 	_stub->copyRect(40, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
-
 #ifdef USE_SLAVE	
 	_res.MAC_closeMainFile();
 	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
