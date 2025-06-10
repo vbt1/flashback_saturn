@@ -16,7 +16,7 @@ extern "C"
 #include "gfs_wrap.h"
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
-extern Uint8 *save_current_lwram;
+//extern Uint8 *save_current_lwram;
 extern Uint8 frame_x;
 extern Uint8 frame_y;
 extern Uint8 frame_z;

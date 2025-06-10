@@ -1268,7 +1268,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 				current_lwram += SAT_ALIGN(_resourceMacDataSize);
 			}
 		}
-
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
 		} else {
@@ -1300,45 +1299,7 @@ void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst,
 		ptr = basePtr + offset;
 		const int w = READ_BE_UINT16(ptr); ptr += 2;
 		const int h = READ_BE_UINT16(ptr); ptr += 2;
-/*
-		dst->orig_w = w;
-		dst->orig_h = h;
-		dst->clip_x = 0;
-		dst->clip_y = 0;
-		dst->clip_w = w;
-		dst->clip_h = h;
 
-		bool clipping = false;
-		if (dst->dst_x < 0) {
-			dst->clip_w += dst->dst_x;
-			dst->clip_x = -dst->dst_x;
-			dst->dst_x = 0;
-			clipping = true;
-		}
-		if (dst->dst_y < 0) {
-			dst->clip_h += dst->dst_y;
-			dst->clip_y = -dst->dst_y;
-			dst->dst_y = 0;
-			clipping = true;
-		}
-		if (dst->dst_x + dst->clip_w > dst->dst_w) {
-			dst->clip_w = dst->dst_w - dst->dst_x;
-			clipping = true;
-		}
-		if (dst->dst_y + dst->clip_h > dst->dst_h) {
-			dst->clip_h = dst->dst_h - dst->dst_y;
-			clipping = true;
-		}
-
-		if (clipping || !dst->ptr) {
-			const int size = w * h;
-			if (size > kScratchBufferSize) {
-				warning("Need %d bytes (current %d) for clipping image buffer", size, kScratchBufferSize);
-				return;
-			}
-			dst->clip_buf = _scratchBuffer;
-			memset(dst->clip_buf, 0, size);
-		}*/
 		switch (sig) {
 		case 0xC211:
 			decodeC211(ptr + 4, w, h, dst);

@@ -223,6 +223,10 @@ void Menu::displayTitleScreenMac(int num) {
 	{
 //		_vid->fullRefresh();
 //		_vid->updateScreen();
+		_stub->copyRect(24, 0, 448, h, _vid->_frontLayer, _vid->_w);
+		_stub->updateScreen(0);
+		_stub->initTimeStamp();
+
 		do {
 			_stub->sleep(EVENTS_DELAY);
 			_stub->processEvents();
@@ -234,8 +238,14 @@ void Menu::displayTitleScreenMac(int num) {
 				_stub->_pi.enter = false;
 				break;
 			}
-			_stub->copyRect(24, 0, 448, h, _vid->_frontLayer, _vid->_w);
-			_stub->updateScreen(0);			
+//			_stub->copyRect(24, 0, 448, h, _vid->_frontLayer, _vid->_w);
+//			_stub->updateScreen(0);
+			unsigned int s2 = _stub->getTimeStamp();
+			if(s2>=2500)
+			{
+				_stub->_pi.enter = true;
+			}
+
 		} while (!_stub->_pi.quit);
 	}
 }
@@ -521,11 +531,20 @@ void Menu::handleTitleScreen() {
 		}
 	}
 
+	_stub->initTimeStamp();
+
 	while (!_stub->_pi.quit) {
 
 		int selectedItem = -1;
 		int previousLanguage = currentLanguage;
 
+		unsigned int s2 = _stub->getTimeStamp();
+		if(s2>=60000)
+		{
+			_stub->_pi.enter = true;
+			currentEntry = 3;
+		}
+			
 		if (_nextScreen == SCREEN_TITLE) {
 			_vid->fadeOut();
 			loadPicture("menu1");
@@ -578,6 +597,7 @@ void Menu::handleTitleScreen() {
 			_stub->_pi.enter = false;
 			selectedItem = currentEntry;
 		}
+		
 		if (selectedItem != -1) {
 			_selectedOption = menuItems[selectedItem].opt;
 			switch (_selectedOption) {
