@@ -240,9 +240,11 @@ void Video::setLevelPalettes() {
 	setTextPalette();
 }
 */
-
+/*
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
+	
+//	emu_printf("MAC_drawStringChar dst %p src %p\n",dst,src);
 
     const uint8_t *srcData = src + ((chr - 32) << 8);
     dst += (y * 2) * 512 + (x * 2);
@@ -266,37 +268,51 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
         }
     }
 }
+*/
 
-/*
+#define SCREEN_WIDTH 512
+#define CHAR_PIXEL_SIZE 256 // 16x16 pixels, 1 byte per pixel
+#define CHAR_OFFSET 32      // ASCII offset for font data
+#define SHADOW_PIXEL 0xC0
+#define FRONT_PIXEL 0xC1
 
-void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
+#include <cstdint>
+#include <cassert>
+#include <cstdio>
+
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *fontData, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
-
-    // Get source data pointer - keeping byte alignment for big-endian
-    const uint8_t* srcData = src + ((chr - 32) << 8);
     
-    // Calculate base destination pointer
-    dst += (uint32_t)(y * _layerScale) * 512 + (x * _layerScale);
+    // Compute source and destination pointers
+    const uint8_t *src = fontData + ((chr - CHAR_OFFSET) << 8);
+    unsigned short *dstShort = (unsigned short*)(dst + (y * 2) * 512 + (x * 2));
     
-    // Cache colors in registers
-    register const uint8_t front = color;
-    register const uint8_t shadow = _charShadowColor;
+    // Precompute colors
+    const uint8_t foreground = color;
+    const uint8_t shadow = _charShadowColor;
     
-    // Single loop - process all 256 pixels (16x16)
-    // Every 16 pixels we need to add pitch-16 to dst
-    for (int i = 0; i < 256; i++) {
-        register uint8_t pixel = *srcData++;
-        
-        *dst = (pixel == 0xC0) ? shadow : 
-              (pixel == 0xC1) ? front : *dst;
-        dst++;
-        
-        // Move to next row after every 16 pixels
-        if ((i & 15) == 15) {
-            dst += 512 - 16;
+    // Render 16 rows of 16 pixels (8 shorts per row)
+    for (int row = 0; row < 16; ++row) {
+        // Process 8 pairs of pixels per row
+        for (int col = 0; col < 8; ++col) {
+            uint8_t srcVal1 = *src++;
+            uint8_t srcVal2 = *src++;
+            
+            // Process first pixel
+            uint8_t pixel1 = (srcVal1 == SHADOW_PIXEL) ? shadow : 
+                            ((srcVal1 == FRONT_PIXEL) ? foreground : (*dstShort >> 8));
+            
+            // Process second pixel  
+            uint8_t pixel2 = (srcVal2 == SHADOW_PIXEL) ? shadow : 
+                            ((srcVal2 == FRONT_PIXEL) ? foreground : (*dstShort & 0xFF));
+            
+            // Write both pixels as a short in BIG-ENDIAN format
+            *dstShort++ = (pixel1 << 8) | pixel2;
         }
+        // Move to next row: advance by remaining shorts in row
+        dstShort += 248; // 256 - 8 = 248 shorts to next row
     }
-}*/
+}
 
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
@@ -316,6 +332,7 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
+
 /*
 const char *Video::drawStringSprite(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);

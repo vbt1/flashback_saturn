@@ -2,7 +2,7 @@
 #define VRAM_MAX 0x64000 // ne pas toucher
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
 #define DEMO 1
 //#define DEBUG2 1
 //#define REDUCE_4BPP 1
