@@ -1140,7 +1140,8 @@ void Resource::load_CMP(File *pf) {
 	}
 //	_cmd = (uint8_t *)sat_malloc(data[1].size);
 	_cmd = (uint8_t *)current_lwram;
-	current_lwram += SAT_ALIGN(data[1].size);
+//	current_lwram += SAT_ALIGN(data[1].size);
+	current_lwram = (uint8_t *)save_current_lwram;
 	/*if (!_cmd) {
 		emu_printf("Unable to allocate CMD buffer\n");
 	}*/
@@ -1149,6 +1150,7 @@ void Resource::load_CMP(File *pf) {
 	} else if (!bytekiller_unpack(_cmd, data[1].size, tmp + data[1].offset, data[1].packedSize)) {
 		emu_printf("Bad CRC for cutscene command data\n");
 	}
+	tmp = NULL;
 //	sat_free(tmp);
 }
 Sint32 GetFileSize(int file_id)
@@ -1699,6 +1701,8 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		return;
 	}
 	_pol = decodeResourceMacData(polEntry, true);
+	
+	emu_printf("cmd2 %p pol2 %p\n",_cmd, _pol);
 #endif
 //	slTVOn();
 }

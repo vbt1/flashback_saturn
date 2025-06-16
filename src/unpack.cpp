@@ -102,7 +102,9 @@ bool bytekiller_unpack(uint8_t *dst, int dstSize, const uint8_t *src, int srcSiz
 			}
 		}
 	} while (uc.size > 0);
-	assert(uc.size == 0);
+//	assert(uc.size == 0);
+	if(uc.size != 0)
+		return 0;
 	return uc.crc == 0;
 }
 

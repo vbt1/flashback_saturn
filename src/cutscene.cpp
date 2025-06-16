@@ -25,7 +25,7 @@ Uint8 transferAux=0;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 //int previousLen=0;
 //uint8_t *previousP=NULL;
-uint16_t previousStr=-1;
+int16_t previousStr=-1;
 //int sameP = false;
 //int sameText = false;
 
@@ -1408,6 +1408,7 @@ bool Cutscene::load(uint16_t cutName) {
 /*		break;
 	}*/
 //	e = _stub->getTimeStamp();
+emu_printf("cmd %p pol %p\n",_res->_cmd, _res->_pol);
 	bool loaded = (_res->_cmd && _res->_pol);
 ////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
 

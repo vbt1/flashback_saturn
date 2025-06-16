@@ -1,6 +1,5 @@
 extern "C" {
 #include 	<sl_def.h>
-#include 	<sega_mem.h>
 #include	<sega_sys.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>

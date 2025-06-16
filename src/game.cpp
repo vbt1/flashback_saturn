@@ -74,10 +74,6 @@ extern Uint32 position_vram_aft_monster;
 extern unsigned int end1;
 }
 static SAVE_BUFFER sbuf;
-//static Uint8 *rle_buf = NULL; //[SAV_BUFSIZE];
-extern "C" {
-#include "sega_mem.h"
-}
 /* *** */
 static Uint32 getFreeSaveBlocks(void);
 static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
@@ -942,6 +938,10 @@ bool Game::handleContinueAbort() {
 		}
 */
 		if (_stub->_pi.enter) {
+// vbt : corrige la ram quand on continue
+			current_lwram = (uint8_t *)save_current_lwram;
+			hwram_ptr = hwram+50000;
+// vbt : corrige la ram quand on continue
 			_stub->_pi.enter = false;
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
