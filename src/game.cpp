@@ -220,8 +220,12 @@ hwram = (uint8_t *)hwram_ptr;
 	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._layerSize);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 #ifdef VIDEO_PLAYER
-for (int i=36;i<100;i++)
+int i;
+for (i=36;i<100;i++)
+{
+	emu_printf("id=%d\n",i);
 	playCutscene(i);
+}
 #endif
 	playCutscene(0x40);
 	playCutscene(0x0D);

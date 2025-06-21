@@ -81,7 +81,7 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 0
+#if 1
 	if (pause > 0) {
 		_stub->sleep(pause);
 	}
@@ -683,10 +683,10 @@ void Cutscene::op_drawCaptionText() {
 		{
 //			emu_printf("Cutscene::op_drawCaptionText() %x\n",strId);
 //			if(strId!=previousStr)
-			{
-					memset4_fast(&_vid->_frontLayer[352 << 9], 0x0000, 60 << 9); // nettoyeur de texte du bas
+//			{
+			memset4_fast(&_vid->_frontLayer[352 << 9], 0x0000, 60 << 9); // nettoyeur de texte du bas
 //				previousStr = strId;
-			}
+//			}
 		}
 	}
 }
@@ -706,6 +706,7 @@ void Cutscene::op_refreshAll() {
 	updateScreen();
 	clearBackPage();
 //	memset(&_vid->_frontLayer[96*_vid->_w],0,_vid->_w* 256); // nettoyeur de texte
+	memset4_fast(&_vid->_frontLayer[112 << 9], 0x0000, 224 << 9);
 	_creditsSlowText = true;
 	op_handleKeys();
 }
@@ -1207,7 +1208,7 @@ void Cutscene::op_drawTextAtPos() {
 
 	uint16_t strId = fetchNextCmdWord();
 	if (strId != 0xFFFF) {
-//	emu_printf("Cutscene::op_drawTextAtPos() %x\n",strId);
+//	emu_printf("Cutscene::op_drawTextAtPos() %x %d\n",strId, _creditsSequence);
 	
 		int16_t x = (int8_t)fetchNextCmdByte() * 8;
 		int16_t y = (int8_t)fetchNextCmdByte() * 8;
@@ -1215,12 +1216,14 @@ void Cutscene::op_drawTextAtPos() {
 			const uint8_t *str = _res->getCineString(strId & 0xFFF);
 			if (str) {
 				hasText = true;
-//				sameText = false;
-//				previousP = NULL;
+//	emu_printf("Cutscene::op_drawTextAtPos() %d\n",_id);
 				if(strId!=previousStr)
 				{
 					const uint8_t color = 0xD0 + (strId >> 0xC);
-					memset4_fast(&_vid->_frontLayer[112 << 9], 0x0000, 224 << 9);
+
+					if(!((_id >= 37 && _id <= 42) || (_id >= 66 && _id <= 71)))
+						memset4_fast(&_vid->_frontLayer[112 << 9], 0x0000, 224 << 9);
+					
 					drawText(x, y, str, color, _vid->_frontLayer, kTextJustifyCenter);
 					previousStr = strId;
 				}
@@ -1248,7 +1251,7 @@ void Cutscene::op_drawTextAtPos() {
 }
 
 void Cutscene::op_handleKeys() {
-//	debug(DBG_CUT, "Cutscene::op_handleKeys()");
+//	emu_printf("Cutscene::op_handleKeys()\n");
 	while (1) {
 		uint8_t key_mask = fetchNextCmdByte();
 		if (key_mask == 0xFF) {
