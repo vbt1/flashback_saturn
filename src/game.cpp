@@ -1763,9 +1763,10 @@ void Game::loadLevelData() {
 		break;
 #endif
 //	case kResourceTypeMac:
-//		hwram_ptr = hwram+50000;
-		position_vram = position_vram_aft_monster = 10*256; // vbt correction
-//		memset((void *)LOW_WORK_RAM,0x00,LOW_WORK_RAM_SIZE);
+// vbt : harmoniser les resets de pointeurs
+		hwram_ptr = hwram+50000;
+		position_vram = 0x1000;
+//		position_vram = position_vram_aft_monster = 10*256; // vbt correction
 //heapWalk();		
 		sat_free(_res._spc); // on ne vire pas
 		sat_free(_res._ani);

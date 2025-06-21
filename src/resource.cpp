@@ -115,14 +115,13 @@ bool Resource::fileExists(const char *filename) {
 }
 */
 void Resource::clearLevelRes() {
-	current_lwram = (Uint8 *)VBT_L_START;
 	sat_free(_tbn); _tbn = 0;
 	sat_free(_pal); _pal = 0;
 	sat_free(_map); _map = 0;
 //	sat_free(_lev); _lev = 0;
 //	_levNum = -1;
 	sat_free(_ani); _ani = 0; // hwram
-	free_OBJ();
+//	free_OBJ();
 
 	sat_free(_spc);	
 	sat_free(_ani);
@@ -131,6 +130,7 @@ void Resource::clearLevelRes() {
 	sat_free(_pol);
 	sat_free(_cine_off);
 //	sat_free(_cine_txt);
+	current_lwram = (Uint8 *)VBT_L_START;
 }
 
 void Resource::load_DEM(const char *filename) {
@@ -887,7 +887,7 @@ void Resource::load_OBJ(File *f) {
 		_objectNodesMap[i] = prevNode;
 	}
 }
-*/
+
 void Resource::free_OBJ() {
 //	emu_printf("Resource::free_OBJ()\n");
 	ObjectNode *prevNode = 0;
@@ -901,7 +901,7 @@ void Resource::free_OBJ() {
 		_objectNodesMap[i] = 0;
 	}
 }
-/*
+
 void Resource::load_OBC(File *f) {
 	const int packedSize = f->readUint32BE();
 	uint8_t *packedData = (uint8_t *)malloc(packedSize);
