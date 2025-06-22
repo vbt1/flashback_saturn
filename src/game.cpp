@@ -1012,7 +1012,7 @@ void Game::drawLevelTexts() {
 		if(previousText_num!=pge->init_PGE->text_num)
 		{
 //			emu_printf("erase %x obj %d\n",_textToDisplay,obj);
-			memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
+			memset4_fast(&_vid._frontLayer[51 << 9], 0x00,32 << 9);
 			_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
 		}
 		hasLevelText = false;
@@ -1036,10 +1036,11 @@ void Game::drawLevelTexts() {
 				printSaveStateCompleted();
 //				return;
 			}
-		}/* else {
-			_currentInventoryIconNum = obj - 1;
-		}*/
-		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+		} else {
+//			_currentInventoryIconNum = obj - 1;
+			_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+		}
+//		emu_printf("redraw %x obj %d %s\n",_textToDisplay,obj);
 	}
 	previousText_num = pge->init_PGE->text_num;
 	_saveStateCompleted = false;

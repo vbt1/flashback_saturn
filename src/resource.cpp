@@ -1702,7 +1702,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 	}
 	_pol = decodeResourceMacData(polEntry, true);
 	
-	emu_printf("cmd2 %p pol2 %p\n",_cmd, _pol);
+//	emu_printf("cmd2 %p pol2 %p\n",_cmd, _pol);
 #endif
 //	slTVOn();
 }

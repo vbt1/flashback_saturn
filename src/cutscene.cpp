@@ -23,12 +23,7 @@ extern Uint8 frame_z;
 void *memset4_fast(void *, long, size_t);
 Uint8 transferAux=0;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
-//int previousLen=0;
-//uint8_t *previousP=NULL;
 int16_t previousStr=-1;
-//int sameP = false;
-//int sameText = false;
-
 }
 #include "mod_player.h"
 #include "resource.h"
@@ -84,16 +79,13 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 1
+#if 0
+	if (pause<-4)
+		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
+#endif
 	if (pause > 0) {
 		_stub->sleep(pause);
 	}
-#else
-	if (pause<-4)
-		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
-	else
-		_stub->sleep(pause);
-#endif
 	_tstamp = _stub->getTimeStamp();
 }
 
@@ -127,9 +119,8 @@ void Cutscene::updateScreen() {
 #ifdef DEBUG_CUTSCENE
 DecodeBuffer buf{};
 #endif
-	if(hasText /*&& !sameText*/)
+	if(hasText)
 	{
-//emu_printf("on vide _frontLayer\n");
 		_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
 //		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x0000,_vid->_w* 320); // nettoyeur de texte du bas
 		hasText = false;
@@ -275,8 +266,6 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 			++len;
 		}
 	}
-//	sameText = false;
-	
 //emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, len=%d)\n", x, y, color, len);
 	
 //	Video::drawCharFunc dcf = _vid->_drawChar;
@@ -342,13 +331,6 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
             end32++;
         }
     }
-    
-    if (previousLen == len && sameP) {
-        sameText = 1;
-        return;
-    }
-    previousLen = len;
-//    sameText = false;
     
     const uint8_t *fnt = _res->_fnt;
     uint16_t lastSep = 0;
@@ -499,7 +481,7 @@ void Cutscene::op_markCurPos() {
 void Cutscene::op_refreshScreen() {
 	_clearScreen = fetchNextCmdByte();
 	if (_clearScreen != 0) {
-//	emu_printf("op_refreshScreen Cutscene::clearBackPage()\n");		
+//	emu_printf("op_refreshScreen Cutscene::clearBackPage()\n");
 		clearBackPage();
 		_creditsSlowText = false;
 	}
@@ -523,10 +505,10 @@ void Cutscene::op_waitForSync() {
 	} else {
 		_frameDelay = fetchNextCmdByte() * 4;
 		sync(_frameDelay);
-		if(_id != 17)
+/*		if(_id != 17) // VBt : à ne pas remettre
 		{
 			_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
-		}
+		}*/
 	}
 }
 
@@ -668,6 +650,7 @@ void Cutscene::op_drawCaptionText() {
 		if (strId != 0xFFFF) {
 			const uint8_t *str = _res->getCineString(strId);
 			if (str) {
+//			emu_printf("Cutscene::op_drawCaptionText() %x %s\n",strId, str);
 				hasText = true;
 				if(strId!=previousStr)
 				{
@@ -683,10 +666,11 @@ void Cutscene::op_drawCaptionText() {
 		}
 		else
 		{
-//			emu_printf("Cutscene::op_drawCaptionText() %x\n",strId);
+//			emu_printf("Cutscene::op_drawCaptionText() %x clean\n",strId);
 //			if(strId!=previousStr)
 //			{
 			memset4_fast(&_vid->_frontLayer[352 << 9], 0x0000, 60 << 9); // nettoyeur de texte du bas
+			_stub->copyRect(0, 352, CLEAN_W, 60, _vid->_frontLayer, _vid->_w);
 //				previousStr = strId;
 //			}
 		}
@@ -705,6 +689,7 @@ void Cutscene::op_skip3() {
 void Cutscene::op_refreshAll() {
 //	emu_printf("Cutscene::op_refreshAll()\n");
 	_frameDelay = 5;
+// vbt : ne pas toucher
 	updateScreen();
 	clearBackPage();
 // nettoyeur de texte
@@ -1176,7 +1161,7 @@ void Cutscene::op_copyScreen() {
 	}
 	DMA_ScuMemCopy(_backPage, _frontPage, IMG_SIZE);
 // vbt : on nettoie 	
-	memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H_MORE << 9); // nettoyeur de texte du bas
+	memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // nettoyeur de texte du bas
 	previousStr = -1;
 	_frameDelay = 10;
 /*
@@ -1203,7 +1188,10 @@ void Cutscene::op_copyScreen() {
 		}
 	}
 	*/
-	updateScreen(); // vbt : remis permet de revoir "present" au boot
+//	updateScreen(); // vbt : remis permet de revoir "present" au boot
+	sync(_frameDelay - 1);
+	SWAP(_frontPage, _backPage);
+    updatePalette();
 }
 
 void Cutscene::op_drawTextAtPos() {
@@ -1231,24 +1219,19 @@ void Cutscene::op_drawTextAtPos() {
 				}
 			}
 			// 'voyage' - cutscene script redraws the string to refresh the screen
-			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
+/*			if (_id == kCineVoyage && (strId & 0xFFF) == 0x45) {
+//				emu_printf("voyage\n");
 				if ((_cmdPtr - _cmdStartPtr) == 0xA) {
-//					_stub->copyRect(0, 0, 512, 224, _vid->_frontLayer, _vid->_w);
-//					memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x0000,_vid->_w* 320); // nettoyeur de texte du bas
-				} else {
+//					emu_printf("on doit effacer le texte ???\n");
+				} else {*/
 					_stub->sleep(15);
-				}
-			}
+//				}
+//			}
 		}
 	}
 	else
 	{
-//		if(strId!=previousStr)
-//		{
-//			emu_printf("Cutscene::op_drawTextAtPos() %x\n",strId);
-			memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9);
-//			previousStr = strId;
-//		}
+		memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9);
 	}
 }
 
@@ -1438,7 +1421,9 @@ void Cutscene::unload() {
 	{
 		_vid->SAT_cleanSprites();
 #ifndef SUBTITLE_SPRITE
-//			emu_printf("clean front1\n"); // efface les sous-titres
+// 		efface le texte sous les icones
+		memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
+//		efface les sous-titres
 		memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9],0x0000, CLEAN_H_MORE << 9);
 		_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
 #endif
@@ -1466,8 +1451,8 @@ void Cutscene::prepare() {
 slTVOff();
 //emu_printf("slSynch\n");
 slSynch(); // VBT : à remettre
-	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,16 << 9);
-	_stub->copyRect(0, 51, _vid->_w, 16, _vid->_frontLayer, _vid->_w);
+	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
+	_stub->copyRect(0, 51, _vid->_w, 32, _vid->_frontLayer, _vid->_w);
 //emu_printf("prepare cutscene\n");	
 	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
