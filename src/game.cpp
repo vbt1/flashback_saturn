@@ -221,8 +221,9 @@ hwram = (uint8_t *)hwram_ptr;
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 #ifdef VIDEO_PLAYER
 int i;
-for (i=36;i<100;i++)
+for (i=0;i<100;i++)
 {
+	current_lwram = (Uint8 *)VBT_L_START;
 	emu_printf("id=%d\n",i);
 	playCutscene(i);
 }

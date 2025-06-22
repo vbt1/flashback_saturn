@@ -278,6 +278,7 @@ void SystemStub_SDL::setOverscanColor(uint8 i) {
 
 void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) {
 	// Calculate initial source and destination pointers
+//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + y * pitch + x);
 

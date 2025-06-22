@@ -17,7 +17,6 @@ extern "C" {
 extern Uint8 *current_lwram;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
-//Uint8* cache = NULL; // vbt : after frontlayer
 GfsDirTbl gfsDirTbl;
 GfsDirName gfsDirName[DIR_MAX];
 Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];     
@@ -35,7 +34,6 @@ static char satpath[25];
 
 static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
-//static Uint8* cache = (uint8_t *)22440000; // vbt : after frontlayer
 
 //static Uint8  fully_cached = 0; // If file is cached from start to finish
 static Uint32 cache_offset = 0;

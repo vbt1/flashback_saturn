@@ -565,7 +565,6 @@ void Menu::handleTitleScreen() {
 				} else {
 					currentLanguage = ARRAYSIZE(languages) - 1;
 				}
-				emu_printf("language left %d\n",currentLanguage);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
@@ -574,7 +573,6 @@ void Menu::handleTitleScreen() {
 				} else {
 					currentLanguage = 0;
 				}
-				emu_printf("language right %d\n",currentLanguage);
 			}
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
