@@ -79,7 +79,7 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 0
+#if 1
 	if (pause<-4)
 		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
 #endif
@@ -224,13 +224,13 @@ void Cutscene::setRotationTransform(uint16_t a, uint16_t b, uint16_t c) { // ide
 	_rotMat[2] = ( sin_c * sin_a) >> 8;
 	_rotMat[3] = (-sin_c * cos_a) >> 8;
 }
-
+#if 0
 static uint8_t getNewLineChar(const Resource *res) {
 	return /*(res->_lang == LANG_JP) ? 0xD1 :*/ '|';
 }
-
+#endif
 uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
-	const uint8_t newLineChar = getNewLineChar(_res);
+	const uint8_t newLineChar = '|';//getNewLineChar(_res);
 	uint8_t *q = _textSep;
 	uint16_t ret = 0;
 	uint16_t pos = 0;
@@ -252,6 +252,7 @@ uint16_t Cutscene::findTextSeparators(const uint8_t *p, int len) {
 	*q++ = 0;
 	return ret;
 }
+
 #if 1
 void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify) {
 //emu_printf("Cutscene::drawText(x=%d, y=%d, c=%d, justify=%d %p len %d %p)\n", x, y, color, textJustify,p,p[1],previousP);
@@ -285,7 +286,7 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
 	if (textJustify != kTextJustifyLeft) {
 		xPos += ((lastSep - *sep++) / 2) * Video::CHAR_W;
 	}
-	const uint8_t newLineChar = getNewLineChar(_res);
+	const uint8_t newLineChar = '|';//getNewLineChar(_res);
 	for (int i = 0; i < len && p[i] != 0xA; ++i) {
 		if (p[i] == newLineChar) {
 			yPos += Video::CHAR_H;
