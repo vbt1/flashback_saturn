@@ -2,8 +2,9 @@
 #define VRAM_MAX 0x64000 // ne pas toucher
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-#define DEBUG 1
+//#define DEBUG 1
 #define DEMO 1
+#define BPP8 1
 //#define DEBUG2 1
 //#define REDUCE_4BPP 1
 /*
@@ -156,22 +157,30 @@ void Game::run() {
 //		buf.setPixel =  _vid.MAC_setPixel;
 		buf.dst_w = Video::CHAR_W*2;
 		buf.dst_h = Video::CHAR_H*2;
-		
+
+
 		for (int i=0;i<106;i++)
 		{
 			buf.ptr = (uint8_t*)hwram_ptr;
 			memset(buf.ptr, 0, buf.dst_w * buf.dst_h);
 			_res.MAC_decodeImageData(spriteData, i, &buf, 0xff);
+
 			if(i>=16 & i<26)
 			{
 			// on copie dans vdp1
 				TEXTURE tx = TEXDEF(16, 16, position_vram);
+#ifdef BPP8
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*16);
 				position_vram += (256*4)>>2;
+#else
+				_vid.convert_8bpp_to_4bpp_inplace(buf.ptr, 16 * 16);
+				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*8);
+				position_vram += (256*4)>>2;
+#endif
 				position_vram_aft_monster = position_vram;
 			}
 			hwram_ptr+=256;
-		}		
+		}
 		SAT_preloadCDfiles();
 		_res.load_TEXT();
 #ifdef DEBUG
@@ -495,16 +504,21 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	unsigned char c2 = frame_z%10;
 	SPRITE user_sprite;
 	user_sprite.CTRL = 0;
-	user_sprite.COLR = 0;		
+	user_sprite.COLR = 0;
+#ifdef BPP8
 	user_sprite.PMOD = CL256Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+#else
+	user_sprite.COLR = 0xC0;
+	user_sprite.PMOD = CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
+#endif
 	user_sprite.SRCA = 0x200+32*c1;
 	user_sprite.SIZE = 0x210;
 	user_sprite.XA   = 224;
 	user_sprite.YA   = -220;
-	slSetSprite(&user_sprite, 130<<16);	// à remettre // ennemis et objets
+	slSetSprite(&user_sprite, 130<<16);	// fps
 	user_sprite.SRCA = 0x200+32*c2;
 	user_sprite.XA   = 240;
-	slSetSprite(&user_sprite, 130<<16);	// à remettre // ennemis et objets	
+	slSetSprite(&user_sprite, 130<<16);	// fps	
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*
@@ -1027,16 +1041,19 @@ void Game::drawLevelTexts() {
 			uint8_t txt_num = pge->init_PGE->text_num;
 			const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
 //			char toto [256];
-//			memcpy(&toto[1],str,*str);
-//	emu_printf("drawLevelTexts %s\n",toto);
+//			memcpy(&toto[2],str,*str);
+//	emu_printf("cut id %d drawLevelTexts %s\n",_cut._id,toto);
 //			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
-			drawString(str, 176, 26, 0xE6, true);
+			if (_cut._id == 0xFFFF) // ou !=34 ou remonter avec texttodisplay
+				drawString(str, 176, 26, 0xE6, true);
 
 			if (icon_num == 2) {
 				printSaveStateCompleted();
 //				return;
 			}
-		} else {
+		} 
+//		else 
+		{
 //			_currentInventoryIconNum = obj - 1;
 			_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
 		}

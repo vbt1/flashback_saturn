@@ -111,6 +111,7 @@ struct Video {
 	uint32_t SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSize);	
 	void SAT_displayPalette();
 	void SAT_cleanSprites();
+	void convert_8bpp_to_4bpp_inplace(uint8_t *buffer, size_t pixel_count);
 };
 
 #endif // VIDEO_H__

@@ -280,6 +280,53 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
 #include <cassert>
 #include <cstdio>
 
+
+#define SCREEN_WIDTH 512
+#define CHAR_PIXEL_SIZE 256 // 16x16 pixels, 1 byte per pixel
+#define CHAR_OFFSET 32      // ASCII offset for font data
+#define SHADOW_PIXEL 0xC0
+#define FRONT_PIXEL 0xC1
+#include <cstdint>
+#include <cassert>
+#include <cstdio>
+
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *fontData, uint8_t color, uint8_t chr) {
+    if (chr < 32) return;
+    
+    // Use bitshifts for faster multiplication
+    const uint8_t *src = fontData + ((chr - CHAR_OFFSET) << 8);
+    unsigned short *dstShort = (unsigned short*)(dst + (y << 10) + (x << 1)); // y*1024 + x*2
+    
+    // Cache colors to avoid repeated member access
+    const uint8_t foreground = color;
+    const uint8_t shadow = _charShadowColor;
+    
+    // Process 16 rows
+    for (int row = 16; --row >= 0; ) {
+        unsigned short *rowPtr = dstShort;
+        
+        // Process 8 pairs of pixels per row
+        for (int col = 8; --col >= 0; ) {
+            uint8_t srcVal1 = *src++;
+            uint8_t srcVal2 = *src++;
+            unsigned short currentPixels = *rowPtr;
+            
+            // Conditional moves are faster than branches on SH2
+            uint8_t pixel1 = (srcVal1 == SHADOW_PIXEL) ? shadow : 
+                            (srcVal1 == FRONT_PIXEL) ? foreground : (currentPixels >> 8);
+            
+            uint8_t pixel2 = (srcVal2 == SHADOW_PIXEL) ? shadow : 
+                            (srcVal2 == FRONT_PIXEL) ? foreground : (currentPixels & 0xFF);
+            
+            *rowPtr++ = (pixel1 << 8) | pixel2;
+        }
+        
+        // Move to next row - use addition instead of complex addressing
+        dstShort += 256; // 512 bytes = 256 shorts per row
+    }
+}
+
+#if 0
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *fontData, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
     
@@ -313,7 +360,7 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
         dstShort += 248; // 256 - 8 = 248 shorts to next row
     }
 }
-
+#endif
 const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col) {
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
@@ -367,11 +414,11 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
-	_stub->initTimeStamp();
-	unsigned int s = _stub->getTimeStamp();	
+//	_stub->initTimeStamp();
+//	unsigned int s = _stub->getTimeStamp();	
 	_res->MAC_loadLevelRoom(level, room, &buf);
-	unsigned int e = _stub->getTimeStamp();
-	emu_printf("--duration bg : %d\n",e-s);
+//	unsigned int e = _stub->getTimeStamp();
+//	emu_printf("--duration bg : %d\n",e-s);
 
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);
@@ -589,6 +636,28 @@ void Video::SAT_cleanSprites()
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 	slSynch(); // vbt à remettre
 }
+/*
+void Video::convert_8bpp_to_4bpp_inplace(uint8_t *buffer, size_t pixel_count) {
+    // Process two pixels at a time, overwriting the input
+    // Process two pixels at a time, overwriting the input
+    for (size_t i = 0; i < pixel_count; i += 2) {
+        // Get first pixel, apply rule
+        uint8_t pixel1 = buffer[i];
+        pixel1 = (pixel1 == 0xC0) ? 6 : pixel1 + 0;
+        pixel1 &= 0x0F; // Mask to ensure 0-15
+
+        // Get second pixel, apply rule, if available
+        uint8_t pixel2 = 0;
+        if (i + 1 < pixel_count) {
+            pixel2 = buffer[i + 1];
+            pixel2 = (pixel2 == 0xC0) ? 6 : pixel2 + 0;
+            pixel2 &= 0x0F; // Mask to ensure 0-15
+        }
+
+        // Combine into one byte: pixel1 in high nibble, pixel2 in low nibble
+        buffer[i / 2] = (pixel1 << 4) | pixel2;
+	}
+}*/
 /*
 void Video::SAT_displayPalette()
 {

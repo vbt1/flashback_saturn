@@ -1424,6 +1424,7 @@ void Cutscene::unload() {
 #ifndef SUBTITLE_SPRITE
 // 		efface le texte sous les icones
 		memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
+//		_stub->copyRect(0, 51, _vid->_w, 32, _vid->_frontLayer, _vid->_w);
 //		efface les sous-titres
 		memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9],0x0000, CLEAN_H_MORE << 9);
 		_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
@@ -1454,7 +1455,7 @@ slTVOff();
 slSynch(); // VBT : à remettre
 	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
 	_stub->copyRect(0, 51, _vid->_w, 32, _vid->_frontLayer, _vid->_w);
-//emu_printf("prepare cutscene\n");	
+//emu_printf("prepare cutscene\n");
 	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
