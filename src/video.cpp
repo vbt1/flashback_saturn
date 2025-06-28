@@ -15,6 +15,7 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
+extern Uint8 *hwram_ptr;
 }
 #include "file.h"
 #include "decode_mac.h"
@@ -419,6 +420,7 @@ void Video::MAC_decodeMap(int level, int room) {
 	_res->MAC_loadLevelRoom(level, room, &buf);
 //	unsigned int e = _stub->getTimeStamp();
 //	emu_printf("--duration bg : %d\n",e-s);
+emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res->kScratchBufferSize+_layerSize);
 
 	Color roomPalette[512];
 	_res->MAC_setupRoomClut(level, room, roomPalette);

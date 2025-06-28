@@ -1866,7 +1866,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+(_vid._w*_vid._h));
+emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+_vid._layerSize);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
