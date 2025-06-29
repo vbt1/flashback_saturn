@@ -1397,7 +1397,7 @@ bool Cutscene::load(uint16_t cutName) {
 /*		break;
 	}*/
 //	e = _stub->getTimeStamp();
-emu_printf("cmd %p pol %p\n",_res->_cmd, _res->_pol);
+//emu_printf("cmd %p pol %p\n",_res->_cmd, _res->_pol);
 	bool loaded = (_res->_cmd && _res->_pol);
 ////emu_printf(" Cutscene::end load %x %d\n", cutName,(_res->_cmd && _res->_pol));
 
