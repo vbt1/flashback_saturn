@@ -81,7 +81,8 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	_f.readUint16BE();
 	_map.typesOffset = _f.readUint16BE();
 	_map.namesOffset = _f.readUint16BE();
-	_map.typesCount = _f.readUint16BE() + 1;
+//	_map.typesCount = _f.readUint16BE() + 1;
+	_map.typesCount = _f.readUint16BE(); // vbt: on ne charge plus les alertes
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
 	
@@ -93,6 +94,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
+//		emu_printf("_types[%d].id %s\n", i, _types[i].id);	
 		_types[i].count = _f.readUint16BE() + 1;
 		_types[i].startOffset = _f.readUint16BE();
 		if (_sndIndex < 0 && memcmp(_types[i].id, "snd ", 4) == 0) {
@@ -110,6 +112,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();
+			_entries[i][j].type = i;
 			_entries[i][j].nameOffset = _f.readUint16BE();
 			_entries[i][j].dataOffset = _f.readUint32BE() & 0x00FFFFFF;
 			_f.readUint32BE();

@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include "file.h"
 
-uint8_t *decodeLzss(File &f, const char *name, uint32_t &decodedSize);
+//uint8_t *decodeLzss(File &f, const char *name, uint32_t &decodedSize);
+uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize);
 
 struct DecodeBuffer {
 	uint8_t *ptr __attribute__((aligned(2)));

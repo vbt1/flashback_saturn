@@ -1237,18 +1237,19 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 	_resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
-
+// vbt : virer les tests sur les noms
 	uint8_t *data = 0;
 	if (decompressLzss) {
-//emu_printf("decodeLzss %d %s\n",_resourceMacDataSize, entry->name);
-		data = decodeLzss(_mac->_f, entry->name, _resourceMacDataSize);
+//emu_printf("\ndecodeLzss %d %s id %d",_resourceMacDataSize, entry->name, entry->id);
+		data = decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
 		/*if (!data) {
 			emu_printf("Failed to decompress '%s'\n", entry->name);
 		}*/
 	} else {
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
-		if(strncmp("Title", entry->name, 5) == 0 
-		|| strcmp("Flashback colors", entry->name) == 0 
+//		if(strncmp("Title", entry->name, 5) == 0 
+		if(entry->id >= 5000 
+		|| entry->type == 33 
 		)
 		{
 //			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
@@ -1258,7 +1259,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		{
 			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
 			{
-//				emu_printf("hwram_ptr ");				
+//				emu_printf("hwram_ptr ");
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
 //				emu_printf("hwram_ptr %p\n",hwram_ptr);

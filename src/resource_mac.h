@@ -18,13 +18,14 @@ struct ResourceMacType {
 };
 
 enum {
-	kResourceMacEntryNameLength = 64
+	kResourceMacEntryNameLength = 30 // arroundir à 30?
 };
 
 struct ResourceMacEntry {
 	uint16_t id;
 	uint16_t nameOffset;
 	uint32_t dataOffset;
+	uint8_t type;
 	char name[kResourceMacEntryNameLength];
 };
 

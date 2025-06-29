@@ -23,37 +23,23 @@ extern Uint8 frame_z;
 #include "util.h"
 #include "saturn_print.h"
 
-static uint8_t* allocate_memory(const char* name, uint32_t alignedSize) {
+static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t alignedSize) {
+//	emu_printf("allocate_memory %d %04x\n", id, alignedSize);
     uint8_t* dst;
-
-//	emu_printf("allocate_memory %s %04x\n", name, alignedSize);
-/*
-    if (name[0] == 'i' && name[1] == 'n' && name[2] == 't' && name[3] == 'r' && name[4] == 'o') {
-        dst = (uint8_t*)current_lwram;
-        current_lwram += alignedSize;
-    }
-    else if (name[0] == 'l' && name[1] == 'o' && name[2] == 'g' && name[3] == 'o') {
-        dst = (uint8_t*)current_lwram;
-        current_lwram += alignedSize;
-    }
-    else*/
 // vbt : évite une fuite mémoire
-	if (name[0] == 'm' && name[1] == 'a' && name[2] == 'p') {
+	if (type == 13 || type == 14)
+	{
         dst = (uint8_t*)current_lwram;
         current_lwram += alignedSize;
     }
-    else if (name[0] == 'e' && name[1] == 's' && name[2] == 'p' && name[3] == 'i' && name[4] == 'o') {
-        dst = (uint8_t*)current_lwram;
-        current_lwram += alignedSize;
-    }
-    else if (strstr(name, "Junky") || strstr(name, "Alien") || strstr(name, "Replicant")) {
-        dst = (uint8_t*)current_lwram;
+    else if (id == 3100 || id == 3300 || id == 3400) {
+        dst = (uint8_t*)hwram_ptr;//current_lwram;
         current_lwram += 4;
-    }
-    else if (strstr(name, "Room") || strstr(name, "Font")) {
+    } // 4000 = font
+	else if ((type == 12 && (id >= 1000 && id <= 1461) ) || id == 4000) {
         dst = (uint8_t*)hwram_screen;
     }
-    else if (strstr(name, "Title 6")) {
+	 else if (id == 5500) { // Title 6
         GFS_Load(GFS_NameToId((int8_t*)"CONTROLS.BIN"), 0, (void*)(current_lwram + 36352), 147456);
         dst = (uint8_t*)NULL;
     }
@@ -65,17 +51,16 @@ static uint8_t* allocate_memory(const char* name, uint32_t alignedSize) {
         dst = (uint8_t*)current_lwram;
         current_lwram += alignedSize;
     }
-
     return dst;
 }
 
-uint8_t* decodeLzss(File& f, const char* name, uint32_t& decodedSize) {
+uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
     // Read decodedSize as 4 bytes (big-endian)
     decodedSize = f.readUint32BE();
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
-    uint8_t* dst = allocate_memory(name, alignedSize);
+    uint8_t* dst = allocate_memory(type, id, alignedSize);
     if (!dst) return NULL; // Handle special case (e.g., "Title 6")
 
     uint8_t* const end = dst + decodedSize;

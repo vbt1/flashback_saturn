@@ -136,7 +136,7 @@ void Game::run() {
 	_mix.init();  // vbt : evite de fragmenter la ram	
 	_res.init();   // vbt : ajout pour la partie mac
 
-		end1 = 564000+50000;
+		end1 = 584000+50000;
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
