@@ -33,10 +33,10 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
         current_lwram += alignedSize;
     }
     else if (id == 3100 || id == 3300 || id == 3400) {
-        dst = (uint8_t*)hwram_ptr;//current_lwram;
+        dst = (uint8_t*)current_lwram;
         current_lwram += 4;
     } // 4000 = font
-	else if ((type == 12 && (id >= 1000 && id <= 1461) ) || id == 4000) {
+	else if ((type == 12 && (id >= 1000 && id <= 1461)) || id == 4000) {
         dst = (uint8_t*)hwram_screen;
     }
 	 else if (id == 5500) { // Title 6
@@ -48,6 +48,7 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
         hwram_ptr += alignedSize;
     }
     else {
+		emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize,end1);
         dst = (uint8_t*)current_lwram;
         current_lwram += alignedSize;
     }

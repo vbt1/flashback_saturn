@@ -1247,7 +1247,6 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}*/
 	} else {
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
-//		if(strncmp("Title", entry->name, 5) == 0 
 		if(entry->id >= 5000 
 		|| entry->type == 33 
 		)
@@ -1257,19 +1256,19 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 		}
 		else
 		{
-			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
+//			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
 			{
 //				emu_printf("hwram_ptr ");
 				data = (uint8_t *)hwram_ptr;
 				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
 //				emu_printf("hwram_ptr %p\n",hwram_ptr);
 			}
-			else
+/*			else // VBt : inutilisé
 			{
-//				emu_printf("sat_malloc2 %s\n", entry->name);
+				emu_printf("sat_malloc2 %s\n", entry->name);
 				data = (uint8_t *)current_lwram;
 				current_lwram += SAT_ALIGN(_resourceMacDataSize);
-			}
+			}*/
 		}
 		if (!data) {
 			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
