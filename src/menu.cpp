@@ -539,7 +539,7 @@ void Menu::handleTitleScreen() {
 		int previousLanguage = currentLanguage;
 
 		unsigned int s2 = _stub->getTimeStamp();
-		if(s2>=60000)
+		if(s2>=45000)
 		{
 			_stub->_pi.enter = true;
 			currentEntry = 3;

@@ -1520,7 +1520,7 @@ void Cutscene::playCredits() {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-//		emu_printf("Cutscene::play() _id=0x%X c%p s %p\n", _id , current_lwram, save_current_lwram);
+		emu_printf("Cutscene::play() _id=0x%X c%p \n", _id , current_lwram);
 		_creditsSequence = false;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
@@ -1551,9 +1551,7 @@ void Cutscene::play() {
 			case 23: // switches
 			case 24: // Level 2 fuse is blown
 				//if (g_options.play_asc_cutscene) 
-				{
 					cutName = 12; // ASC
-				}
 				break;
 /*			case 30:
 			case 31:

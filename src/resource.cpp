@@ -120,7 +120,7 @@ void Resource::clearLevelRes() {
 	sat_free(_map); _map = 0;
 //	sat_free(_lev); _lev = 0;
 //	_levNum = -1;
-	sat_free(_ani); _ani = 0; // hwram
+//	sat_free(_ani); _ani = 0; // hwram
 //	free_OBJ();
 
 	sat_free(_spc);	
@@ -134,19 +134,22 @@ void Resource::clearLevelRes() {
 }
 
 void Resource::load_DEM(const char *filename) {
-	sat_free(_dem); _dem = 0;
+//	sat_free(_dem); _dem = 0;
 	_demLen = 0;
 //	if (_mac) {
 //			emu_printf("mac version\n");
 		char name[16];
-		if (0) {
+//		if (0) {
 			// recorded inputs for levels 3 and 5 are not replayed correctly
 			snprintf(name, sizeof(name), "Demo Level %c", filename[4]);
-		} else {
-			snprintf(name, sizeof(name), "Demo Level 1");
-		}
+//		} else {
+//			snprintf(name, sizeof(name), "Demo Level 1");
+//		}
+		
 		_dem = decodeResourceMacData(name, true);
 		_demLen = _resourceMacDataSize;
+		
+	emu_printf("load_DEM %s %p %d fn %s\n", name, _dem, _demLen, filename);
 
 		for (int i = 0; i < _demLen; ++i) {
 			uint8_t mask = 0;
@@ -1223,7 +1226,6 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
-//		emu_printf("Resource '%s' found %d %s\n",name, decompressLzss,entry->name);		
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
@@ -1233,52 +1235,31 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
-//	emu_printf("Resource::decodeResourceMacData 'seek %d entry %p file %p'\n",_mac->_dataOffset + entry->dataOffset, entry,_mac->_f);	
-	_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
-	_resourceMacDataSize = _mac->_f.readUint32BE();
+    _mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
+    _resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
-// vbt : virer les tests sur les noms
-	uint8_t *data = 0;
-	if (decompressLzss) {
+    
+    if (decompressLzss) {
 //emu_printf("\ndecodeLzss %d %s id %d",_resourceMacDataSize, entry->name, entry->id);
-		data = decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
-		/*if (!data) {
-			emu_printf("Failed to decompress '%s'\n", entry->name);
-		}*/
-	} else {
-//emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
-		if(entry->id >= 5000 
-		|| entry->type == 33 
-		)
-		{
-//			emu_printf("_scratchBuffer %p size %d\n", _scratchBuffer, _resourceMacDataSize);
-			data = (uint8_t *)_scratchBuffer;
-		}
-		else
-		{
-//			if ((int)hwram_ptr+_resourceMacDataSize<=end1)
-			{
-//				emu_printf("hwram_ptr ");
-				data = (uint8_t *)hwram_ptr;
-				hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
-//				emu_printf("hwram_ptr %p\n",hwram_ptr);
-			}
-/*			else // VBt : inutilisé
-			{
-				emu_printf("sat_malloc2 %s\n", entry->name);
-				data = (uint8_t *)current_lwram;
-				current_lwram += SAT_ALIGN(_resourceMacDataSize);
-			}*/
-		}
-		if (!data) {
-			emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
-		} else {
-			_mac->_f.read(data, _resourceMacDataSize);
-		}
-	}
-//emu_printf("end Resource::decodeResourceMacData %d %s\n",_resourceMacDataSize,entry->name);	
+        return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
+    }
+    
+    uint8_t *data;
+    
+    if (entry->id < 5000 && entry->type != 33) {
+        data = hwram_ptr;
+        hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
+    } else {
+        data = _scratchBuffer;
+    }
+    
+    if (!data) {
+        emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
+        return NULL;
+    }
 //	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
-	return data;
+    _mac->_f.read(data, _resourceMacDataSize);
+    return data;
 }
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask) {

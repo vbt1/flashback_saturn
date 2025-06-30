@@ -26,32 +26,48 @@ extern Uint8 frame_z;
 static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t alignedSize) {
 //	emu_printf("allocate_memory %d %04x\n", id, alignedSize);
     uint8_t* dst;
-// vbt : évite une fuite mémoire
-	if (type == 13 || type == 14)
-	{
-        dst = (uint8_t*)current_lwram;
+
+    // Fast path for type 13 or 14
+    if (type == 13 || type == 14) {
+        dst = current_lwram;
         current_lwram += alignedSize;
+        return dst;
     }
-    else if (id == 3100 || id == 3300 || id == 3400) {
-        dst = (uint8_t*)current_lwram;
+
+    if (type == 31) //  demo
+		return (uint8_t *)0x2e7000;
+
+
+    // Fast path for specific IDs
+    if (id == 3100 || id == 3300 || id == 3400) {
+        dst = current_lwram;
         current_lwram += 4;
-    } // 4000 = font
-	else if ((type == 12 && (id >= 1000 && id <= 1461)) || id == 4000) {
-        dst = (uint8_t*)hwram_screen;
+        return dst;
     }
-	 else if (id == 5500) { // Title 6
+
+    // Fast path for type 12 with ID range or ID 4000
+    if ((type == 12 && (id - 1000) <= (1461 - 1000)) || id == 4000) {
+        return hwram_screen;
+    }
+
+    // Special case for ID 5500
+    if (id == 5500) {
         GFS_Load(GFS_NameToId((int8_t*)"CONTROLS.BIN"), 0, (void*)(current_lwram + 36352), 147456);
-        dst = (uint8_t*)NULL;
+        return NULL;
     }
-    else if (((int)hwram_ptr) + alignedSize < end1) {
-        dst = (uint8_t*)hwram_ptr;
+
+    // Default case: Use hwram_ptr if possible
+    if ((int)hwram_ptr + alignedSize < end1) {
+        dst = hwram_ptr;
         hwram_ptr += alignedSize;
+        return dst;
     }
-    else {
-		emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize,end1);
-        dst = (uint8_t*)current_lwram;
-        current_lwram += alignedSize;
-    }
+
+    // Fallback to lwram
+    emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize, end1);
+
+    dst = current_lwram;
+    current_lwram += alignedSize;
     return dst;
 }
 

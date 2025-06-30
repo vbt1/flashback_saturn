@@ -124,7 +124,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 //	_rewindPtr = -1;
 //	_rewindLen = 0;
 //	_cheats = cheats;
-	_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
+//	_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 }
 
 void Game::run() {
@@ -136,7 +136,7 @@ void Game::run() {
 	_mix.init();  // vbt : evite de fragmenter la ram	
 	_res.init();   // vbt : ajout pour la partie mac
 
-		end1 = 584000+40000+50000;
+		end1 = 584000+20000+50000; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
@@ -266,8 +266,9 @@ for (i=0;i<100;i++)
 		current_lwram = (uint8_t *)save_current_lwram;
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
-			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
+			_demoBin = (_demoBin + 1) % 2; //ARRAYSIZE(_demoInputs);
 			const char *fn = _demoInputs[_demoBin].name;
+//			emu_printf("_demoBin '%d arraysz %d\n", _demoBin, ARRAYSIZE(_demoInputs));
 //			emu_printf("Loading inputs from '%s'\n", fn);
 			_res.load_DEM(fn);
 			if (_res._demLen == 0) {
@@ -616,8 +617,10 @@ void Game::playCutscene(int id) {
 				_mix.playMusic(num);
 			}
 		}*/
-		emu_printf("_cut._id %d _music %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
-		_cut.play();
+//		emu_printf("_cut._id %d _music %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
+// vbt : temporary disable cutscenes on demos
+		if(_demoBin != -1 && _cut._id != 23 && _cut._id != 8  && _cut._id != 5)
+			_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
