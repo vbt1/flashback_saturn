@@ -136,14 +136,15 @@ void Game::run() {
 	_mix.init();  // vbt : evite de fragmenter la ram	
 	_res.init();   // vbt : ajout pour la partie mac
 
-		end1 = 584000+20000+50000; // vbt : marge de 20ko environ
+//		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+20000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 		end1 += (int)hwram;
 		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
 		hwram_ptr = (unsigned char *)hwram;
 		hwram_screen = hwram_ptr;
-		hwram_ptr += 50000;
+		hwram_ptr += HWRAM_SCREEN_SIZE;
 	
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
@@ -260,7 +261,7 @@ for (i=0;i<100;i++)
 		_menu.handleTitleScreen();
 #ifdef DEMO
 
-		hwram_ptr = hwram+50000;
+		hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
 		position_vram = 0x1000;
 //		position_vram = position_vram_aft_monster = 10*256; // vbt correction
 		current_lwram = (uint8_t *)save_current_lwram;
@@ -270,6 +271,7 @@ for (i=0;i<100;i++)
 			const char *fn = _demoInputs[_demoBin].name;
 //			emu_printf("_demoBin '%d arraysz %d\n", _demoBin, ARRAYSIZE(_demoInputs));
 //			emu_printf("Loading inputs from '%s'\n", fn);
+			_cheats = 0;
 			_res.load_DEM(fn);
 			if (_res._demLen == 0) {
 				continue;
@@ -280,6 +282,7 @@ for (i=0;i<100;i++)
 		} else
 #endif
 		{
+			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 			_demoBin = -1;
 			_skillLevel = _menu._skill;
 			_currentLevel = _menu._level;
@@ -618,9 +621,7 @@ void Game::playCutscene(int id) {
 			}
 		}*/
 //		emu_printf("_cut._id %d _music %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
-// vbt : temporary disable cutscenes on demos
-		if(_demoBin != -1 && _cut._id != 23 && _cut._id != 8  && _cut._id != 5)
-			_cut.play();
+		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
 			{
@@ -962,7 +963,7 @@ bool Game::handleContinueAbort() {
 		if (_stub->_pi.enter) {
 // vbt : corrige la ram quand on continue
 			current_lwram = (uint8_t *)save_current_lwram;
-			hwram_ptr = hwram+50000;
+			hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
 // vbt : corrige la ram quand on continue
 			_stub->_pi.enter = false;
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
@@ -1409,19 +1410,6 @@ void Game::drawAnimBuffer(uint8_t stateNum, AnimBufferState *state) {
 				if (stateNum == 1 && (_blinkingConradCounter & 1)) {
 					break;
 				}
-/*				switch (_res._type) {
-				case kResourceTypeDOS:
-					if (!(state->dataPtr[-2] & 0x80)) {
-//						_vid.PC_decodeSpm(state->dataPtr, _res._scratchBuffer); // vbt à  remettre
-						drawCharacter(_res._scratchBuffer, state->x, state->y, state->h, state->w, pge->flags);
-					} else {
-						drawCharacter(state->dataPtr, state->x, state->y, state->h, state->w, pge->flags);
-					}
-					break;
-				case kResourceTypeMac:
-					drawPiege(state);
-					break;
-				}*/
 			}/* else {
 				drawPiege(state);
 			}*/
@@ -1722,7 +1710,8 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 			break;
 
 		case kResourceTypeMac: {
-*/				Color palette[512];
+*/ 				Color palette[512];
+//				Color *palette = (Color *)hwram_ptr;
 //				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 
 // on l'appelle juste pour la palette				
@@ -1790,7 +1779,7 @@ void Game::loadLevelData() {
 #endif
 //	case kResourceTypeMac:
 // vbt : harmoniser les resets de pointeurs
-		hwram_ptr = hwram+50000;
+		hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
 		position_vram = 0x1000;
 //		position_vram = position_vram_aft_monster = 10*256; // vbt correction
 //heapWalk();		
@@ -1869,7 +1858,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_res.kScratchBufferSize+_vid._layerSize);
+emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
@@ -2144,10 +2133,20 @@ void Game::inp_update() {
 		const int keymask = _res._dem[_inp_demPos++];
 		
 		_stub->_pi.dirMask = keymask & 0xF;
-		_stub->_pi.enter = (keymask & 0x10) != 0;
-		_stub->_pi.space = (keymask & 0x20) != 0;
-		_stub->_pi.shift = (keymask & 0x40) != 0;
-		_stub->_pi.backspace = (keymask & 0x80) != 0;
+		_stub->_pi.enter = (keymask & 0x10) != 0; //PAD_PUSH_C // use item
+		_stub->_pi.space = (keymask & 0x20) != 0; //PAD_PUSH_A // draw gun
+		_stub->_pi.shift = (keymask & 0x40) != 0; //PAD_PULL_B // action
+		_stub->_pi.backspace = (keymask & 0x80) != 0; //PAD_PUSH_START // inventory
+		
+emu_printf("Item %d gun %d action/run %d invent %d dir %x\n", _stub->_pi.enter, _stub->_pi.space, _stub->_pi.shift,_stub->_pi.backspace, _stub->_pi.dirMask);
+
+/*
+		DIR_UP    = 1 << 0,
+		DIR_DOWN  = 1 << 1,
+		DIR_LEFT  = 1 << 2,
+		DIR_RIGHT = 1 << 3
+*/
+		
 	}
 }
 #endif
@@ -2177,10 +2176,10 @@ bool Game::saveGameState(uint8 slot) {
 //	Uint32 BackUpRamWork[2048];
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
-	Uint8  *rle_buf		 = (Uint8  *)_res._scratchBuffer; //_res._scratchBuffer;//hwram_screen;
-	Uint32 *libBakBuf    = (Uint32 *)(_res._scratchBuffer+10000);
-	Uint32 *BackUpRamWork= (Uint32 *)(_res._scratchBuffer+10000+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(_res._scratchBuffer+10000+0x6000);
+	Uint8  *rle_buf		 = (Uint8  *)SCRATCH; //_res._scratchBuffer;
+	Uint32 *libBakBuf    = (Uint32 *)(rle_buf+10000);
+	Uint32 *BackUpRamWork= (Uint32 *)(rle_buf+10000+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(rle_buf+10000+0x6000);
 
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2242,10 +2241,10 @@ bool Game::loadGameState(uint8 slot) {
 	
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
-	Uint8  *rle_buf		 = (Uint8  *)_res._scratchBuffer; //_res._scratchBuffer;//hwram_screen;
-	Uint32 *libBakBuf    = (Uint32 *)(_res._scratchBuffer+10000);
-	Uint32 *BackUpRamWork= (Uint32 *)(_res._scratchBuffer+10000+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(_res._scratchBuffer+10000+0x6000);
+	Uint8  *rle_buf		 = (Uint8  *)SCRATCH; //_res._scratchBuffer;
+	Uint32 *libBakBuf    = (Uint32 *)(rle_buf+10000);
+	Uint32 *BackUpRamWork= (Uint32 *)(rle_buf+10000+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(rle_buf+10000+0x6000);
 	memset(rle_buf, 0, 40000);
 
 	Uint32 i;

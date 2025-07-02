@@ -94,7 +94,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.read(_types[i].id, 4);
-		emu_printf("_types[%d].id %s\n", i, _types[i].id);	
+//		emu_printf("_types[%d].id %s\n", i, _types[i].id);	
 		_types[i].count = _f.readUint16BE() + 1;
 		_types[i].startOffset = _f.readUint16BE();
 		if (_sndIndex < 0 && memcmp(_types[i].id, "snd ", 4) == 0) {

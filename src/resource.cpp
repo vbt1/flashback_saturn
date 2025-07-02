@@ -6,7 +6,6 @@
  */
  
 //#define WITH_MEM_MALLOC 1
- 
 extern "C"
 {
 #include <sl_def.h>
@@ -54,11 +53,6 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_mac = 0;
 	_readUint16 = READ_BE_UINT16;
 	_readUint32 = READ_BE_UINT32;
-
-//emu_printf("sat_malloc _scratchBuffer: %p %d\n", _scratchBuffer, kScratchBufferSize);	
-
-//	_scratchBuffer = (uint8_t *)current_lwram;
-	_scratchBuffer = (uint8_t *)0x2e7000;//sat_malloc(kScratchBufferSize); // on bouge sur de la lwram
 }
 
 Resource::~Resource() {
@@ -149,7 +143,7 @@ void Resource::load_DEM(const char *filename) {
 		_dem = decodeResourceMacData(name, true);
 		_demLen = _resourceMacDataSize;
 		
-	emu_printf("load_DEM %s %p %d fn %s\n", name, _dem, _demLen, filename);
+//	emu_printf("load_DEM %s %p %d fn %s\n", name, _dem, _demLen, filename);
 
 		for (int i = 0; i < _demLen; ++i) {
 			uint8_t mask = 0;
@@ -624,9 +618,9 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.SPM", objName);
 		loadStub = &Resource::load_SPM;
 		break;
-*/	default:
+	default:
 		emu_printf("Unimplemented Resource::load() type %d\n", objType);
-		break;
+		break;*/
 	}
 	if (ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.%s", objName, ext);
@@ -1250,7 +1244,14 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
         data = hwram_ptr;
         hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
     } else {
-        data = _scratchBuffer;
+		if(_resourceMacDataSize>=HWRAM_SCREEN_SIZE)
+		{
+			data = (Uint8  *)SCRATCH;
+//			data = (Uint8  *)_scratchBuffer;
+//emu_printf("utilisation scratch_buffer title size %d %p\n",_resourceMacDataSize,current_lwram+200000);
+		}
+		else
+			data = hwram_screen;
     }
     
     if (!data) {
@@ -1368,7 +1369,6 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
 	if (ptr) {
 		MAC_decodeImageData(ptr, 0, buf, 0xff);
-//		sat_free(ptr);  // pas de vidage car on utilise scratchbuffer
 	}
 }
 

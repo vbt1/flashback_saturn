@@ -12,6 +12,7 @@ extern "C" {
 extern Uint8 *hwram;
 }
 #include "saturn_print.h"
+
 /*
 void *sat_malloc(size_t size) {
 	void *mem = NULL;

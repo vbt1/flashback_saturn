@@ -104,7 +104,7 @@ struct Resource {
 	enum {
 //		kPaulaFreq = 3546897,
 		kClutSize = 912, //1024,
-		kScratchBufferSize = 0x19000 //0x20000 //512 * 448//320 * 224 + 1024
+//		kScratchBufferSize = 0x19000 //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
 	static const uint16_t _voicesOffsetsTable[];
@@ -154,7 +154,7 @@ struct Resource {
 //	uint8_t *_bnq;
 	uint16_t _numObjectNodes;
 	ObjectNode *_objectNodesMap[255];
-	uint8_t *_scratchBuffer;
+//	uint8_t *_scratchBuffer;
 	SoundFx *_sfxList;
 //	uint8_t _numSfx;
 	uint8_t *_cmd;

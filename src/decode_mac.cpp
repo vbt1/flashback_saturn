@@ -35,7 +35,7 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
     }
 
     if (type == 31) //  demo
-		return (uint8_t *)0x2e7000;
+		return (uint8_t *)SCRATCH;
 
 
     // Fast path for specific IDs

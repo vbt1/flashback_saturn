@@ -1,6 +1,6 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x65000 // ne pas toucher
+#define VRAM_MAX 0x66000 // ne pas toucher
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -28,7 +28,6 @@ extern Uint8 *hwram_ptr;
 #undef VDP2_VRAM_B0
 #define VDP2_VRAM_B0 NULL 
 */
-#define LOW_WORK_RAM 0x00200000
 
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
@@ -37,7 +36,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 	_layerSize = _w * _h;
-	_frontLayer = (uint8_t *)0x2aeff8;//sat_malloc(_w * _h);
+	_frontLayer = (uint8_t *)0x2C8000;
 
 	memset(&_frontLayer[0], 0, _w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -423,6 +422,7 @@ void Video::MAC_decodeMap(int level, int room) {
 //emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res->kScratchBufferSize+_layerSize);
 
 	Color roomPalette[512];
+//	Color *roomPalette = (Color *)hwram_ptr;
 	_res->MAC_setupRoomClut(level, room, roomPalette);
 
 	for (int j = 0; j < 16; ++j) {
@@ -612,9 +612,8 @@ void Video::SAT_displayCutscene()
 
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
 	user_sprite.SRCA = spriteVramOffset / 8;
-
-	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)_res->_scratchBuffer, IMG_SIZE);
-//	slTransferEntry(_res->_scratchBuffer, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
+//	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)hwram_ptr, IMG_SIZE);
+	slTransferEntry(hwram_ptr, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }

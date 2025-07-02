@@ -116,37 +116,11 @@ void Menu::loadPicture(const char *prefix) {
 				if (screens[i].num == kMacTitleScreen_Controls) {
 //					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
 					_stub->copyRect(0, 0, _vid->_w, _vid->_h, current_lwram, _vid->_w);
-
 					displayTitleScreenMac(kMacTitleScreen_LeftEye);
-
-					/*
-					for (int j = 0; j < _vid->_h * _vid->_w; ++j) {
-						if (_vid->_backLayer[j] != 0) {
-							_vid->_frontLayer[j] = _vid->_backLayer[j];
-						}
-					}*/
 				}
 				break;
 			}
 		}
-/*	} else {
-		if (_res->isDOS()) {
-			static const int kPictureW = 256;
-			static const int kPictureH = 224;
-			_res->load_MAP_menu(prefix, _res->_scratchBuffer);
-			for (int i = 0; i < 4; ++i) {
-				for (int y = 0; y < kPictureH; ++y) {
-					for (int x = 0; x < kPictureW / 4; ++x) {
-						_vid->_frontLayer[i + x * 4 + kPictureW * y] = _res->_scratchBuffer[0x3800 * i + x + 64 * y];
-					}
-				}
-			}
-		} else if (_res->isPC98()) {
-			_res->load_MAP_menu(prefix, _vid->_frontLayer);
-		}
-		_res->load_PAL_menu(prefix, _res->_scratchBuffer);
-		_stub->setPalette(_res->_scratchBuffer, 256);
-	}*/
 	memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
 //	_vid->updateWidescreen();
 }
@@ -253,7 +227,6 @@ void Menu::displayTitleScreenMac(int num) {
 void Menu::handleInfoScreen() {
 //	debug(DBG_MENU, "Menu::handleInfoScreen()");
 	_vid->fadeOut();
-//	memset(_vid->_frontLayer, 0, 512*384);
 	
 	if (_res->_lang == LANG_FR) {
 		loadPicture("instru_f");

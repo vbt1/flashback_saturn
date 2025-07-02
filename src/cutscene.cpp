@@ -14,7 +14,9 @@ extern "C"
 #include <sega_gfs.h>
 #include <gfs_def.h>
 #include "gfs_wrap.h"
+#include "sat_mem_checker.h"
 extern Uint8 *hwram_screen;
+extern Uint8 *hwram_ptr;
 extern Uint8 *current_lwram;
 //extern Uint8 *save_current_lwram;
 extern Uint8 frame_x;
@@ -26,6 +28,7 @@ extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 int16_t previousStr=-1;
 }
 #include "mod_player.h"
+#include "decode_mac.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "cutscene.h"
@@ -149,7 +152,8 @@ DecodeBuffer buf{};
     slSetSprite(&user_sprite, toFIXED2(240));
 
     user_sprite.COLR = 0xD0;
-    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == _res->_scratchBuffer) ? (IMG_SIZE >> 1) : 0);
+//    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == hwram_screen+IMG_SIZE) ? (IMG_SIZE >> 1) : 0);
+    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == hwram_screen) ? 0 : (IMG_SIZE >> 1));
     user_sprite.SRCA = spriteVramOffset / 8;
 
     uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
@@ -162,24 +166,24 @@ DecodeBuffer buf{};
 
 #ifdef DEBUG_CUTSCENE
     #define SAT_ALIGN(a) ((a+3)&~3)
-    buf.w = 240;
-    buf.h = 128;
+    buf.dst_w = 240;
+    buf.dst_h = 128;
     position_vram = 0x1000;
-    size_t dataSize = SAT_ALIGN(buf.w * buf.h);
+    size_t dataSize = SAT_ALIGN(buf.dst_w * buf.dst_h);
     int cgaddr1 = 8 * _vid->SAT_copySpriteToVram((uint8_t *)_backPage, buf, dataSize);
 
     // Debug loop for _backPage
     uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1);
-    packPixels(_backPage, temp, IMG_SIZE);
-    slTransferEntry(temp, aux2, IMG_SIZE / 2);
+    packPixels(_backPage, aux2, IMG_SIZE);
+ //   slTransferEntry(temp, aux2, IMG_SIZE / 2);
     _vid->SAT_displaySprite((uint8_t *)cgaddr1, -320, -224, 128, 240);
 
     int cgaddr3 = _vid->SAT_copySpriteToVram((uint8_t *)_frontPage, buf, dataSize);
 
     // Debug loop for _frontPage
     uint8_t *aux1 = (uint8_t *)(SpriteVRAM + cgaddr3 * 8);
-    packPixels(_frontPage, temp, IMG_SIZE);
-    slTransferEntry(temp, aux1, IMG_SIZE / 2);
+    packPixels(_frontPage, aux1, IMG_SIZE);
+//    slTransferEntry(temp, aux1, IMG_SIZE / 2);
     _vid->SAT_displaySprite((uint8_t *)(cgaddr3 * 8), -320, -96, 128, 240);
 
     int cgaddr2 = _vid->SAT_copySpriteToVram((uint8_t *)_auxPage, buf, dataSize);
@@ -1429,8 +1433,8 @@ void Cutscene::unload() {
 		memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9],0x0000, CLEAN_H_MORE << 9);
 		_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
 #endif
-//		Color clut[512];
-		Color *clut = (Color *)hwram_screen;
+		Color clut[512];
+//		Color *clut = (Color *)hwram_ptr;
 		_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
 		_res->MAC_copyClut16(clut, 0x1D, 0x38);
 
@@ -1444,11 +1448,9 @@ void Cutscene::unload() {
 }
 
 void Cutscene::prepare() {
-//	_frontPage = (uint8_t *)_res->_scratchBuffer;
-//	_backPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*1);
-//	_auxPage = (uint8_t *)_res->_scratchBuffer+(IMG_SIZE*2);
 	_frontPage = (uint8_t *)hwram_screen;
-	_backPage = (uint8_t *)_res->_scratchBuffer;
+//	_backPage = (uint8_t *)hwram_screen+IMG_SIZE;
+	_backPage = (uint8_t *)SCRATCH+4096;//hwram_ptr; //SCRATCH
 	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
 //emu_printf("slSynch\n");
@@ -1460,9 +1462,7 @@ slSynch(); // VBT : à remettre
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
 	memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE*2), 0x00, IMG_SIZE*2);
-#ifdef SUBTITLE_SPRITE	
-	memset((uint8_t *)_vid->_txt2Layer,0, 480*255);
-#endif
+
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
