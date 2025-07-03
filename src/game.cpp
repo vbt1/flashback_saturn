@@ -2177,9 +2177,9 @@ bool Game::saveGameState(uint8 slot) {
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
 	Uint8  *rle_buf		 = (Uint8  *)SCRATCH; //_res._scratchBuffer;
-	Uint32 *libBakBuf    = (Uint32 *)(rle_buf+10000);
-	Uint32 *BackUpRamWork= (Uint32 *)(rle_buf+10000+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(rle_buf+10000+0x6000);
+	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+10000);
+	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+10000+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+10000+0x6000);
 
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2242,9 +2242,9 @@ bool Game::loadGameState(uint8 slot) {
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
 	Uint8  *rle_buf		 = (Uint8  *)SCRATCH; //_res._scratchBuffer;
-	Uint32 *libBakBuf    = (Uint32 *)(rle_buf+10000);
-	Uint32 *BackUpRamWork= (Uint32 *)(rle_buf+10000+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(rle_buf+10000+0x6000);
+	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+10000);
+	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+10000+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+10000+0x6000);
 	memset(rle_buf, 0, 40000);
 
 	Uint32 i;

@@ -4,6 +4,7 @@
 extern "C" {
 #include "lzwlib.h"
 #endif
+#include "sat_mem_checker.h"
 //extern void //emu_printf(const char *format, ...);
 #define LZ_MAX_OFFSET 32768*2
 #ifndef LZ_MIN_MATCH
@@ -15,8 +16,8 @@ extern "C" {
 #define HASH_CHAIN_LENGTH 16
 #define HASH_TABLE_SIZE (HASH_SIZE * HASH_CHAIN_LENGTH * sizeof(unsigned int))
 #define TEMP_BUFFER_SIZE 65536
-#define HASH_TABLE_ADDR ((unsigned int *)0x2aeff8)
-#define TEMP_BUFFER_ADDR ((unsigned char *)(0x2aeff8 + HASH_TABLE_SIZE))
+#define HASH_TABLE_ADDR ((unsigned int *)FRONT)
+#define TEMP_BUFFER_ADDR ((unsigned char *)(FRONT + HASH_TABLE_SIZE))
 
 // LZW-specific defines
 #define LZW_DICT_SIZE 4096

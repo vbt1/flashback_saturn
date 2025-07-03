@@ -36,7 +36,7 @@ Video::Video(Resource *res, SystemStub *stub)
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
 	_layerSize = _w * _h;
-	_frontLayer = (uint8_t *)0x2C8000;
+	_frontLayer = (uint8_t *)FRONT;
 
 	memset(&_frontLayer[0], 0, _w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
@@ -414,12 +414,12 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
-//	_stub->initTimeStamp();
-//	unsigned int s = _stub->getTimeStamp();	
+	_stub->initTimeStamp();
+	unsigned int s = _stub->getTimeStamp();	
 	_res->MAC_loadLevelRoom(level, room, &buf);
-//	unsigned int e = _stub->getTimeStamp();
-//	emu_printf("--duration bg : %d\n",e-s);
-//emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_res->kScratchBufferSize+_layerSize);
+	unsigned int e = _stub->getTimeStamp();
+	emu_printf("--duration bg : %d\n",e-s);
+emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_layerSize);
 
 	Color roomPalette[512];
 //	Color *roomPalette = (Color *)hwram_ptr;
