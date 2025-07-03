@@ -612,8 +612,8 @@ void Video::SAT_displayCutscene()
 
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
 	user_sprite.SRCA = spriteVramOffset / 8;
-//	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)hwram_ptr, IMG_SIZE);
-	slTransferEntry(hwram_ptr, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
+	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
+//	slTransferEntry(hwram_screen, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }
