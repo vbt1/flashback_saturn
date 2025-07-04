@@ -1463,11 +1463,12 @@ void Resource::MAC_copyClut16(Color *clut, uint8_t dest, uint8_t src) {
 void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     const int num = _macLevelNumbers[level][0] - '1';
     int offset = _macLevelColorOffsets[num];
-
+	int conradPal = 0x30;
     // Special case for certain rooms in level 1
     if (level == 1) {
         if ((room >= 27 && room <= 30) || (room >= 35 && room <= 37) || room == 45 || room == 46) {
             offset = 32;
+			conradPal = 0x31;
         }
     }
     // Unroll loops to reduce loop overhead
@@ -1504,7 +1505,7 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     MAC_copyClut16(clut, 27, offset + 3);
 */
     // Copy and clear specific CLUTs
-    MAC_copyClut16(clut,  0x14, 0x30);  // palette for the main character
+    MAC_copyClut16(clut,  0x14, conradPal);  // palette for the main character
 //    MAC_clearClut16(clut, 0x16);       // clear unused palette
 
     MAC_copyClut16(clut, 0x1A, _macLevelColorOffsets[0] + 2);
