@@ -6,10 +6,10 @@
 #define DEMO 1
 #define BPP8 1
 
-#define HWRAM 0
-#define LWRAM 1<<0
-#define LWRA1 1<<1
-#define VRAM1 1<<2
+#define HWRAM 1<<0
+#define LWRAM 1<<1
+#define LWRA1 1<<2
+#define VRAM1 1<<3
 
 //#define DEBUG2 1
 //#define REDUCE_4BPP 1
@@ -266,7 +266,7 @@ for (i=0;i<100;i++)
 	while (!_stub->_pi.quit) {
 		_menu.handleTitleScreen();
 #ifdef DEMO
-		SAT_RAMcleaner (HWRAM|LWRA1|VRAM1);
+		SAT_cleanRAM (HWRAM|LWRA1|VRAM1);
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 			_demoBin = (_demoBin + 1) % 2; //ARRAYSIZE(_demoInputs);
@@ -335,7 +335,7 @@ emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 			_vid.updateScreen();
 			_vid.SAT_cleanSprites();
 
-			SAT_RAMcleaner (HWRAM|LWRA1|VRAM1);
+			SAT_cleanRAM (HWRAM|LWRA1|VRAM1);
 
 			// flush inputs
 			_stub->_pi.dirMask = 0;
@@ -970,7 +970,7 @@ bool Game::handleContinueAbort() {
 */
 		if (_stub->_pi.enter) {
 // vbt : corrige la ram quand on continue
-			SAT_RAMcleaner (HWRAM|LWRAM);
+			SAT_cleanRAM (LWRAM);
 // vbt : corrige la ram quand on continue
 			_stub->_pi.enter = false;
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
@@ -1785,7 +1785,7 @@ void Game::loadLevelData() {
 		break;
 #endif
 //	case kResourceTypeMac:
-		SAT_RAMcleaner (HWRAM|LWRA1|VRAM1);
+		SAT_cleanRAM (HWRAM|LWRA1|VRAM1);
 //heapWalk();		
 		sat_free(_res._spc); // on ne vire pas
 		sat_free(_res._ani);
@@ -2737,17 +2737,18 @@ current_lwram+=SAT_ALIGN(21623);
 #endif
 }
 
-void Game::SAT_RAMcleaner(unsigned char all) {
+void Game::SAT_cleanRAM(unsigned char all) {
 emu_printf("ram clean %d\n",all);
-		hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
-		if (all & 4)
+		if (all & 1)
+			hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
+		if (all & 8)
 			position_vram = 0x1000;
-		if (all & 2)
+		if (all & 4)
 		{
 			emu_printf("current_lwram1 %x\n",VBT_L_START);
 			current_lwram = (uint8_t *)VBT_L_START;
 		}
-		if (all & 1)
+		if (all & 2)
 		{
 			emu_printf("current_lwram2 %p\n",save_current_lwram);
 			current_lwram = (uint8_t *)save_current_lwram;

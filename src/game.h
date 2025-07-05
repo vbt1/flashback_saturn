@@ -403,7 +403,7 @@ struct Game {
 	void SAT_preloadPerso();
 	void SAT_preloadIcon();
 	void SAT_preloadCDfiles();
-	void SAT_RAMcleaner(unsigned char all);
+	void SAT_cleanRAM(unsigned char all);
 };
 
 #endif // GAME_H__
