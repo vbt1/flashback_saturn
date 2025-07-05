@@ -419,7 +419,7 @@ void Video::MAC_decodeMap(int level, int room) {
 	_res->MAC_loadLevelRoom(level, room, &buf);
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration bg : %d\n",e-s);
-emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_layerSize);
+//emu_printf("1hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_layerSize);
 
 	Color roomPalette[512];
 //	Color *roomPalette = (Color *)hwram_ptr;

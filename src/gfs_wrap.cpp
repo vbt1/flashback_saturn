@@ -505,7 +505,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
     // Direct read for large requests or cache misses
     const Uint32 start_sector = seek_pos / SECTOR_SIZE;
     const Uint32 skip_bytes = seek_pos & (SECTOR_SIZE - 1); // Use bitwise AND instead of modulo
-    
+//emu_printf("start_sector %d skip_bytes %d %p\n",start_sector,skip_bytes,current_lwram);
     // Special sector handling (consolidated check)
     static const Uint32 special_sectors[] = {3093, 3115, 3163, 3223, 3272};
     for (int i = 0; i < 5; i++) {

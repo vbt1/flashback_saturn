@@ -5,6 +5,12 @@
 //#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
+
+#define HWRAM 0
+#define LWRAM 1<<0
+#define LWRA1 1<<1
+#define VRAM1 1<<2
+
 //#define DEBUG2 1
 //#define REDUCE_4BPP 1
 /*
@@ -260,11 +266,7 @@ for (i=0;i<100;i++)
 	while (!_stub->_pi.quit) {
 		_menu.handleTitleScreen();
 #ifdef DEMO
-
-		hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
-		position_vram = 0x1000;
-//		position_vram = position_vram_aft_monster = 10*256; // vbt correction
-		current_lwram = (uint8_t *)save_current_lwram;
+		SAT_RAMcleaner (HWRAM|LWRA1|VRAM1);
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 			_demoBin = (_demoBin + 1) % 2; //ARRAYSIZE(_demoInputs);
@@ -312,6 +314,7 @@ for (i=0;i<100;i++)
 			_score = 0;
 //			clearStateRewind();
 			loadLevelData();
+emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -331,7 +334,8 @@ for (i=0;i<100;i++)
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 			_vid.updateScreen();
 			_vid.SAT_cleanSprites();
-//on vide l'écran et les sprites
+
+			SAT_RAMcleaner (HWRAM|LWRA1|VRAM1);
 
 			// flush inputs
 			_stub->_pi.dirMask = 0;
@@ -372,6 +376,7 @@ void Game::resetGameState() {
 
 void Game::mainLoop() {
 	playCutscene();
+
 	if (_cut._id == 0x3D) {
 		showFinalScore();
 		_endLoop = true;
@@ -420,7 +425,9 @@ void Game::mainLoop() {
 		/*if (_res._isDemo) {
 			_currentLevel = oldLevel;
 		}*/
+//emu_printf("6hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		changeLevel();
+emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
@@ -437,6 +444,7 @@ void Game::mainLoop() {
 			_currentRoom = _pgeLive[0].room_location;
 		_mix.pauseMusic();
 			loadLevelRoom();
+emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -962,8 +970,7 @@ bool Game::handleContinueAbort() {
 */
 		if (_stub->_pi.enter) {
 // vbt : corrige la ram quand on continue
-			current_lwram = (uint8_t *)save_current_lwram;
-			hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
+			SAT_RAMcleaner (HWRAM|LWRAM);
 // vbt : corrige la ram quand on continue
 			_stub->_pi.enter = false;
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
@@ -1778,13 +1785,11 @@ void Game::loadLevelData() {
 		break;
 #endif
 //	case kResourceTypeMac:
-// vbt : harmoniser les resets de pointeurs
-		hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
-		position_vram = 0x1000;
-//		position_vram = position_vram_aft_monster = 10*256; // vbt correction
+		SAT_RAMcleaner (HWRAM|LWRA1|VRAM1);
 //heapWalk();		
 		sat_free(_res._spc); // on ne vire pas
 		sat_free(_res._ani);
+emu_printf("2chwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_res.MAC_unloadLevelData();
 		sat_free(_res._cmd);
 		sat_free(_res._pol);
@@ -1858,7 +1863,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-emu_printf("hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
@@ -1969,6 +1974,7 @@ void Game::changeLevel() {
 //		slTVOn();
 //	clearStateRewind();
 	loadLevelData();
+emu_printf("3hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 	loadLevelRoom();
 	_vid.setPalette0xF();
 	_vid.setTextPalette();
@@ -2729,4 +2735,21 @@ current_lwram+=SAT_ALIGN(21623);
  //   wait_for_slave(); // Wait for slave to complete
     emu_printf("wait_for_slave end\n");
 #endif
+}
+
+void Game::SAT_RAMcleaner(unsigned char all) {
+emu_printf("ram clean %d\n",all);
+		hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
+		if (all & 4)
+			position_vram = 0x1000;
+		if (all & 2)
+		{
+			emu_printf("current_lwram1 %x\n",VBT_L_START);
+			current_lwram = (uint8_t *)VBT_L_START;
+		}
+		if (all & 1)
+		{
+			emu_printf("current_lwram2 %p\n",save_current_lwram);
+			current_lwram = (uint8_t *)save_current_lwram;
+		}
 }

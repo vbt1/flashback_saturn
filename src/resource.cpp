@@ -124,7 +124,6 @@ void Resource::clearLevelRes() {
 	sat_free(_pol);
 	sat_free(_cine_off);
 //	sat_free(_cine_txt);
-	current_lwram = (Uint8 *)VBT_L_START;
 }
 
 void Resource::load_DEM(const char *filename) {
@@ -1220,6 +1219,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 	
 	const ResourceMacEntry *entry = _mac->findEntry(name);
 	if (entry) {
+//		emu_printf("Resource '%s' found\n", name);
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
@@ -1264,7 +1264,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 }
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask) {
-//emu_printf("MAC_decodeImageData %p %p %i %x\n",ptr,dst,i,READ_BE_UINT16(ptr));	
+//emu_printf("MAC_decodeImageData %p %p %i %x\n",ptr,dst,i,READ_BE_UINT16(ptr));
 	const uint8_t *basePtr = ptr;
 	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
 //	assert(sig == 0xC211 || sig == 0xC103);
