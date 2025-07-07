@@ -8,6 +8,7 @@ extern "C" {
 	#include 	<string.h>
 #include <sl_def.h>
 #include <sgl.h>
+#include "sega_sys.h"
 extern Uint8 *current_lwram;
 }
 
@@ -594,6 +595,7 @@ void Menu::handleTitleScreen() {
 			case MENU_OPTION_ITEM_DEMO:
 				return;
 			case MENU_OPTION_ITEM_QUIT:
+				SYS_Exit(0);
 				return;
 			}
 			_nextScreen = SCREEN_TITLE;

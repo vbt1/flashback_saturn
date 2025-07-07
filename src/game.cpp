@@ -1,8 +1,8 @@
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x64000 // ne pas toucher
+#define VRAM_MAX 0x65000 // ne pas toucher
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
 
@@ -270,6 +270,7 @@ for (i=0;i<100;i++)
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 			_demoBin = (_demoBin + 1) % 2; //ARRAYSIZE(_demoInputs);
+//			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
 			const char *fn = _demoInputs[_demoBin].name;
 //			emu_printf("_demoBin '%d arraysz %d\n", _demoBin, ARRAYSIZE(_demoInputs));
 //			emu_printf("Loading inputs from '%s'\n", fn);
@@ -1051,9 +1052,9 @@ void Game::drawLevelTexts() {
 			drawIcon(icon_num, 80, 8, 0xA);
 			uint8_t txt_num = pge->init_PGE->text_num;
 			const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
-//			char toto [256];
-//			memcpy(&toto[2],str,*str);
-//	emu_printf("cut id %d drawLevelTexts %s\n",_cut._id,toto);
+			char toto [256];
+			memcpy(&toto[2],str,*str);
+	emu_printf("cut id %d drawLevelTexts %s\n",_cut._id,toto);
 //			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			if (_cut._id == 0xFFFF) // ou !=34 ou remonter avec texttodisplay
 				drawString(str, 176, 26, 0xE6, true);
@@ -1789,7 +1790,7 @@ void Game::loadLevelData() {
 //heapWalk();		
 		sat_free(_res._spc); // on ne vire pas
 		sat_free(_res._ani);
-emu_printf("2chwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+//emu_printf("2chwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_res.MAC_unloadLevelData();
 		sat_free(_res._cmd);
 		sat_free(_res._pol);
@@ -1961,12 +1962,26 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 }
 
 uint16_t Game::getRandomNumber() {
-	uint32_t n = _randSeed * 2;
+/*	uint32_t n = _randSeed * 2;
 	if (((int32_t)_randSeed) >= 0) {
 		n ^= 0x1D872B41;
 	}
 	_randSeed = n;
 	return n & 0xFFFF;
+*/
+/*	
+    _randSeed = (_randSeed * 16807) % 2147483647;
+    return (_randSeed >> 16) & 0xFFFF;
+*/
+// Compute next seed: X(n+1) = (a * X(n) + c) mod m
+#define MULTIPLIER 69069 // Common multiplier for good period
+#define INCREMENT 1      // Odd increment for LCG
+#define MODULUS 65536    // 2^16 for 16-bit modulus
+
+    _randSeed = (MULTIPLIER * _randSeed + INCREMENT) % MODULUS;
+    
+    // Convert to signed 16-bit range (-32768 to 32767)
+    return (int16_t)(_randSeed & 0xFFFF) - 32768;
 }
 
 void Game::changeLevel() {
@@ -2738,19 +2753,19 @@ current_lwram+=SAT_ALIGN(21623);
 }
 
 void Game::SAT_cleanRAM(unsigned char all) {
-emu_printf("ram clean %d\n",all);
+//emu_printf("ram clean %d\n",all);
 		if (all & 1)
 			hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
 		if (all & 8)
 			position_vram = 0x1000;
 		if (all & 4)
 		{
-			emu_printf("current_lwram1 %x\n",VBT_L_START);
+//			emu_printf("current_lwram1 %x\n",VBT_L_START);
 			current_lwram = (uint8_t *)VBT_L_START;
 		}
 		if (all & 2)
 		{
-			emu_printf("current_lwram2 %p\n",save_current_lwram);
+//			emu_printf("current_lwram2 %p\n",save_current_lwram);
 			current_lwram = (uint8_t *)save_current_lwram;
 		}
 }

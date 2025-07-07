@@ -109,20 +109,28 @@ bool Resource::fileExists(const char *filename) {
 }
 */
 void Resource::clearLevelRes() {
-	sat_free(_tbn); _tbn = 0;
-	sat_free(_pal); _pal = 0;
-	sat_free(_map); _map = 0;
+//	sat_free(_tbn); 
+	_tbn = 0;
+//	sat_free(_pal); 
+	_pal = 0;
+//	sat_free(_map); 
+	_map = 0;
 //	sat_free(_lev); _lev = 0;
 //	_levNum = -1;
 //	sat_free(_ani); _ani = 0; // hwram
 //	free_OBJ();
 
-	sat_free(_spc);	
-	sat_free(_ani);
+//	sat_free(_spc);	
+	_spc = 0;
+//	sat_free(_ani);
+	_ani = 0;
 	MAC_unloadLevelData();
-	sat_free(_cmd);
-	sat_free(_pol);
-	sat_free(_cine_off);
+//	sat_free(_cmd);
+	_cmd = 0;
+//	sat_free(_pol);
+	_pol = 0;
+//	sat_free(_cine_off);
+	_cine_off = 0;
 //	sat_free(_cine_txt);
 }
 
@@ -482,7 +490,7 @@ static const char *getTextBin(Language lang, ResourceType type) {
 		return "TBN";
 	}
 }
-*/
+
 void Resource::unload(int objType) {
 	
 //	emu_printf("Resource::unload(int objType)\n");
@@ -506,7 +514,7 @@ void Resource::unload(int objType) {
 		break;
 	}
 }
-
+*/
 void Resource::load(const char *objName, int objType, const char *ext) {
 //	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
@@ -1363,7 +1371,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 
 void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 //emu_printf("MAC_loadTitleImage\n");	
-	char name[64];
+	char name[8];
 	snprintf(name, sizeof(name), "Title %d", i);
 //emu_printf("decodeResourceMacData %s\n",name);	
 	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
@@ -1375,7 +1383,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 void Resource::MAC_unloadLevelData() {
 
 //	emu_printf("unload _ani %p\n",_ani);	
-	sat_free(_ani); // vbt est dans scratchbuff
+//	sat_free(_ani); // vbt est dans scratchbuff
 //	emu_printf("unload _ani %p\n",_ani);
 	_ani = 0;
 	ObjectNode *prevNode = 0;
@@ -1387,9 +1395,9 @@ void Resource::MAC_unloadLevelData() {
 		}
 	}
 	_numObjectNodes = 0;
-	sat_free(_tbn);
+//	sat_free(_tbn);
 	_tbn = 0;
-	sat_free(_str);
+//	sat_free(_str);
 	_str = 0;
 }
 
@@ -1397,7 +1405,7 @@ static const uint8_t _macLevelColorOffsets[] = { 24, 28, 36, 40, 44 }; // red pa
 static const char *_macLevelNumbers[] = { "1", "2", "3", "4-1", "4-2", "5-1", "5-2" };
 
 void Resource::MAC_loadLevelData(int level) {
-	char name[64];
+	char name[22];
 //emu_printf("MAC_loadLevelData\n");	
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
@@ -1445,7 +1453,7 @@ void Resource::MAC_loadLevelData(int level) {
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //emu_printf("MAC_loadLevelRoom\n");	
-	char name[64];
+	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
 
@@ -1553,7 +1561,7 @@ emu_printf("MAC_getImageData bad sig %x %p\n",sig,ptr);
 }
 
 bool Resource::MAC_hasLevelMap(int level, int room) const {
-	char name[64];
+	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], room);
 	return _mac->findEntry(name) != 0;
 }
@@ -1570,14 +1578,13 @@ static void stringLowerCase(char *p) {
 void Resource::MAC_unloadCutscene() {
 	current_lwram = (uint8_t *)save_current_lwram;
 //	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
-	sat_free(_pol);
+//	sat_free(_pol);
 	_pol = 0;
-	sat_free(_cmd);
+//	sat_free(_cmd);
 	_cmd = 0;
 //	sat_free(_cine_txt);
 //	_cine_txt = 0;
 }
-
 
 #ifdef USE_SLAVE
 volatile bool slave_done_flag = false;
@@ -1643,7 +1650,7 @@ void Resource::process_polygons(const char* cutscene) {
 void Resource::MAC_loadCutscene(const char *cutscene) {
 //		emu_printf("MAC_loadCutscene1 %s %p\n", cutscene, current_lwram);	
 //	MAC_unloadCutscene();
-	char name[32];
+	char name[20];
 	save_current_lwram = (uint8_t *)current_lwram;
 	
 
