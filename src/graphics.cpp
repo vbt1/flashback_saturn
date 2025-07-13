@@ -10,6 +10,7 @@ extern unsigned char *hwram_screen;
 #include "graphics.h"
 
 #define VIDEO_PITCH 240
+#define USE_MESH 1
 
 void Graphics::setLayer(uint8_t *layer, int pitch) {
 	_layer = layer;
@@ -254,17 +255,42 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
             x1 = *pts++;
         } while (x1 >= 0);
     } else {
+#ifdef USE_MESH
+		uint8_t y = 0;
+        do {
+            int16_t x2 = *pts++;
+            if (x2 > _crw - 1) x2 = _crw - 1;
+            if (x1 <= x2) {
+                uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
+                int x = x1;
+                const uint8_t mask = color & ~7;
+                while (curDst < end) {
+					const uint8_t val = *curDst | mask;
+					if ((x & 1) ^ (y & 1)) {
+						*curDst = color;
+					} else if (val == 8) {
+						*curDst = 0;
+					}
+					curDst++;
+					++x;
+                }
+            }
+			y++;
+            dst += VIDEO_PITCH;
+            x1 = *pts++;
+        } while (x1 >= 0);
+#else
         uint8_t *aux1 = hwram_screen + (VIDEO_PITCH * 128) + (*(_areaPoints) + _cry) * (VIDEO_PITCH / 2) + _crx / 2;
         do {
             int16_t x2 = *pts++;
             if (x2 > _crw - 1) x2 = _crw - 1;
             if (x1 <= x2) {
                 uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
-                uint8_t *aux = aux1 + x1 / 2;
+                uint8_t *aux = aux1 + (x1 / 2);
                 int x = x1;
                 uint8_t mask = color & ~7;
                 while (curDst < end) {
-                    uint8_t val = *curDst | mask;
+                    const uint8_t val = *curDst | mask;
                     if (val != 8) {
                         *curDst++ = val;
                     } else {
@@ -279,6 +305,7 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
             aux1 += VIDEO_PITCH / 2;
             x1 = *pts++;
         } while (x1 >= 0);
+#endif
     }
 }
 

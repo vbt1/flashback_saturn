@@ -1052,9 +1052,9 @@ void Game::drawLevelTexts() {
 			drawIcon(icon_num, 80, 8, 0xA);
 			uint8_t txt_num = pge->init_PGE->text_num;
 			const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
-			char toto [256];
-			memcpy(&toto[2],str,*str);
-	emu_printf("cut id %d drawLevelTexts %s\n",_cut._id,toto);
+//			char toto [256];
+//			memcpy(&toto[2],str,*str);
+//	emu_printf("cut id %d drawLevelTexts %s\n",_cut._id,toto);
 //			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			if (_cut._id == 0xFFFF) // ou !=34 ou remonter avec texttodisplay
 				drawString(str, 176, 26, 0xE6, true);
