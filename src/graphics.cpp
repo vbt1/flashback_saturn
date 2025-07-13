@@ -242,24 +242,44 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
     int16_t x1 = *pts++;
     if (x1 < 0) return;
 
-    do {
-        int16_t x2 = *pts++;
-        if (x2 > _crw - 1) x2 = _crw - 1;
-        if (x1 <= x2) {
-            uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
-            if (hasAlpha && color > 7) {
+    if (!hasAlpha || color <= 7) {
+        do {
+            int16_t x2 = *pts++;
+            if (x2 > _crw - 1) x2 = _crw - 1;
+            if (x1 <= x2) {
+                uint8_t *curDst = dst + x1;
+                memset(curDst, color, x2 - x1 + 1);
+            }
+            dst += VIDEO_PITCH;
+            x1 = *pts++;
+        } while (x1 >= 0);
+    } else {
+        uint8_t *aux1 = hwram_screen + (VIDEO_PITCH * 128) + (*(_areaPoints) + _cry) * (VIDEO_PITCH / 2) + _crx / 2;
+        do {
+            int16_t x2 = *pts++;
+            if (x2 > _crw - 1) x2 = _crw - 1;
+            if (x1 <= x2) {
+                uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
+                uint8_t *aux = aux1 + x1 / 2;
+                int x = x1;
                 uint8_t mask = color & ~7;
                 while (curDst < end) {
                     uint8_t val = *curDst | mask;
-                    *curDst++ = val == 8 ? 15 : val;
+                    if (val != 8) {
+                        *curDst++ = val;
+                    } else {
+                        uint8_t nibble = (x & 1) ? *aux : (*aux >> 4);
+                        *curDst++ = (nibble & 7) + 8;
+                    }
+                    if (x & 1) ++aux;
+                    ++x;
                 }
-            } else {
-                memset(curDst, color, end - curDst);
             }
-        }
-        dst += VIDEO_PITCH;
-        x1 = *pts++;
-    } while (x1 >= 0);
+            dst += VIDEO_PITCH;
+            aux1 += VIDEO_PITCH / 2;
+            x1 = *pts++;
+        } while (x1 >= 0);
+    }
 }
 
 void Graphics::drawSegment(uint8_t color, bool hasAlpha, int16_t ys, const Point *pts, uint8_t numPts) {
