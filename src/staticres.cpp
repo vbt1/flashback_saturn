@@ -1223,7 +1223,7 @@ const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
 	"START",
 	"SKILL",
 	"PASSWORD",
-	"INFO",
+	"CONTROLS",	// fix text on mac
 	"QUIT",
 	"SKILL LEVEL :",
 	"EASY",

@@ -192,7 +192,7 @@ struct Resource {
 	void setLanguage(Language lang);
 
 //	bool isDOS()   const { return _type == kResourceTypeDOS; }
-	bool isMac()   const { return _type == kResourceTypeMac; }
+//	bool isMac()   const { return _type == kResourceTypeMac; }
 
 	bool fileExists(const char *filename);
 
@@ -268,7 +268,6 @@ struct Resource {
 	const uint8_t *getCineString(int num) const {
 //		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_cine_txt);
-//emu_printf("getCineString num : %d count %d %p\n",num,count,_cine_txt);			
 			assert(num < count);
 			const int offset = READ_BE_UINT16(_cine_txt + 2 + num * 2);
 			return _cine_txt + offset;
@@ -285,6 +284,12 @@ struct Resource {
 */	}
 	const char *getMenuString(int num) const {
 		return (num >= 0 && num < LocaleData::LI_NUM) ? _textsTable[num] : "";
+#if 0
+			const int count = READ_BE_UINT16(_textsTable);
+			assert(num < count);
+			const int offset = READ_BE_UINT16(_textsTable + 2 + num * 2);
+			return _textsTable + offset;
+#endif
 	}
 	const uint8_t *getCreditsString(int num) {
 		assert(_type == kResourceTypeMac);

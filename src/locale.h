@@ -20,7 +20,7 @@
 #define __LOCALE_H__
 
 #include "intern.h"
-
+/*
 struct Locale {
 	enum Id {
 		LI_01_CONTINUE_OR_ABORT = 0,
@@ -48,9 +48,9 @@ struct Locale {
 		
 		LI_NUM
 	};
-
-	static const char *_textsTableFR[];
-	static const char *_textsTableEN[];
+*/
+//	static const char *_textsTableFR[];
+//	static const char *_textsTableEN[];
 //	static const char *_textsTableDE[];
 //	static const char *_textsTableSP[];
 //	static const uint8 _stringsTableFR[];

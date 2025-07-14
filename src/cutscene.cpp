@@ -1319,7 +1319,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 	const int count = READ_BE_UINT16(p);
 	int offset = 0;
 	_baseOffset = (count + 1) * 2;
-	if (_res->isMac() && _id != 3 && _id != 19 && _id != 22 && _id != 23 && _id != 24) {
+	if (_id != 3 && _id != 19 && _id != 22 && _id != 23 && _id != 24) {
 		_vid->_charShadowColor = 0xE0;
 //		assert(num < count);
 		if(num >= count)

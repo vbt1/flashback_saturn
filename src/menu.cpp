@@ -523,9 +523,9 @@ void Menu::handleTitleScreen() {
 			_vid->fadeOut();
 			loadPicture("menu1");
 //			_vid->fullRefresh();
-			_charVar1 = _res->isMac() ? 0xE0 : 0; // shadowColor
-			_charVar3 = _res->isMac() ? 0xE4 : 1; // selectedColor
-			_charVar4 = _res->isMac() ? 0xE5 : 2; // defaultColor
+			_charVar1 = /*_res->isMac() ?*/ 0xE0 /*: 0*/; // shadowColor
+			_charVar3 = /*_res->isMac() ?*/ 0xE4 /*: 1*/; // selectedColor
+			_charVar4 = /*_res->isMac() ?*/ 0xE5 /*: 2*/; // defaultColor
 			currentEntry = 0;
 			_nextScreen = -1;
 		}

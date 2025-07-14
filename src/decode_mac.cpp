@@ -53,7 +53,6 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
     // Special case for ID 5500
     if (id == 5500) {
         GFS_Load(GFS_NameToId((int8_t*)"CONTROLS.BIN"), 0, (void*)(current_lwram + 36352), 147456);
-		memset(current_lwram + 183808,0x00,45568);
         return NULL;
     }
 

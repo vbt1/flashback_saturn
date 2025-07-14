@@ -1001,7 +1001,7 @@ bool Game::handleContinueAbort() {
 		_stub->sleep(100);
 		--timeout;
 	}
-	memset4_fast(_vid._frontLayer,0x00,512*400);
+	memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 	return false;
 }
@@ -2159,7 +2159,7 @@ void Game::inp_update() {
 		_stub->_pi.shift = (keymask & 0x40) != 0; //PAD_PULL_B // action
 		_stub->_pi.backspace = (keymask & 0x80) != 0; //PAD_PUSH_START // inventory
 		
-emu_printf("Item %d gun %d action/run %d invent %d dir %x\n", _stub->_pi.enter, _stub->_pi.space, _stub->_pi.shift,_stub->_pi.backspace, _stub->_pi.dirMask);
+//emu_printf("Item %d gun %d action/run %d invent %d dir %x\n", _stub->_pi.enter, _stub->_pi.space, _stub->_pi.shift,_stub->_pi.backspace, _stub->_pi.dirMask);
 
 /*
 		DIR_UP    = 1 << 0,
