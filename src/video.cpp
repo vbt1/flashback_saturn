@@ -240,6 +240,7 @@ void Video::setLevelPalettes() {
 	setTextPalette();
 }
 */
+// vbt : meilleure fonction
 /*
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *src, uint8_t color, uint8_t chr) {
     if (chr < 32) return;
@@ -269,7 +270,75 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
     }
 }
 */
+#define CHAR_PIXEL_SIZE 256 // 16x16 pixels, 1 byte per pixel
+#define CHAR_OFFSET 32      // ASCII offset for font data
+#define SHADOW_PIXEL 0xC0
+#define FRONT_PIXEL 0xC1
 
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *fontData, uint8_t color, uint8_t chr) {
+    if (chr < CHAR_OFFSET) return;
+
+    // Compute source and destination pointers
+    const uint8_t *srcData = fontData + ((chr - CHAR_OFFSET) * CHAR_PIXEL_SIZE);
+    uint8_t *dstPtr = dst + (y * 2 * pitch) + (x * 2);
+    const int rowAdvance = pitch; // Full pitch stride per row
+    const uint8_t foreground = color;
+    const uint8_t shadow = _charShadowColor;
+
+    // Process 16 rows
+    for (int i = 0; i < 16; i++) {
+        // Process 16 pixels per row in groups of 4
+        uint8_t *rowDst = dstPtr;
+        const uint8_t *rowSrc = srcData;
+        for (int j = 0; j < 16; j += 4) {
+            uint8_t src0 = rowSrc[j];
+            uint8_t src1 = rowSrc[j + 1];
+            uint8_t src2 = rowSrc[j + 2];
+            uint8_t src3 = rowSrc[j + 3];
+            rowDst[j]     = src0 == SHADOW_PIXEL ? shadow : (src0 == FRONT_PIXEL ? foreground : rowDst[j]);
+            rowDst[j + 1] = src1 == SHADOW_PIXEL ? shadow : (src1 == FRONT_PIXEL ? foreground : rowDst[j + 1]);
+            rowDst[j + 2] = src2 == SHADOW_PIXEL ? shadow : (src2 == FRONT_PIXEL ? foreground : rowDst[j + 2]);
+            rowDst[j + 3] = src3 == SHADOW_PIXEL ? shadow : (src3 == FRONT_PIXEL ? foreground : rowDst[j + 3]);
+        }
+        dstPtr += rowAdvance;
+        srcData += 16;
+    }
+}
+/*
+#include <cstdint>
+#define CHAR_PIXEL_SIZE 256 // 16x16 pixels, 1 byte per pixel
+#define CHAR_OFFSET 32      // ASCII offset for font data
+#define SHADOW_PIXEL 0xC0
+#define FRONT_PIXEL 0xC1
+// nouvelle meilleure version
+void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *fontData, uint8_t color, uint8_t chr) {
+    if (chr < CHAR_OFFSET) return;
+
+    // Compute source and destination pointers
+    const uint8_t *srcData = fontData + ((chr - CHAR_OFFSET) * CHAR_PIXEL_SIZE);
+    uint8_t *dstPtr = dst + (y * 2 * pitch) + (x * 2);
+    const uint8_t foreground = color;
+    const uint8_t shadow = _charShadowColor;
+    const int rowAdvance = pitch; // Advance to next row after 16 bytes
+
+    // Process 16 rows
+    for (int i = 0; i < 16; i++, dstPtr += rowAdvance, srcData += 16) {
+        // Process 16 pixels per row in groups of 4
+        for (int j = 0; j < 16; j += 4) {
+            uint8_t src0 = srcData[j];
+            uint8_t src1 = srcData[j + 1];
+            uint8_t src2 = srcData[j + 2];
+            uint8_t src3 = srcData[j + 3];
+
+            dstPtr[j]     = src0 == SHADOW_PIXEL ? shadow : (src0 == FRONT_PIXEL ? foreground : dstPtr[j]);
+            dstPtr[j + 1] = src1 == SHADOW_PIXEL ? shadow : (src1 == FRONT_PIXEL ? foreground : dstPtr[j + 1]);
+            dstPtr[j + 2] = src2 == SHADOW_PIXEL ? shadow : (src2 == FRONT_PIXEL ? foreground : dstPtr[j + 2]);
+            dstPtr[j + 3] = src3 == SHADOW_PIXEL ? shadow : (src3 == FRONT_PIXEL ? foreground : dstPtr[j + 3]);
+        }
+    }
+}
+*/
+/*
 #define SCREEN_WIDTH 512
 #define CHAR_PIXEL_SIZE 256 // 16x16 pixels, 1 byte per pixel
 #define CHAR_OFFSET 32      // ASCII offset for font data
@@ -325,7 +394,7 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
         dstShort += 256; // 512 bytes = 256 shorts per row
     }
 }
-
+*/
 #if 0
 void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint8_t *fontData, uint8_t color, uint8_t chr) {
     if (chr < 32) return;

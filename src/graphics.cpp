@@ -31,7 +31,33 @@ void Graphics::drawPoint(uint8_t color, const Point *pt) {
 		*(_layer + (pt->y + _cry) * VIDEO_PITCH + pt->x + _crx) = color;
 	}
 }
+// vbt :  peut etre plus rapide
+void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
+    int16_t x1 = pt1->x + _crx, y1 = pt1->y + _cry;
+    int16_t x2 = pt2->x + _crx, y2 = pt2->y + _cry;
+    
+    // General case with optimized pointer updates
+    int16_t dx = x2 - x1, dy = y2 - y1;
+    int16_t sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+    dx = dx < 0 ? -dx : dx;
+    dy = dy < 0 ? -dy : dy;
+    int16_t err = (dx > dy ? dx : -dy) / 2;
+    
+    uint8_t *layerBase = _layer + y1 * VIDEO_PITCH + x1 + _cry * VIDEO_PITCH + _crx;
+    const int16_t pitchStep = sy * VIDEO_PITCH;
+    
+    for (;;) {
+        if ((uint16_t)x1 < _crw && (uint16_t)y1 < _crh) {
+            *layerBase = color;
+        }
+        if (x1 == x2 && y1 == y2) break;
+        int16_t e2 = err;
+        if (e2 > -dx) { err -= dy; x1 += sx; layerBase += sx; }
+        if (e2 < dy) { err += dx; y1 += sy; layerBase += pitchStep; }
+    }
+}
 
+/*
 void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
     int16_t x = pt1->x + _crx, y = pt1->y + _cry;
     int16_t dx = pt2->x - pt1->x, dy = pt2->y - pt1->y;
@@ -52,7 +78,7 @@ void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
         if (e2 < dy) { err += dx; y += sy; }
     }
 }
-
+*/
 /*
 void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
 //	debug(DBG_VIDEO, "Graphics::drawLine()");
@@ -254,59 +280,70 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
             dst += VIDEO_PITCH;
             x1 = *pts++;
         } while (x1 >= 0);
-    } else {
-#ifdef USE_MESH
-		uint8_t y = 0;
-        do {
-            int16_t x2 = *pts++;
-            if (x2 > _crw - 1) x2 = _crw - 1;
-            if (x1 <= x2) {
-                uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
-                int x = x1;
-                const uint8_t mask = color & ~7;
-                while (curDst < end) {
-					const uint8_t val = *curDst | mask;
-					if ((x & 1) ^ (y & 1)) {
-						*curDst = color;
-					} else if (val == 8) {
-						*curDst = 0;
-					}
-					curDst++;
-					++x;
-                }
-            }
-			y++;
-            dst += VIDEO_PITCH;
-            x1 = *pts++;
-        } while (x1 >= 0);
-#else
-        uint8_t *aux1 = hwram_screen + (VIDEO_PITCH * 128) + (*(_areaPoints) + _cry) * (VIDEO_PITCH / 2) + _crx / 2;
-        do {
-            int16_t x2 = *pts++;
-            if (x2 > _crw - 1) x2 = _crw - 1;
-            if (x1 <= x2) {
-                uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
-                uint8_t *aux = aux1 + (x1 / 2);
-                int x = x1;
-                uint8_t mask = color & ~7;
-                while (curDst < end) {
-                    const uint8_t val = *curDst | mask;
-                    if (val != 8) {
-                        *curDst++ = val;
-                    } else {
-                        uint8_t nibble = (x & 1) ? *aux : (*aux >> 4);
-                        *curDst++ = (nibble & 7) + 8;
-                    }
-                    if (x & 1) ++aux;
-                    ++x;
-                }
-            }
-            dst += VIDEO_PITCH;
-            aux1 += VIDEO_PITCH / 2;
-            x1 = *pts++;
-        } while (x1 >= 0);
-#endif
+		return;
     }
+#ifdef USE_MESH
+	int16_t x2 = *pts++;
+	if (x2 > _crw - 1) x2 = _crw - 1;
+	if (x1 <= x2) {
+		uint8_t *curDst = dst + x1;
+		memset(curDst, color, x2 - x1 + 1);
+	}
+	dst += VIDEO_PITCH;
+	x1 = *pts++;
+
+	uint8_t y = 1;
+	const uint8_t mask = color & ~7;
+	do {
+		int16_t x2 = *pts++;
+		if (x2 > _crw - 1) x2 = _crw - 1;
+		if (x1 <= x2) {
+			uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
+			int x = x1;
+
+			while (curDst < end) {
+				const uint8_t val = *curDst | mask;
+				
+				if ((x & 1) ^ (y & 1)) {
+					*curDst = color;
+				} else if (val == 8) {
+					*curDst = 0;
+				}
+				curDst++;
+				++x;
+			}
+		}
+		y++;
+		dst += VIDEO_PITCH;
+		x1 = *pts++;
+	} while (x1 >= 0);
+#else
+	uint8_t *aux1 = hwram_screen + (VIDEO_PITCH * 128) + (*(_areaPoints) + _cry) * (VIDEO_PITCH / 2) + _crx / 2;
+	do {
+		int16_t x2 = *pts++;
+		if (x2 > _crw - 1) x2 = _crw - 1;
+		if (x1 <= x2) {
+			uint8_t *curDst = dst + x1, *end = curDst + (x2 - x1 + 1);
+			uint8_t *aux = aux1 + (x1 / 2);
+			int x = x1;
+			uint8_t mask = color & ~7;
+			while (curDst < end) {
+				const uint8_t val = *curDst | mask;
+				if (val != 8) {
+					*curDst++ = val;
+				} else {
+					uint8_t nibble = (x & 1) ? *aux : (*aux >> 4);
+					*curDst++ = (nibble & 7) + 8;
+				}
+				if (x & 1) ++aux;
+				++x;
+			}
+		}
+		dst += VIDEO_PITCH;
+		aux1 += VIDEO_PITCH / 2;
+		x1 = *pts++;
+	} while (x1 >= 0);
+#endif
 }
 
 void Graphics::drawSegment(uint8_t color, bool hasAlpha, int16_t ys, const Point *pts, uint8_t numPts) {

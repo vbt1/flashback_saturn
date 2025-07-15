@@ -83,8 +83,10 @@ void Cutscene::sync(int frameDelay) {
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
 #if 1
+	const int32_t target = frameDelay * (1000 / frameHz);
 	if (pause<-4)
-		emu_printf("too slow !! duration %d real duration %d delay %d \n",frameDelay * (1000 / frameHz), pause, delay);
+		emu_printf("too slow !! target: %d ms, actual: %d ms, overtime: %d ms\n",
+		target, delay, delay - target);
 #endif
 	if (pause > 0) {
 		_stub->sleep(pause);
@@ -122,12 +124,16 @@ void Cutscene::updateScreen() {
 #ifdef DEBUG_CUTSCENE
 DecodeBuffer buf{};
 #endif
+//emu_printf("VBT updateScreen1 duration %d\n",_stub->getTimeStamp() - _tstamp);
+
 	if(hasText)
 	{
 		_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
 //		memset4_fast(&_vid->_frontLayer[96*_vid->_w],0x0000,_vid->_w* 320); // nettoyeur de texte du bas
 		hasText = false;
 	}
+//emu_printf("VBT updateScreen2 duration %d\n",_stub->getTimeStamp() - _tstamp);
+
 	sync(_frameDelay - 1);
 	SWAP(_frontPage, _backPage);
 
@@ -142,10 +148,10 @@ DecodeBuffer buf{};
     user_sprite.YB = 0 + (128 << 1);
     user_sprite.GRDA = 0;
     size_t spriteVramOffset;
-
+	const Uint16 size = (IMG_SIZE >> 1);
+	
     if (transferAux) {
-		const Uint16 size = 240 * 64;
-		spriteVramOffset = 0x80000 - (IMG_SIZE >> 1);
+		spriteVramOffset = 0x80000 - size;
         slTransferEntry((void*)_auxPage, (void*)(SpriteVRAM + spriteVramOffset), size);
     }
     user_sprite.SRCA = spriteVramOffset / 8;
@@ -153,13 +159,14 @@ DecodeBuffer buf{};
 
     user_sprite.COLR = 0xD0;
 //    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == hwram_screen+IMG_SIZE) ? (IMG_SIZE >> 1) : 0);
-    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == hwram_screen) ? 0 : (IMG_SIZE >> 1));
+    spriteVramOffset = 0x80000 - IMG_SIZE - ((_frontPage == hwram_screen) ? 0 : size);
     user_sprite.SRCA = spriteVramOffset / 8;
 
     uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
 	packPixels(_frontPage, aux, IMG_SIZE);
     slSetSprite(&user_sprite, toFIXED2(240));
     frame_x++;
+
     slSynch();
     updatePalette();
     transferAux = 0;
@@ -475,9 +482,9 @@ void Cutscene::op_markCurPos() {
 			_frameDelay = 6;
 		}
 	} else {
-//	emu_printf("Cutscene::op_markCurPos() drawCreditsText\n");
 		drawCreditsText();
 	}
+//emu_printf("updateScreen 1\n");	
 	updateScreen();
 	clearBackPage();
 	_creditsSlowText = false;
@@ -494,6 +501,8 @@ void Cutscene::op_refreshScreen() {
 
 void Cutscene::op_waitForSync() {
 //	emu_printf("Cutscene::op_waitForSync()\n");
+//emu_printf("VBT op_waitForSync duration %d\n",_stub->getTimeStamp() - _tstamp);
+	
 	if (_creditsSequence) {
 		uint16_t n = fetchNextCmdByte() * 2;
 		do {
@@ -502,19 +511,23 @@ void Cutscene::op_waitForSync() {
 			if (_textBuf == _textCurBuf) {
 				_creditsTextCounter = /*_res->isDOS() ? 20 :*/ 60;
 			}
+//emu_printf("VBT drawCreditsText1 duration %d\n",_stub->getTimeStamp() - _tstamp);
 			drawCreditsText();
+//emu_printf("VBT drawCreditsText2 duration %d\n",_stub->getTimeStamp() - _tstamp);
 //			updateScreen();
 		} while (--n);
 //		clearBackPage();
 		_creditsSlowText = false;
 	} else {
 		_frameDelay = fetchNextCmdByte() * 4;
+//emu_printf("VBT sync %d duration %d\n",_frameDelay, _stub->getTimeStamp() - _tstamp);
 		sync(_frameDelay);
 /*		if(_id != 17) // VBt : à ne pas remettre
 		{
 			_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
 		}*/
 	}
+//	emu_printf("VBT op_waitForSyncEnd duration %d\n",_stub->getTimeStamp() - _tstamp);
 }
 
 void Cutscene::checkShape(uint16_t shapeOffset) {
@@ -1358,8 +1371,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 //			emu_printf("Invalid cutscene opcode = 0x%02X\n", op);
 			continue;
 		}
-//emu_printf("VBT cutmainLoop k op %d\n",op);
-		(this->*_opcodeTable[op])();
+ 		(this->*_opcodeTable[op])();
 		_stub->processEvents();
 		if (_stub->_pi.backspace) {
 			_stub->_pi.backspace = false;
