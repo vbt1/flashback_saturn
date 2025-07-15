@@ -1411,6 +1411,15 @@ int Game::pge_op_findAndCopyPiege(ObjectOpcodeArgs *args) {
 int Game::pge_op_isInRandomRange(ObjectOpcodeArgs *args) {
 	uint16_t n = args->a;
 	if (n != 0) {
+
+		if (_demoBin != -1) {
+			const int x = _demoRandCounter;
+			++_demoRandCounter;
+			if (_demoRandCounter >= _demoRandRange) {
+				_demoRandCounter = 0;
+			}
+			return (x % n) == 0 ? 1 : 0;
+		}
 		if ((getRandomNumber() % n) == 0) {
 			return 1;
 		}

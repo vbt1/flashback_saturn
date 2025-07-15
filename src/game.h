@@ -57,6 +57,7 @@ struct Game {
 	};
 
 	static const Demo _demoInputs[3];
+	static const DemoMac _demoInputsMac[3];
 	static const Level _gameLevels[];
 	static const uint16_t _scoreTable[];
 	static const uint8_t _monsterListLevel1[];
@@ -89,6 +90,7 @@ struct Game {
 	uint8_t _currentLevel;
 	uint8_t _skillLevel;
 	int _demoBin;
+	int16_t _demoRandCounter, _demoRandRange; // Used for Macintosh demo inputs replay
 	uint32_t _score;
 	uint8_t _currentRoom;
 	uint8_t _currentIcon;

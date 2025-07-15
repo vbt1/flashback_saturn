@@ -269,8 +269,7 @@ for (i=0;i<100;i++)
 		SAT_cleanRAM (HWRAM|LWRA1|VRAM1);
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
-			_demoBin = (_demoBin + 1) % 2; //ARRAYSIZE(_demoInputs);
-//			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
+			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
 			const char *fn = _demoInputs[_demoBin].name;
 //			emu_printf("_demoBin '%d arraysz %d\n", _demoBin, ARRAYSIZE(_demoInputs));
 //			emu_printf("Loading inputs from '%s'\n", fn);
@@ -282,6 +281,8 @@ for (i=0;i<100;i++)
 			_skillLevel = kSkillNormal;
 			_currentLevel = _demoInputs[_demoBin].level;
 			_randSeed = 0;
+			_demoRandCounter = 0;
+			_demoRandRange = _demoInputsMac[_demoBin].rnd;
 		} else
 #endif
 		{
@@ -1842,14 +1843,10 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 #ifdef DEMO
 	if (_demoBin != -1) {
 		_cut._id = 0xFFFF;
-		if (_demoInputs[_demoBin].room != 255) {
-			_pgeLive[0].room_location = _demoInputs[_demoBin].room;
-			_pgeLive[0].pos_x = _demoInputs[_demoBin].x;
-			_pgeLive[0].pos_y = _demoInputs[_demoBin].y;
-			_inp_demPos = 0;
-		} else {
-			_inp_demPos = 1;
-		}
+		_pgeLive[0].room_location = _demoInputsMac[_demoBin].room;
+		_pgeLive[0].pos_x = _demoInputsMac[_demoBin].x;
+		_pgeLive[0].pos_y = _demoInputsMac[_demoBin].y;
+		_inp_demPos = 0;
 //		_printLevelCodeCounter = 0;
 	}
 #endif

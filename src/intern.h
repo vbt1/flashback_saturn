@@ -98,6 +98,13 @@ struct Demo {
 	int x, y;
 };
 
+struct DemoMac {
+	uint8_t level;
+	uint8_t room;
+	uint8_t x, y;
+	uint8_t rnd;
+};
+
 struct Level {
 	const char *name;
 //	const char *name2;
