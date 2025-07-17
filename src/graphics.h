@@ -32,6 +32,7 @@ struct Graphics {
 	void drawPolygonOutline(uint8_t color, const Point *pts, uint8_t numPts);
 	void drawPolygon(uint8_t color, bool hasAlpha, const Point *pts, uint8_t numPts);
 	void floodFill(uint8_t color, const Point *pts, uint8_t numPts);
+	void SAT_fillMesh();
 };
 
 #endif // GRAPHICS_H__

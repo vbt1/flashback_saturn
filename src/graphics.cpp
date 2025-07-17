@@ -5,10 +5,12 @@
  */
 extern "C" {
 #include <string.h>
+#include <sl_def.h>
 extern unsigned char *hwram_screen;
 }
 #include "graphics.h"
-
+#include "decode_mac.h"
+#include "video.h"
 #define VIDEO_PITCH 240
 #define USE_MESH 1
 
@@ -285,6 +287,7 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
 #ifdef USE_MESH
 	int16_t x2 = *pts++;
 	if (x2 > _crw - 1) x2 = _crw - 1;
+//	emu_printf("color %d\n", color);
 	if (x1 <= x2) {
 		uint8_t *curDst = dst + x1;
 		memset(curDst, color, x2 - x1 + 1);
@@ -817,7 +820,17 @@ gfx_drawPolygonEnd:
 
 gfx_fillArea:
 	*rpts++ = -1;
-	fillArea(color, hasAlpha);
+#ifdef USE_MESH	
+	if(!(color==12 && hasAlpha))
+#endif
+		fillArea(color, hasAlpha);
+#ifdef USE_MESH
+	else
+	{
+		SAT_fillMesh();
+		emu_printf("dy=%d color %d hasAlpha%d\n",dy,color,hasAlpha);
+	}
+#endif
 }
 
 //static int16_t _pointsQueue[8192];
@@ -827,7 +840,7 @@ void Graphics::floodFill(uint8_t color, const Point *pts, uint8_t numPts) {
 //	assert(numPts >= 3);
 	if(numPts < 3)
 	{
-		emu_printf("Graphics::floodFill\n");
+//		emu_printf("Graphics::floodFill\n");
 		return;
 	}
 	int xmin, xmax;
@@ -885,4 +898,35 @@ void Graphics::floodFill(uint8_t color, const Point *pts, uint8_t numPts) {
 		++start_x;
 		++start_y;
 	}
+}
+
+void Graphics::SAT_fillMesh()
+{
+	int16_t *pts = _areaPoints;
+	uint8_t start_y = *pts;
+	int16_t x1 = *pts++;
+	int16_t x2 = *pts++;
+	emu_printf("start_y %d\n",start_y);
+/*
+	do {
+		int16_t x2 = *pts++;
+		x1 = *pts++;
+	} while (x1 >= 0);
+*/
+	SPRITE user_sprite;
+    user_sprite.PMOD = ECdis | MESHon | 0x0800;
+    user_sprite.COLR = 0xCC;
+    user_sprite.SIZE = 0x1E80;
+    user_sprite.CTRL = FUNC_Polygon;
+    user_sprite.XA = 0;
+    user_sprite.YA = 0;
+    user_sprite.XB = 100;
+    user_sprite.YB = 0;
+    user_sprite.XD = 0;
+    user_sprite.YD = 100;
+    user_sprite.XC = 100;
+    user_sprite.YC = 100;
+    user_sprite.GRDA = 0;
+	 user_sprite.SRCA = 0x1000/8;
+	slSetSprite(&user_sprite, toFIXED2(240));
 }
