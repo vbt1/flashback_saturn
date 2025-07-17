@@ -167,6 +167,12 @@ DecodeBuffer buf{};
     slSetSprite(&user_sprite, toFIXED2(240));
     frame_x++;
 
+	if(_id == 0x48)
+	{
+		_vid->SAT_displayMeshSprite(-239+5*2,-239+239*2,-126+22*2,-126+45*2);
+		_vid->SAT_displayMeshSprite(-239+43*2,-239+239*2,-126+53*2,-126+68*2);
+		_vid->SAT_displayMeshSprite(-239+49*2,-239+182*2,-126+76*2,-126+86*2);
+	}
     slSynch();
     updatePalette();
     transferAux = 0;

@@ -105,7 +105,8 @@ struct Video {
 	void MAC_drawFG(int x, int y, const uint8_t *data, int frame);
 	void MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int anim_number, bool xflip);
 	void SAT_displayText(int x, int y, unsigned short h, unsigned short w);
-	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);	
+	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);
+	void SAT_displayMeshSprite(int x1, int x2, int y1, int y2);
 	void SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf);
 	void SAT_displayCutscene();
 	uint32_t SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSize);	

@@ -824,7 +824,7 @@ gfx_fillArea:
 	if(!(color==12 && hasAlpha))
 #endif
 		fillArea(color, hasAlpha);
-#ifdef USE_MESH
+#ifdef USE_MESH2
 	else
 	{
 		SAT_fillMesh();
@@ -899,34 +899,13 @@ void Graphics::floodFill(uint8_t color, const Point *pts, uint8_t numPts) {
 		++start_y;
 	}
 }
-
+#ifdef USE_MESH2
 void Graphics::SAT_fillMesh()
 {
 	int16_t *pts = _areaPoints;
-	uint8_t start_y = *pts;
+	uint8_t start_y = *pts++;
 	int16_t x1 = *pts++;
 	int16_t x2 = *pts++;
-	emu_printf("start_y %d\n",start_y);
-/*
-	do {
-		int16_t x2 = *pts++;
-		x1 = *pts++;
-	} while (x1 >= 0);
-*/
-	SPRITE user_sprite;
-    user_sprite.PMOD = ECdis | MESHon | 0x0800;
-    user_sprite.COLR = 0xCC;
-    user_sprite.SIZE = 0x1E80;
-    user_sprite.CTRL = FUNC_Polygon;
-    user_sprite.XA = 0;
-    user_sprite.YA = 0;
-    user_sprite.XB = 100;
-    user_sprite.YB = 0;
-    user_sprite.XD = 0;
-    user_sprite.YD = 100;
-    user_sprite.XC = 100;
-    user_sprite.YC = 100;
-    user_sprite.GRDA = 0;
-	 user_sprite.SRCA = 0x1000/8;
-	slSetSprite(&user_sprite, toFIXED2(240));
+	emu_printf("start_y %d x1 %d x2 %d\n",start_y,x1,x2);
 }
+#endif

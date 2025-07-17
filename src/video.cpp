@@ -666,6 +666,43 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf) {
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
 }
 
+void Video::SAT_displayMeshSprite(int x1, int x2, int y1, int y2)
+{
+	SPRITE user_sprite;
+
+    user_sprite.PMOD = ECdis | MESHon | 0x0800;
+    user_sprite.CTRL = FUNC_Polygon;
+    user_sprite.COLR = 0xCC;
+    user_sprite.XA = x1;
+    user_sprite.YA = y1+1;
+    user_sprite.XB = x2;
+    user_sprite.YB = y1+1;
+
+    user_sprite.XD = x1;
+    user_sprite.YD = y2-1;
+    user_sprite.XC = x2;
+    user_sprite.YC = y2-1;
+	slSetSprite(&user_sprite, toFIXED2(240));
+
+    user_sprite.PMOD = ECdis | 0x0800;
+    user_sprite.CTRL = FUNC_Line;
+    user_sprite.YA = y1;
+    user_sprite.YB = y1;
+
+	slSetSprite(&user_sprite, toFIXED2(240));
+
+    user_sprite.YA = y2;
+    user_sprite.YB = y2;
+
+	slSetSprite(&user_sprite, toFIXED2(240));
+
+    user_sprite.XA = x2;
+    user_sprite.YA = y1;
+    user_sprite.XB = x2;
+
+	slSetSprite(&user_sprite, toFIXED2(240));
+}
+
 void Video::SAT_displayCutscene()
 {
     SPRITE user_sprite;
