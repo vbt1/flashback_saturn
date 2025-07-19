@@ -670,7 +670,7 @@ void Video::SAT_displayMeshSprite(int x1, int x2, int y1, int y2)
 {
 	SPRITE user_sprite;
 
-    user_sprite.PMOD = ECdis | MESHon | 0x0800;
+    user_sprite.PMOD = MESHon | SPdis | ECdis | 0x0800;
     user_sprite.CTRL = FUNC_Polygon;
     user_sprite.COLR = 0xCC;
     user_sprite.XA = x1;
@@ -684,7 +684,7 @@ void Video::SAT_displayMeshSprite(int x1, int x2, int y1, int y2)
     user_sprite.YC = y2-1;
 	slSetSprite(&user_sprite, toFIXED2(240));
 
-    user_sprite.PMOD = ECdis | 0x0800;
+    user_sprite.PMOD = SPdis | ECdis | 0x0800;
     user_sprite.CTRL = FUNC_Line;
     user_sprite.YA = y1;
     user_sprite.YB = y1;
@@ -695,6 +695,9 @@ void Video::SAT_displayMeshSprite(int x1, int x2, int y1, int y2)
     user_sprite.YB = y2;
 
 	slSetSprite(&user_sprite, toFIXED2(240));
+
+	if(x2>=239)
+		return;
 
     user_sprite.XA = x2;
     user_sprite.YA = y1;
@@ -719,7 +722,7 @@ void Video::SAT_displayCutscene()
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
 	user_sprite.SRCA = spriteVramOffset / 8;
 	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
-//	slTransferEntry(hwram_screen, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
+//	slTransferEntry(hwram_screen + IMG_SIZE, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 }

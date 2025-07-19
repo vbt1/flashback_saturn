@@ -82,7 +82,7 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 1
+#if 0
 	const int32_t target = frameDelay * (1000 / frameHz);
 	if (pause<-4)
 		emu_printf("too slow !! target: %d ms, actual: %d ms, overtime: %d ms\n",
@@ -169,9 +169,9 @@ DecodeBuffer buf{};
 
 	if(_id == 0x48)
 	{
-		_vid->SAT_displayMeshSprite(-239+5*2,-239+239*2,-126+22*2,-126+45*2);
-		_vid->SAT_displayMeshSprite(-239+43*2,-239+239*2,-126+53*2,-126+68*2);
-		_vid->SAT_displayMeshSprite(-239+49*2,-239+182*2,-126+76*2,-126+86*2);
+		_vid->SAT_displayMeshSprite(-229, 239, -82, -36);
+		_vid->SAT_displayMeshSprite(-153, 239, -20, 10);
+		_vid->SAT_displayMeshSprite(-141, 125, 26, 46);
 	}
     slSynch();
     updatePalette();
@@ -1467,18 +1467,20 @@ void Cutscene::unload() {
 
 void Cutscene::prepare() {
 	_frontPage = (uint8_t *)hwram_screen;
-//	_backPage = (uint8_t *)hwram_screen+IMG_SIZE;
+//	_backPage = (uint8_t *)_frontPage+IMG_SIZE;
 	_backPage = (uint8_t *)SCRATCH+4096;//hwram_ptr; //SCRATCH
-	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
+//	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
+	_auxPage = (uint8_t *)_frontPage+IMG_SIZE; //hwram_ptr;
 slTVOff();
 //emu_printf("slSynch\n");
 slSynch(); // VBT : à remettre
 	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
 	_stub->copyRect(0, 51, _vid->_w, 32, _vid->_frontLayer, _vid->_w);
 //emu_printf("prepare cutscene\n");
-	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
+//	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
-	memset4_fast(_frontPage, 0x00, IMG_SIZE);
+//	memset4_fast(_frontPage, 0x00, HWRAM_SCREEN_SIZE);
+	memset4_fast(_frontPage, 0x00, HWRAM_SCREEN_SIZE);
 	memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE*2), 0x00, IMG_SIZE*2);
 
 	_stub->_pi.dirMask = 0;

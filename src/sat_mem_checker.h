@@ -25,7 +25,7 @@ void *memset4_fast(void *, long, size_t);
 #define VBT_L_START    ((volatile void *)(0x200000))
 //#define LOW_WORK_RAM_START    ((volatile void *)(0x290000))
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
-#define HWRAM_SCREEN_SIZE 50000 //128*240*2
+#define HWRAM_SCREEN_SIZE 50000//(128*240*2)+(64*240)
 #define SCRATCH 0x2AF000 //0x2e7000
 #define FRONT   0x2C8000 //0x2aeff8;
 #endif
