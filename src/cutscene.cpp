@@ -1469,8 +1469,7 @@ void Cutscene::prepare() {
 	_frontPage = (uint8_t *)hwram_screen;
 //	_backPage = (uint8_t *)_frontPage+IMG_SIZE;
 	_backPage = (uint8_t *)SCRATCH+4096;//hwram_ptr; //SCRATCH
-//	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
-	_auxPage = (uint8_t *)_frontPage+IMG_SIZE; //hwram_ptr;
+	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
 //emu_printf("slSynch\n");
 slSynch(); // VBT : à remettre
@@ -1479,8 +1478,7 @@ slSynch(); // VBT : à remettre
 //emu_printf("prepare cutscene\n");
 //	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
-//	memset4_fast(_frontPage, 0x00, HWRAM_SCREEN_SIZE);
-	memset4_fast(_frontPage, 0x00, HWRAM_SCREEN_SIZE);
+	memset4_fast(_frontPage, 0x00, IMG_SIZE+IMG_SIZE/2);
 	memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE*2), 0x00, IMG_SIZE*2);
 
 	_stub->_pi.dirMask = 0;
