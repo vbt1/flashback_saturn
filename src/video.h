@@ -108,6 +108,7 @@ struct Video {
 	void SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w);
 	void SAT_displayMeshSprite(int x1, int x2, int y1, int y2);
 	void SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf);
+	void SAT_displaySpritesPalette();
 	void SAT_displayCutscene();
 	uint32_t SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSize);	
 	void SAT_displayPalette();

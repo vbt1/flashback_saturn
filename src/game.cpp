@@ -533,6 +533,8 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	user_sprite.SRCA = 0x200+32*c2;
 	user_sprite.XA   = 240;
 	slSetSprite(&user_sprite, 130<<16);	// fps	
+
+//	_vid.SAT_displaySpritesPalette();
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*

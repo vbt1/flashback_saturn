@@ -768,6 +768,44 @@ void Video::convert_8bpp_to_4bpp_inplace(uint8_t *buffer, size_t pixel_count) {
 	}
 }*/
 /*
+void Video::SAT_displaySpritesPalette()
+{
+	SPRITE user_sprite;
+
+    size_t spriteVramOffset;
+	spriteVramOffset = 0x80000 - 256*64;
+
+    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE=(256/8)<<8|64;
+    user_sprite.CTRL = 0;
+    user_sprite.XA = -256;
+    user_sprite.YA = -224;
+    user_sprite.GRDA = 0;
+    user_sprite.SRCA = spriteVramOffset / 8;
+
+	unsigned int k = 0;
+
+	for (int j = 0; j < 8; j++) 
+	{
+		unsigned char* vram = (unsigned char*)SpriteVRAM + spriteVramOffset + j * 8 * 256;  // Start position for this iteration
+
+		for (int i = 0; i < 32; i++) {
+			unsigned char value = i + k;
+
+			for (int n = 0; n < 8; n++) {
+				memset(vram, value, 8);  // Set 8 bytes at once
+				vram += 256;  // Move to the next line
+			}
+
+			vram -= (8 * 256 - 8);  // Adjust position for the next block of 8 lines
+		}
+
+		k += 32;
+	}
+	slSetSprite(&user_sprite, 130<<16);	// fps	
+}
+
 void Video::SAT_displayPalette()
 {
 	unsigned char* vram_base = (unsigned char*)VDP2_VRAM_A0 + 0x4800;
