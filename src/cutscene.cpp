@@ -82,7 +82,7 @@ void Cutscene::sync(int frameDelay) {
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
 	const int32_t delay = _stub->getTimeStamp() - _tstamp;
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 0
+#if 1
 	const int32_t target = frameDelay * (1000 / frameHz);
 	if (pause<-4)
 		emu_printf("too slow !! target: %d ms, actual: %d ms, overtime: %d ms\n",
@@ -1212,10 +1212,8 @@ void Cutscene::op_copyScreen() {
 		}
 	}
 	*/
-//	updateScreen(); // vbt : remis permet de revoir "present" au boot
-	sync(_frameDelay - 1);
-	SWAP(_frontPage, _backPage);
-    updatePalette();
+	updateScreen(); // vbt : remis permet de revoir "present" au boot
+	// ne pas simplifier, ajoute un bug sur la sequence de fin
 }
 
 void Cutscene::op_drawTextAtPos() {

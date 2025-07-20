@@ -1,5 +1,4 @@
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x65000 // ne pas toucher
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
 #define DEBUG 1

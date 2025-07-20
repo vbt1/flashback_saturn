@@ -1,6 +1,5 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
-#define VRAM_MAX 0x66000 // ne pas toucher
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
