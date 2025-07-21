@@ -29,5 +29,5 @@ void *memset4_fast(void *, long, size_t);
 // si on modifie scratch et front, la sequence de fin a des glitchs ...
 #define SCRATCH 0x2e7000
 #define FRONT   0x2aeff8
-#define VRAM_MAX 0x65000 // ne pas toucher
+#define VRAM_MAX 0x64000 // ne pas toucher
 #endif
