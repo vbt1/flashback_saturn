@@ -2520,7 +2520,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         buf.dst_h = height;
         buf.ptr = destPtr;
 
-        if (isSpc && j != 616 && j != 273) continue;
+        if (isSpc && j != SPR_METRO && j != SPR_ELEVATOR) continue;
 
         memset(buf.ptr, 0, width * height); // Optimize if possible
         _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
@@ -2557,7 +2557,7 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 
         void* target;
         int cgaddr;
-        if ((position_vram + dataSize) <= VRAM_MAX || j == 616 || j == 273) {
+        if ((position_vram + dataSize) <= VRAM_MAX || j == SPR_METRO || j == SPR_ELEVATOR) {
             TEXTURE tx = TEXDEF(width, height, position_vram);
             target = (void*)(SpriteVRAM + (tx.CGadr << 3));
             cgaddr = (int)tx.CGadr;

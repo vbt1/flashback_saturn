@@ -1,5 +1,6 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
+
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -21,12 +22,6 @@ extern Uint8 *hwram_ptr;
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
-/*
-#undef VDP2_VRAM_A0
-#define VDP2_VRAM_A0 NULL 
-#undef VDP2_VRAM_B0
-#define VDP2_VRAM_B0 NULL 
-*/
 
 Video::Video(Resource *res, SystemStub *stub)
 	: _res(res), _stub(stub) {
@@ -563,7 +558,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
     // Compute the correct sprite index
     int index = (data == _res->_spc) ? _res->NUM_SPRITES + frame : anim_number;
     bool is_monster = (data == _res->_monster);
-    bool is_special = (index == 1903 || index == 1560);
+    bool is_special = (index == SPR_METRO + _res->NUM_SPRITES || index == SPR_ELEVATOR + _res->NUM_SPRITES);
 
     // Use reference to make sure changes apply
     SAT_sprite &spriteData = _res->_sprData[index];
