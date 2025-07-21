@@ -2525,6 +2525,15 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         memset(buf.ptr, 0, width * height); // Optimize if possible
         _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
+		if(j == SPR_METRO)
+		{
+			for ( uint16_t i = 0; i < width * height;i++)
+			{
+				if (destPtr[i] != 0)
+					destPtr[i]|=128;
+			}
+		}
+
         SAT_sprite* sprData = &_res._sprData[baseIndex + j];
         sprData->size = (height / 8) << 8 | width;
         sprData->x_flip = (uint8_t)-(xPos - height_raw - 1 - (height - height_raw));
