@@ -740,28 +740,28 @@ void Video::SAT_cleanSprites()
 	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
 	slSynch(); // vbt à remettre
 }
-/*
+
 void Video::convert_8bpp_to_4bpp_inplace(uint8_t *buffer, size_t pixel_count) {
     // Process two pixels at a time, overwriting the input
     // Process two pixels at a time, overwriting the input
     for (size_t i = 0; i < pixel_count; i += 2) {
         // Get first pixel, apply rule
         uint8_t pixel1 = buffer[i];
-        pixel1 = (pixel1 == 0xC0) ? 6 : pixel1 + 0;
+ //       pixel1 = (pixel1 == 0xC0) ? 6 : pixel1 + 0;
         pixel1 &= 0x0F; // Mask to ensure 0-15
 
         // Get second pixel, apply rule, if available
         uint8_t pixel2 = 0;
         if (i + 1 < pixel_count) {
             pixel2 = buffer[i + 1];
-            pixel2 = (pixel2 == 0xC0) ? 6 : pixel2 + 0;
+//            pixel2 = (pixel2 == 0xC0) ? 6 : pixel2 + 0;
             pixel2 &= 0x0F; // Mask to ensure 0-15
         }
 
         // Combine into one byte: pixel1 in high nibble, pixel2 in low nibble
         buffer[i / 2] = (pixel1 << 4) | pixel2;
 	}
-}*/
+}
 /*
 void Video::SAT_displaySpritesPalette()
 {

@@ -119,7 +119,7 @@ struct __attribute__((__packed__)) SAT_sprite {
     uint8_t x_flip; 
     int16_t x : 10;  // 10 bits (values between -512 and +511)
     int16_t y : 10;  // 10 bits (values between -512 and +511)
-    int8_t color : 4;  // 8 bits
+    int8_t color : 5;  // 8 bits
 };
 
 struct InitPGE {

@@ -2525,6 +2525,9 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         memset(buf.ptr, 0, width * height); // Optimize if possible
         _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
+        SAT_sprite* sprData = &_res._sprData[baseIndex + j];
+        sprData->color = isMonster ? 5 : -1;
+
 		if(j == SPR_METRO)
 		{
 /*
@@ -2544,17 +2547,21 @@ palette utilisée
 					if(destPtr[i]==254)
 						destPtr[i]=246;
 				}
+//				else
+				if (destPtr[i] == 240)
+					destPtr[i] = 255; // 4bpp only
 			}
+			_vid.convert_8bpp_to_4bpp_inplace(destPtr, width * height);
+			sprData->color = 15;
+//			buf.type = 1;
 		}
 
-        SAT_sprite* sprData = &_res._sprData[baseIndex + j];
         sprData->size = (height / 8) << 8 | width;
         sprData->x_flip = (uint8_t)-(xPos - height_raw - 1 - (height - height_raw));
         sprData->x = xPos;
         sprData->y = yPos;
 
         size_t dataSize = SAT_ALIGN((width * height) / (buf.type == 1 ? 2 : 1));
-        sprData->color = isMonster ? 5 : -1;
 
 #ifdef REDUCE_4BPP
         if (isSpc) {
