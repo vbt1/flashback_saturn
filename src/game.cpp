@@ -534,7 +534,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	user_sprite.XA   = 240;
 	slSetSprite(&user_sprite, 130<<16);	// fps	
 
-	_vid.SAT_displaySpritesPalette();
+//	_vid.SAT_displaySpritesPalette();
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
 /*
@@ -2525,19 +2525,27 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
         memset(buf.ptr, 0, width * height); // Optimize if possible
         _res.MAC_decodeImageData(spriteData, j, &buf, 0xff);
 
-/*		if(j == SPR_METRO)
+		if(j == SPR_METRO)
 		{
 /*
 palette utilisée
 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x07, 0x09,
 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x20
+0x20=> couleur 245 (couleur 6)
 */
 			for ( uint16_t i = 0; i < width * height;i++)
 			{
 				if (destPtr[i] != 0)
-					destPtr[i]|=128;
+				{
+					if(destPtr[i]<0x20)
+						destPtr[i]+=239;
+					else
+						destPtr[i]=245;
+					if(destPtr[i]==254)
+						destPtr[i]=246;
+				}
 			}
-		}*/
+		}
 
         SAT_sprite* sprData = &_res._sprData[baseIndex + j];
         sprData->size = (height / 8) << 8 | width;

@@ -501,7 +501,7 @@ void Video::MAC_decodeMap(int level, int room) {
 
 //vbt ajout pour sprites	
 	for (int j = 0; j < 16; ++j) {
-		if (j == 5 || j == 7 || j == 14 || j == 15) { // utile uniquement si on affiche les textes en sprite
+		if (j == 5 || j == 7 || j == 14 /*|| j == 15*/) { // utile uniquement si on affiche les textes en sprite
 			continue;
 		}
 		for (int i = 0; i < 16; ++i) {

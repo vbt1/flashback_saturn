@@ -165,6 +165,7 @@ void Menu::displayTitleScreenMac(int num) {
 
 	memset(_vid->_backLayer, 0, w * h);
 	_res->MAC_loadTitleImage(num, &buf);
+
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
 		_res->MAC_copyClut16(palette, 0, clutBaseColor + i);
@@ -189,6 +190,15 @@ void Menu::displayTitleScreenMac(int num) {
 		c.r = c.g = c.b = 0;
 		_stub->setPaletteEntry(0, &c);
 	} else if (num == kMacTitleScreen_Flashback) {
+		Color c;
+		c.r = c.g = c.b = 255;
+		_stub->setPaletteEntry(0, &c);
+
+		for (int i = 496; i < 512; ++i) {
+			_stub->setPaletteEntry(i, &c);
+		}
+		c.r = c.g = c.b = 0;
+		_stub->setPaletteEntry(511, &c);
 		_vid->setTextPalette();
 //		_mix->playMusic(1); // vbt : déplacé, musique du menu
 	}
