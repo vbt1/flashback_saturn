@@ -621,7 +621,7 @@ void Video::MAC_drawSprite(int x, int y, const uint8_t *data, int frame, int ani
 
 // Helper function to copy sprite to VRAM
 uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSize) {
-    if (position_vram + dataSize > VRAM_MAX + 0x18000) {
+    if (position_vram + dataSize > VRAM_MAX + 0x15000) {
         position_vram = position_vram_aft_monster;
     }
 

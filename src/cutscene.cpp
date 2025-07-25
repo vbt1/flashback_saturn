@@ -591,22 +591,63 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 }
 
 void Cutscene::packPixels(uint8_t *back, uint8_t *aux, size_t size) {
-	uint32_t *b = (uint32_t *)back;
-	for (size_t i = 0, j = 0; i < size / 4; i += 4, j += 8) {
-		uint32_t b0 = b[i];
-		uint32_t b1 = b[i + 1];
-		uint32_t b2 = b[i + 2];
-		uint32_t b3 = b[i + 3];
+    // ----------- METHOD 1 (32-bit packed) - WORKING, BUT DISABLED -------------
+    /*
+    uint32_t *b = (uint32_t *)back;
+    for (size_t i = 0, j = 0; i < size / 4; i += 4, j += 8) {
+        uint32_t b0 = b[i];
+        uint32_t b1 = b[i + 1];
+        uint32_t b2 = b[i + 2];
+        uint32_t b3 = b[i + 3];
 
-		aux[j]     = ((b0 >> 16) & 0xFF) | ((b0 >> 24) << 4);
-		aux[j + 1] = ((b0 >> 0)  & 0xFF) | ((b0 >> 8)  << 4);
-		aux[j + 2] = ((b1 >> 16) & 0xFF) | ((b1 >> 24) << 4);
-		aux[j + 3] = ((b1 >> 0)  & 0xFF) | ((b1 >> 8)  << 4);
-		aux[j + 4] = ((b2 >> 16) & 0xFF) | ((b2 >> 24) << 4);
-		aux[j + 5] = ((b2 >> 0)  & 0xFF) | ((b2 >> 8)  << 4);
-		aux[j + 6] = ((b3 >> 16) & 0xFF) | ((b3 >> 24) << 4);
-		aux[j + 7] = ((b3 >> 0)  & 0xFF) | ((b3 >> 8)  << 4);
-	}
+        aux[j]     = ((b0 >> 16) & 0xFF) | ((b0 >> 24) << 4);
+        aux[j + 1] = ((b0 >> 0)  & 0xFF) | ((b0 >> 8)  << 4);
+        aux[j + 2] = ((b1 >> 16) & 0xFF) | ((b1 >> 24) << 4);
+        aux[j + 3] = ((b1 >> 0)  & 0xFF) | ((b1 >> 8)  << 4);
+        aux[j + 4] = ((b2 >> 16) & 0xFF) | ((b2 >> 24) << 4);
+        aux[j + 5] = ((b2 >> 0)  & 0xFF) | ((b2 >> 8)  << 4);
+        aux[j + 6] = ((b3 >> 16) & 0xFF) | ((b3 >> 24) << 4);
+        aux[j + 7] = ((b3 >> 0)  & 0xFF) | ((b3 >> 8)  << 4);
+    }
+    */
+
+    // ----------- METHOD 2 (Simple pack to buffer) - WORKING, BUT DISABLED -------------
+    /*
+    for (size_t i = 0, j = 0; i < size; i += 2, ++j) {
+        uint8_t hi = back[i] & 0x0F;
+        uint8_t lo = back[i + 1] & 0x0F;
+        aux[j] = (hi << 4) | lo;
+    }
+    */
+
+    // ----------- METHOD 3 (Chunked transfer) - ✅ FIXED AND ACTIVE -------------
+
+    constexpr int CHUNK_SIZE = 240;                    // 240 bytes = 480 pixels
+    constexpr int PIXELS_PER_CHUNK = CHUNK_SIZE * 2;   // 480 pixels per chunk
+    constexpr int TOTAL_PIXELS = 240 * 128;            // Full image
+    constexpr int TOTAL_CHUNKS = TOTAL_PIXELS / PIXELS_PER_CHUNK;
+
+    uint8_t temp240buffer[CHUNK_SIZE];
+    const uint8_t* src = back;
+    size_t spriteVramOffset = 0;
+/*
+    for (int chunk = 0; chunk < 128; ++chunk) {
+		int j=0;
+        for (int i = 0; i < 480; i+=2,j++) {
+			uint8_t hi = src[i] & 0x0F;
+			uint8_t lo = src[i + 1] & 0x0F;
+			temp240buffer[j] = (hi << 4) | lo;
+//            aux[j] = (hi << 4) | lo;
+        }
+
+        // ✅ Write into aux (which points to SpriteVRAM already)
+//        slTransferEntry((void*)temp240buffer, (void*)(aux + spriteVramOffset), CHUNK_SIZE);
+		DMA_ScuMemCopy((void*)(aux + spriteVramOffset), (void*)temp240buffer, CHUNK_SIZE);
+        spriteVramOffset += CHUNK_SIZE;
+        src += PIXELS_PER_CHUNK;
+    }*/
+	DMA_ScuMemCopy((void*)(aux), (void*)back, size/2);
+	
 }
 
 void Cutscene::op_drawShape() {
