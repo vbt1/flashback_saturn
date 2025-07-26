@@ -21,7 +21,7 @@ struct Graphics {
 	int16_t _areaPoints[AREA_POINTS_SIZE * 2];
 	int16_t _crx, _cry, _crw, _crh;
 
-	void setLayer(uint8_t *layer, int pitch);
+	void setLayer(uint8_t *layer);
 	void setClippingRect(int16_t vx, int16_t vy, int16_t vw, int16_t vh);
 	void drawPoint(uint8_t color, const Point *pt);
 	void drawLine(uint8_t color, const Point *pt1, const Point *pt2);

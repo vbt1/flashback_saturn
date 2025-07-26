@@ -65,7 +65,7 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
     }
 
     // Fallback to lwram
-    emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize, end1);
+//    emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize, end1);
 
     dst = current_lwram;
     current_lwram += alignedSize;

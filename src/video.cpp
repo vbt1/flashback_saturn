@@ -700,28 +700,6 @@ void Video::SAT_displayMeshSprite(int x1, int x2, int y1, int y2)
 	slSetSprite(&user_sprite, toFIXED2(240));
 }
 
-void Video::SAT_displayCutscene()
-{
-    SPRITE user_sprite;
-    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
-    user_sprite.COLR = 0;
-    user_sprite.SIZE = 0x1E80;
-    user_sprite.CTRL = FUNC_Sprite | _ZmCC;
-    user_sprite.XA = 0;
-    user_sprite.YA = 0;
-    user_sprite.XB = 479;
-    user_sprite.YB = 255;
-    user_sprite.GRDA = 0;
-
-    const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
-	user_sprite.SRCA = spriteVramOffset / 8;
-//	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
-	DMA_ScuMemCopy((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
-//	slTransferEntry(hwram_screen + IMG_SIZE, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
-
-    slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
-}
-
 void Video::SAT_cleanSprites()
 {
 	SPRITE user_sprite;

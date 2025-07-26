@@ -932,8 +932,6 @@ bool Game::handleContinueAbort() {
 		sprintf(textBuf, "SCORE: %lu", _score);
 		_vid.drawString(textBuf, 64, 153, 0xE3);
 
-//emu_printf("SAT_displayCutscene\n");
-//		_vid.SAT_displayCutscene();
 //emu_printf("slsynch Game::handleContinueAbort()\n");
 //		slSynch();
 

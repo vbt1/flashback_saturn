@@ -14,9 +14,8 @@ extern unsigned char *hwram_screen;
 #define VIDEO_PITCH 240
 #define USE_MESH 1
 
-void Graphics::setLayer(uint8_t *layer, int pitch) {
+void Graphics::setLayer(uint8_t *layer) {
 	_layer = layer;
-//	_layerPitch = pitch;
 }
 
 void Graphics::setClippingRect(int16_t rx, int16_t ry, int16_t rw, int16_t rh) {

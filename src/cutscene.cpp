@@ -491,7 +491,6 @@ void Cutscene::op_markCurPos() {
 	} else {
 		drawCreditsText();
 	}
-//emu_printf("updateScreen 1\n");	
 	updateScreen();
 	clearBackPage();
 	_creditsSlowText = false;
@@ -543,7 +542,7 @@ void Cutscene::checkShape(uint16_t shapeOffset) {
 
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 //emu_printf("Cutscene::drawShape()1\n");
-	_gfx.setLayer(_backPage, _vid->_w);
+	_gfx.setLayer(_backPage);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		Point pt;
@@ -751,7 +750,7 @@ void Cutscene::op_refreshAll() {
 
 void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
 //	//emu_printf("Cutscene::drawShapeScale(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
-	_gfx.setLayer(_backPage, _vid->_w);
+	_gfx.setLayer(_backPage);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		int16_t x, y;
@@ -938,7 +937,7 @@ void Cutscene::op_drawShapeScale() {
 
 void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
 //	//emu_printf("Cutscene::drawShapeScaleRotate(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
-	_gfx.setLayer(_backPage, _vid->_w);
+	_gfx.setLayer(_backPage);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		int16_t x, y, ix, iy;
@@ -1234,7 +1233,7 @@ void Cutscene::op_copyScreen() {
 			paletteLut[k] = 0xC0 + index;
 		}
 
-		_gfx.setLayer(_backPage, _vid->_w);
+		_gfx.setLayer(_backPage);
 		drawSetShape(_memoSetShape2Data, 0, (int16_t)memoSetPos[_memoSetOffset + 1], (int16_t)memoSetPos[_memoSetOffset + 2], paletteLut);
 		_memoSetOffset += 3;
 		if (memoSetPos[_memoSetOffset] == 4) {
@@ -1500,7 +1499,6 @@ void Cutscene::prepare() {
 	_backPage = (uint8_t *)SCRATCH+4096;//hwram_ptr; //SCRATCH
 	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
-//emu_printf("slSynch\n");
 slSynch(); // VBT : à remettre
 	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
 	_stub->copyRect(0, 51, _vid->_w, 32, _vid->_frontLayer, _vid->_w);
@@ -1528,6 +1526,7 @@ slSynch(); // VBT : à remettre
 	_gfx.setClippingRect(sx, sy, sw, sh);
 	slScrAutoDisp(NBG1ON|SPRON); // vbt à remettre
 	slTVOn();
+	_stub->initTimeStamp();
 }
 
 void Cutscene::playCredits() {
@@ -1654,15 +1653,15 @@ static void readSetPalette(const uint8_t *p, uint16_t offset, uint16_t *palette)
 	}
 }
 
-void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, const uint8_t *paletteLut) {
-//emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d,%p)\n",p,offset,x,y,paletteLut);	
+void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y) {
+//emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d)\n",p,offset,x,y);	
 	const int count = READ_BE_UINT16(p + offset); offset += 2;
 	for (int i = 0; i < count - 1; ++i) {
 		offset += 5; // shape_marker
 		const int verticesCount = p[offset++];
 		const int ix = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 		const int iy = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
-		uint8_t color = paletteLut[p[offset]]; offset += 2;
+		uint8_t color = p[offset]; offset += 2;
 
 		if (verticesCount == 255) {
 			int16_t rx = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
@@ -1704,7 +1703,6 @@ static const int kMaxPaletteSize = 32;
 void Cutscene::playSet(const uint8_t *p, int offset) {
 	SetShape backgroundShapes[kMaxShapesCount];
 	const int bgCount = READ_BE_UINT16(p + offset); offset += 2;
-//	assert(bgCount <= kMaxShapesCount);
 	if(bgCount > kMaxShapesCount)
 		return;
 	
@@ -1716,7 +1714,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	}
 	SetShape foregroundShapes[kMaxShapesCount];
 	const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
-//	assert(fgCount <= kMaxShapesCount);
+
 	if(fgCount > kMaxShapesCount)
 		return;
 
@@ -1727,89 +1725,55 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		offset = nextOffset + 45;
 	}
 	prepare();
-	_gfx.setLayer(_backPage, _vid->_w);
+	_gfx.setLayer(_backPage);
 
 	offset = 10;
 	const int frames = READ_BE_UINT16(p + offset); offset += 2;
+	transferAux = 1;
+	_frameDelay = 5;
 	
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
 		const uint32_t timestamp = _stub->getTimeStamp();
-//emu_printf("frame %d/%d\n",i,frames);
-//		memset(_backPage, 0xC0, _vid->_h * _vid->_w);
 
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
+		uint16_t paletteBuffer[16];
 
-		uint16_t paletteBuffer[kMaxPaletteSize];
-		memset(paletteBuffer, 0, sizeof(paletteBuffer));
-		readSetPalette(p, backgroundShapes[shapeBg].offset + backgroundShapes[shapeBg].size, paletteBuffer);
-		int paletteLutSize = 16;
-
-		uint8_t paletteLut[kMaxPaletteSize];
-		for (int j = 0; j < 16; ++j) {
-			paletteLut[j] = 0xC0 + j;
+		if(transferAux)
+		{
+			readSetPalette(p, backgroundShapes[shapeBg].offset + backgroundShapes[shapeBg].size, paletteBuffer);
+			copyPalette((uint8_t *)paletteBuffer, 0);
+			drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0);
+			packPixels(_backPage, _auxPage, IMG_SIZE);
+			clearBackPage();
 		}
-		drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0, paletteLut);
+		_gfx.setLayer(_frontPage);
+		int newpal = 1;
+
 		for (int j = 0; j < count; ++j) {
 			const int shapeFg = READ_BE_UINT16(p + offset); offset += 2;
 			const int shapeX = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 			const int shapeY = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 
-			uint16_t tempPalette[16];
-			readSetPalette(p, foregroundShapes[shapeFg].offset + foregroundShapes[shapeFg].size, tempPalette);
-			for (int k = 0; k < 16; ++k) {
-				bool found = false;
-				for (int l = 0; l < paletteLutSize; ++l) {
-					if (tempPalette[k] == paletteBuffer[l]) {
-						found = true;
-						paletteLut[k] = 0xC0 + l;
-						break;
-					}
-				}
-				if (!found) {
-//					assert(paletteLutSize < kMaxPaletteSize);
-					if(paletteLutSize >= kMaxPaletteSize)
-						return;
-					paletteLut[k] = 0xC0 + paletteLutSize;
-					paletteBuffer[paletteLutSize++] = tempPalette[k];
-				}
+			if(newpal)
+			{
+				readSetPalette(p, foregroundShapes[shapeFg].offset + foregroundShapes[shapeFg].size, paletteBuffer);
+				copyPalette((uint8_t *)paletteBuffer, 1);
+				newpal = 0;
 			}
-
-			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY, paletteLut);
+			drawSetShape(p, foregroundShapes[shapeFg].offset, shapeX, shapeY);
 		}
+		updateScreen();
+		memset4_fast(_frontPage, 0, IMG_SIZE);
 
-		for (int j = 0; j < paletteLutSize; ++j) {
-//			Color c = Video::AMIGA_convertColor(paletteBuffer[j]);
-			
-			Color c;
-			uint8 t = (paletteBuffer[j] == 0) ? 0 : 3;			
-// vbt correction des couleurs			
-			c.r = ((paletteBuffer[j] & 0xF00) >> 6) | t;
-			c.g = ((paletteBuffer[j] & 0x0F0) >> 2) | t;
-			c.b = ((paletteBuffer[j] & 0x00F) << 2) | t;
-			
-			_stub->setPaletteEntry(0x1C0 + j, &c);
-		}
-		_vid->SAT_displayCutscene();
-		slSynch(); // VBT à remettre
-		updatePalette();
-		const int diff = 90 - (_stub->getTimeStamp() - timestamp);
-		_stub->sleep((diff < 16) ? 16 : diff);
 		_stub->processEvents();
 		if (_stub->_pi.backspace) {
 			_stub->_pi.backspace = false;
 			_interrupted = true;
 		}
 	}
-	_vid->SAT_cleanSprites();	
-	// restore palette entries modified by the cutscene player
-	Color palette[32];
-	_res->MAC_copyClut16(palette, 0, 0x37);
-	_res->MAC_copyClut16(palette, 1, 0x38);
-			for (int i = 0; i < 32; ++i) {
-		_stub->setPaletteEntry(0x1C0 + i, &palette[i]);
-	}
-	
+
+	unload();
 	_stop = true; // pour reprendre la musique
 	
 	frame_y = frame_x = 0;
