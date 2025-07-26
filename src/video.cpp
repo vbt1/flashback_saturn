@@ -709,13 +709,14 @@ void Video::SAT_displayCutscene()
     user_sprite.CTRL = FUNC_Sprite | _ZmCC;
     user_sprite.XA = 0;
     user_sprite.YA = 0;
-    user_sprite.XB = 480;
-    user_sprite.YB = 256;
+    user_sprite.XB = 479;
+    user_sprite.YB = 255;
     user_sprite.GRDA = 0;
 
     const size_t spriteVramOffset = 0x80000 - IMG_SIZE;
 	user_sprite.SRCA = spriteVramOffset / 8;
-	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
+//	memcpyl((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
+	DMA_ScuMemCopy((void *)(SpriteVRAM + spriteVramOffset), (void*)SCRATCH+4096, IMG_SIZE);
 //	slTransferEntry(hwram_screen + IMG_SIZE, (void*)SpriteVRAM + spriteVramOffset, IMG_SIZE);
 
     slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
@@ -745,21 +746,9 @@ void Video::convert_8bpp_to_4bpp_inplace(uint8_t *buffer, size_t pixel_count) {
     // Process two pixels at a time, overwriting the input
     // Process two pixels at a time, overwriting the input
     for (size_t i = 0; i < pixel_count; i += 2) {
-        // Get first pixel, apply rule
-        uint8_t pixel1 = buffer[i];
- //       pixel1 = (pixel1 == 0xC0) ? 6 : pixel1 + 0;
-        pixel1 &= 0x0F; // Mask to ensure 0-15
-
-        // Get second pixel, apply rule, if available
-        uint8_t pixel2 = 0;
-        if (i + 1 < pixel_count) {
-            pixel2 = buffer[i + 1];
-//            pixel2 = (pixel2 == 0xC0) ? 6 : pixel2 + 0;
-            pixel2 &= 0x0F; // Mask to ensure 0-15
-        }
-
-        // Combine into one byte: pixel1 in high nibble, pixel2 in low nibble
-        buffer[i / 2] = (pixel1 << 4) | pixel2;
+		uint8_t hi = buffer[i];
+		uint8_t lo = buffer[i + 1] & 0xF;
+		buffer[i>>1] = (hi << 4) | lo;
 	}
 }
 /*

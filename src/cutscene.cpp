@@ -133,9 +133,9 @@ DecodeBuffer buf{};
 		hasText = false;
 	}
 //emu_printf("VBT updateScreen2 duration %d\n",_stub->getTimeStamp() - _tstamp);
-
 	sync(_frameDelay - 1);
 	SWAP(_frontPage, _backPage);
+
 
     SPRITE user_sprite;
     user_sprite.PMOD = CL16Bnk | ECdis | 0x0800;
@@ -163,7 +163,10 @@ DecodeBuffer buf{};
     user_sprite.SRCA = spriteVramOffset / 8;
 
     uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
-	packPixels(_frontPage, aux, IMG_SIZE);
+
+	packPixels(_frontPage, hwram_ptr, IMG_SIZE);
+	DMA_ScuMemCopy(aux, hwram_ptr, size);
+
     slSetSprite(&user_sprite, toFIXED2(240));
     frame_x++;
 
@@ -391,10 +394,8 @@ void Cutscene::drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, 
     }
 }
 #endif
-void Cutscene::clearBackPage() {
+inline void Cutscene::clearBackPage() {
 //	emu_printf("clearBackPage : _clearScreen %d\n",_clearScreen);
-//	if(_clearScreen)
-// nettoyeur de texte
 	memset4_fast(_backPage, 0, IMG_SIZE);
 }
 
@@ -591,9 +592,8 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 }
 
 void Cutscene::packPixels(uint8_t *back, uint8_t *aux, size_t size) {
-    // ----------- METHOD 1 (32-bit packed) - WORKING, BUT DISABLED -------------
-    /*
-    uint32_t *b = (uint32_t *)back;
+/*
+   uint32_t *b = (uint32_t *)back;
     for (size_t i = 0, j = 0; i < size / 4; i += 4, j += 8) {
         uint32_t b0 = b[i];
         uint32_t b1 = b[i + 1];
@@ -609,48 +609,34 @@ void Cutscene::packPixels(uint8_t *back, uint8_t *aux, size_t size) {
         aux[j + 6] = ((b3 >> 16) & 0xFF) | ((b3 >> 24) << 4);
         aux[j + 7] = ((b3 >> 0)  & 0xFF) | ((b3 >> 8)  << 4);
     }
-    */
+*/
 
-    // ----------- METHOD 2 (Simple pack to buffer) - WORKING, BUT DISABLED -------------
-    /*
-    for (size_t i = 0, j = 0; i < size; i += 2, ++j) {
-        uint8_t hi = back[i] & 0x0F;
-        uint8_t lo = back[i + 1] & 0x0F;
-        aux[j] = (hi << 4) | lo;
-    }
-    */
-
-    // ----------- METHOD 3 (Chunked transfer) - ✅ FIXED AND ACTIVE -------------
-
-    constexpr int CHUNK_SIZE = 240;                    // 240 bytes = 480 pixels
-    constexpr int PIXELS_PER_CHUNK = CHUNK_SIZE * 2;   // 480 pixels per chunk
-    constexpr int TOTAL_PIXELS = 240 * 128;            // Full image
+    constexpr int CHUNK_SIZE = 3840;
+    constexpr int PIXELS_PER_CHUNK = CHUNK_SIZE * 2;
+    constexpr int TOTAL_PIXELS = 240 * 128;
     constexpr int TOTAL_CHUNKS = TOTAL_PIXELS / PIXELS_PER_CHUNK;
 
-    uint8_t temp240buffer[CHUNK_SIZE];
+    uint8_t *buffer = (uint8_t*)hwram_screen+(HWRAM_SCREEN_SIZE-CHUNK_SIZE);
     const uint8_t* src = back;
     size_t spriteVramOffset = 0;
-/*
-    for (int chunk = 0; chunk < 128; ++chunk) {
-		int j=0;
-        for (int i = 0; i < 480; i+=2,j++) {
-			uint8_t hi = src[i] & 0x0F;
-			uint8_t lo = src[i + 1] & 0x0F;
-			temp240buffer[j] = (hi << 4) | lo;
-//            aux[j] = (hi << 4) | lo;
-        }
 
-        // ✅ Write into aux (which points to SpriteVRAM already)
-//        slTransferEntry((void*)temp240buffer, (void*)(aux + spriteVramOffset), CHUNK_SIZE);
-		DMA_ScuMemCopy((void*)(aux + spriteVramOffset), (void*)temp240buffer, CHUNK_SIZE);
+    for (int chunk = 0; chunk < TOTAL_CHUNKS; ++chunk) {
+        for (int i = 0; i < PIXELS_PER_CHUNK; i+=2) {
+			uint8_t hi = src[i];
+			uint8_t lo = src[i + 1];
+			buffer[i>>1] = (hi << 4) | lo;
+        }
+//		DMA_ScuMemCopy((void*)(aux + spriteVramOffset), (void*)temp240buffer, CHUNK_SIZE); // ne fonctionne pas
+//      slTransferEntry((void*)temp240buffer, (void*)(aux + spriteVramOffset), CHUNK_SIZE);
+		memcpyl((void*)(aux + spriteVramOffset), (void*)buffer, CHUNK_SIZE);
+
         spriteVramOffset += CHUNK_SIZE;
         src += PIXELS_PER_CHUNK;
-    }*/
-	DMA_ScuMemCopy((void*)(aux), (void*)back, size/2);
-	
+    }
 }
 
 void Cutscene::op_drawShape() {
+//emu_printf("op_drawShape\n");
     int16_t x = 0, y = 0;
     uint16_t shapeOffset = fetchNextCmdWord();
     if (shapeOffset & 0x8000) {
@@ -893,7 +879,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 }
 
 void Cutscene::op_drawShapeScale() {
-//	debug(DBG_CUT, "Cutscene::op_drawShapeScale()");
+//	emu_printf("Cutscene::op_drawShapeScale()\n");
 
 	_shape_count = 0;
 
@@ -1218,17 +1204,21 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 	return index;
 }
 */
+
 void Cutscene::op_copyScreen() {
 //	emu_printf("Cutscene::op_copyScreen()\n");
 	_creditsSlowText = true;
 	if (_textCurBuf == _textBuf) {
 		++_creditsTextCounter;
 	}
-	DMA_ScuMemCopy(_backPage, _frontPage, IMG_SIZE);
+//	DMA_ScuMemCopy(_backPage, _frontPage, IMG_SIZE); // pas de dma possible
+	memcpyl(_backPage, _frontPage, IMG_SIZE);
+
 // vbt : on nettoie 	
 	memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // nettoyeur de texte du bas
 	previousStr = -1;
 	_frameDelay = 10;
+
 /*
 	const bool drawMemoShapes = _drawMemoSetShapes && (_paletteNum == 19 || _paletteNum == 23) && (_memoSetOffset + 3) <= sizeof(memoSetPos);
 	if (drawMemoShapes) {
@@ -1439,7 +1429,7 @@ bool Cutscene::load(uint16_t cutName) {
 	slSynch();
 	cutName &= 0xFF;
 	const char *name = _namesTableDOS[cutName];
-	if(cutName!=12 && cutName!=31 && cutName!=2)
+	if(cutName!=12 && cutName!=31 && cutName!=35 && cutName!=2)
 	{
 		_res->MAC_loadCutscene(name);
 	}
@@ -1577,7 +1567,7 @@ void Cutscene::playCredits() {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		_textCurBuf = NULL;
-		emu_printf("Cutscene::play() _id=0x%X c%p \n", _id , current_lwram);
+//		emu_printf("Cutscene::play() _id=0x%X c%p \n", _id , current_lwram);
 		_creditsSequence = false;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;

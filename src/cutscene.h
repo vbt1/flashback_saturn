@@ -127,7 +127,7 @@ struct Cutscene {
 	void setRotationTransform(uint16_t a, uint16_t b, uint16_t c);
 	uint16_t findTextSeparators(const uint8_t *p, int len);
 	void drawText(int16_t x, int16_t y, const uint8_t *p, uint16_t color, uint8_t *page, int textJustify);
-	void clearBackPage();
+	inline void clearBackPage();
 	void drawCreditsText();
 //	void drawProtectionShape(uint8 shapeNum, uint16_t zoom);
 	void checkShape(uint16_t shapeOffset);
