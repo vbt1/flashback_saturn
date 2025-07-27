@@ -1756,7 +1756,7 @@ void Resource::MAC_loadSounds() {
 	_sfxList[NUM_SFXS].freq = 8000;
 	_sfxList[NUM_SFXS].data = p;
 	GFS_Load(GFS_NameToId((int8_t *)"GAMESAVE.PCM"),0,(void *)p,_sfxList[NUM_SFXS].len);
-//			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", i, _sfxList[i].len, dataSize, _sfxList[i].freq, p);
+//			emu_printf("sfx #%d len %d datasize %d freq %d addr %p\n", NUM_SFXS, _sfxList[NUM_SFXS].len, _sfxList[NUM_SFXS].len, _sfxList[NUM_SFXS].freq, p);
 	p += SAT_ALIGN8(_sfxList[NUM_SFXS].len);	
 	
 	soundAddr = p;
