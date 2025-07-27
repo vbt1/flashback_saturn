@@ -115,11 +115,12 @@ struct Level {
 
 struct __attribute__((__packed__)) SAT_sprite {
     uint32_t cgaddr : 26;  // 32 bits
+    uint16_t x_flip : 6; 
     uint16_t size : 14;  // 14 bits
-    uint8_t x_flip; 
+    int8_t color : 8;  // 8 bits
     int16_t x : 10;  // 10 bits (values between -512 and +511)
     int16_t y : 10;  // 10 bits (values between -512 and +511)
-    int8_t color : 5;  // 8 bits
+
 };
 
 struct InitPGE {

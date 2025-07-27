@@ -24,7 +24,6 @@ extern "C" {
 #include "sat_mem_checker.h"
 #include "cdtoc.h"
 volatile Uint32 ticker = 0;
-volatile Uint8  tick_wrap = 0;
 Uint8 tickPerVblank = 0;
 extern unsigned char frame_x;
 extern unsigned char frame_y;
@@ -640,7 +639,6 @@ void SystemStub_SDL::init_cdda(void)
 
 inline void timeTick() {
 	if(ticker > (0xFFFFFFFF - tickPerVblank)) {
-		tick_wrap ^= 1;
 		ticker = 0;
 	} else {
 		ticker += tickPerVblank;

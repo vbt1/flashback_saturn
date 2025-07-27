@@ -632,7 +632,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 	if (ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.%s", objName, ext);
 	}
-
+	slSynch(); // vbt : ajout
 	if (f.open(_entryName, _dataPath, "rb")) {
 //		assert(loadStub);
 		(this->*loadStub)(&f);

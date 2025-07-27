@@ -1,6 +1,6 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
-
+//#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -477,13 +477,15 @@ void Video::MAC_decodeMap(int level, int room) {
 
 	SAT_cleanSprites(); // vbt : ajout
 	slTVOff();
+#ifdef DEBUG
 	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();	
+#endif
 	_res->MAC_loadLevelRoom(level, room, &buf);
+#ifdef DEBUG
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration bg : %d\n",e-s);
-//emu_printf("1hwram free %08d lwram used %08d lwram2 %08d\n",0x60FB000-(int)hwram_ptr,(int)current_lwram-0x200000,_layerSize);
-
+#endif
 	Color roomPalette[512];
 //	Color *roomPalette = (Color *)hwram_ptr;
 	_res->MAC_setupRoomClut(level, room, roomPalette);

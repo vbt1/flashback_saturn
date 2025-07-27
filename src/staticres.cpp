@@ -65,7 +65,7 @@ const char *const Cutscene::_namesTableDOS[] = {
 	"SERRURE",
 	"HOLOCUBE",
 	"CHUTE2",
-	"LOGOSSSI",
+	"LOGOSSSI"
 };
 
 const uint16_t Cutscene::_offsetsTableDOS[] = {

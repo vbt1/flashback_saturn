@@ -80,7 +80,10 @@ void Cutscene::sync(int frameDelay) {
 	}
 
 	uint8_t frameHz = ((TVSTAT & 1) == 0)?60:50;
-	const int32_t delay = _stub->getTimeStamp() - _tstamp;
+	int32_t delay = _stub->getTimeStamp() - _tstamp;
+
+//	emu_printf("sleepx frame delay %d delay %d _tstamp %d\n", frameDelay, delay, _tstamp);
+	delay=(delay<0?17:delay);
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
 #if 1
 	const int32_t target = frameDelay * (1000 / frameHz);
@@ -177,6 +180,7 @@ DecodeBuffer buf{};
 		_vid->SAT_displayMeshSprite(-141, 125, 26, 46);
 	}
     slSynch();
+//	_stub->initTimeStamp();
     updatePalette();
     transferAux = 0;
 
@@ -1424,8 +1428,7 @@ bool Cutscene::load(uint16_t cutName) {
 		return 0;
 /*	_stub->initTimeStamp();
 	unsigned int s = _stub->getTimeStamp();
-*/	slTVOff();
-	slSynch();
+*/
 	cutName &= 0xFF;
 	const char *name = _namesTableDOS[cutName];
 	if(cutName!=12 && cutName!=31 && cutName!=35 && cutName!=2)
@@ -1499,14 +1502,14 @@ void Cutscene::prepare() {
 	_backPage = (uint8_t *)SCRATCH+4096;//hwram_ptr; //SCRATCH
 	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
 slTVOff();
-slSynch(); // VBT : à remettre
+slSynch(); // VBT : à remettre // utile
 	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,32 << 9);
 	_stub->copyRect(0, 51, _vid->_w, 32, _vid->_frontLayer, _vid->_w);
 //emu_printf("prepare cutscene\n");
 //	memset4_fast(_auxPage, 0x00, IMG_SIZE/2);
 	memset4_fast(_backPage, 0x00, IMG_SIZE);
 	memset4_fast(_frontPage, 0x00, IMG_SIZE+IMG_SIZE/2);
-	memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE*2), 0x00, IMG_SIZE*2);
+//	memset4_fast((uint8_t *)(SpriteVRAM + 0x80000 - IMG_SIZE*2), 0x00, IMG_SIZE*2);
 
 	_stub->_pi.dirMask = 0;
 	_stub->_pi.enter = false;
@@ -1733,8 +1736,6 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	_frameDelay = 5;
 	
 	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
-		const uint32_t timestamp = _stub->getTimeStamp();
-
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
 		uint16_t paletteBuffer[16];
