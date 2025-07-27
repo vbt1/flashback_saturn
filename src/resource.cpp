@@ -514,7 +514,7 @@ void Resource::unload(int objType) {
 		break;
 	}
 }
-*/
+
 void Resource::load(const char *objName, int objType, const char *ext) {
 //	emu_printf("Resource::load('%s', %d)\n", objName, objType);
 	LoadStub loadStub = 0;
@@ -522,7 +522,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 	File f;
 		
 	switch (objType) {
-/*	case OT_MBK:
+	case OT_MBK:
 		snprintf(_entryName, sizeof(_entryName), "%s.MBK", objName);
 		loadStub = &Resource::load_MBK;
 		break;
@@ -597,11 +597,11 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.POL", objName);
 		loadStub = &Resource::load_POL;
 		break;
-*/	case OT_CMP:
+	case OT_CMP:
 		snprintf(_entryName, sizeof(_entryName), "%s.CMP", objName);
 		loadStub = &Resource::load_CMP;
 		break;
-/*	case OT_OBC:
+	case OT_OBC:
 		snprintf(_entryName, sizeof(_entryName), "%s.OBC", objName);
 		loadStub = &Resource::load_OBC;
 		break;
@@ -627,7 +627,7 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 		break;
 	default:
 		emu_printf("Unimplemented Resource::load() type %d\n", objType);
-		break;*/
+		break;
 	}
 	if (ext) {
 		snprintf(_entryName, sizeof(_entryName), "%s.%s", objName, ext);
@@ -636,12 +636,11 @@ void Resource::load(const char *objName, int objType, const char *ext) {
 	if (f.open(_entryName, _dataPath, "rb")) {
 //		assert(loadStub);
 		(this->*loadStub)(&f);
-		/*if (f.ioErr()) {
+		if (f.ioErr()) {
 			emu_printf("I/O error when reading '%s'", _entryName);
-		}*/
-//		f.close();
+		}
+		f.close();
 	}
-/*
 	else {
 		if (_aba) {
 			uint32_t size;
@@ -715,9 +714,8 @@ emu_printf("_aba->loadEntry\n");
 		error("Cannot open '%s'", _entryName);
 	}
 	f.close();
-	*/
 }
-/*
+
 void Resource::load_CT(File *pf) {
 //	debug(DBG_RES, "Resource::load_CT()");
 	int len = pf->size();
@@ -1108,13 +1106,13 @@ emu_printf("Resource::load_POL()\n");
 	}
 }
 */
-void Resource::load_CMP(File *pf) {
+void Resource::load_CMP(uint8_t *p) {
 //	emu_printf("load_CMP\n");
-	const int len = pf->size();
+//	const int len = pf->size();
 	save_current_lwram = (uint8_t *)current_lwram;
-	uint8_t *tmp = (uint8_t *)current_lwram;
-	current_lwram += SAT_ALIGN(len);
-	pf->read(tmp, len);
+	uint8_t *tmp = (uint8_t *)p;
+//	current_lwram += SAT_ALIGN(len);
+//	pf->read(tmp, len);
 	struct {
 		int offset, packedSize, size;
 	} data[2];

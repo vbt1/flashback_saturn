@@ -1431,15 +1431,18 @@ bool Cutscene::load(uint16_t cutName) {
 */
 	cutName &= 0xFF;
 	const char *name = _namesTableDOS[cutName];
-	if(cutName!=12 && cutName!=31 && cutName!=35 && cutName!=2)
+	if(cutName!=12 && cutName!=31 && cutName!=2)
 	{
 		_res->MAC_loadCutscene(name);
 	}
 	else
 	{
-		_res->MAC_closeMainFile();
-		_res->load(name, Resource::OT_CMP);
-		_res->MAC_reopenMainFile();
+		if(cutName==12)
+			_res->load_CMP((uint8_t *)CUTCMP2);
+		else if (cutName==31)
+			_res->load_CMP((uint8_t *)CUTCMP4);
+		else if (cutName==2)
+			_res->load_CMP((uint8_t *)CUTCMP3);
 	}
 // fix bug on displaying key cutscene
 //	memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9);
@@ -1585,10 +1588,7 @@ void Cutscene::play() {
 				}
 				break;
 			case 8: // save checkpoints
-				_res->MAC_closeMainFile();
-				GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.CMP"),0,(void *)current_lwram,6361);
-				playSet(current_lwram, 0x5E4);
-				_res->MAC_reopenMainFile();
+				playSet((uint8_t *)CUTCMP1, 0x5E4);
 				break;
 			case 19:
 				//if (g_options.play_serrure_cutscene) 

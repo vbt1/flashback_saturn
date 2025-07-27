@@ -29,6 +29,10 @@ void *memset4_fast(void *, long, size_t);
 // si on modifie scratch et front, la sequence de fin a des glitchs ...
 #define SCRATCH 0x2e7000
 #define FRONT   0x2aeff8
+#define CUTCMP1 0x2AAFF8				// CAILLOU
+#define CUTCMP2 CUTCMP1+SAT_ALIGN(6361) // ASC
+#define CUTCMP3 CUTCMP2+SAT_ALIGN(2472)
+#define CUTCMP4 CUTCMP3+SAT_ALIGN(2296)
 #define VRAM_MAX 0x68000 // ne pas toucher
 
 

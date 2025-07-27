@@ -229,7 +229,7 @@ struct Resource {
 	void load_TBN(File *pf);
 	void load_CMD(File *pf);
 	void load_POL(File *pf);
-	void load_CMP(File *pf);
+	void load_CMP(uint8_t *p);
 	void load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize);
 	void load_SPL(File *pf);
 	void load_LEV(File *pf);

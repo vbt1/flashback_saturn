@@ -124,9 +124,10 @@ void Game::run() {
 
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 //	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
+	SAT_preloadCMPfiles();
 
 	_randSeed = time(0);
-	_mix.init();  // vbt : evite de fragmenter la ram	
+	_mix.init();  // vbt : evite de fragmenter la ram
 	_res.init();   // vbt : ajout pour la partie mac
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
@@ -152,7 +153,6 @@ void Game::run() {
 //		buf.setPixel =  _vid.MAC_setPixel;
 		buf.dst_w = Video::CHAR_W*2;
 		buf.dst_h = Video::CHAR_H*2;
-
 
 		for (int i=0;i<106;i++)
 		{
@@ -2764,6 +2764,14 @@ current_lwram+=SAT_ALIGN(21623);
  //   wait_for_slave(); // Wait for slave to complete
     emu_printf("wait_for_slave end\n");
 #endif
+}
+
+void Game::SAT_preloadCMPfiles()
+{
+	GFS_Load(GFS_NameToId((int8_t *)"CAILLOU.CMP"),0,(uint8_t *)CUTCMP1,6361);
+	GFS_Load(GFS_NameToId((int8_t *)"ASC.CMP")	  ,0,(uint8_t *)CUTCMP2,2472);
+	GFS_Load(GFS_NameToId((int8_t *)"CARTE.CMP")  ,0,(uint8_t *)CUTCMP3,2296);
+	GFS_Load(GFS_NameToId((int8_t *)"SERRURE.CMP"),0,(uint8_t *)CUTCMP4,3512);
 }
 
 void Game::SAT_cleanRAM(unsigned char all) {
