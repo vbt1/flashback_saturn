@@ -1020,7 +1020,7 @@ void Game::drawLevelTexts() {
 	if (obj == 0) {
 		obj = col_findCurrentCollidingObject(pge, 0xFF, 5, 9, &pge);
 	}
-	
+
 	if(hasLevelText)
 	{
 //		emu_printf("_textToDisplay %x obj %d num %d\n",_textToDisplay,obj,pge->init_PGE->text_num);
@@ -1045,8 +1045,11 @@ void Game::drawLevelTexts() {
 //			memcpy(&toto[2],str,*str);
 //	emu_printf("cut id %d drawLevelTexts %s\n",_cut._id,toto);
 //			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
-			if (_cut._id == 0xFFFF) // ou !=34 ou remonter avec texttodisplay
+			if (_cut._id == 0xFFFF  || _cut._id == 30 || _cut._id == 31 ) // ou !=34 ou remonter avec texttodisplay
+			{
 				drawString(str, 176, 26, 0xE6, true);
+				_cut._id = 0xFFFF;
+			}
 
 			if (icon_num == 2) {
 				printSaveStateCompleted();
@@ -1982,6 +1985,11 @@ void Game::changeLevel() {
 }
 
 void Game::handleInventory() {
+// vbt : vidage nécessaire
+//emu_printf("cut id %d\n",_cut._id);
+//	if(_cut._id!=0xFFFF)
+//	memset4_fast(&_vid._frontLayer[50*_vid._w], 0x00,32*_vid._w);
+
 	LivePGE *selected_pge = 0;
 	LivePGE *pge = &_pgeLive[0];
 	if (pge->life > 0 && pge->current_inventory_PGE != 0xFF) {
