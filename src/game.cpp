@@ -1985,10 +1985,14 @@ void Game::changeLevel() {
 }
 
 void Game::handleInventory() {
-// vbt : vidage nécessaire
-//emu_printf("cut id %d\n",_cut._id);
-//	if(_cut._id!=0xFFFF)
-//	memset4_fast(&_vid._frontLayer[50*_vid._w], 0x00,32*_vid._w);
+// vbt : vidage nécessaire, correction à améliorer
+	extern Uint16 VDP2_BGON;
+//emu_printf("cut id %d %x\n",_cut._id,VDP2_BGON);
+	if ((VDP2_BGON & 0x1) == 0)
+	{
+		memset4_fast(&_vid._frontLayer[51 << 9], 0x00,32 << 9);
+		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+	}
 
 	LivePGE *selected_pge = 0;
 	LivePGE *pge = &_pgeLive[0];
