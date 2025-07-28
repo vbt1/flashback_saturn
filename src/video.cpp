@@ -135,7 +135,7 @@ void Video::fadeOutPalette() {
 			col.b = col.b * step >> 4;
 			_stub->setPaletteEntry(c, &col);
 		}
-		fullRefresh();
+//		fullRefresh(); // vbt casse le fadeout des controles
 		updateScreen();
 		_stub->sleep(50);
 	}
