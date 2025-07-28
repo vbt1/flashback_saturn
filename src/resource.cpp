@@ -1521,13 +1521,17 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     MAC_copyClut16(clut, 0x1C, 0x37);  // icons
     MAC_copyClut16(clut, 0x1D, 0x38);
 
+
+    if (level == 1) {
 // vbt : palette pour le metro
-    for (int i = 0; i < 15; ++i)
-        clut[i+0x1F * 16] = tmp[i+1];
-	clut[15+0x1F * 16] = tmp[1]; // 4bpp only
-    // Unroll LUT-based color swap loop
+		for (int i = 0; i < 15; ++i)
+			clut[i+0x1F * 16] = tmp[i+1];
+		clut[15+0x1F * 16] = tmp[1]; // 4bpp only
+	}
+	// Unroll LUT-based color swap loop
 	static const unsigned char lut[30]={14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
 										126,127,254,255,174,175,190,191,206,207,222,223,238,239};
+
 	clut[69].r = 255;
 	clut[69].g = 255;
 	clut[69].b = 255;

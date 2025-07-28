@@ -79,6 +79,7 @@ struct Video {
 	void setPaletteSlotLE(int palSlot, const uint8_t *palData);
 	void setTextPalette();
 	void setPalette0xF();
+	void setIconsPalette();
 	void copyLevelMap(uint16 room);
 	void decodeLevelMap(uint16 sz, const uint8_t *src, uint8_t *dst);
 	void setLevelPalettes();

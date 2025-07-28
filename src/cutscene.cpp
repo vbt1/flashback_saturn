@@ -1485,16 +1485,7 @@ void Cutscene::unload() {
 		memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9],0x0000, CLEAN_H_MORE << 9);
 		_stub->copyRect(CLEAN_X, CLEAN_Y, CLEAN_W, CLEAN_H_MORE, _vid->_frontLayer, _vid->_w);
 #endif
-		Color clut[512];
-//		Color *clut = (Color *)hwram_ptr;
-		_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
-		_res->MAC_copyClut16(clut, 0x1D, 0x38);
-
-		const int baseColor = 12 * 16 + 256;
-		for (int i = 0; i < 32; ++i) {
-			int color = baseColor + i;
-			_stub->setPaletteEntry(color, &clut[color]);
-		}
+		_vid->setIconsPalette();
 	}
 	slTVOn();
 }

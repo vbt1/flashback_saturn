@@ -238,17 +238,9 @@ void Menu::displayTitleScreenMac(int num) {
 void Menu::handleInfoScreen() {
 //	debug(DBG_MENU, "Menu::handleInfoScreen()");
 	_vid->fadeOut();
-	
-	if (_res->_lang == LANG_FR) {
-		loadPicture("instru_f");
-	} else {
-		loadPicture("instru_e");
-	}
-	
-//	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
-	
-//	_vid->fullRefresh();
-//	_vid->updateScreen();
+	_vid->setIconsPalette();
+	loadPicture("instru_e");
+
 	do {
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
@@ -379,10 +371,10 @@ bool Menu::handlePasswordScreen() {
 */
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
+	memset(_vid->_frontLayer, 0, _vid->_layerSize);
 	_vid->fadeOut();
 	loadPicture("menu2");
-memset(_vid->_frontLayer, 0, _vid->_layerSize);	
-//	_vid->fullRefresh();
+	_vid->setTextPalette(); // vbt : ajout
 	int currentSkill = _skill;
 	int currentLevel = _level;
 	do {
@@ -637,7 +629,9 @@ void Menu::handleTitleScreen() {
 		*/
 //		_vid->updateScreen();
 //			memset(_vid->_frontLayer,0x00,_vid->_layerSize);
-			_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+
+//emu_printf("selectedItem %d curr %d\n",_selectedOption,);
+		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
 	}

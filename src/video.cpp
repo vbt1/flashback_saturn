@@ -127,7 +127,7 @@ void Video::fadeOut() {
 
 void Video::fadeOutPalette() {
 	for (int step = 16; step >= 0; --step) {
-		for (int c = 0; c < 256; ++c) {
+		for (int c = 0; c < 512; ++c) {
 			Color col;
 			_stub->getPaletteEntry(c, &col);
 			col.r = col.r * step >> 4;
@@ -199,6 +199,18 @@ void Video::setPalette0xF() {
 		c.g = *p++ >> 2;
 		c.b = *p++ >> 2;
 		_stub->setPaletteEntry(0xF0 + i, &c);
+	}
+}
+
+void Video::setIconsPalette() {
+	Color clut[512];
+	_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
+	_res->MAC_copyClut16(clut, 0x1D, 0x38);
+
+	const int baseColor = 12 * 16 + 256;
+	for (int i = 0; i < 32; ++i) {
+		int color = baseColor + i;
+		_stub->setPaletteEntry(color, &clut[color]);
 	}
 }
 
