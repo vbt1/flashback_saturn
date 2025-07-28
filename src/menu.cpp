@@ -372,8 +372,11 @@ bool Menu::handlePasswordScreen() {
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	memset(_vid->_frontLayer, 0, _vid->_layerSize);
+	_vid->_fullRefresh = true;
+	_vid->fullRefresh();
 	_vid->fadeOut();
 	loadPicture("menu2");
+
 	_vid->setTextPalette(); // vbt : ajout
 	int currentSkill = _skill;
 	int currentLevel = _level;
@@ -522,9 +525,12 @@ void Menu::handleTitleScreen() {
 		}
 			
 		if (_nextScreen == SCREEN_TITLE) {
+			memset(_vid->_frontLayer, 0, _vid->_layerSize);
+			_vid->_fullRefresh = true;
+			_vid->fullRefresh();
 			_vid->fadeOut();
 			loadPicture("menu1");
-//			_vid->fullRefresh();
+
 			_charVar1 = /*_res->isMac() ?*/ 0xE0 /*: 0*/; // shadowColor
 			_charVar3 = /*_res->isMac() ?*/ 0xE4 /*: 1*/; // selectedColor
 			_charVar4 = /*_res->isMac() ?*/ 0xE5 /*: 2*/; // defaultColor
