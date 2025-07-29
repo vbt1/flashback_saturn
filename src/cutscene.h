@@ -61,7 +61,7 @@ struct Cutscene {
 	static const Text _enTextsTable[];
 //	static const uint8_t _caillouSetData[];
 //	static const uint8_t _memoSetShape2Data[];
-//	static const uint8_t _memoSetShape4Data[];
+	static const uint8_t _memoSetShape4Data[];
 
 	Graphics _gfx;
 	Mixer _mix;

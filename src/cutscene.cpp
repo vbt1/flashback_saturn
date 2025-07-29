@@ -680,7 +680,7 @@ void Cutscene::op_drawShape() {
     }
 }
 
-//static int _paletteNum = -1;
+static int _paletteNum = -1;
 
 void Cutscene::op_setPalette() {
 //	emu_printf("Cutscene::op_setPalette()\n");
@@ -693,7 +693,7 @@ void Cutscene::op_setPalette() {
 		_palBuf[0x20] = 0x0F;
 		_palBuf[0x21] = 0xFF;
 	}
-//	_paletteNum = num;
+	_paletteNum = num;
 }
 
 void Cutscene::op_drawCaptionText() {
@@ -1167,7 +1167,7 @@ void Cutscene::op_drawShapeScaleRotate() {
 		++_shape_count;
 	}
 }
-/*
+
 static const uint16_t memoSetPos[] = {
 	2, 0xffca, 0x0010, 2, 0xffcb, 0x000f, 2, 0xffcd, 0x000e, 2, 0xffd0, 0x000d, 2, 0xffd3, 0x000c, 2, 0xffd7, 0x000b,
 	2, 0xffd9, 0x000a, 2, 0xffdb, 0x0009, 2, 0xffdd, 0x0008, 2, 0xffdd, 0x0008, 2, 0xffdd, 0x0008, 2, 0xffdd, 0x0008,
@@ -1206,7 +1206,7 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 	}
 	return index;
 }
-*/
+
 
 void Cutscene::op_copyScreen() {
 //	emu_printf("Cutscene::op_copyScreen()\n");
@@ -1222,32 +1222,35 @@ void Cutscene::op_copyScreen() {
 	previousStr = -1;
 	_frameDelay = 10;
 
-/*
 	const bool drawMemoShapes = _drawMemoSetShapes && (_paletteNum == 19 || _paletteNum == 23) && (_memoSetOffset + 3) <= sizeof(memoSetPos);
 	if (drawMemoShapes) {
-		uint16_t paletteBuffer[32];
+/*		uint16_t paletteBuffer[32];
 		for (int i = 0; i < 32; ++i) {
 			paletteBuffer[i] = READ_BE_UINT16(_palBuf + i * 2);
-		}
+		}*/
 		uint16_t tempPalette[16];
-		readSetPalette(_memoSetShape2Data, 0x462, tempPalette);
-		uint8_t paletteLut[32];
+		uint8_t *_memoSetShape2Data = (uint8_t *)CUTCMP5;
+//		readSetPalette(_memoSetShape2Data, 0x462, tempPalette);
+		/*uint8_t paletteLut[32];
 		for (int k = 0; k < 16; ++k) {
 			const int index = findSetPaletteColor(tempPalette[k], paletteBuffer);
 			paletteLut[k] = 0xC0 + index;
-		}
-
+		}*/
+//					copyPalette((uint8_t *)tempPalette, 0);
 		_gfx.setLayer(_backPage);
-		drawSetShape(_memoSetShape2Data, 0, (int16_t)memoSetPos[_memoSetOffset + 1], (int16_t)memoSetPos[_memoSetOffset + 2], paletteLut);
+		drawSetShape(_memoSetShape2Data, 0, (int16_t)memoSetPos[_memoSetOffset + 1], (int16_t)memoSetPos[_memoSetOffset + 2]/*, paletteLut*/);
 		_memoSetOffset += 3;
 		if (memoSetPos[_memoSetOffset] == 4) {
-			drawSetShape(_memoSetShape4Data, 0, (int16_t)memoSetPos[_memoSetOffset + 1], (int16_t)memoSetPos[_memoSetOffset + 2], paletteLut);
+			drawSetShape(_memoSetShape4Data, 0, (int16_t)memoSetPos[_memoSetOffset + 1], (int16_t)memoSetPos[_memoSetOffset + 2]/*, paletteLut*/);
 			_memoSetOffset += 3;
 		}
 	}
-	*/
+	
 	updateScreen(); // vbt : remis permet de revoir "present" au boot
 	// ne pas simplifier, ajoute un bug sur la sequence de fin
+	if (drawMemoShapes) {
+		SWAP(_frontPage, _backPage);
+	}
 }
 
 void Cutscene::op_drawTextAtPos() {
@@ -1394,10 +1397,10 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 	_polPtr = getPolygonData();
 //	debug(DBG_CUT, "_baseOffset = %d offset = %d count = %d", _baseOffset, offset, count);
 
-//	_paletteNum = -1;
+	_paletteNum = -1;
 	_isConcavePolygonShape = false;
-//	_drawMemoSetShapes = (_id == kCineMemo);
-//	_memoSetOffset = 0;
+	_drawMemoSetShapes = (_id == kCineMemo);
+	_memoSetOffset = 0;
 	while (!_stub->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
 //		debug(DBG_CUT, "Cutscene::play() opcode = 0x%X (%d)", op, (op >> 2));

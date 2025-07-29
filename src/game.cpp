@@ -131,7 +131,7 @@ void Game::run() {
 	_res.init();   // vbt : ajout pour la partie mac
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+30000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+29000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
@@ -2784,6 +2784,7 @@ void Game::SAT_preloadCMPfiles()
 	GFS_Load(GFS_NameToId((int8_t *)"ASC.CMP")	  ,0,(uint8_t *)CUTCMP2,2472);
 	GFS_Load(GFS_NameToId((int8_t *)"CARTE.CMP")  ,0,(uint8_t *)CUTCMP3,2296);
 	GFS_Load(GFS_NameToId((int8_t *)"SERRURE.CMP"),0,(uint8_t *)CUTCMP4,3512);
+	GFS_Load(GFS_NameToId((int8_t *)"MEMO.CMP")	  ,0,(uint8_t *)CUTCMP5,1167);
 }
 
 void Game::SAT_cleanRAM(unsigned char all) {
