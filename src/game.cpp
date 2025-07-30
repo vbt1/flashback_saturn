@@ -1777,9 +1777,11 @@ void Game::loadLevelData() {
 		_res.load(lvl->name2, Resource::OT_TBN);
 		break;
 #endif
+
+//		slSynch(); // pour virer les sprites
+		_vid.fadeOut();
 //	case kResourceTypeMac:
 		SAT_cleanRAM (HWRAM|LWRA1|VRAM1);
-//heapWalk();		
 		sat_free(_res._spc); // on ne vire pas
 		sat_free(_res._ani);
 //emu_printf("2chwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
@@ -1789,6 +1791,20 @@ void Game::loadLevelData() {
 		sat_free(_res._cine_off);
 
 		_vid.setTextPalette();
+/*
+	Color clut[512];
+	_res.MAC_copyClut16(clut, 0xE, 0x38);
+	_res.MAC_copyClut16(clut, 0x1E, 0x38);
+
+	const int baseColor = 14 * 16 + 256;
+	for (int i = 0; i < 16; ++i) {
+		int color = baseColor + i;
+		_stub->setPaletteEntry(color, &clut[color]);
+		_stub->setPaletteEntry(256+color, &clut[color]);
+	}
+*/
+//		_stub->updateScreen(0);
+//		slSynch();
 //		_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);

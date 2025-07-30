@@ -21,6 +21,8 @@ GfsDirTbl gfsDirTbl;
 GfsDirName gfsDirName[DIR_MAX];
 Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];     
 Sint32 gfsDirN;
+extern Sint32  gfcd_fatal_err; /* OPEN, NODISC, FATALの保持                */
+extern GfsMng   *gfs_mng_ptr;
 }
 
 #include "saturn_print.h"
@@ -99,6 +101,90 @@ Sint32 crawl_dir(char *token) {
 	return ret;
 }
 */
+
+void errGfsFunc(void *obj, int ec)
+{
+	char texte[50];
+	sprintf(texte, "ErrGfs %X %X",obj, ec); 
+	texte[49]='\0';
+	do{
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	emu_printf("%s\n", texte);
+
+    int      ret;
+    GfsErrStat  stat;
+    GFS_GetErrStat(&stat);
+    ret = GFS_ERR_CODE(&stat);
+
+	sprintf(texte, "ErrGfsCode %X",ret); 
+	texte[49]='\0';
+
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
+	emu_printf("%s\n", texte);
+//	wait_vblank();
+
+	}while(1);
+}
+
+#define GFS_LOCAL
+#define GFCD_ERR_OK             0       /* 正常終了 */
+#define GFCD_ERR_WAIT           -1      /* 処理待ち */
+#define GFCD_ERR_NOCDBLK        -2      /* CDブロックが接続されていない */
+#define GFCD_ERR_NOFILT         -3      /* 空き絞りがない */
+#define GFCD_ERR_NOBUF          -4      /* 空き区画がない */
+#define GFCD_ERR_INUSE          -5      /* 指定された資源が使用中 */
+#define GFCD_ERR_RANGE          -6      /* 引数が範囲外 */
+#define GFCD_ERR_UNUSE          -7      /* 未確保のものを操作しようとした */
+#define GFCD_ERR_QFULL          -8      /* コマンドキューがいっぱい */
+#define GFCD_ERR_NOTOWNER       -9      /* 非所有者が資源を操作しようとした */
+#define GFCD_ERR_CDC            -10     /* CDCからのエラー */
+#define GFCD_ERR_CDBFS          -11     /* CDブロックファイルシステムエラー */
+#define GFCD_ERR_TMOUT          -12     /* タイムアウト */
+#define GFCD_ERR_OPEN           -13     /* トレイが開いている */
+#define GFCD_ERR_NODISC         -14     /* ディスクが入っていない */
+#define GFCD_ERR_CDROM          -15     /* CD-ROMでないディスクが入っている */
+#define GFCD_ERR_FATAL          -16     /* ステータスがFATAL */
+
+#define MNG_ERROR(mng)          ((mng)->error)
+
+GFS_LOCAL Sint32 gfs_mngSetErrCode(Sint32 code)
+{
+    GfsErrStat  *err;
+
+    switch (gfcd_fatal_err) {
+    case    GFCD_ERR_OK:        /* 処理速度の低下を防ぐため先頭におく   */
+        break;
+#if !defined(DEBUG_LIB)
+    case    GFCD_ERR_OPEN:
+        code = GFS_ERR_CDOPEN;
+        break;
+    case    GFCD_ERR_NODISC:
+        code = GFS_ERR_CDNODISC;
+        break;
+#endif
+    case    GFCD_ERR_FATAL:
+        code = GFS_ERR_FATAL;
+        break;
+    default:
+        break;
+    }
+    err = &MNG_ERROR(gfs_mng_ptr);
+    GFS_ERR_CODE(err) = code;
+    /* エラー関数が登録されている場合 */
+    if ((code != GFS_ERR_OK)&&(GFS_ERR_FUNC(err) != NULL)) {
+        GFS_ERR_FUNC(err)(GFS_ERR_OBJ(err), code); /* エラー処理関数実行 */
+    }
+    return code;
+}
+
+void GFS_SetErrFunc(GfsErrFunc func, void *obj)
+{
+    GFS_ERR_FUNC(&MNG_ERROR(gfs_mng_ptr)) = func;
+    GFS_ERR_OBJ(&MNG_ERROR(gfs_mng_ptr)) = obj;
+    gfs_mngSetErrCode(GFS_ERR_OK);
+}
+
 void init_GFS() { //Initialize GFS system
 
 	CDC_CdInit(0x00,0x00,0x05,0x0f);
@@ -115,6 +201,7 @@ void init_GFS() { //Initialize GFS system
 	current_path[idx][0] = '/';
 */	dir_depth = 0;
 //	cache=(Uint8 *)22400000;
+	GFS_SetErrFunc((GfsErrFunc)errGfsFunc, NULL );
 	memset4_fast(cache, 0, CACHE_SIZE);
 }
 
