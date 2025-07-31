@@ -183,7 +183,7 @@ struct SystemStub_SDL : SystemStub {
 //	virtual void unlockMutex(void *mutex);
 	virtual void setup_input (void); // Setup input controllers
 
-	virtual void setPalette(uint8 *palette, uint16 colors);
+//	virtual void setPalette(uint8 *palette, uint16 colors);
 	void prepareGfxMode();
 	void cleanupGfxMode();
 	void forceGfxRedraw();
@@ -238,7 +238,7 @@ void SystemStub_SDL::destroy() {
 	cleanupGfxMode();
 	SYS_Exit(0);
 }
-
+/*
 void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 	assert(colors <= 256);
 	for (int i = 0; i < colors; ++i) {
@@ -250,7 +250,7 @@ void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 	}
 	
 }
-
+*/
 void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
 	uint8 r = (c->r << 2) | (c->r & 3);
 	uint8 g = (c->g << 2) | (c->g & 3);
