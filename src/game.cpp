@@ -258,6 +258,7 @@ for (i=0;i<100;i++)
 
 		if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
 			_demoBin = (_demoBin + 1) % ARRAYSIZE(_demoInputs);
+			_res._isDemo = true;
 			const char *fn = _demoInputs[_demoBin].name;
 //			emu_printf("_demoBin '%d arraysz %d\n", _demoBin, ARRAYSIZE(_demoInputs));
 //			emu_printf("Loading inputs from '%s'\n", fn);
@@ -276,6 +277,7 @@ for (i=0;i<100;i++)
 		{
 			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 			_demoBin = -1;
+			_res._isDemo = false;
 			_skillLevel = _menu._skill;
 			_currentLevel = _menu._level;
 		}

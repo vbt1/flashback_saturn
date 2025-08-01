@@ -48,7 +48,7 @@ Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	_dataPath = dataPath;
 	_type = type;
 	_lang = lang;
-//	_isDemo = false;
+	_isDemo = false;
 //	_aba = 0;
 	_mac = 0;
 	_readUint16 = READ_BE_UINT16;

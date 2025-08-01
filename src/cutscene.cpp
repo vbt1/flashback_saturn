@@ -1414,7 +1414,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		}
  		(this->*_opcodeTable[op])();
 		_stub->processEvents();
-		if (_stub->_pi.backspace) {
+		if (_stub->_pi.backspace && !_res->_isDemo) {
 			_stub->_pi.backspace = false;
 			_interrupted = true;
 		}
@@ -1762,7 +1762,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		memset4_fast(_frontPage, 0, IMG_SIZE);
 
 		_stub->processEvents();
-		if (_stub->_pi.backspace) {
+		if (_stub->_pi.backspace && !_res->_isDemo) {
 			_stub->_pi.backspace = false;
 			_interrupted = true;
 		}
