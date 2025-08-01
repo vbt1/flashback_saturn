@@ -564,6 +564,7 @@ void Menu::handleTitleScreen() {
 			} else {
 				currentEntry = menuItemsCount - 1;
 			}
+			_stub->initTimeStamp();
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
@@ -572,6 +573,7 @@ void Menu::handleTitleScreen() {
 			} else {
 				currentEntry = 0;
 			}
+			_stub->initTimeStamp();
 		}
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
@@ -607,6 +609,7 @@ void Menu::handleTitleScreen() {
 				return;
 			}
 			_nextScreen = SCREEN_TITLE;
+			_stub->initTimeStamp();
 			continue;
 		}
 
@@ -614,6 +617,7 @@ void Menu::handleTitleScreen() {
 			_res->setLanguage(languages[currentLanguage].lang);
 			// clear previous language text
 			memcpy(_vid->_frontLayer, _vid->_backLayer, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H * 4);
+			_stub->initTimeStamp();
 		}
 
 		// draw the options
