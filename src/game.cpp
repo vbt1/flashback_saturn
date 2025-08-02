@@ -1169,6 +1169,8 @@ void Game::drawStoryTexts() {
 			if (voiceSegmentLen) 
 			{
 				uint32_t address = (uint32_t)soundAddr;
+				if(voiceSegmentLen<9216)
+					voiceSegmentLen = 9216;
 //				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
 				pcm_sample_t pcm = {.addr = address, .vol = (Mixer::MAX_VOLUME>>1)-1, .bit = pcm_sample_8bit};
 				pcm_prepare_sample(&pcm, PCM_VOICE, voiceSegmentLen);

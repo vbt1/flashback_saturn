@@ -1768,8 +1768,9 @@ void Resource::MAC_loadSounds() {
 
 void Resource::MAC_closeMainFile()
 {
-	GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
-	GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+//	GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
+//	GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+	_mac->_f.close();
 }
 
 void Resource::MAC_reopenMainFile()

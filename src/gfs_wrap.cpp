@@ -100,7 +100,7 @@ Sint32 crawl_dir(char *token) {
 
 	return ret;
 }
-*/
+
 
 void errGfsFunc(void *obj, int ec)
 {
@@ -126,6 +126,7 @@ void errGfsFunc(void *obj, int ec)
 
 	}while(1);
 }
+*/
 
 #define GFS_LOCAL
 #define GFCD_ERR_OK             0       /* 正常終了 */
@@ -193,15 +194,8 @@ void init_GFS() { //Initialize GFS system
     GFS_DIRTBL_DIRNAME(&gfsDirTbl) = gfsDirName;
     GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;
     gfsDirN = GFS_Init(OPEN_MAX, gfsLibWork, &gfsDirTbl);
-/*
-	Uint8 idx;
-	for(idx = 0; idx < 15; idx++) {
-		memset(current_path[idx], 0, 16);
-	}
-	current_path[idx][0] = '/';
-*/	dir_depth = 0;
-//	cache=(Uint8 *)22400000;
-	GFS_SetErrFunc((GfsErrFunc)errGfsFunc, NULL );
+	dir_depth = 0;
+//	GFS_SetErrFunc((GfsErrFunc)errGfsFunc, NULL );
 	memset4_fast(cache, 0, CACHE_SIZE);
 }
 
@@ -211,27 +205,17 @@ GFS_FILE *sat_fopen(const char *path) {
 
 	if (path == NULL) 
 	{	
-//slPrint((char *)"path == NULL     ",slLocate(10,12));
-//slSynch();
-	return NULL; // nothing to do...
+		return NULL; // nothing to do...
 	}
 	Uint16 idx;
 	static GFS_FILE fp[1];
 	idx = 0;
 	if (path[idx] == '\0')
 	{
-//slPrint((char *)"Malformed path     ",slLocate(10,12));
-//slSynch();		
 		return NULL; // Malformed path
 	}
-
-//slPrint((char *)"good path     ",slLocate(10,12));
-//slSynch();
-
 	Uint16 path_len = strlen(path);
 	Uint16 tokens = 0; // How many "entries" we have in this path?
-//slPrint((char *)"strncpy     ",slLocate(10,12));
-//slSynch();
 	strncpy(satpath, path, path_len + 1); // Prepare the string to work on
 
 	if ((char*)strtok(satpath, "/") != NULL) tokens++; // it's not an empty path...
@@ -239,8 +223,6 @@ GFS_FILE *sat_fopen(const char *path) {
 	while((char*)strtok(NULL, "/") != NULL) tokens++; // count remaining
 
 	strncpy(satpath, path, path_len + 1);
-//slPrint((char *)"strncpy2     ",slLocate(10,12));
-//slSynch();
 
 	char *path_token = (char*)strtok(satpath, "/");
 /*
@@ -285,16 +267,13 @@ GFS_FILE *sat_fopen(const char *path) {
 	// OPEN FILE
 	if(ret >= 0) // Open only if we are sure we traversed the path correctly
 	{
-//emu_printf("%s fid %d\n",path_token,GFS_NameToId((Sint8*)path_token));
-//slPrint((char *)"GFS_Open     ",slLocate(10,12));		
 		fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
 	}
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-//slPrint((char *)"GFS_SetTmode     ",slLocate(10,12));		
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
-		
+
 		// Encapsulate the file data
 		fp->fid = fid;
 		fp->f_seek_pos = 0;
