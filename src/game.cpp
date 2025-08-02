@@ -1157,7 +1157,8 @@ void Game::drawStoryTexts() {
 			uint32_t voiceSegmentLen = 0;
 			uint32_t next = 0;
 //			_textToDisplay=0;
-			_mix.pauseMusic();
+			if(textSegmentsCount==1)
+				_mix.pauseMusic();
 			//_mix.stopMusic();
 			pcm_sample_stop(PCM_VOICE);
 			volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(PCM_VOICE);
