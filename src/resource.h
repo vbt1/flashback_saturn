@@ -239,7 +239,8 @@ struct Resource {
 	const uint8_t *getAniData(int num) const {
 //		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_ani);
-			assert(num < count);
+			if(num >= count)
+				return NULL;
 			const int offset = READ_BE_UINT16(_ani + 2 + num * 2);
 			return _ani + offset;
 /*		}
@@ -249,7 +250,8 @@ struct Resource {
 	const uint8_t *getTextString(int level, int num) const {
 //		if (_type == kResourceTypeMac) {
 			const int count = READ_BE_UINT16(_tbn);
-			assert(num < count);
+			if(num >= count)
+				return NULL;
 			const int offset = READ_BE_UINT16(_tbn + 2 + num * 2);
 			return _tbn + offset;
 /*		}
@@ -265,23 +267,17 @@ struct Resource {
 /*		}
 		return _stringsTable + READ_LE_UINT16(_stringsTable + num * 2);*/
 	}
-	const uint8_t *getCineString(int num) const {
-//		if (_type == kResourceTypeMac) {
-			const int count = READ_BE_UINT16(_cine_txt);
-			assert(num < count);
-			const int offset = READ_BE_UINT16(_cine_txt + 2 + num * 2);
-			return _cine_txt + offset;
-/*		}
-		if (_lang == LANG_JP) {
-			const int offset = READ_BE_UINT16(LocaleData::_cineBinJP + num * 2);
-			return LocaleData::_cineTxtJP + offset;
-		}
-		if (_cine_off) {
-			const int offset = READ_BE_UINT16(_cine_off + num * 2);
-			return _cine_txt + offset;
-		}
-		return (num >= 0 && num < NUM_CUTSCENE_TEXTS) ? _cineStrings[num] : 0;
-*/	}
+	
+const uint8_t *getCineString(int num) const {
+    // if (_type == kResourceTypeMac) {
+        const int count = READ_BE_UINT16(_cine_txt);
+        if (num >= count) {
+            return NULL;
+        }
+        const int offset = READ_BE_UINT16(_cine_txt + 2 + num * 2);
+        return _cine_txt + offset;
+    // }
+}
 	const char *getMenuString(int num) const {
 		return (num >= 0 && num < LocaleData::LI_NUM) ? _textsTable[num] : "";
 #if 0
@@ -292,7 +288,7 @@ struct Resource {
 #endif
 	}
 	const uint8_t *getCreditsString(int num) {
-		assert(_type == kResourceTypeMac);
+//		assert(_type == kResourceTypeMac);
 		const int count = READ_BE_UINT16(_credits);
 		if (num < count) {
 			const int offset = READ_BE_UINT16(_credits + 2 + num * 2);

@@ -1,6 +1,6 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)

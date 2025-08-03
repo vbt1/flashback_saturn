@@ -256,7 +256,7 @@ void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
 	uint8 g = (c->g << 2) | (c->g & 3);
 	uint8 b = (c->b << 2) | (c->b & 3);
 
-	_pal[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | ((r >> 3) << 0) | RGB_Flag;
+	_pal[i] = RGB(r>>3,g>>3,b>>3);
 }
 
 void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {

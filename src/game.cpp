@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
 
@@ -293,6 +293,8 @@ for (i=0;i<100;i++)
 //		}
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
+			memset4_fast(_vid._frontLayer, 0x00, _vid._layerSize);
+			_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
 			_vid.setTextPalette();
 			playCutscene(0x3D);
 		} else {

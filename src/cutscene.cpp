@@ -85,7 +85,7 @@ void Cutscene::sync(int frameDelay) {
 //	emu_printf("sleepx frame delay %d delay %d _tstamp %d\n", frameDelay, delay, _tstamp);
 	delay=(delay<0?17:delay);
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 0
+#if 1
 	const int32_t target = frameDelay * (1000 / frameHz);
 	if (pause<-4)
 		emu_printf("too slow !! target: %d ms, actual: %d ms, overtime: %d ms\n",
@@ -546,7 +546,8 @@ void Cutscene::checkShape(uint16_t shapeOffset) {
 
 void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 //emu_printf("Cutscene::drawShape()1\n");
-	_gfx.setLayer(_backPage);
+//	_gfx.setLayer(_backPage);
+	_gfx._layer = _backPage;
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		Point pt;
@@ -754,7 +755,8 @@ void Cutscene::op_refreshAll() {
 
 void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
 //	//emu_printf("Cutscene::drawShapeScale(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
-	_gfx.setLayer(_backPage);
+//	_gfx.setLayer(_backPage);
+	_gfx._layer = _backPage;
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		int16_t x, y;
@@ -941,7 +943,8 @@ void Cutscene::op_drawShapeScale() {
 
 void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b, int16_t c, int16_t d, int16_t e, int16_t f, int16_t g) {
 //	//emu_printf("Cutscene::drawShapeScaleRotate(%d, %d, %d, %d, %d, %d, %d)\n", zoom, b, c, d, e, f, g);
-	_gfx.setLayer(_backPage);
+//	_gfx.setLayer(_backPage);
+	_gfx._layer = _backPage;
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		int16_t x, y, ix, iy;
@@ -1237,7 +1240,8 @@ void Cutscene::op_copyScreen() {
 			paletteLut[k] = 0xC0 + index;
 		}*/
 //					copyPalette((uint8_t *)tempPalette, 0);
-		_gfx.setLayer(_backPage);
+//		_gfx.setLayer(_backPage);
+		_gfx._layer = _backPage;
 		drawSetShape(_memoSetShape2Data, 0, (int16_t)memoSetPos[_memoSetOffset + 1], (int16_t)memoSetPos[_memoSetOffset + 2]/*, paletteLut*/);
 		_memoSetOffset += 3;
 		if (memoSetPos[_memoSetOffset] == 4) {
@@ -1722,7 +1726,8 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		offset = nextOffset + 45;
 	}
 	prepare();
-	_gfx.setLayer(_backPage);
+//	_gfx.setLayer(_backPage);
+	_gfx._layer = _backPage;
 
 	offset = 10;
 	const int frames = READ_BE_UINT16(p + offset); offset += 2;
@@ -1742,7 +1747,8 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 			packPixels(_backPage, _auxPage, IMG_SIZE);
 			clearBackPage();
 		}
-		_gfx.setLayer(_frontPage);
+		_gfx._layer = _frontPage;
+//		_gfx.setLayer(_frontPage);
 		int newpal = 1;
 
 		for (int j = 0; j < count; ++j) {
