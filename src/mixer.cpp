@@ -58,7 +58,7 @@ void Mixer::pauseMusic(void)
 	// Get current address
 	CDC_GetCurStat(&statdata);
 
-//	emu_printf( "Mixer::pauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
+//	emu_printf( "Mixer::pauseMusic() %d _musicTrack %d\n",_musicTrack,statdata.report.fad);
 
 	// Restore address
     CdcPos poswk;
@@ -68,7 +68,7 @@ void Mixer::pauseMusic(void)
 
 void Mixer::unpauseMusic(void)
 {
-//	emu_printf( "Mixer::unpauseMusic() %d _musicTrack %d %d\n",_musicType,_musicTrack,statdata.report.fad);
+//	emu_printf( "Mixer::unpauseMusic() _musicTrack %d %d\n",_musicTrack,statdata.report.fad);
 
 	CdcPly ply;
 
@@ -157,9 +157,8 @@ void Mixer::playMusic(int num, int tempo) {
 }
 
 void Mixer::stopMusic() {
-//	emu_printf( "Mixer::stopMusic() %d _musicTrack %d\n",_musicType,_musicTrack);
+//	emu_printf( "Mixer::stopMusic() _musicTrack %d\n",_musicTrack);
 	// Get current address
-	
 	CdcStat stat;
 	CDC_GetCurStat(&stat);
 

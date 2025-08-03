@@ -440,13 +440,9 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
-			{
 				_mix.unpauseMusic(); // vbt : on reprend où la musique était
-			}
 			else
-			{
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
-			}
 		}
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
 	}
@@ -488,9 +484,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 			_mix.unpauseMusic(); // vbt : on reprend où la musique était
 		else
 			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
-	
 		_cut._stop = false;
-		//audioEnabled = 1;
 //		_stub->_pi.backspace = false;
 //		_stub->_pi.quit = false;
 	}
@@ -548,10 +542,7 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */) {
-//		_sfxPly.stop(); // vbt à voir
 //		ToggleWidescreenStack tws(_stub, false);
-//		_mix.stopMusic();
-//		_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
 /*		if (_res._hasSeqData) {
 			int num = 0;
 			switch (_cut._id) {
@@ -632,27 +623,7 @@ void Game::playCutscene(int id) {
 				_cut.play();
 			}
 		}
-		
-#if 0 
-		if (/*_res.isMac() &&*/ !(id == 0x48 || id == 0x49)) { // continue or score screens
-			// restore palette entries modified by the cutscene player (0xC and 0xD)
-			Color palette[32];
-			_res.MAC_copyClut16(palette, 0, 0x37);
-			_res.MAC_copyClut16(palette, 1, 0x38);
-//			for (int i = 0; i < 32; ++i) {
-			for (int i = 0; i < 14; ++i) { // vbt on n'écrase pas les 2 couleurs de priorité
-				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
-			}
-			_stub->setPaletteEntry(64, &palette[14]);
-			_stub->setPaletteEntry(65, &palette[15]);
 
-			for (int i = 16; i < 30; ++i) { // vbt on n'écrase pas les 2 couleurs de priorité
-				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
-			}
-			_stub->setPaletteEntry(66, &palette[31]);
-			_stub->setPaletteEntry(67, &palette[32]);
-		}
-#endif
 		if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
 			_cut.playCredits();
@@ -1086,7 +1057,7 @@ void Game::drawStoryTexts() {
 		int textSegmentsCount = 0;
 		int yPos = 0;
 		while (!_stub->_pi.quit) {
-			memset(_vid._frontLayer, 0x00, 512*224);
+			memset(_vid._frontLayer, 0x00, 512*284);
 //			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
 			yPos = 26;
 //			if (_res._type == kResourceTypeMac) {
@@ -1237,11 +1208,10 @@ _vid.drawString(toto, 1, 88, 0xE7);
 //emu_printf("clean storytext\n");			
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
+		_mix.unpauseMusic();
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
-
-		_mix.unpauseMusic();
 		frame_y = frame_x = 0;
 		frame_z = 30;
 	}

@@ -1972,6 +1972,7 @@ int Game::pge_op_changeRoom(ObjectOpcodeArgs *args) {
 			if (_currentRoom != live_pge_2->room_location) {
 				_currentRoom = live_pge_2->room_location;
 				loadLevelRoom();
+				_mix.unpauseMusic();
 // vbt : cause garbage on level 2 teleportation
 //				_vid.fullRefresh();
 			}

@@ -85,7 +85,7 @@ void Cutscene::sync(int frameDelay) {
 //	emu_printf("sleepx frame delay %d delay %d _tstamp %d\n", frameDelay, delay, _tstamp);
 	delay=(delay<0?17:delay);
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 1
+#if 0
 	const int32_t target = frameDelay * (1000 / frameHz);
 	if (pause<-4)
 		emu_printf("too slow !! target: %d ms, actual: %d ms, overtime: %d ms\n",
