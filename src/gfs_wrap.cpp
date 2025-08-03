@@ -146,7 +146,7 @@ void errGfsFunc(void *obj, int ec)
 #define GFCD_ERR_NODISC         -14     /* ディスクが入っていない */
 #define GFCD_ERR_CDROM          -15     /* CD-ROMでないディスクが入っている */
 #define GFCD_ERR_FATAL          -16     /* ステータスがFATAL */
-
+/*
 #define MNG_ERROR(mng)          ((mng)->error)
 
 GFS_LOCAL Sint32 gfs_mngSetErrCode(Sint32 code)
@@ -154,7 +154,7 @@ GFS_LOCAL Sint32 gfs_mngSetErrCode(Sint32 code)
     GfsErrStat  *err;
 
     switch (gfcd_fatal_err) {
-    case    GFCD_ERR_OK:        /* 処理速度の低下を防ぐため先頭におく   */
+    case    GFCD_ERR_OK:
         break;
 #if !defined(DEBUG_LIB)
     case    GFCD_ERR_OPEN:
@@ -172,9 +172,9 @@ GFS_LOCAL Sint32 gfs_mngSetErrCode(Sint32 code)
     }
     err = &MNG_ERROR(gfs_mng_ptr);
     GFS_ERR_CODE(err) = code;
-    /* エラー関数が登録されている場合 */
+
     if ((code != GFS_ERR_OK)&&(GFS_ERR_FUNC(err) != NULL)) {
-        GFS_ERR_FUNC(err)(GFS_ERR_OBJ(err), code); /* エラー処理関数実行 */
+        GFS_ERR_FUNC(err)(GFS_ERR_OBJ(err), code);
     }
     return code;
 }
@@ -185,6 +185,7 @@ void GFS_SetErrFunc(GfsErrFunc func, void *obj)
     GFS_ERR_OBJ(&MNG_ERROR(gfs_mng_ptr)) = obj;
     gfs_mngSetErrCode(GFS_ERR_OK);
 }
+*/
 
 void init_GFS() { //Initialize GFS system
 

@@ -125,102 +125,112 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
 
     // Remap initialization (potential one-time setup)
     if (!remap_initialized) {
-memset(remap, 0, sizeof(remap));
-const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
-                                      126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239};
-// Use 16-bit copy where possible
-		uint16_t* remap16 = reinterpret_cast<uint16_t*>(remap + 128);
-		const uint16_t* src16 = reinterpret_cast<const uint16_t*>(remap_values);
+        memset(remap, 0, sizeof(remap));
+        const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
+                                              126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239};
+        uint16_t* remap16 = (uint16_t*)(remap + 128);
+        const uint16_t* src16 = (const uint16_t*)remap_values;
 
-		size_t i = 0;
-		for (; i + 1 < sizeof(remap_values); i += 2) {
-			*remap16++ = *src16++;
-		}
+        for (size_t i = 0; i + 1 < sizeof(remap_values); i += 2) {
+            *remap16++ = *src16++;
+        }
         remap[14] = 128; remap[15] = 129; remap[30] = 130; remap[31] = 131;
         remap[160] = 14; remap[161] = 15; remap[190] = 150; remap[191] = 151;
         remap_initialized = true;
     }
+
     unsigned short cursor = 0;
     short bits = 1;
     uint8_t count = 0;
     unsigned short offset = 0;
     static uint8_t window[(1 << kBits)] __attribute__ ((aligned (4)));
-//	uint8_t *window = (uint8_t *)(((uintptr_t)hwram_screen+ 50031) & ~31);
 
-//	slTVOff(); on le fait bien avant
-	w*=8;
-	h/=8;
+    w *= 8;
+    h /= 8;
 
-	for (unsigned short y = 0; y < h; ++y) {
-		for (int x = 0; x < w; x++) {
-			if (count == 0) {
-				// Revert to original bitstream parsing
-				uint8_t carry = bits & 1;
-				bits >>= 1;
-				if (bits == 0) {
-					bits = *src++;
-					if (carry) bits |= 0x100;
-					carry = bits & 1;
-					bits >>= 1;
-				}
+    for (unsigned short y = 0; y < h; ++y) {
+        for (int x = 0; x < w; x++) {
+            if (count == 0) {
+                uint8_t carry = bits & 1;
+                bits >>= 1;
+                if (bits == 0) {
+                    bits = *src++;
+                    if (carry) bits |= 0x100;
+                    carry = bits & 1;
+                    bits >>= 1;
+                }
 
-				if (!carry) {
-					uint8_t color = *src++;
-					if (mask != 0xFF) {
-						color = remap[color] ? remap[color] : color;
-					}
-					window[cursor++] = color;
-					cursor &= kMask;
-					continue;
-				}
+                if (!carry) {
+                    uint8_t color = *src++;
+                    if (mask != 0xFF) {
+                        color = remap[color] ? remap[color] : color;
+                    }
+                    window[cursor++] = color;
+                    cursor &= kMask;
+                    continue;
+                }
 
-				offset = ((unsigned short)src[0] << 8) | src[1]; // Big-endian read
-				src += 2;
-				count = 3 + (offset >> 12);
-				offset = (cursor - (offset & kMask) - 1) & kMask;
-			}
+                offset = ((unsigned short)src[0] << 8) | src[1]; // Big-endian read
+                src += 2;
+                count = 3 + (offset >> 12);
+                offset = (cursor - (offset & kMask) - 1) & kMask;
+            }
 
-			if (cursor <= 4077 && offset <= 4077) {
-				uint8_t *dst = window + cursor;
-				const uint8_t *src_win = window + offset;
+            if (cursor <= 4077 && offset <= 4077) {
+                uint8_t *dst = window + cursor;
+                const uint8_t *src_win = window + offset;
 
-				// Optimized copy with 8-byte unrolling
-				int i = 0;
+                // Check if the memory addresses are aligned
+                if (((uintptr_t)dst & 3) == 0 && ((uintptr_t)src_win & 3) == 0) {
+                    // Use 32-bit loads and stores for aligned memory with loop unrolling
+                    int i = 0;
+                    for (; i < count - 7; i += 8) {
+                        *((uint32_t*)(dst + i)) = *((uint32_t*)(src_win + i));
+                        *((uint32_t*)(dst + i + 4)) = *((uint32_t*)(src_win + i + 4));
+                    }
+                    for (; i < count; i++) {
+                        dst[i] = src_win[i];
+                    }
+                } else {
+                    // Byte-by-byte copy for unaligned memory with loop unrolling
+                    int i = 0;
+                    for (; i < count - 7; i += 8) {
+                        dst[i] = src_win[i];
+                        dst[i + 1] = src_win[i + 1];
+                        dst[i + 2] = src_win[i + 2];
+                        dst[i + 3] = src_win[i + 3];
+                        dst[i + 4] = src_win[i + 4];
+                        dst[i + 5] = src_win[i + 5];
+                        dst[i + 6] = src_win[i + 6];
+                        dst[i + 7] = src_win[i + 7];
+                    }
+                    for (; i < count; i++) {
+                        dst[i] = src_win[i];
+                    }
+                }
 
-				for (; i < count - 8; i += 8) {
-					dst[i] = src_win[i];
-					dst[i + 1] = src_win[i + 1];
-					dst[i + 2] = src_win[i + 2];
-					dst[i + 3] = src_win[i + 3];
-					dst[i + 4] = src_win[i + 4];
-					dst[i + 5] = src_win[i + 5];
-					dst[i + 6] = src_win[i + 6];
-					dst[i + 7] = src_win[i + 7];
-				}
-				for (; i < count; i++) {
-					dst[i] = src_win[i];
-				}
+                cursor += count;
+                cursor &= kMask;
+                x += count - 1;
+                count = 0;
+                continue;
+            }
 
-				cursor += count;
-				cursor &= kMask;
-				x += count - 1; // Restore original x increment
-				count = 0;
-				continue;
-			}
+            window[cursor++] = window[offset++];
+            cursor &= kMask;
+            offset &= kMask;
+            count--;
+        }
+        DMA_ScuMemCopy(buf->ptr, window, w);
+        buf->ptr += w;
+    }
 
-			window[cursor++] = window[offset++];
-			cursor &= kMask;
-			offset &= kMask;
-			count--;
-		}
-		DMA_ScuMemCopy(buf->ptr, window, w);
-		buf->ptr += w;
-	}
-
-	slTVOn();
-	frame_y = frame_x = 0;
-	frame_z = 30;
+    slTVOn();
+    frame_y = frame_x = 0;
+    frame_z = 30;
 }
+
+
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
     const uint8_t *ptrs[4];
