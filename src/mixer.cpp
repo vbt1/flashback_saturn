@@ -111,7 +111,10 @@ void Mixer::playMusic(int num, int tempo) {
 	if (num == 1) { // menu screen
 		trackNum = 2;
 	} else if (num >= MUSIC_TRACK) {
-		trackNum = 3+ num - MUSIC_TRACK;
+		trackNum = 2 + num - MUSIC_TRACK;
+
+		if(trackNum == 7 || trackNum == 8)
+			trackNum = 6;
 	}
 	else
 		trackNum = num;
@@ -120,7 +123,7 @@ void Mixer::playMusic(int num, int tempo) {
 	if(trackNum>1 && trackNum<40)
 	{
 		CdcPly ply;
-		_musicTrack = trackNum;
+		_musicTrack = trackNum + 1;
 //		statdata.report.fad = 0;
 
 		CDC_PLY_STYPE(&ply) = CDC_PTYPE_FAD; // track number

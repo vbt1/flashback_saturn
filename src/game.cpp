@@ -421,7 +421,7 @@ void Game::mainLoop() {
 		}*/
 //emu_printf("6hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		changeLevel();
-emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+//emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
@@ -1833,9 +1833,8 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-
-	if(_res._isDemo)
-		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
+// vbt : bon endroit pour lire la piste audio
+	_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
 //emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 }
 
