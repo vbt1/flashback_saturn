@@ -308,7 +308,7 @@ for (i=0;i<100;i++)
 			_score = 0;
 //			clearStateRewind();
 			loadLevelData();
-//emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -421,7 +421,7 @@ void Game::mainLoop() {
 		}*/
 //emu_printf("6hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		changeLevel();
-//emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
@@ -436,7 +436,8 @@ void Game::mainLoop() {
 			_deathCutsceneCounter = 1;
 		} else {
 			_currentRoom = _pgeLive[0].room_location;
-		_mix.pauseMusic();
+			_mix.pauseMusic();
+// obligatoire pour reprendre où ca en était meme pour les démos
 			loadLevelRoom();
 emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,0x300000-CUTCMP1);
 			_loadMap = false;
@@ -479,8 +480,9 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 			return;
 		}
 	}
-	
-	if(_cut._stop)
+
+	if(_cut._stop) // utile si on vien de lire une cutscene 
+	// trouver le bon moyen de pas le faire 2x
 	{
 		if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			_mix.unpauseMusic(); // vbt : on reprend où la musique était
@@ -490,6 +492,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 //		_stub->_pi.backspace = false;
 //		_stub->_pi.quit = false;
 	}
+
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -1830,6 +1833,9 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
+
+	if(_res._isDemo)
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
 //emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 }
 
