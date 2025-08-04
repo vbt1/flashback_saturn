@@ -13,11 +13,11 @@ extern unsigned char *hwram_screen;
 #include "video.h"
 #define VIDEO_PITCH 240
 #define USE_MESH 1
-
+/*
 void Graphics::setLayer(uint8_t *layer) {
 	_layer = layer;
 }
-
+*/
 void Graphics::setClippingRect(int16_t rx, int16_t ry, int16_t rw, int16_t rh) {
 //	debug(DBG_VIDEO, "Graphics::setClippingRect(%d, %d, %d, %d)", rx, ry, rw, rh);
 	_crx = rx;

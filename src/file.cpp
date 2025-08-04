@@ -157,11 +157,11 @@ void File::seek(int32_t off) {
 void File::read(void *ptr, uint32_t len) {
     _impl->read(ptr, len);
 }
-
+/*
 void File::readInline(void *ptr, uint32_t len) {
     _impl->read(ptr, len);
 }
-
+*/
 uint8_t File::readByte() {
     uint8_t b;
     _impl->read(&b, 1);

@@ -85,7 +85,7 @@ void Cutscene::sync(int frameDelay) {
 //	emu_printf("sleepx frame delay %d delay %d _tstamp %d\n", frameDelay, delay, _tstamp);
 	delay=(delay<0?17:delay);
 	const int32_t pause = frameDelay * (1000 / frameHz) - delay;
-#if 1
+#if 0
 	const int32_t target = frameDelay * (1000 / frameHz);
 	if (pause<-4)
 		emu_printf("too slow !! target: %d ms, actual: %d ms, overtime: %d ms\n",
@@ -1367,10 +1367,7 @@ void Cutscene::mainLoop(uint16_t num) {
 emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		_mix.playMusic(_musicTableDOS[_id]);
 	}
-	if(_id == 0x4A)
-	{
-		_mix.unpauseMusic();		
-	}
+
 	_newPal = false;
 	_hasAlphaColor = false;
 	const uint8_t *p = getCommandData();
@@ -1397,6 +1394,12 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		}
 		p += _baseOffset;
 	}
+// vbt déplacé !!!
+	if(_id == 0x4A || _creditsSequence)
+	{
+		_mix.unpauseMusic();
+	}
+
 	_cmdPtr = _cmdStartPtr = p + offset;
 	_polPtr = getPolygonData();
 //	debug(DBG_CUT, "_baseOffset = %d offset = %d count = %d", _baseOffset, offset, count);
@@ -1559,10 +1562,12 @@ void Cutscene::playCredits() {
 		const uint16_t *offsets = _offsetsTableDOS;
 		uint16_t cutName = offsets[cut_id * 2 + 0];
 		uint16_t cutOff  = offsets[cut_id * 2 + 1];
+
 		if (load(cutName)) {
 			mainLoop(cutOff);
 			unload();
 		}
+		_mix.stopMusic(1);
 	}
 	_creditsSequence = false;
 }

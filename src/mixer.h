@@ -75,7 +75,7 @@ struct Mixer {
 	void playMusic(int num, int tempo = 0);
 	void pauseMusic(void);
 	void unpauseMusic(void);
-	void stopMusic();
+	void stopMusic(uint8 current);
 	uint32 getSampleRate() const;
 //	void mix(int8 *buf, int len);
 

@@ -58,17 +58,17 @@ void Mixer::pauseMusic(void)
 	// Get current address
 	CDC_GetCurStat(&statdata);
 
-//	emu_printf( "Mixer::pauseMusic() %d _musicTrack %d\n",_musicTrack,statdata.report.fad);
+	emu_printf( "Mixer::pauseMusic() %d _musicTrack %d\n",_musicTrack,statdata.report.fad);
 
 	// Restore address
-    CdcPos poswk;
-    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
-    CDC_CdSeek(&poswk);	
+//    CdcPos poswk;
+//    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
+//    CDC_CdSeek(&poswk);
 }
 
 void Mixer::unpauseMusic(void)
 {
-//	emu_printf( "Mixer::unpauseMusic() _musicTrack %d %d\n",_musicTrack,statdata.report.fad);
+	emu_printf( "Mixer::unpauseMusic() _musicTrack %d %d\n",_musicTrack,statdata.report.fad);
 
 	CdcPly ply;
 
@@ -76,7 +76,6 @@ void Mixer::unpauseMusic(void)
 
 	if (statdata.report.fad == 0)
 	{
-
 		CDC_PLY_SFAD(&ply) = toc.Tracks[_musicTrack].fad;
 	}
 	else
@@ -100,11 +99,14 @@ void Mixer::unpauseMusic(void)
     CDC_PLY_PMODE(&ply) = CDC_PM_DFL | 0xf; // 0xf = infinite repetitions
 
 	// Start playback
+    CdcPos poswk;
+    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
+    CDC_CdSeek(&poswk);
     CDC_CdPlay(&ply);
 }
 
 void Mixer::playMusic(int num, int tempo) {
-//	emu_printf("Mixer::playMusic(%d, %d)  music type %d\n", num, tempo,_musicType);
+	emu_printf("Mixer::playMusic(%d, %d)\n", num, tempo);
 	int trackNum = -1;
 	if (num == 1) { // menu screen
 		trackNum = 2;
@@ -156,11 +158,30 @@ void Mixer::playMusic(int num, int tempo) {
 	}*/
 }
 
+void Mixer::stopMusic(uint8 current) {
+	// Get current address
+	if (!current)
+	{
+		CdcStat stat;
+		CDC_GetCurStat(&stat);
+	}
+	else
+	{
+		CDC_GetCurStat(&statdata);
+	}
+	emu_printf( "Mixer::stopMusic(%d) _musicTrack %d %d\n",current, _musicTrack,statdata.report.fad);
+
+	// Restore address
+    CdcPos poswk;
+    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
+    CDC_CdSeek(&poswk);
+}
+#if 0
 void Mixer::stopMusic() {
-//	emu_printf( "Mixer::stopMusic() _musicTrack %d\n",_musicTrack);
 	// Get current address
 	CdcStat stat;
 	CDC_GetCurStat(&stat);
+	emu_printf( "Mixer::stopMusic() _musicTrack %d %d\n",_musicTrack,statdata.report.fad);
 
 	// Restore address
     CdcPos poswk;
@@ -206,6 +227,7 @@ void Mixer::stopMusic() {
 	}
 */	
 }
+#endif
 /*
 void Mixer::addclamp(int8& a, int b) {
 	int add = a + b;

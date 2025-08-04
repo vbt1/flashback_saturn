@@ -282,7 +282,7 @@ for (i=0;i<100;i++)
 			_currentLevel = _menu._level;
 		}
 	
-		_mix.stopMusic(); // vbt à remettre
+		_mix.stopMusic(0); // vbt à remettre
 		memset(_vid._frontLayer, 0, _vid._layerSize);
 
 		if (_stub->_pi.quit) {
@@ -626,19 +626,19 @@ void Game::playCutscene(int id) {
 			}
 		}
 
+		_mix.stopMusic(0);
 		if (_cut._id == 0x3D) {
-			_mix.playMusic(Mixer::MUSIC_TRACK + 9);
+			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
+			_mix.stopMusic(1);
 			_cut.playCredits();
 		}
-		_mix.stopMusic();
-	
 		frame_y = frame_x = 0;
 		frame_z = 30;
 	}
 	else
 	{  // vbt pour les niveaux sans video
 		if(_mix._musicTrack==2)
-			_mix.stopMusic();
+			_mix.stopMusic(0);
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 	}
 }
