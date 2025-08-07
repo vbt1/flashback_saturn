@@ -251,6 +251,17 @@ for (i=0;i<100;i++)
 		break;
 	}
 */
+	SoundFx sfx;
+	sfx.freq = 11035;
+	sfx.len = 63710;
+	sfx.data = soundAddr;
+
+	_res.MAC_closeMainFile();
+	GFS_Load(GFS_NameToId((int8_t *)"MENU.PCM"),0,(void *)soundAddr,sfx.len);
+	_res.MAC_reopenMainFile();
+
+	pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
+
 	while (!_stub->_pi.quit) {
 		_menu.handleTitleScreen();
 #ifdef DEMO
@@ -281,7 +292,7 @@ for (i=0;i<100;i++)
 			_skillLevel = _menu._skill;
 			_currentLevel = _menu._level;
 		}
-	
+		pcm_sample_stop(PCM_VOICE);
 		_mix.stopMusic(0); // vbt à remettre
 		memset(_vid._frontLayer, 0, _vid._layerSize);
 
@@ -323,7 +334,7 @@ emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 				}
 #endif
 			}
-//			slTVOff();
+			pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
 			_vid._fullRefresh = true;
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 			_vid.updateScreen();
@@ -1148,13 +1159,13 @@ void Game::drawStoryTexts() {
 				uint32_t address = (uint32_t)soundAddr;
 				if(voiceSegmentLen<9216)
 					voiceSegmentLen = 9216;
+				SoundFx sfx;
+
+				sfx.freq = 11035;
+				sfx.len = voiceSegmentLen;
+				sfx.data = soundAddr;
 //				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
-				pcm_sample_t pcm = {.addr = address, .vol = (Mixer::MAX_VOLUME>>1)-1, .bit = pcm_sample_8bit};
-				pcm_prepare_sample(&pcm, PCM_VOICE, voiceSegmentLen);
-	//			pcm_sample_set_samplerate(&pcm, sfx->freq);
-				pcm_sample_set_samplerate(PCM_VOICE, 11035);
-				pcm_sample_set_loop(PCM_VOICE, pcm_sample_loop_no_loop);
-				pcm_sample_start(PCM_VOICE);
+				pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_no_loop);
 //				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
 			}
 /*
@@ -1905,15 +1916,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 
 //			emu_printf("play sound %02d/%d on channel %02d len %d\n",num,_res._numSfx,i,sfx->len);
 			channel_len[i] = sfx->len;
-
-			uint32_t address = (uint32_t)sfx->data;
-			pcm_sample_t pcm = {.addr = address, .vol = volume, .bit = pcm_sample_8bit};
-//		pcm_sample_stop(&pcm);
-			pcm_prepare_sample(&pcm, i, sfx->len);
-//			pcm_sample_set_samplerate(&pcm, sfx->freq);
-			pcm_sample_set_samplerate(i, 6000);
-			pcm_sample_set_loop(i, pcm_sample_loop_no_loop);
-			pcm_sample_start(i);
+			pcm_play(i, sfx, volume, pcm_sample_loop_no_loop);
 		}
 	} else if (num == 66) {
 		// open/close inventory (DOS)

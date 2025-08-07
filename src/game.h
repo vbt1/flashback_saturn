@@ -6,7 +6,6 @@
 
 #ifndef GAME_H__
 #define GAME_H__
-
 #include "intern.h"
 #include "cutscene.h"
 #include "menu.h"

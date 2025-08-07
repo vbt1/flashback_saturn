@@ -1473,12 +1473,7 @@ int Game::pge_op_saveState(ObjectOpcodeArgs *args) {
 	if (_validSaveState /*&& g_options.play_gamesaved_sound*/) {
 		SoundFx *sfx = &_res._sfxList[NUM_SFXS];		
 //		_mix.play(Resource::_gameSavedSoundData, Resource::_gameSavedSoundLen, 8000, Mixer::MAX_VOLUME);
-		uint32_t address = (uint32_t)sfx->data;
-		pcm_sample_t pcm = {.addr = address, .vol = (Mixer::MAX_VOLUME>>1)-1, .bit = pcm_sample_8bit};
-		pcm_prepare_sample(&pcm, PCM_VOICE, sfx->len);
-		pcm_sample_set_samplerate(PCM_VOICE, sfx->freq);
-		pcm_sample_set_loop(PCM_VOICE, pcm_sample_loop_no_loop);
-		pcm_sample_start(PCM_VOICE);
+		pcm_play(PCM_VOICE, sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
 	}
 	return 0xFFFF;
 }

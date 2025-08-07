@@ -3,6 +3,15 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
+
+struct SoundFx {
+//	uint32_t offset;
+	uint16_t len;
+	uint16_t freq;
+	uint8_t *data;
+//	int8_t peak;
+};
 
 typedef enum
 {
@@ -29,5 +38,6 @@ void pcm_sample_set_samplerate(uint8_t chan, uint32_t sr);
 void pcm_sample_start(uint8_t chan);
 void pcm_sample_stop(uint8_t chan);
 void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop);
+void pcm_play(uint8_t chan, SoundFx *sfx, int volume, pcm_sample_loop_t loop);
 
 void fm_test();

@@ -7,6 +7,10 @@
 #ifndef RESOURCE_H__
 #define RESOURCE_H__
 
+extern "C" {
+#include "pcm.h"
+}
+
 #include "intern.h"
 #include "resource_aba.h"
 #include "resource_mac.h"

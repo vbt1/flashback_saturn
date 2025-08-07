@@ -234,13 +234,4 @@ struct InventoryItem {
 	InitPGE *init_pge;
 	LivePGE *live_pge;
 };
-
-struct SoundFx {
-	uint32_t offset;
-	uint16_t len;
-	uint16_t freq;
-	uint8_t *data;
-	int8_t peak;
-};
-
 #endif // INTERN_H__

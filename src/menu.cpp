@@ -603,6 +603,7 @@ void Menu::handleTitleScreen() {
 				handleInfoScreen();
 				break;
 			case MENU_OPTION_ITEM_DEMO:
+				_stub->initTimeStamp();
 				return;
 			case MENU_OPTION_ITEM_QUIT:
 				SYS_Exit(0);
