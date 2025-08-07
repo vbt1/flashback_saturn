@@ -406,6 +406,7 @@ struct Game {
 	void SAT_preloadCDfiles();
 	void SAT_preloadCMPfiles();
 	void SAT_cleanRAM(unsigned char all);
+	void SAT_playMenuAudio();
 };
 
 #endif // GAME_H__

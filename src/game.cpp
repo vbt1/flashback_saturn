@@ -251,16 +251,7 @@ for (i=0;i<100;i++)
 		break;
 	}
 */
-	SoundFx sfx;
-	sfx.freq = 11035;
-	sfx.len = 63710;
-	sfx.data = soundAddr;
-
-	_res.MAC_closeMainFile();
-	GFS_Load(GFS_NameToId((int8_t *)"MENU.PCM"),0,(void *)soundAddr,sfx.len);
-	_res.MAC_reopenMainFile();
-
-	pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
+	SAT_playMenuAudio();
 
 	while (!_stub->_pi.quit) {
 		_menu.handleTitleScreen();
@@ -319,7 +310,7 @@ for (i=0;i<100;i++)
 			_score = 0;
 //			clearStateRewind();
 			loadLevelData();
-emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+//emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
 			_endLoop = false;
 			_frameTimestamp = _stub->getTimeStamp();
@@ -334,7 +325,8 @@ emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 				}
 #endif
 			}
-			pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
+//			pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
+			SAT_playMenuAudio();
 			_vid._fullRefresh = true;
 			memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 			_vid.updateScreen();
@@ -2791,4 +2783,19 @@ void Game::SAT_cleanRAM(unsigned char all) {
 //			emu_printf("current_lwram2 %p\n",save_current_lwram);
 			current_lwram = (uint8_t *)save_current_lwram;
 		}
+}
+
+void Game::SAT_playMenuAudio()
+{
+//	emu_printf("SAT_playMenuAudio\n");
+	SoundFx sfx;
+	sfx.freq = 11035;
+	sfx.len = 63710;
+	sfx.data = soundAddr;
+
+	_res.MAC_closeMainFile();
+	GFS_Load(GFS_NameToId((int8_t *)"MENU.PCM"),0,(void *)soundAddr,sfx.len);
+	_res.MAC_reopenMainFile();
+
+	pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
 }
