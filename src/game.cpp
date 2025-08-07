@@ -2746,8 +2746,10 @@ static void process_commands(void* arg) {
 #endif
 
 void Game::SAT_preloadCDfiles() {
+	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
+	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-	_stub->copyRect(40, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
+	_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
 #ifdef USE_SLAVE	
 	_res.MAC_closeMainFile();
 	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);

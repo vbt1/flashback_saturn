@@ -1473,7 +1473,7 @@ int Game::pge_op_saveState(ObjectOpcodeArgs *args) {
 	if (_validSaveState /*&& g_options.play_gamesaved_sound*/) {
 		SoundFx *sfx = &_res._sfxList[NUM_SFXS];		
 //		_mix.play(Resource::_gameSavedSoundData, Resource::_gameSavedSoundLen, 8000, Mixer::MAX_VOLUME);
-		pcm_play(PCM_VOICE, sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_loop);
+		pcm_play(PCM_VOICE, sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_no_loop);
 	}
 	return 0xFFFF;
 }
