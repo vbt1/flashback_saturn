@@ -296,11 +296,6 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 
 void SystemStub_SDL::updateScreen(int shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 4);  // vbt à remettre
-	extern Uint16 VDP2_SCYIN0;
-	extern Uint16 VDP2_SCYN0;
-	VDP2_SCYN0 = 16000;
-	VDP2_SCYIN0 = shakeOffset;
-//	slScrPosNbg0(toFIXED(-63), toFIXED(shakeOffset));
 }
 
 void SystemStub_SDL::processEvents() {

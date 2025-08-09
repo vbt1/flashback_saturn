@@ -61,12 +61,7 @@ Video::~Video() {
 
 void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
-	
-//	_stub->updateScreen(0);
-	if(_shakeOffset!=0)
-	emu_printf("Video::fullRefresh %d _shakeOffset %d\n",_fullRefresh,_shakeOffset);	
 //	_fullRefresh = false;
-//_shakeOffset=0;
 	if (_fullRefresh) {
 		_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 		_stub->updateScreen(_shakeOffset);
@@ -102,12 +97,12 @@ void Video::updateScreen() {
 //		}
 	}
 */	
-	if (_shakeOffset != 0) 
-	{
-		_stub->updateScreen(_shakeOffset);
-		_shakeOffset = 0;
+//	if (_shakeOffset != 0) 
+//	{
+//		_stub->updateScreen(_shakeOffset);
+//		_shakeOffset = 0;
 //		_fullRefresh = true; // vbt : on ne recharge pas l'image de l'écran
-	}
+//	}
 }
 
 void Video::fullRefresh() {
