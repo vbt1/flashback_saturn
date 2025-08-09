@@ -168,7 +168,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void getPaletteEntry(uint16 i, Color *c);
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
-	virtual void updateScreen(uint8 shakeOffset);
+	virtual void updateScreen(int shakeOffset);
 //	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 	virtual void processEvents();
 	virtual void sleep(uint32 duration);
@@ -294,9 +294,13 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	}
 }
 
-void SystemStub_SDL::updateScreen(uint8 shakeOffset) {
+void SystemStub_SDL::updateScreen(int shakeOffset) {
 	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 4);  // vbt à remettre
-//	memcpy((void*)(CRAM_BANK + 512), (void*)_pal, 256 * 4);  // vbt à remettre
+	extern Uint16 VDP2_SCYIN0;
+	extern Uint16 VDP2_SCYN0;
+	VDP2_SCYN0 = 16000;
+	VDP2_SCYIN0 = shakeOffset;
+//	slScrPosNbg0(toFIXED(-63), toFIXED(shakeOffset));
 }
 
 void SystemStub_SDL::processEvents() {

@@ -1997,7 +1997,7 @@ int Game::pge_op_changeLevel(ObjectOpcodeArgs *args) {
 }
 
 int Game::pge_op_shakeScreen(ObjectOpcodeArgs *args) {
-//	_vid._shakeOffset = getRandomNumber() & 7;
+	_vid._shakeOffset = getRandomNumber() & 7;
 	return 0xFFFF;
 }
 

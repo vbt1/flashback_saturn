@@ -35,8 +35,8 @@ Video::Video(Resource *res, SystemStub *stub)
 	memset(&_frontLayer[0], 0, _w * _h);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
 	memset(_backLayer, 0, _w * _h); // vbt à remettre
-	
 	_fullRefresh = true;
+	_shakeOffset = 0;
 	_charFrontColor = 0;
 	_charTransparentColor = 0;
 	_charShadowColor = 0;
@@ -63,14 +63,15 @@ void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
 	
 //	_stub->updateScreen(0);
-//	emu_printf("Video::fullRefresh %d\n",_fullRefresh);	
+	if(_shakeOffset!=0)
+	emu_printf("Video::fullRefresh %d _shakeOffset %d\n",_fullRefresh,_shakeOffset);	
 //	_fullRefresh = false;
 //_shakeOffset=0;
 	if (_fullRefresh) {
 		_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
-		_stub->updateScreen(0);
+		_stub->updateScreen(_shakeOffset);
 		_fullRefresh = false;
-	} 
+	}
 /*	
 	else {
 		int i, j;
@@ -101,11 +102,12 @@ void Video::updateScreen() {
 //		}
 	}
 */	
-//	if (_shakeOffset != 0) 
-//	{
-//		_shakeOffset = 0;
-//		_fullRefresh = true;
-//	}
+	if (_shakeOffset != 0) 
+	{
+		_stub->updateScreen(_shakeOffset);
+		_shakeOffset = 0;
+//		_fullRefresh = true; // vbt : on ne recharge pas l'image de l'écran
+	}
 }
 
 void Video::fullRefresh() {

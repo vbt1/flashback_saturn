@@ -60,25 +60,25 @@ struct SystemStub {
 
 	virtual ~SystemStub() {}
 
-	virtual void init(const char *title, uint16 w, uint16 h) = 0;
-	virtual void destroy() = 0;
+	virtual void init(const char *title, uint16 w, uint16 h);
+	virtual void destroy();
 
-	virtual void setPaletteEntry(uint16 i, const Color *c) = 0;
-	virtual void getPaletteEntry(uint16 i, Color *c) = 0;
-	virtual void setOverscanColor(uint8 i) = 0;
-	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
-//	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch) = 0;
-	virtual void updateScreen(uint8 shakeOffset) = 0;
-//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb) = 0;
+	virtual void setPaletteEntry(uint16 i, const Color *c);
+	virtual void getPaletteEntry(uint16 i, Color *c);
+	virtual void setOverscanColor(uint8 i);
+	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
+//	virtual void copyRect2(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
+	virtual void updateScreen(int shakeOffset);
+//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 
-	virtual void processEvents() = 0;
-	virtual void sleep(uint32 duration) = 0;
-	virtual uint32 getTimeStamp() = 0;
+	virtual void processEvents();
+	virtual void sleep(uint32 duration);
+	virtual uint32 getTimeStamp();
 	virtual void initTimeStamp();
 	
 //	virtual void startAudio(AudioCallback callback, void *param) = 0;
 //	virtual void stopAudio() = 0;
-	virtual uint32 getOutputSampleRate() = 0;
+	virtual uint32 getOutputSampleRate();
 
 //	virtual void *createMutex() = 0;
 //	virtual void destroyMutex(void *mutex) = 0;

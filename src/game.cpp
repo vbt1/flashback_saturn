@@ -123,7 +123,6 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 void Game::run() {
 
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
-//	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 	SAT_preloadCMPfiles();
 
 	_randSeed = time(0);
@@ -213,7 +212,6 @@ hwram = (uint8_t *)hwram_ptr;
 		return;
 	}
 #endif
-
 //	if (_res.isMac()) 
 	{
 		_menu.displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
@@ -500,6 +498,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 //		_stub->_pi.backspace = false;
 //		_stub->_pi.quit = false;
 	}
+
 	already_done = 0;
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
@@ -1933,26 +1932,12 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 }
 
 uint16_t Game::getRandomNumber() {
-/*	uint32_t n = _randSeed * 2;
+	uint32_t n = _randSeed * 2;
 	if (((int32_t)_randSeed) >= 0) {
 		n ^= 0x1D872B41;
 	}
 	_randSeed = n;
 	return n & 0xFFFF;
-*/
-/*	
-    _randSeed = (_randSeed * 16807) % 2147483647;
-    return (_randSeed >> 16) & 0xFFFF;
-*/
-// Compute next seed: X(n+1) = (a * X(n) + c) mod m
-#define MULTIPLIER 69069 // Common multiplier for good period
-#define INCREMENT 1      // Odd increment for LCG
-#define MODULUS 65536    // 2^16 for 16-bit modulus
-
-    _randSeed = (MULTIPLIER * _randSeed + INCREMENT) % MODULUS;
-    
-    // Convert to signed 16-bit range (-32768 to 32767)
-    return (int16_t)(_randSeed & 0xFFFF) - 32768;
 }
 
 void Game::changeLevel() {
