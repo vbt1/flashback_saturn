@@ -1997,7 +1997,7 @@ void Game::handleInventory() {
 		int current_line = 0;
 		bool display_score = false;
 
-		while (!_stub->_pi.backspace && !_stub->_pi.quit & !_cut._interrupted) {
+		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
 /*			switch (_res._type) {

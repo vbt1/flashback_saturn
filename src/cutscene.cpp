@@ -1780,6 +1780,7 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 	}
 
 	unload();
+	_interrupted = false;
 	_stop = true; // pour reprendre la musique
 	
 	frame_y = frame_x = 0;
