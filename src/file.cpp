@@ -130,9 +130,9 @@ File::~File() {
 
 bool File::open(const char *filename, const char *directory, const char *mode) {
     _impl->close();
-    memset(name, 0, 50);
+    memset(name, 0, 20);
     bool opened = _impl->open(filename, mode);
-    snprintf(name, 49, "%s", filename);
+    snprintf(name, 19, "%s", filename);
     return opened;
 }
 

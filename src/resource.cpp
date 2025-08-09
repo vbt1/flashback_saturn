@@ -1181,7 +1181,6 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 
 		char filename[14];
 		sprintf(filename,"%d_%d.PCM",num,segment);
-		
 		int fid=GFS_NameToId((Sint8 *)filename);
 		Sint32 filesize=GetFileSize(fid);
 		*bufSize=filesize;

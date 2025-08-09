@@ -24,7 +24,7 @@
 struct File_impl;
 
 struct File {
-	char name[50];
+	char name[20];
 	File();
 	~File();
 

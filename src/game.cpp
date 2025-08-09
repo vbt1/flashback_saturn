@@ -371,6 +371,8 @@ void Game::resetGameState() {
 	_pge_zoomX = _pge_zoomY = 0;
 }
 
+uint8_t already_done = 0;
+
 void Game::mainLoop() {
 	playCutscene();
 
@@ -449,6 +451,7 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 				_mix.unpauseMusic(); // vbt : on reprend où la musique était
 			else
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+			already_done = 1;
 		}
 		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
 	}
@@ -487,6 +490,8 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	if(_cut._stop) // utile si on vien de lire une cutscene 
 	// trouver le bon moyen de pas le faire 2x
 	{
+		if(!already_done)
+
 		if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
 			_mix.unpauseMusic(); // vbt : on reprend où la musique était
 		else
@@ -495,7 +500,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 //		_stub->_pi.backspace = false;
 //		_stub->_pi.quit = false;
 	}
-
+	already_done = 0;
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -2741,7 +2746,7 @@ void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-	_stub->copyRect(0, 0, _vid._w, 16, _vid._frontLayer, _vid._w);
+	_stub->copyRect(0, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
 #ifdef USE_SLAVE	
 	_res.MAC_closeMainFile();
 	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);

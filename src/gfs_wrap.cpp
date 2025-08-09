@@ -273,7 +273,7 @@ GFS_FILE *sat_fopen(const char *path) {
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
+		GFS_SetTmode(fid, GFS_TMODE_SDMA1); // DMA transfer by SCU
 
 		// Encapsulate the file data
 		fp->fid = fid;

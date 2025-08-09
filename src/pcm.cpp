@@ -155,7 +155,7 @@ void pcm_sample_set_loop(uint8_t chan, pcm_sample_loop_t loop)
 	asm("nop");
 }
 
-void pcm_play(uint8_t chan, SoundFx *sfx, int volume, pcm_sample_loop_t loop)
+void pcm_play(uint8_t chan, SoundFx *sfx, uint8_t volume, pcm_sample_loop_t loop)
 {
 	uint32_t address = (uint32_t)sfx->data;
 	pcm_sample_t pcm = {.addr = address, .vol = volume, .bit = pcm_sample_8bit};
