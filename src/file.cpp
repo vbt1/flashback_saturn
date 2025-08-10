@@ -73,28 +73,33 @@ struct stdFile : File_impl {
     }
 
     void read(void *ptr, uint32_t len) {
-        uint8_t *dst = (uint8_t *)ptr;
-        uint32_t remaining = len;
+    uint8_t *dst = (uint8_t *)ptr;
+    uint32_t remaining = len;
 
+//emu_printf("reading %p sz %d _bufPos %d\n", ptr,len, _bufPos, _bufLen);
         // Use buffered data first
         while (remaining > 0 && _bufPos < _bufLen) {
             *dst++ = _buffer[_bufPos++];
             remaining--;
         }
+		if (!remaining)
+			return;
 
         // Read directly if request is large
         if (remaining >= sizeof(_buffer)) {
-            if (_fp) {
+//emu_printf("remaining direct read %d\n",remaining);			
+ //           if (_fp) {
                 uint32_t r = sat_fread(dst, 1, remaining, _fp);
                 if (r != remaining) {
                     _ioErr = true;
-                }
+//                }
             }
             return;
         }
 
         // Refill buffer for small reads
-        if (_fp && remaining > 0) {
+        if (/*_fp &&*/ remaining > 0) {
+//emu_printf("remaining not in cache %d\n",remaining);
             _bufLen = sat_fread(_buffer, 1, sizeof(_buffer), _fp);
             _bufPos = 0;
             if (_bufLen == 0) {

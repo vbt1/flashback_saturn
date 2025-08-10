@@ -117,14 +117,12 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
 
 #define CS1(x)                  (0x24000000UL + (x))
 
-void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
-    static const short kBits = 12;
-    static const short kMask = (1 << kBits) - 1;
-    static unsigned char remap[256];
-    static bool remap_initialized = false;
-
+static unsigned char remap[256] __attribute__((aligned(4)));
+ //   static bool remap_initialized = false;
+void remap_colors()
+{
     // Remap initialization (potential one-time setup)
-    if (!remap_initialized) {
+//    if (!remap_initialized) {
         memset(remap, 0, sizeof(remap));
         const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
                                               126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239};
@@ -136,8 +134,13 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
         }
         remap[14] = 128; remap[15] = 129; remap[30] = 130; remap[31] = 131;
         remap[160] = 14; remap[161] = 15; remap[190] = 150; remap[191] = 151;
-        remap_initialized = true;
-    }
+//        remap_initialized = true;
+//    }
+}
+
+void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
+    static const short kBits = 12;
+    static const short kMask = (1 << kBits) - 1;
 
     unsigned short cursor = 0;
     short bits = 1;
@@ -221,7 +224,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
             offset &= kMask;
             count--;
         }
-        DMA_ScuMemCopy(buf->ptr, window, w);
+//        DMA_ScuMemCopy(buf->ptr, window, w);
+// vbt : ne jamais remettre de dma, memcpyl : 765ms, dma : 765ms + plantages aléatoires
+		memcpyl(buf->ptr, window, w);
+//		emu_printf("DMA_ScuMemCopy %p %p w %d\n", buf->ptr, window, w);
         buf->ptr += w;
     }
 
@@ -229,8 +235,6 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     frame_y = frame_x = 0;
     frame_z = 30;
 }
-
-
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
     const uint8_t *ptrs[4];

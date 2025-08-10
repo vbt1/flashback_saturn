@@ -20,5 +20,6 @@ struct DecodeBuffer {
 
 void decodeC103(const uint8_t *a3, int w, int h, DecodeBuffer *buf, unsigned char mask);
 void decodeC211(const uint8_t *a3, int w, int h, DecodeBuffer *buf);
+void remap_colors();
 
 #endif

@@ -14,6 +14,7 @@ void *sat_realloc(void *ptr, size_t size);
 char *sat_strdup(const char *s);
 
 void memcpyl(void *, void *, int);
+void memcpyw(void *, void *, int);
 void *memset4_fast(void *, long, size_t);
 #define SAT_ALIGN(a) ((a+3)&~3)
 #define SAT_ALIGN8(a) ((a+15)&~15)

@@ -79,6 +79,7 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern unsigned int end1;
 }
+void remap_colors();
 static SAVE_BUFFER sbuf;
 /* *** */
 static Uint32 getFreeSaveBlocks(void);
@@ -123,6 +124,7 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 void Game::run() {
 
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
+	remap_colors();
 	SAT_preloadCMPfiles();
 
 	_randSeed = time(0);
