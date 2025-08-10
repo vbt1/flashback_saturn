@@ -285,11 +285,13 @@ void SystemStub_SDL::copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 
 	if (w == pitch) {
 //		memcpyl(dstPtr, srcPtr, w * h);
 		DMA_ScuMemCopy(dstPtr, srcPtr, w * h);
+		SCU_DMAWait();
 	} else {
 		for (uint16 idx = 0; idx < h; ++idx) {
 			DMA_ScuMemCopy(dstPtr, srcPtr, w);
 			srcPtr += pitch;
 			dstPtr += pitch;
+			SCU_DMAWait();
 		}
 	}
 }
@@ -667,7 +669,7 @@ uint8 isNTSC (void) {
 		return 0;
 }
 
-/*
+
 void SCU_DMAWait(void) {
 	Uint32 res;
 
@@ -677,4 +679,4 @@ void SCU_DMAWait(void) {
 		//emu_printf("SCU DMA COPY FAILED!\n");
 	}
 }
-*/
+

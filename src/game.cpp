@@ -168,10 +168,12 @@ void Game::run() {
 #ifdef BPP8
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*16);
 				position_vram += (256*4)>>2;
+				SCU_DMAWait();
 #else
 				_vid.convert_8bpp_to_4bpp_inplace(buf.ptr, 16 * 16);
 				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*8);
 				position_vram += (256*4)>>2;
+				SCU_DMAWait();
 #endif
 				position_vram_aft_monster = position_vram;
 			}
@@ -2573,6 +2575,7 @@ palette utilisée
         }
         DMA_ScuMemCopy(target, buf.ptr, dataSize);
         sprData->cgaddr = cgaddr;
+		SCU_DMAWait();
 
 #ifdef DEBUG2
         debugSpriteDisplay(sprData, buf, j, count);

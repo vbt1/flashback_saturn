@@ -169,7 +169,7 @@ DecodeBuffer buf{};
 
 	packPixels(_frontPage, hwram_ptr, IMG_SIZE);
 	DMA_ScuMemCopy(aux, hwram_ptr, size);
-
+	SCU_DMAWait();
     slSetSprite(&user_sprite, toFIXED2(240));
     frame_x++;
 

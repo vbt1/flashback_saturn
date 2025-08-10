@@ -639,6 +639,7 @@ uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSi
     TEXTURE tx = TEXDEF(buf.dst_h, buf.dst_w, position_vram);
     DMA_ScuMemCopy((void *)(SpriteVRAM + (tx.CGadr << 3)), src, dataSize);
     position_vram += (dataSize*4)>>2;
+	SCU_DMAWait();
 	return tx.CGadr; 
 }
 
