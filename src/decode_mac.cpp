@@ -84,36 +84,59 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
     uint8_t* const end = dst + decodedSize;
     uint8_t* cur = dst;
 
+    // Buffer for batch reading
+    const size_t BUFFER_SIZE = 768;
+    uint8_t buffer[BUFFER_SIZE];
+    size_t bufferPos = BUFFER_SIZE; // Start with empty buffer
+
     while (cur < end) {
-        uint8_t code = f.readByte();
+        // Read code byte
+        if (bufferPos >= BUFFER_SIZE) {
+            f.read(buffer, BUFFER_SIZE);
+            bufferPos = 0;
+        }
+        uint8_t code = buffer[bufferPos++];
+
         for (int i = 0; i < 8 && cur < end; ++i) {
             if ((code & 1) == 0) {
-                *cur++ = f.readByte();
+                // Literal byte - need to read one byte
+                if (bufferPos >= BUFFER_SIZE) {
+                    f.read(buffer, BUFFER_SIZE);
+                    bufferPos = 0;
+                }
+                *cur++ = buffer[bufferPos++];
             } else {
-                uint16_t offset = f.readUint16BE();
+                // Back-reference - need to read 2 bytes for offset
+                // Read first byte (high byte)
+                if (bufferPos >= BUFFER_SIZE) {
+                    f.read(buffer, BUFFER_SIZE);
+                    bufferPos = 0;
+                }
+                uint8_t high = buffer[bufferPos++];
+
+                // Read second byte (low byte)
+                if (bufferPos >= BUFFER_SIZE) {
+                    f.read(buffer, BUFFER_SIZE);
+                    bufferPos = 0;
+                }
+                uint8_t low = buffer[bufferPos++];
+                
+                uint16_t offset = (static_cast<uint16_t>(high) << 8) | low;
                 const int len = (offset >> 12) + 3;
                 offset &= 0xFFF;
-				uint8_t* src = cur - offset - 1;
-//				emu_printf("name %s len %d\n",name, len);
-				cur[0] = src[0];
-				cur[1] = src[1];
-				cur[2] = src[2];
+                uint8_t* src = cur - offset - 1;
 
-				// Handle remaining bytes
-				for (unsigned char i =3; i < len; i++) {
-					cur[i] = src[i];
-				}
-				cur+=len;
+                // Copy bytes (handle overlapping case properly)
+                for (int j = 0; j < len; j++) {
+                    cur[j] = src[j];
+                }
+                cur += len;
             }
             code >>= 1;
         }
     }
-//	emu_printf("inf %d sup %d\n",a,b);
-//	emu_printf("dst %p size %d\n",dst,decodedSize);
-
-	return dst;
+    return dst;
 }
-
 
 #define CS1(x)                  (0x24000000UL + (x))
 
