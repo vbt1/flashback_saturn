@@ -30,7 +30,7 @@ struct File {
 
 	File_impl *_impl;
 
-	bool open(const char *filename, const char *directory, const char *mode);
+	bool open(const char *filename, const char *directory, const int position);
 	void openMemoryBuffer(int initialCapacity);
 	void close();
 	bool ioErr() const;

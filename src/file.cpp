@@ -27,9 +27,10 @@ extern "C" {
 struct File_impl {
     bool _ioErr;
     File_impl() : _ioErr(false) {}
-    virtual bool open(const char *path, const char *mode) = 0;
+    virtual bool open(const char *path, const int position) = 0;
     virtual void close() = 0;
     virtual uint32_t size() = 0;
+    virtual uint32_t tell() = 0;
     virtual void seek(int32_t off) = 0;
     virtual void read(void *ptr, uint32_t len) = 0;
     virtual void write(void *ptr, uint32_t len) = 0;
@@ -43,7 +44,7 @@ struct stdFile : File_impl {
 
     stdFile() : _fp(0), _bufPos(0), _bufLen(0) {}
 
-    bool open(const char *path, const char *mode) {
+    bool open(const char *path, const int position) {
         _ioErr = false;
         _fp = sat_fopen(path);
         _bufPos = 0;
@@ -53,6 +54,7 @@ struct stdFile : File_impl {
 
     void close() {
         if (_fp) {
+			emu_printf("position before closing %d\n",GFS_Tell(_fp->fid));
             sat_fclose(_fp);
             _fp = 0;
         }
@@ -64,8 +66,13 @@ struct stdFile : File_impl {
         return _fp ? _fp->f_size : 0;
     }
 
+    uint32_t tell() {
+        return _fp ? GFS_Tell(_fp->fid) : 0;
+    }
+
     void seek(int32_t off) {
         if (_fp) {
+//			emu_printf("seek %d\n",off);
             sat_fseek(_fp, off, SEEK_SET);
             _bufPos = 0;
             _bufLen = 0; // Invalidate buffer on seek
@@ -87,7 +94,8 @@ struct stdFile : File_impl {
 
         // Read directly if request is large
         if (remaining >= sizeof(_buffer)) {
-//emu_printf("remaining direct read %d\n",remaining);			
+//if(len>10000)
+emu_printf("remaining direct read %d len %d\n",remaining,len);			
  //           if (_fp) {
                 uint32_t r = sat_fread(dst, 1, remaining, _fp);
                 if (r != remaining) {
@@ -133,10 +141,10 @@ File::~File() {
     }
 }
 
-bool File::open(const char *filename, const char *directory, const char *mode) {
+bool File::open(const char *filename, const char *directory, const int position) {
     _impl->close();
     memset(name, 0, 20);
-    bool opened = _impl->open(filename, mode);
+    bool opened = _impl->open(filename, position);
     snprintf(name, 19, "%s", filename);
     return opened;
 }
@@ -153,6 +161,10 @@ bool File::ioErr() const {
 
 uint32_t File::size() {
     return _impl->size();
+}
+
+uint32_t File::tell() {
+    return _impl->tell();
 }
 
 void File::seek(int32_t off) {

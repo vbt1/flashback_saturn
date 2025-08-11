@@ -29,7 +29,7 @@ ResourceMac::ResourceMac(const char *filePath, const char *dataPath)
 	memset(&_map, 0, sizeof(_map));
 //	_f.open(filePath, "rb", fs);
 //emu_printf("_f.open\n");
-	_f.open(filePath, dataPath, "rb");
+	_f.open(filePath, dataPath, 0);
 }
 
 ResourceMac::~ResourceMac() {

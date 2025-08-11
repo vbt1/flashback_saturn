@@ -75,6 +75,8 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
     // Read decodedSize as 4 bytes (big-endian)
     decodedSize = f.readUint32BE();
+	emu_printf("decodedSize sz %d pos %d\n",decodedSize, f.size(), f.tell());
+
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
@@ -86,7 +88,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
 
     // Buffer for batch reading
     const size_t BUFFER_SIZE = 768;
-    uint8_t buffer[BUFFER_SIZE];
+    uint8_t buffer[BUFFER_SIZE] __attribute__ ((aligned (4)));
     size_t bufferPos = BUFFER_SIZE; // Start with empty buffer
 
     while (cur < end) {
@@ -247,7 +249,7 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
             offset &= kMask;
             count--;
         }
-        DMA_ScuMemCopy(buf->ptr, window, w);
+//        DMA_ScuMemCopy(buf->ptr, window, w);
 // vbt : ne jamais remettre de dma, memcpyl : 765ms, dma : 765ms + plantages aléatoires
 		memcpyl(buf->ptr, window, w);
 //		emu_printf("DMA_ScuMemCopy %p %p w %d\n", buf->ptr, window, w);

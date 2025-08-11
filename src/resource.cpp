@@ -1774,5 +1774,5 @@ void Resource::MAC_closeMainFile()
 
 void Resource::MAC_reopenMainFile()
 {
-	_mac->_f.open(ResourceMac::FILENAME2, _dataPath,"rb");
+	_mac->_f.open(ResourceMac::FILENAME2, _dataPath,100);
 }
