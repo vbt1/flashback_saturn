@@ -249,10 +249,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
         }
         DMA_ScuMemCopy(buf->ptr, window, w);
 // vbt : ne jamais remettre de dma, memcpyl : 765ms, dma : 765ms + plantages aléatoires
-//		memcpyl(buf->ptr, window, w);
+		memcpyl(buf->ptr, window, w);
 //		emu_printf("DMA_ScuMemCopy %p %p w %d\n", buf->ptr, window, w);
         buf->ptr += w;
-		SCU_DMAWait();
+//		SCU_DMAWait();
     }
 
     slTVOn();

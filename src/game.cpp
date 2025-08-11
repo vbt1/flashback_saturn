@@ -1967,6 +1967,7 @@ void Game::handleInventory() {
 	{
 		memset4_fast(&_vid._frontLayer[51 << 9], 0x00,32 << 9);
 		_stub->copyRect(0, 51, _vid._w, 32, _vid._frontLayer, _vid._w);
+		return;
 	}
 
 	LivePGE *selected_pge = 0;

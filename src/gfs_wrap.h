@@ -22,7 +22,7 @@ typedef struct {
 	GfsHn  fid;       // Pointer to GFS file structure
 	long f_size;      // file size in *bytes*
 	long  f_seek_pos; // seek pointer position in *bytes*
-	Uint32 file_hash; // file hash 
+//	Uint32 file_hash; // file hash 
 } GFS_FILE;
 
 void init_GFS();
