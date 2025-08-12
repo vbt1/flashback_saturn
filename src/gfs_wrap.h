@@ -9,12 +9,12 @@
 //#define   OPEN_MAX  (Sint32)20
 //#define   DIR_MAX   (Sint32)170
 
-#define   OPEN_MAX  (Sint32)12
+#define   OPEN_MAX  (Sint32)8
 #define   DIR_MAX   (Sint32)152
 
 
 #define SECTOR_SIZE 2048 // Bytes for each sector
-#define TOT_SECTOR 8
+#define TOT_SECTOR 2
 
 #define FNAME_SIZE 15
 
@@ -27,7 +27,7 @@ typedef struct {
 
 void init_GFS();
 
-GFS_FILE *sat_fopen(const char *path);
+GFS_FILE *sat_fopen(const char *path, const int position);
 int sat_fclose(GFS_FILE *fp);
 
 int sat_fseek(GFS_FILE *stream, long offset, int whence);

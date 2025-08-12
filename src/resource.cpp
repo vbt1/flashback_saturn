@@ -42,6 +42,7 @@ void init_GFS();
 #include "game.h"
 
 uint8_t * save_current_lwram;
+int last_position = 0;
 
 Resource::Resource(const char *dataPath, ResourceType type, Language lang) {
 	memset(this, 0, sizeof(Resource));
@@ -1234,6 +1235,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
+//emu_printf("_mac->_f.seek( off1 %d off2 %d\n",_mac->_dataOffset, entry->dataOffset);
     _mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
     _resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
@@ -1769,10 +1771,11 @@ void Resource::MAC_closeMainFile()
 {
 //	GfsSvr *svr = &MNG_SVR((GfsMng *)gfsLibWork);
 //	GFS_Close(MNG_FILE((GfsMng *)gfsLibWork));
+	last_position = _mac->_f.tell();
 	_mac->_f.close();
 }
 
 void Resource::MAC_reopenMainFile()
 {
-	_mac->_f.open(ResourceMac::FILENAME2, _dataPath,100);
+	_mac->_f.open(ResourceMac::FILENAME2, _dataPath, last_position);
 }

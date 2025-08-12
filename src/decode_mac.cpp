@@ -75,7 +75,6 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
     // Read decodedSize as 4 bytes (big-endian)
     decodedSize = f.readUint32BE();
-	emu_printf("decodedSize sz %d pos %d\n",decodedSize, f.size(), f.tell());
 
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
@@ -87,7 +86,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
     uint8_t* cur = dst;
 
     // Buffer for batch reading
-    const size_t BUFFER_SIZE = 768;
+    const size_t BUFFER_SIZE = 2048;
     uint8_t buffer[BUFFER_SIZE] __attribute__ ((aligned (4)));
     size_t bufferPos = BUFFER_SIZE; // Start with empty buffer
 

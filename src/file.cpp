@@ -46,20 +46,25 @@ struct stdFile : File_impl {
 
     bool open(const char *path, const int position) {
         _ioErr = false;
-        _fp = sat_fopen(path);
-        _bufPos = 0;
-        _bufLen = 0;
+        _fp = sat_fopen(path, position);
+		if(!position)
+		{
+			_bufPos = 0;
+			_bufLen = 0;
+		}
+//		else
+//			emu_printf("position after reopening %d\n",GFS_Tell(_fp->fid));
         return _fp != NULL;
     }
 
     void close() {
         if (_fp) {
-			emu_printf("position before closing %d\n",GFS_Tell(_fp->fid));
+//			emu_printf("position before closing %d\n",GFS_Tell(_fp->fid));
             sat_fclose(_fp);
             _fp = 0;
         }
-        _bufPos = 0;
-        _bufLen = 0;
+ //       _bufPos = 0;
+ //       _bufLen = 0;
     }
 
     uint32_t size() {
@@ -95,18 +100,19 @@ struct stdFile : File_impl {
         // Read directly if request is large
         if (remaining >= sizeof(_buffer)) {
 //if(len>10000)
-emu_printf("remaining direct read %d len %d\n",remaining,len);			
- //           if (_fp) {
+//emu_printf("remaining direct read %d len %d\n",remaining,len);
+            if (_fp) {
                 uint32_t r = sat_fread(dst, 1, remaining, _fp);
                 if (r != remaining) {
+					emu_printf("_ioErr1 r%d remaining %d\n",r , remaining);
                     _ioErr = true;
-//                }
+				}
             }
             return;
         }
 
         // Refill buffer for small reads
-        if (/*_fp &&*/ remaining > 0) {
+        if (_fp && remaining > 0) {
 //emu_printf("remaining not in cache %d\n",remaining);
             _bufLen = sat_fread(_buffer, 1, sizeof(_buffer), _fp);
             _bufPos = 0;
