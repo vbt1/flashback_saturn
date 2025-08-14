@@ -1238,16 +1238,21 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //emu_printf("_mac->_f.seek( off1 %d off2 %d\n",_mac->_dataOffset, entry->dataOffset);
     _mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
     _resourceMacDataSize = _mac->_f.readUint32BE();
-//emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
+//emu_printf("entry->name1 %s lzss %d size %d sizeVBT %d\n",entry->name, decompressLzss, _resourceMacDataSize, entry->size);
     
     if (decompressLzss) {
 emu_printf("\ndecodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
 	   if(_resourceMacDataSize>=90000)
+	   {
+//		    _resourceMacDataSize = _mac->_f.readUint32BE(); //entry->size;//
 			return decodeLzssCache(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
-
+	   }
+//	   _resourceMacDataSize = _mac->_f.readUint32BE();
+//	   _resourceMacDataSize = entry->size;
        return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
     }
-    
+//	_resourceMacDataSize = _mac->_f.readUint32BE();
+	emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);   
     uint8_t *data;
     
     if (entry->id < 5000 && entry->type != 33) {
@@ -1458,7 +1463,7 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-
+emu_printf("MAC_decodeImageData\n");
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 }
 

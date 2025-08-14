@@ -100,9 +100,9 @@ struct stdFile : File_impl {
 		Sint32 tot_bytes = len + skip_bytes;
 		Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 		Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
-		_fp->f_seek_pos += (readBytes - skip_bytes); 
+//		_fp->f_seek_pos += (readBytes - skip_bytes); 
 // vbt : voir si utile, testé avec, commit sans !
-//		seek(readBytes - skip_bytes);
+		seek(readBytes - skip_bytes);
 
 		return &ptr[skip_bytes];
 	}
@@ -164,10 +164,9 @@ void File::readInline(void *ptr, uint32_t len) {
 uint8_t File::readByte() {
     uint8_t b;
     _impl->read(&b, 1);
-	pos +=1;
-    return b;
+   return b;
 }
-
+/*
 uint16_t File::readUint16BE() {
 	uint8_t hi = readByte();
 	uint8_t lo = readByte();
@@ -176,10 +175,25 @@ uint16_t File::readUint16BE() {
 
 uint32_t File::readUint32BE() {
 	uint16_t hi = readUint16BE();
+emu_printf("hi %d\n",hi);
 	uint16_t lo = readUint16BE();
+emu_printf("lo %d\n",lo);
 	return (hi << 16) | lo;
 }
+*/
 
+uint16_t File::readUint16BE() {
+    uint16_t value;
+    _impl->read(&value, 2);
+    return value;
+}
+
+uint32_t File::readUint32BE() {
+	emu_printf("readUint32BE\n");
+    uint32_t value;
+    _impl->read(&value, 4);
+    return value;
+}
 
 void File::write(void *ptr, uint32_t len) {
     _impl->write(ptr, len);

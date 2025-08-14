@@ -20,7 +20,7 @@ void	*malloc(size_t);
 #define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
 
 
-const char *ResourceMac::FILENAME1 = "Flashbck.bin";
+//const char *ResourceMac::FILENAME1 = "Flashbck.bin";
 const char *ResourceMac::FILENAME2 = "Flashbck.rsr";
 
 //ResourceMac::ResourceMac(const char *filePath, FileSystem *fs)
@@ -128,6 +128,19 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 				_f.read(_entries[i][j].name, len);
 				_entries[i][j].name[len] = '\0';
 			}
+		}
+	}
+
+
+// préchargement des tailles des bgs
+	for (int i = 12; i < 15; ++i)
+	{
+		for (int j = 0; j < _types[i].count; ++j) {
+			_f.seek(_dataOffset + _entries[i][j].dataOffset);
+			_entries[i][j].compressedSize = _f.readUint32BE();
+			_entries[i][j].size = _f.readUint32BE();
+	//		emu_printf("name %s size %d size decomp %d\n", _entries[i][j].name,_entries[i][j].compressedSize,size);
+
 		}
 	}
 }

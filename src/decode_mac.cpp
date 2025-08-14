@@ -75,9 +75,10 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
     // Read decodedSize as 4 bytes (big-endian)
 emu_printf("decodeLzss %d\n", decodedSize);
+//	decodedSize = f.readUint32BE(); /// vbt : temporaire
 	uint32_t srcSize = decodedSize;
     decodedSize = f.readUint32BE();
-emu_printf("decodeLzss sz2 %d\n", decodedSize);
+//emu_printf("decodeLzss sz2 %d\n", decodedSize);
 
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
@@ -126,7 +127,7 @@ emu_printf("decodeLzss sz2 %d\n", decodedSize);
 uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
 emu_printf("decodeLzssCache %d\n", decodedSize);
     decodedSize = f.readUint32BE();
-emu_printf("decodeLzssCache sz2 %d\n", decodedSize);
+//emu_printf("decodeLzssCache sz2 %d\n", decodedSize);
 
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
