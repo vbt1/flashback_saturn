@@ -1242,7 +1242,7 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
     
     if (decompressLzss) {
 emu_printf("\ndecodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
-	   if(_resourceMacDataSize>=90000)
+	   if(_resourceMacDataSize>65535)
 	   {
 //		    _resourceMacDataSize = _mac->_f.readUint32BE();
 			return decodeLzssCache(_mac->_f, entry->type, entry->id, _resourceMacDataSize);

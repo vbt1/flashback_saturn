@@ -109,7 +109,7 @@ void errGfsFunc(void *obj, int ec)
 
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	emu_printf("%s\n", texte);
+//	emu_printf("%s\n", texte);
 
     int      ret;
     GfsErrStat  stat;

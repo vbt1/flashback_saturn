@@ -130,6 +130,14 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 		}
 	}
 
+uint8_t *t = (uint8_t *)malloc(10);
+emu_printf("entries %p\n",_entries);
+emu_printf("t %p\n",t);
+
+
+//while(1);
+
+
 /*
 // préchargement des tailles des bgs
 	for (int i = 0; i < _map.typesCount; ++i)

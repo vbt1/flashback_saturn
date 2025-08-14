@@ -81,7 +81,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
 //if(entry->compressedSize<=0)
 //while(1);	
 	
-	emu_printf("decodeLzss sz2 %d %d\n", decodedSize, decodedSize);
+	emu_printf("Lzss sz2 %d %d\n", decodedSize, decodedSize);
 
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
@@ -129,7 +129,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
 }
 
 uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
-emu_printf("decodeLzssCache %d\n", decodedSize);
+emu_printf("LzssCache %d\n", decodedSize);
     decodedSize = f.readUint32BE();
 //emu_printf("decodeLzssCache sz2 %d\n", decodedSize);
 
@@ -143,7 +143,7 @@ emu_printf("decodeLzssCache %d\n", decodedSize);
     uint8_t* cur = dst;
 
     // Buffer for batch reading
-    const size_t BUFFER_SIZE = 2048;
+    const size_t BUFFER_SIZE = 1024;
     uint8_t buffer[BUFFER_SIZE] __attribute__ ((aligned (4)));
     size_t bufferPos = BUFFER_SIZE; // Start with empty buffer
 
