@@ -35,6 +35,7 @@ struct File_impl {
     virtual uint32_t size() = 0;
     virtual uint32_t tell() = 0;
     virtual void seek(int32_t off) = 0;
+	virtual void batchSeek(int32_t off);
     virtual void read(void *ptr, uint32_t len) = 0;
     virtual void write(void *ptr, uint32_t len) = 0;
 	virtual uint8_t *batchRead (uint8_t *ptr, uint32_t len);
@@ -71,6 +72,10 @@ struct stdFile : File_impl {
 		if (_fp) {
 			sat_fseek(_fp, off, SEEK_SET);
 		}
+	}
+
+	void batchSeek(int32_t off) {
+		_fp->f_seek_pos += off;
 	}
 
 	void read(void *ptr, uint32_t len) {
@@ -149,6 +154,10 @@ void File::seek(int32_t off) {
     _impl->seek(off);
 }
 
+void File::batchSeek(int32_t off) {
+    _impl->seek(off);
+}
+
 void File::read(void *ptr, uint32_t len) {
     _impl->read(ptr, len);
 }
@@ -189,7 +198,7 @@ uint16_t File::readUint16BE() {
 }
 
 uint32_t File::readUint32BE() {
-	emu_printf("readUint32BE\n");
+//	emu_printf("readUint32BE\n");
     uint32_t value;
     _impl->read(&value, 4);
     return value;

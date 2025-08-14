@@ -73,17 +73,21 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
 }
 
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
+//uint8_t* decodeLzss(File& f, const ResourceMacEntry *entry) {
     // Read decodedSize as 4 bytes (big-endian)
-emu_printf("decodeLzss %d\n", decodedSize);
-//	decodedSize = f.readUint32BE(); /// vbt : temporaire
 	uint32_t srcSize = decodedSize;
     decodedSize = f.readUint32BE();
-//emu_printf("decodeLzss sz2 %d\n", decodedSize);
+	
+//if(entry->compressedSize<=0)
+//while(1);	
+	
+	emu_printf("decodeLzss sz2 %d %d\n", decodedSize, decodedSize);
 
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
     uint8_t* dst = allocate_memory(type, id, alignedSize);
+    //uint8_t* dst = allocate_memory(entry->type, entry->id, alignedSize);
     if (!dst) return NULL; // Handle special case (e.g., "Title 6")
 
 	uint8_t* batch = (uint8_t*)SCRATCH;

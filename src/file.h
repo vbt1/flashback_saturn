@@ -36,6 +36,7 @@ struct File {
 	bool ioErr() const;
 	uint32_t size();
 	void seek(int32_t off);
+	void batchSeek(int32_t off);
 	uint32_t tell();
 	void read(void *ptr, uint32_t len);
 	uint8_t *batchRead (uint8_t *ptr, uint32_t len);

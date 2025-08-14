@@ -1244,12 +1244,14 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 emu_printf("\ndecodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
 	   if(_resourceMacDataSize>=90000)
 	   {
-//		    _resourceMacDataSize = _mac->_f.readUint32BE(); //entry->size;//
+//		    _resourceMacDataSize = _mac->_f.readUint32BE();
 			return decodeLzssCache(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
 	   }
 //	   _resourceMacDataSize = _mac->_f.readUint32BE();
-//	   _resourceMacDataSize = entry->size;
        return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
+//	   _mac->_f.batchSeek(4);
+//       return decodeLzss(_mac->_f, entry); //entry->type, entry->id, _resourceMacDataSize);
+//       return decodeLzss(_mac->_f, entry); //entry->type, entry->id, _resourceMacDataSize);
     }
 //	_resourceMacDataSize = _mac->_f.readUint32BE();
 	emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);   

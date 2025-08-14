@@ -10,7 +10,6 @@ void	*malloc(size_t);
 
 #include <assert.h>
 #include <stdlib.h>
-
 //#include "fs.h"
 #include "resource_mac.h"
 #include "util.h"
@@ -131,18 +130,18 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 		}
 	}
 
-
+/*
 // préchargement des tailles des bgs
-	for (int i = 12; i < 15; ++i)
+	for (int i = 0; i < _map.typesCount; ++i)
 	{
 		for (int j = 0; j < _types[i].count; ++j) {
 			_f.seek(_dataOffset + _entries[i][j].dataOffset);
 			_entries[i][j].compressedSize = _f.readUint32BE();
-			_entries[i][j].size = _f.readUint32BE();
+//			_entries[i][j].size = _f.readUint32BE();
 	//		emu_printf("name %s size %d size decomp %d\n", _entries[i][j].name,_entries[i][j].compressedSize,size);
 
 		}
-	}
+	}*/
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {

@@ -4,9 +4,10 @@
 
 #include <stdint.h>
 #include "file.h"
-
+#include "resource_mac.h"
 //uint8_t *decodeLzss(File &f, const char *name, uint32_t &decodedSize);
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize);
+//uint8_t* decodeLzss(File& f, const ResourceMacEntry *entry);
 uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize);
 
 struct DecodeBuffer {
