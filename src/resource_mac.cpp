@@ -130,26 +130,17 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 		}
 	}
 
-uint8_t *t = (uint8_t *)malloc(10);
-emu_printf("entries %p\n",_entries);
-emu_printf("t %p\n",t);
-
-
-//while(1);
-
-
-/*
 // préchargement des tailles des bgs
-	for (int i = 0; i < _map.typesCount; ++i)
+	for (int i = 12; i < 36; ++i)
 	{
 		for (int j = 0; j < _types[i].count; ++j) {
 			_f.seek(_dataOffset + _entries[i][j].dataOffset);
 			_entries[i][j].compressedSize = _f.readUint32BE();
-//			_entries[i][j].size = _f.readUint32BE();
+			_entries[i][j].size = _f.readUint32BE();
 	//		emu_printf("name %s size %d size decomp %d\n", _entries[i][j].name,_entries[i][j].compressedSize,size);
 
 		}
-	}*/
+	}
 }
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {

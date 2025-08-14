@@ -90,7 +90,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
     //uint8_t* dst = allocate_memory(entry->type, entry->id, alignedSize);
     if (!dst) return NULL; // Handle special case (e.g., "Title 6")
 
-	uint8_t* batch = (uint8_t*)SCRATCH;
+	uint8_t* batch = (uint8_t*)SCRATCH+4096;
 	batch = f.batchRead(batch, srcSize);
 //	emu_printf("batch %02x %02x %02x %02x\n", batch[0], batch[1], batch[2], batch[3]);
 
