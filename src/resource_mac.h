@@ -25,7 +25,7 @@ struct ResourceMacEntry {
 	uint16_t id;
 	uint16_t nameOffset;
 	uint32_t dataOffset;
-	uint16_t compressedSize;
+	uint32_t compressedSize;
 	uint16_t size;
 	uint8_t type;
 	char name[kResourceMacEntryNameLength];
