@@ -1241,8 +1241,11 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);
     
     if (decompressLzss) {
-//emu_printf("\ndecodeLzss %d %s id %d",_resourceMacDataSize, entry->name, entry->id);
-        return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
+emu_printf("\ndecodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
+	   if(_resourceMacDataSize>=90000)
+			return decodeLzssCache(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
+
+       return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
     }
     
     uint8_t *data;

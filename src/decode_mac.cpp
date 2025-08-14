@@ -74,7 +74,59 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
 
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
     // Read decodedSize as 4 bytes (big-endian)
+emu_printf("decodeLzss %d\n", decodedSize);
+	uint32_t srcSize = decodedSize;
     decodedSize = f.readUint32BE();
+emu_printf("decodeLzss sz2 %d\n", decodedSize);
+
+    uint32_t alignedSize = SAT_ALIGN(decodedSize);
+
+    // Allocate memory
+    uint8_t* dst = allocate_memory(type, id, alignedSize);
+    if (!dst) return NULL; // Handle special case (e.g., "Title 6")
+
+	uint8_t* batch = (uint8_t*)SCRATCH;
+	batch = f.batchRead(batch, srcSize);
+//	emu_printf("batch %02x %02x %02x %02x\n", batch[0], batch[1], batch[2], batch[3]);
+
+    uint8_t* const end = dst + decodedSize;
+    uint8_t* cur = dst;
+
+   while (cur < end) {
+        uint8_t code = *batch++;
+//		emu_printf("code[%d] %02x\n",i++,code);
+        for (int i = 0; i < 8 && cur < end; ++i) {
+            if ((code & 1) == 0) {
+                *cur++ = *batch++;
+            } else {
+				uint16_t offset = READ_BE_UINT16(batch);
+				batch += 2;
+
+                const int len = (offset >> 12) + 3;
+                offset &= 0xFFF;
+				uint8_t* src = cur - offset - 1;
+//				emu_printf("name %s len %d\n",name, len);
+				cur[0] = src[0];
+				cur[1] = src[1];
+				cur[2] = src[2];
+
+				// Handle remaining bytes
+				for (unsigned char i =3; i < len; i++) {
+					cur[i] = src[i];
+				}
+				cur+=len;
+            }
+            code >>= 1;
+        }
+    }
+//	emu_printf("inf %d sup %d\n",a,b);
+	return dst;
+}
+
+uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
+emu_printf("decodeLzssCache %d\n", decodedSize);
+    decodedSize = f.readUint32BE();
+emu_printf("decodeLzssCache sz2 %d\n", decodedSize);
 
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
@@ -97,7 +149,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
             bufferPos = 0;
         }
         uint8_t code = buffer[bufferPos++];
-
+//		emu_printf("code[%d] %02x pos %d tell %d %p\n",i++,code,bufferPos-1,f.tell()*2048,buffer);
         for (int i = 0; i < 8 && cur < end; ++i) {
             if ((code & 1) == 0) {
                 // Literal byte - need to read one byte

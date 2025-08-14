@@ -24,6 +24,9 @@ extern "C" {
 #include "file.h"
 #include "saturn_print.h"
 
+#define GFS_BYTE_SCT(byte, sctsiz)  \
+    ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
+
 struct File_impl {
     bool _ioErr;
     File_impl() : _ioErr(false) {}
@@ -34,26 +37,16 @@ struct File_impl {
     virtual void seek(int32_t off) = 0;
     virtual void read(void *ptr, uint32_t len) = 0;
     virtual void write(void *ptr, uint32_t len) = 0;
+	virtual uint8_t *batchRead (uint8_t *ptr, uint32_t len);
 };
 
 struct stdFile : File_impl {
     GFS_FILE *_fp;
-    uint8_t _buffer[256] __attribute__ ((aligned (4)));
-    uint32_t _bufPos;
-    uint32_t _bufLen;
-
-    stdFile() : _fp(0), _bufPos(0), _bufLen(0) {}
+    stdFile() : _fp(0) {}
 
     bool open(const char *path, const int position) {
         _ioErr = false;
         _fp = sat_fopen(path, position);
-		if(!position)
-		{
-			_bufPos = 0;
-			_bufLen = 0;
-		}
-//		else
-//			emu_printf("position after reopening %d\n",GFS_Tell(_fp->fid));
         return _fp != NULL;
     }
 
@@ -63,8 +56,6 @@ struct stdFile : File_impl {
             sat_fclose(_fp);
             _fp = 0;
         }
- //       _bufPos = 0;
- //       _bufLen = 0;
     }
 
     uint32_t size() {
@@ -73,58 +64,23 @@ struct stdFile : File_impl {
 
     uint32_t tell() {
         return _fp ? GFS_Tell(_fp->fid) : 0;
+ //       return _fp->f_seek_pos;
     }
 
-    void seek(int32_t off) {
-        if (_fp) {
-//			emu_printf("seek %d\n",off);
-            sat_fseek(_fp, off, SEEK_SET);
-            _bufPos = 0;
-            _bufLen = 0; // Invalidate buffer on seek
-        }
-    }
+	void seek(int32_t off) {
+		if (_fp) {
+			sat_fseek(_fp, off, SEEK_SET);
+		}
+	}
 
-    void read(void *ptr, uint32_t len) {
-    uint8_t *dst = (uint8_t *)ptr;
-    uint32_t remaining = len;
-
-//emu_printf("reading %p sz %d _bufPos %d\n", ptr,len, _bufPos, _bufLen);
-        // Use buffered data first
-        while (remaining > 0 && _bufPos < _bufLen) {
-            *dst++ = _buffer[_bufPos++];
-            remaining--;
-        }
-		if (!remaining)
-			return;
-
-        // Read directly if request is large
-        if (remaining >= sizeof(_buffer)) {
-//if(len>10000)
-//emu_printf("remaining direct read %d len %d\n",remaining,len);
-            if (_fp) {
-                uint32_t r = sat_fread(dst, 1, remaining, _fp);
-                if (r != remaining) {
-					emu_printf("_ioErr1 r%d remaining %d\n",r , remaining);
-                    _ioErr = true;
-				}
-            }
-            return;
-        }
-
-        // Refill buffer for small reads
-        if (_fp && remaining > 0) {
-//emu_printf("remaining not in cache %d\n",remaining);
-            _bufLen = sat_fread(_buffer, 1, sizeof(_buffer), _fp);
-            _bufPos = 0;
-            if (_bufLen == 0) {
-                _ioErr = true;
-                return;
-            }
-            uint32_t to_copy = remaining < _bufLen ? remaining : _bufLen;
-            memcpy(dst, _buffer, to_copy);
-            _bufPos += to_copy;
-        }
-    }
+	void read(void *ptr, uint32_t len) {
+		if (_fp) {
+			uint32 r = sat_fread(ptr, 1, len, _fp);
+			if (r != len) {
+				_ioErr = true;
+			}
+		}
+	}
 
     void write(void *ptr, uint32_t len) {
         if (_fp) {
@@ -134,6 +90,22 @@ struct stdFile : File_impl {
             }
         }
     }
+
+	uint8_t *batchRead (uint8_t *ptr, uint32_t len)
+	{
+		Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+	//	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector
+		Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+//		GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+		Sint32 tot_bytes = len + skip_bytes;
+		Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+		Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+		_fp->f_seek_pos += (readBytes - skip_bytes); 
+// vbt : voir si utile, testé avec, commit sans !
+//		seek(readBytes - skip_bytes);
+
+		return &ptr[skip_bytes];
+	}
 };
 
 File::File() {
@@ -180,6 +152,10 @@ void File::seek(int32_t off) {
 void File::read(void *ptr, uint32_t len) {
     _impl->read(ptr, len);
 }
+
+uint8_t *File::batchRead(uint8_t *ptr, uint32_t len) {
+    return _impl->batchRead(ptr, len);
+}
 /*
 void File::readInline(void *ptr, uint32_t len) {
     _impl->read(ptr, len);
@@ -188,20 +164,22 @@ void File::readInline(void *ptr, uint32_t len) {
 uint8_t File::readByte() {
     uint8_t b;
     _impl->read(&b, 1);
+	pos +=1;
     return b;
 }
 
 uint16_t File::readUint16BE() {
-    uint16_t value;
-    _impl->read(&value, 2);
-    return value;
+	uint8_t hi = readByte();
+	uint8_t lo = readByte();
+	return (hi << 8) | lo;
 }
 
 uint32_t File::readUint32BE() {
-    uint32_t value;
-    _impl->read(&value, 4);
-    return value;
+	uint16_t hi = readUint16BE();
+	uint16_t lo = readUint16BE();
+	return (hi << 16) | lo;
 }
+
 
 void File::write(void *ptr, uint32_t len) {
     _impl->write(ptr, len);
