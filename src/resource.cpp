@@ -1237,12 +1237,9 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
 //emu_printf("_mac->_f.seek( off1 %d off2 %d\n",_mac->_dataOffset, entry->dataOffset);
     _mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
-	
-//	_resourceMacDataSize = _mac->_f.readUint32BE();
 //emu_printf("entry->name1 %s lzss %d size %d sizeVBT %d\n",entry->name, decompressLzss, _resourceMacDataSize, entry->size);
     
     if (decompressLzss) {
-//		_resourceMacDataSize = _mac->_f.readUint32BE();
 		_resourceMacDataSize = entry->compressedSize;
 	   if(_resourceMacDataSize>90000)
 	   {
@@ -1250,10 +1247,8 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 emu_printf("decodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
 			return decodeLzssCache(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
 	   }
-//	   _resourceMacDataSize = _mac->_f.readUint32BE();
 emu_printf("decodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
-       return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
-//	   _mac->_f.batchSeek(4);
+       return decodeLzss(_mac->_f, entry->type, entry->id, _resourceMacDataSize, entry);
 //       return decodeLzss(_mac->_f, entry);
     }
 	_resourceMacDataSize = _mac->_f.readUint32BE();

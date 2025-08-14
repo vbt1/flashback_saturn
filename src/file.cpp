@@ -98,6 +98,7 @@ struct stdFile : File_impl {
 
 	uint8_t *batchRead (uint8_t *ptr, uint32_t len)
 	{
+		emu_printf("_fp->f_seek_pos %d\n",_fp->f_seek_pos);
 		Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
 	//	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector
 		Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
