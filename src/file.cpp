@@ -37,7 +37,7 @@ struct File_impl {
     virtual void seek(int32_t off) = 0;
 	virtual void batchSeek(int32_t off);
     virtual void read(void *ptr, uint32_t len) = 0;
-    virtual void write(void *ptr, uint32_t len) = 0;
+//    virtual void write(void *ptr, uint32_t len) = 0;
 	virtual uint8_t *batchRead (uint8_t *ptr, uint32_t len);
 };
 
@@ -199,7 +199,7 @@ uint32_t File::readUint32BE() {
     _impl->read(&value, 4);
     return value;
 }
-
+/*
 void File::write(void *ptr, uint32_t len) {
     _impl->write(ptr, len);
 }
@@ -221,3 +221,4 @@ void File::writeUint32BE(uint32_t n) {
 char* File::fileName() {
     return name;
 }
+*/

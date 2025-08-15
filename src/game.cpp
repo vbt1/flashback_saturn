@@ -201,8 +201,16 @@ void Game::run() {
 	emu_printf("--duration %s : %d\n","perso", et-st);
 #endif		
 //				SAT_preloadPerso();
+#ifdef DEBUG
+	_stub->initTimeStamp();
+	st = _stub->getTimeStamp();
+#endif
 // vbt : refaire le chargement des sons
 		_res.MAC_loadSounds(); // vbt déplacé
+#ifdef DEBUG
+	et = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","sound", et-st);
+#endif	
 // à redeplacer
 		_res.MAC_loadCutsceneText(); // vbt déplacé
 /*		break;

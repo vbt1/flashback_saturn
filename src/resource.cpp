@@ -1728,12 +1728,12 @@ void Resource::MAC_loadSounds() {
 			const ResourceMacEntry *entry = &_mac->_entries[soundType][num];
 			_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 			int dataSize = _mac->_f.readUint32BE();
-			assert(dataSize > kHeaderSize);
+//			assert(dataSize > kHeaderSize);
 			uint8_t buf[kHeaderSize];
 			_mac->_f.read(buf, kHeaderSize);
 			dataSize -= kHeaderSize;
-
 			_mac->_f.read(p, dataSize);
+
 			for (int j = 0; j < dataSize; ++j) {
 				p[j] = ((int8_t)(p[j] ^ 0x80)) / kGain;
 			}

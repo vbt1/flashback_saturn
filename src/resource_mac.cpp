@@ -85,36 +85,39 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 	_f.seek(mapOffset + _map.typesOffset + 2);
 	
-//	_types = (ResourceMacType *)sat_calloc(_map.typesCount, sizeof(ResourceMacType));  // taille 8 LWRAM
 	_types = (ResourceMacType *)malloc(_map.typesCount * sizeof(ResourceMacType));  // taille 8 LWRAM
-//	_types = (ResourceMacType *)hwram_ptr;
-//	hwram_ptr += _map.typesCount * sizeof(SoundFx);
+	uint8_t *tmp = (uint8_t *)SCRATCH;
 //emu_printf("MALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_map.typesCount);
+	tmp = _f.batchRead(tmp, _map.typesCount * 8);
 
 	for (int i = 0; i < _map.typesCount; ++i) {
-		_f.read(_types[i].id, 4);
-//		emu_printf("_types[%d].id %s\n", i, _types[i].id);	
-		_types[i].count = _f.readUint16BE() + 1;
-		_types[i].startOffset = _f.readUint16BE();
+		_types[i].id[0] = tmp[0];
+		_types[i].id[1] = tmp[1];
+		_types[i].id[2] = tmp[2];
+		_types[i].id[3] = tmp[3];
+		_types[i].count = READ_BE_UINT16(tmp+4) + 1;
+		_types[i].startOffset = READ_BE_UINT16(tmp+6);
+		tmp+=8;
 		if (_sndIndex < 0 && memcmp(_types[i].id, "snd ", 4) == 0) {
 			_sndIndex = i;
 		}
 	}
-//	_entries = (ResourceMacEntry **)sat_calloc(_map.typesCount, sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
+
 	_entries = (ResourceMacEntry **)malloc(_map.typesCount * sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
 //emu_printf("MALLOC: _entries: %p size %d\n", _types,sizeof(ResourceMacEntry *)*_map.typesCount);	
 
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
-//		_entries[i] = (ResourceMacEntry *)sat_calloc(_types[i].count, sizeof(ResourceMacEntry));
 		_entries[i] = (ResourceMacEntry *)malloc(_types[i].count * sizeof(ResourceMacEntry));
+		tmp = (uint8_t *)SCRATCH;
+		tmp = _f.batchRead(tmp, _types[i].count * 12);
 
 		for (int j = 0; j < _types[i].count; ++j) {
-			_entries[i][j].id = _f.readUint16BE();
+			_entries[i][j].id = READ_BE_UINT16(tmp);
 			_entries[i][j].type = i;
-			_entries[i][j].nameOffset = _f.readUint16BE();
-			_entries[i][j].dataOffset = _f.readUint32BE() & 0x00FFFFFF;
-			_f.readUint32BE();
+			_entries[i][j].nameOffset = READ_BE_UINT16(tmp+2);
+			_entries[i][j].dataOffset = READ_BE_UINT32(tmp+4) & 0x00FFFFFF;
+			tmp+=12;
 		}
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].name[0] = '\0';
@@ -143,7 +146,6 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 			_entries[value][j].compressedSize = _f.readUint32BE();
 			_entries[value][j].size = _f.readUint32BE();
 	//		emu_printf("name %s size %d size decomp %d\n", _entries[i][j].name,_entries[i][j].compressedSize,size);
-
 		}
 	}
 }

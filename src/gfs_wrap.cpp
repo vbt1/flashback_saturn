@@ -281,15 +281,7 @@ partial_cache:
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
 
 //emu_printf("offset_in_cache %d \n", offset_in_cache);			
-//emu_printf("start offset %d \n", start_sector * SECTOR_SIZE);			
-//emu_printf("stream->f_seek_pos %d \n", stream->f_seek_pos);
-//emu_printf("cache_offset %d\n", cache_offset);
-//emu_printf("stream->f_seek_pos %d cache_offset %d %x %x %x %x withoff %x %x\n",stream->f_seek_pos,cache_offset,cache[0],cache[1],cache[8],cache[9],cache[offset_in_cache+8],cache[offset_in_cache+9]);	
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
-//emu_printf("ptr[0] %x ptr[1] %x  ptr[2] %x ptr[3] %x ptr[4] %x ptr[5] %x ptr[6] %x ptr[7] %x ptr[8] %x ptr[9] %x ptr[10] %x ptr[11] %x ptr[12] %x\n",
-//((Uint8 *)ptr)[1538],((Uint8 *)ptr)[1538+1],((Uint8 *)ptr)[1538+2],((Uint8 *)ptr)[3],
-//((Uint8 *)ptr)[4],((Uint8 *)ptr)[5],((Uint8 *)ptr)[6],((Uint8 *)ptr)[7],
-//((Uint8 *)ptr)[8],((Uint8 *)ptr)[9],((Uint8 *)ptr)[10],((Uint8 *)ptr)[11],((Uint8 *)ptr)[11]);
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;
 		} 
@@ -311,10 +303,12 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
+//emu_printf("skip bytes\n");
 		read_buffer = (Uint8*)current_lwram;
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 	} else {
+//emu_printf("no skip bytes\n");
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 	stream->f_seek_pos += (readBytes - skip_bytes); // Update the seek cursor 
