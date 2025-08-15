@@ -37,70 +37,9 @@ static char satpath[25];
 //static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 
-//static Uint8  fully_cached = 0; // If file is cached from start to finish
 static Uint32 cache_offset = 0;
 // Used for initialization and such
 
-
-//Uint8 dir_depth = 0;
-/*
-Uint32 hashString(const char *string) {
-        char c, *f ;
-        Uint32 n ;
-
-        if (!string)
-                return 0 ;
-
-        n = 0 ;
-        f = (char *)string ;
-
-        while ((c = *f) != 0) {
-                n = (n << 7) + (n << 1) + n + c ;
-                f++ ;
-        }
-
-        return n ;
-}
-
-void back_to_root() {
-	while(dir_depth) {
-		GFS_LoadDir(1, &gfsDirTbl); // to the parent
-		GFS_SetDir(&gfsDirTbl);
-
-		memset(current_path[dir_depth], 0, 16);
-		dir_depth--;
-	}
-}
-
-Sint32 crawl_dir(char *token) {
-	Sint32 ret;
-	Sint32 id;
-
-	if(strcmp("..", token) == 0) { // parent
-		GFS_LoadDir(1, &gfsDirTbl);
-		ret = GFS_SetDir(&gfsDirTbl);
-		if(dir_depth > 0) { 
-			memset(current_path[dir_depth], 0, 16);
-			dir_depth--;
-		}
-	} else if (strcmp(".", token) == 0) {
-		ret = 0; // just do nothing in this case
-	} else { // normal entry
-		id = GFS_NameToId((Sint8*)token);
-		if(id < 0) return -1;
-
-		GFS_LoadDir(id, &gfsDirTbl);
-		ret = GFS_SetDir(&gfsDirTbl);
-		if (ret < 0) return ret;
-
-		dir_depth++;
-		strcpy(current_path[dir_depth], token);
-	}
-
-	return ret;
-}
-
-*/
 void errGfsFunc(void *obj, int ec)
 {
 	char texte[50];

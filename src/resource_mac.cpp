@@ -131,12 +131,17 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	}
 
 // préchargement des tailles des bgs
-	for (int i = 12; i < 36; ++i)
+
+	unsigned char target_types[] = {6, 12, 13, 14, 16, 20, 32, 35};
+	int num_target_types = sizeof(target_types);
+
+	for (int i = 0; i < num_target_types; ++i)
 	{
-		for (int j = 0; j < _types[i].count; ++j) {
-			_f.seek(_dataOffset + _entries[i][j].dataOffset);
-			_entries[i][j].compressedSize = _f.readUint32BE();
-			_entries[i][j].size = _f.readUint32BE();
+		unsigned char value = target_types[i];
+		for (int j = 0; j < _types[value].count; ++j) {
+			_f.seek(_dataOffset + _entries[value][j].dataOffset);
+			_entries[value][j].compressedSize = _f.readUint32BE();
+			_entries[value][j].size = _f.readUint32BE();
 	//		emu_printf("name %s size %d size decomp %d\n", _entries[i][j].name,_entries[i][j].compressedSize,size);
 
 		}

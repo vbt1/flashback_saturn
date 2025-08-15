@@ -132,7 +132,7 @@ void Game::run() {
 	_res.init();   // vbt : ajout pour la partie mac
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+30000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);

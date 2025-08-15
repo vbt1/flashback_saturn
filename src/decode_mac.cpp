@@ -86,6 +86,9 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entr
     if (!dst) return NULL; // Handle special case (e.g., "Title 6")
 
 	uint8_t* batch = (uint8_t*)SCRATCH+4096;
+	if(decodedSize>300000)
+		batch = (uint8_t*)FRONT;
+
 	batch = f.batchRead(batch, srcSize);
 
     uint8_t* const end = dst + decodedSize;
@@ -118,7 +121,7 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entr
     }
 	return dst;
 }
-
+#if 0
 uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
 //emu_printf("LzssCache %d\n", decodedSize);
     decodedSize = f.readUint32BE();
@@ -186,6 +189,7 @@ uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_
     }
     return dst;
 }
+#endif 
 
 #define CS1(x)                  (0x24000000UL + (x))
 

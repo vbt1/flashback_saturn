@@ -1240,24 +1240,19 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //emu_printf("entry->name1 %s lzss %d size %d sizeVBT %d\n",entry->name, decompressLzss, _resourceMacDataSize, entry->size);
     
     if (decompressLzss) {
-		_resourceMacDataSize = entry->compressedSize;
-	   if(_resourceMacDataSize>90000)
-	   {
-		    _resourceMacDataSize = _mac->_f.readUint32BE();
-//emu_printf("decodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
-			return decodeLzssCache(_mac->_f, entry->type, entry->id, _resourceMacDataSize);
-	   }
 //emu_printf("decodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
        return decodeLzss(_mac->_f, _resourceMacDataSize, entry);
     }
-	_resourceMacDataSize = _mac->_f.readUint32BE();
 //	emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);   
     uint8_t *data;
     
     if (entry->id < 5000 && entry->type != 33) {
         data = hwram_ptr;
-        hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
+        hwram_ptr += SAT_ALIGN(entry->compressedSize);
+		_mac->_f.batchSeek(4);
+		return _mac->_f.batchRead(data, entry->compressedSize);
     } else {
+		_resourceMacDataSize = _mac->_f.readUint32BE();
 		if(_resourceMacDataSize>=HWRAM_SCREEN_SIZE)
 		{
 			data = (Uint8  *)SCRATCH;
@@ -1462,7 +1457,7 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true);
-emu_printf("MAC_decodeImageData\n");
+//emu_printf("MAC_decodeImageData\n");
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 }
 
