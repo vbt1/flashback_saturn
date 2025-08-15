@@ -132,7 +132,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 // préchargement des tailles des bgs
 
-	unsigned char target_types[] = {6, 12, 13, 14, 16, 20, 32, 35};
+	unsigned char target_types[] = {6, 12, 13, 14, 16, 20, 31, 32, 33, 35};
 	int num_target_types = sizeof(target_types);
 
 	for (int i = 0; i < num_target_types; ++i)

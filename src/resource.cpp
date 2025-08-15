@@ -1243,33 +1243,19 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 //emu_printf("decodeLzss %d %s id %d\n",_resourceMacDataSize, entry->name, entry->id);
        return decodeLzss(_mac->_f, _resourceMacDataSize, entry);
     }
-//	emu_printf("entry->name1 %s lzss %d size %d\n",entry->name, decompressLzss, _resourceMacDataSize);   
     uint8_t *data;
-    
-    if (entry->id < 5000 && entry->type != 33) {
-        data = hwram_ptr;
-        hwram_ptr += SAT_ALIGN(entry->compressedSize);
-		_mac->_f.batchSeek(4);
-		return _mac->_f.batchRead(data, entry->compressedSize);
-    } else {
-		_resourceMacDataSize = _mac->_f.readUint32BE();
-		if(_resourceMacDataSize>=HWRAM_SCREEN_SIZE)
-		{
-			data = (Uint8  *)SCRATCH;
-//			data = (Uint8  *)_scratchBuffer;
-//emu_printf("utilisation scratch_buffer title size %d %p\n",_resourceMacDataSize,current_lwram+200000);
-		}
-		else
-			data = hwram_screen;
-    }
-    
-    if (!data) {
-        emu_printf("Failed to allocate %d bytes for '%s'\n", _resourceMacDataSize, entry->name);
-        return NULL;
-    }
-//	emu_printf("xxx data %p name %s size %d lzss %d\n",data,entry->name, _resourceMacDataSize, decompressLzss);
-    _mac->_f.read(data, _resourceMacDataSize);
-    return data;
+
+	if (entry->id < 5000 && entry->type != 33) {
+		data = hwram_ptr;
+		hwram_ptr += SAT_ALIGN(entry->compressedSize);
+	} 
+
+	else 
+	{
+		data = (entry->compressedSize >= HWRAM_SCREEN_SIZE) ? hwram_ptr : hwram_screen;
+	}
+	_mac->_f.batchSeek(4);
+	return _mac->_f.batchRead(data, entry->compressedSize);
 }
 
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask) {
