@@ -72,7 +72,7 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
     return dst;
 }
 
-uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize, const ResourceMacEntry *entry) {
+uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entry) {
 //uint8_t* decodeLzss(File& f, const ResourceMacEntry *entry) {
 	uint32_t srcSize = entry->compressedSize;
     decodedSize = entry->size;
@@ -81,8 +81,8 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
-    uint8_t* dst = allocate_memory(type, id, alignedSize);
-//    uint8_t* dst = allocate_memory(entry->type, entry->id, alignedSize);
+//    uint8_t* dst = allocate_memory(type, id, alignedSize);
+    uint8_t* dst = allocate_memory(entry->type, entry->id, alignedSize);
     if (!dst) return NULL; // Handle special case (e.g., "Title 6")
 
 	uint8_t* batch = (uint8_t*)SCRATCH+4096;
@@ -120,7 +120,7 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
 }
 
 uint8_t* decodeLzssCache(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize) {
-emu_printf("LzssCache %d\n", decodedSize);
+//emu_printf("LzssCache %d\n", decodedSize);
     decodedSize = f.readUint32BE();
 //emu_printf("decodeLzssCache sz2 %d\n", decodedSize);
 
