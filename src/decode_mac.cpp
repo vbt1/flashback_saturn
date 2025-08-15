@@ -74,16 +74,10 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
 
 uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& decodedSize, const ResourceMacEntry *entry) {
 //uint8_t* decodeLzss(File& f, const ResourceMacEntry *entry) {
-    // Read decodedSize as 4 bytes (big-endian)
-//	uint32_t srcSize = decodedSize;
-//    decodedSize = f.readUint32BE();
-	uint32_t srcSize = f.readUint32BE();
-    decodedSize = f.readUint32BE();
-	srcSize = entry->compressedSize;
+	uint32_t srcSize = entry->compressedSize;
     decodedSize = entry->size;
-//	f.batchSeek(4);
-	emu_printf("Lzss sz2 %d %d\n", srcSize, decodedSize);
-
+	f.batchSeek(8);
+//	emu_printf("Lzss sz2 %d %d\n", srcSize, decodedSize);
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
@@ -93,14 +87,12 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
 
 	uint8_t* batch = (uint8_t*)SCRATCH+4096;
 	batch = f.batchRead(batch, srcSize);
-	emu_printf("batch %02x %02x %02x %02x\n", batch[0], batch[1], batch[2], batch[3]);
 
     uint8_t* const end = dst + decodedSize;
     uint8_t* cur = dst;
 
    while (cur < end) {
         uint8_t code = *batch++;
-//		emu_printf("code[%d] %02x\n",i++,code);
         for (int i = 0; i < 8 && cur < end; ++i) {
             if ((code & 1) == 0) {
                 *cur++ = *batch++;
@@ -111,7 +103,6 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
                 const int len = (offset >> 12) + 3;
                 offset &= 0xFFF;
 				uint8_t* src = cur - offset - 1;
-//				emu_printf("name %s len %d\n",name, len);
 				cur[0] = src[0];
 				cur[1] = src[1];
 				cur[2] = src[2];
@@ -125,7 +116,6 @@ uint8_t* decodeLzss(File& f, const uint8_t type, const uint16_t id, uint32_t& de
             code >>= 1;
         }
     }
-//	emu_printf("inf %d sup %d\n",a,b);
 	return dst;
 }
 

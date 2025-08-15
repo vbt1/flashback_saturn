@@ -98,18 +98,13 @@ struct stdFile : File_impl {
 
 	uint8_t *batchRead (uint8_t *ptr, uint32_t len)
 	{
-		emu_printf("_fp->f_seek_pos %d\n",_fp->f_seek_pos);
 		Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-	//	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector
 		Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
-//		GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+		GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
 		Sint32 tot_bytes = len + skip_bytes;
 		Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 		Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
-//		_fp->f_seek_pos += (readBytes - skip_bytes); 
-// vbt : voir si utile, testé avec, commit sans !
-		seek(readBytes - skip_bytes);
-
+		_fp->f_seek_pos += (readBytes - skip_bytes);
 		return &ptr[skip_bytes];
 	}
 };
@@ -156,7 +151,7 @@ void File::seek(int32_t off) {
 }
 
 void File::batchSeek(int32_t off) {
-    _impl->seek(off);
+    _impl->batchSeek(off);
 }
 
 void File::read(void *ptr, uint32_t len) {
