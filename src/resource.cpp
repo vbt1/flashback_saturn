@@ -1193,8 +1193,11 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	char buf[32];
+
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
 	const ResourceMacEntry *entry = _mac->findEntry(buf);
+	
+	emu_printf("text %d %s\n", entry->type, buf);
 	if (entry) {
 		return decodeResourceMacData(entry, false);
 	} else { // CD version
@@ -1235,7 +1238,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 }
 
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
-//emu_printf("_mac->_f.seek( off1 %d off2 %d\n",_mac->_dataOffset, entry->dataOffset);
+emu_printf("_mac->_f.seek( off1 %d off2 %d\n",_mac->_dataOffset, entry->dataOffset);
     _mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 //emu_printf("entry->name1 %s lzss %d size %d sizeVBT %d\n",entry->name, decompressLzss, _resourceMacDataSize, entry->size);
     
@@ -1247,12 +1250,18 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 
 	if (entry->id < 5000 && entry->type != 33) {
 		data = hwram_ptr;
+		_resourceMacDataSize = _mac->_f.readUint32BE();
+emu_printf("decodeResourceMacData %d %s id %d type \n",_resourceMacDataSize, entry->name, entry->id, entry->type);
 		hwram_ptr += SAT_ALIGN(entry->compressedSize);
+		_mac->_f.read(data, _resourceMacDataSize);
+		return data;
 	} 
-
 	else 
 	{
 		data = (entry->compressedSize >= HWRAM_SCREEN_SIZE) ? hwram_ptr : hwram_screen;
+		_resourceMacDataSize = _mac->_f.readUint32BE();
+		_mac->_f.read(data, _resourceMacDataSize);
+		return data;
 	}
 	_mac->_f.batchSeek(4);
 	return _mac->_f.batchRead(data, entry->compressedSize);
@@ -1728,7 +1737,7 @@ void Resource::MAC_loadSounds() {
 			const ResourceMacEntry *entry = &_mac->_entries[soundType][num];
 			_mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
 			int dataSize = _mac->_f.readUint32BE();
-//			assert(dataSize > kHeaderSize);
+			assert(dataSize > kHeaderSize);
 			uint8_t buf[kHeaderSize];
 			_mac->_f.read(buf, kHeaderSize);
 			dataSize -= kHeaderSize;

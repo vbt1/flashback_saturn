@@ -86,11 +86,15 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	_f.seek(mapOffset + _map.typesOffset + 2);
 	
 	_types = (ResourceMacType *)malloc(_map.typesCount * sizeof(ResourceMacType));  // taille 8 LWRAM
+#if 0
 	uint8_t *tmp = (uint8_t *)SCRATCH;
 //emu_printf("MALLOC: _types: %p size %d\n", _types,sizeof(ResourceMacType)*_map.typesCount);
 	tmp = _f.batchRead(tmp, _map.typesCount * 8);
+#else
 
+#endif
 	for (int i = 0; i < _map.typesCount; ++i) {
+#if 0
 		_types[i].id[0] = tmp[0];
 		_types[i].id[1] = tmp[1];
 		_types[i].id[2] = tmp[2];
@@ -101,6 +105,15 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 		if (_sndIndex < 0 && memcmp(_types[i].id, "snd ", 4) == 0) {
 			_sndIndex = i;
 		}
+#else
+		_f.read(_types[i].id, 4);
+//		emu_printf("_types[%d].id %s\n", i, _types[i].id);	
+		_types[i].count = _f.readUint16BE() + 1;
+		_types[i].startOffset = _f.readUint16BE();
+		if (_sndIndex < 0 && memcmp(_types[i].id, "snd ", 4) == 0) {
+			_sndIndex = i;
+		}
+#endif
 	}
 
 	_entries = (ResourceMacEntry **)malloc(_map.typesCount * sizeof(ResourceMacEntry *)); // taille totale 2740 HWRAM
@@ -109,6 +122,7 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	for (int i = 0; i < _map.typesCount; ++i) {
 		_f.seek(mapOffset + _map.typesOffset + _types[i].startOffset);
 		_entries[i] = (ResourceMacEntry *)malloc(_types[i].count * sizeof(ResourceMacEntry));
+#if 0
 		tmp = (uint8_t *)SCRATCH;
 		tmp = _f.batchRead(tmp, _types[i].count * 12);
 
@@ -119,6 +133,16 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 			_entries[i][j].dataOffset = READ_BE_UINT32(tmp+4) & 0x00FFFFFF;
 			tmp+=12;
 		}
+#else
+	
+		for (int j = 0; j < _types[i].count; ++j) {
+			_entries[i][j].id = _f.readUint16BE();
+			_entries[i][j].type = i;
+			_entries[i][j].nameOffset = _f.readUint16BE();
+			_entries[i][j].dataOffset = _f.readUint32BE() & 0x00FFFFFF;
+			_f.readUint32BE();
+		}
+#endif
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].name[0] = '\0';
 			if (_entries[i][j].nameOffset != 0xFFFF) {
