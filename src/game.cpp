@@ -210,9 +210,15 @@ void Game::run() {
 #ifdef DEBUG
 	et = _stub->getTimeStamp();
 	emu_printf("--duration %s : %d\n","sound", et-st);
+	_stub->initTimeStamp();
+	st = _stub->getTimeStamp();
 #endif	
 // à redeplacer
 		_res.MAC_loadCutsceneText(); // vbt déplacé
+#ifdef DEBUG
+	et = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","cut text", et-st);
+#endif	
 /*		break;
 	}
 */
