@@ -161,14 +161,17 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 
 	unsigned char target_types[] = {12, 13, 14, 16, 20, 31, 32, 33, 35};
 	int num_target_types = sizeof(target_types);
-
+	uint32_t data[2];
 	for (int i = 0; i < num_target_types; ++i)
 	{
 		unsigned char value = target_types[i];
 		for (int j = 0; j < _types[value].count; ++j) {
 			_f.seek(_dataOffset + _entries[value][j].dataOffset);
-			_entries[value][j].compressedSize = _f.readUint32BE();
-			_entries[value][j].size = _f.readUint32BE();
+//			_entries[value][j].compressedSize = _f.readUint32BE();
+//			_entries[value][j].size = _f.readUint32BE();
+			_f.read(data, 8);
+			_entries[value][j].compressedSize = data[0];
+			_entries[value][j].size = data[1];
 		}
 	}
 }

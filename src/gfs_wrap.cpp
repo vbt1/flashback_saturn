@@ -228,13 +228,13 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 
 	return 0;
 }
-
+/*
 long sat_ftell(GFS_FILE *stream) {
 	if (stream == NULL) return -1;
 
 	return stream->f_seek_pos;
 }
-
+*/
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
