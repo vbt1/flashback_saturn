@@ -77,7 +77,7 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entr
 	uint32_t srcSize = entry->compressedSize;
     decodedSize = entry->size;
 	f.batchSeek(8);
-	emu_printf("Lzss sz2 %d %d type %d\n", srcSize, decodedSize, entry->type);
+//	emu_printf("Lzss sz2 %d %d type %d\n", srcSize, decodedSize, entry->type);
     uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory

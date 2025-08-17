@@ -169,18 +169,25 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 			_f.seek(_dataOffset + _entries[value][j].dataOffset);
 			_entries[value][j].compressedSize = _f.readUint32BE();
 			_entries[value][j].size = _f.readUint32BE();
-	//		emu_printf("name %s size %d size decomp %d\n", _entries[i][j].name,_entries[i][j].compressedSize,size);
 		}
 	}
 }
+/*
+type 12 → PPSS rooms
+type 13 → POLY cut
+type 14 → PMOV cut
+type 16 → OBJD obj levels
+type 20 → LMAP level map
+type 31 → DEMO demos
+type 32 → COND level cond
+type 35 → ANIM level sequence
+*/
 
-const ResourceMacEntry *ResourceMac::findEntry(const char *name) const {
-//emu_printf("ResourceMacEntry *ResourceMac::findEntry\n");	
-	for (int type = 0; type < _map.typesCount; ++type) {
-		for (int i = 0; i < _types[type].count; ++i) {
-			if (strcmp(name, _entries[type][i].name) == 0) {
-				return &_entries[type][i];
-			}
+const ResourceMacEntry *ResourceMac::findEntry(const char *name, const int type) const {
+//	emu_printf("findEntry %d\n", type);
+	for (int i = 0; i < _types[type].count; ++i) {
+		if (strcmp(name, _entries[type][i].name) == 0) {
+			return &_entries[type][i];
 		}
 	}
 	return 0;

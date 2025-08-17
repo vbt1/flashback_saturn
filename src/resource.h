@@ -306,7 +306,7 @@ const uint8_t *getCineString(int num) const {
 	uint8_t *loadBankData(uint16_t num);
 
 	uint8_t *decodeResourceMacText(const char *name, const char *suffix);
-	uint8_t *decodeResourceMacData(const char *name, bool decompressLzss);
+	uint8_t *decodeResourceMacData(const char *name, bool decompressLzss, const int type);
 	uint8_t *decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss);
 	void MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask);
 	void MAC_decodeDataCLUT(const uint8_t *ptr);

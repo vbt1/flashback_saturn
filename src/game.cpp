@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-#define DEBUG 1
+//#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
 
@@ -129,7 +129,15 @@ void Game::run() {
 
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram
+#ifdef DEBUG
+	_stub->initTimeStamp();
+	unsigned int s1 = _stub->getTimeStamp();
+#endif
 	_res.init();   // vbt : ajout pour la partie mac
+#ifdef DEBUG
+	unsigned int e1 = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","init", e1-s1);
+#endif
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
 		end1 = 584000+30000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
@@ -2686,7 +2694,7 @@ void Game::SAT_preloadMonsters() {
 #ifdef DEBUG
 	unsigned int st = _stub->getTimeStamp();
 #endif
-					_res._monster = _res.decodeResourceMacData(data[i].name, true);
+					_res._monster = _res.decodeResourceMacData(data[i].name, true, 12);
 #ifdef DEBUG
 	unsigned int se = _stub->getTimeStamp();
 	emu_printf("--lzss %d enn : %d\n",i,se-st);	

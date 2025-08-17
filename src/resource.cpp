@@ -148,7 +148,7 @@ void Resource::load_DEM(const char *filename) {
 //			snprintf(name, sizeof(name), "Demo Level 1");
 //		}
 		
-		_dem = decodeResourceMacData(name, true);
+		_dem = decodeResourceMacData(name, true, 31);
 		_demLen = _resourceMacDataSize;
 		
 //	emu_printf("load_DEM %s %p %d fn %s\n", name, _dem, _demLen, filename);
@@ -1193,9 +1193,8 @@ void Resource::load_VCE(int num, int segment, uint8_t **buf, uint32_t *bufSize) 
 
 uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 	char buf[32];
-
 	snprintf(buf, sizeof(buf), "%s %s", name, suffix);
-	const ResourceMacEntry *entry = _mac->findEntry(buf);
+	const ResourceMacEntry *entry = _mac->findEntry(buf,21);
 	
 //	emu_printf("text %d %s\n", entry->type, buf); vbt : ne jamais mettre avant le test
 	if (entry) {
@@ -1212,28 +1211,26 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		if(strstr(name, "Movie"))
 		{
 			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "French");
-			_cine_txtFR = decodeResourceMacData(buf, false);
+			_cine_txtFR = decodeResourceMacData(buf, false, 6);
 			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "English");
-			_cine_txtEN = decodeResourceMacData(buf, false);
+			_cine_txtEN = decodeResourceMacData(buf, false, 6);
 			return (_lang == LANG_FR) ? _cine_txtFR : _cine_txtEN;
 		}
 		else
 		{
-			return decodeResourceMacData(buf, false);
+			return decodeResourceMacData(buf, false, 6);
 		}
 	}
 }
 
-uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) {
+uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss, const int type) {
 	uint8_t *data = 0;
 	
-	const ResourceMacEntry *entry = _mac->findEntry(name);
+	const ResourceMacEntry *entry = _mac->findEntry(name, type);
 	if (entry) {
-//		emu_printf("Resource '%s' found\n", name);
 		data = decodeResourceMacData(entry, decompressLzss);
 	} else {
 		_resourceMacDataSize = 0;
-//		emu_printf("Resource '%s' not found\n", name);
 	}
 	return data;
 }
@@ -1307,24 +1304,24 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 
 void Resource::MAC_loadClutData() {
 //emu_printf("MAC_loadClutData\n");		
-	uint8_t *ptr = decodeResourceMacData("Flashback colors", false);
+	uint8_t *ptr = decodeResourceMacData("Flashback colors", false, 33);
 	MAC_decodeDataCLUT(ptr);
 //	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
 //emu_printf("MAC_loadFontData\n");	
-	_fnt = decodeResourceMacData("Font", true);   // taille 19323 hwr
+	_fnt = decodeResourceMacData("Font", true, 12);   // taille 19323 hwr
 }
 
 void Resource::MAC_loadIconData() {
 //emu_printf("MAC_loadIconData\n");			
-	_icn = decodeResourceMacData("Icons", true);
+	_icn = decodeResourceMacData("Icons", true, 12);
 }
 
 void Resource::MAC_loadPersoData() {
 //emu_printf("MAC_loadPersoData\n");				
-	_perso = decodeResourceMacData("Person", true); // taille 213124 lwr
+	_perso = decodeResourceMacData("Person", true, 12); // taille 213124 lwr
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
@@ -1348,7 +1345,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 	for (int i = 0; data[i].id; ++i) {
 		if (strcmp(data[i].id, name) == 0) {
 #ifndef PRELOAD_MONSTERS
-			_monster = decodeResourceMacData(data[i].name, true);
+			_monster = decodeResourceMacData(data[i].name, true, 12);
 #endif
 			MAC_copyClut16(clut, 16+5, data[i].index);
 			break;
@@ -1361,7 +1358,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 	char name[8];
 	snprintf(name, sizeof(name), "Title %d", i);
 //emu_printf("decodeResourceMacData %s\n",name);	
-	uint8_t *ptr = decodeResourceMacData(name, (i == 6));
+	uint8_t *ptr = decodeResourceMacData(name, (i == 6), 12);
 	if (ptr) {
 		MAC_decodeImageData(ptr, 0, buf, 0xff);
 	}
@@ -1397,21 +1394,21 @@ void Resource::MAC_loadLevelData(int level) {
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
-	uint8_t *ptr = decodeResourceMacData(name, true);
+	uint8_t *ptr = decodeResourceMacData(name, true, 16);
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
 //emu_printf(" .ANI\n");	
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
-	ptr = decodeResourceMacData(name, true);
+	ptr = decodeResourceMacData(name, true, 32);
 	assert(READ_BE_UINT16(ptr) == NUM_OBJECTS);
 	decodeOBJ(ptr, _resourceMacDataSize);
 
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
-	_ani = decodeResourceMacData(name, true);
+	_ani = decodeResourceMacData(name, true, 35);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
 //emu_printf(" .OBJ\n");
 
@@ -1421,14 +1418,14 @@ void Resource::MAC_loadLevelData(int level) {
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 //emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
-	ptr = decodeResourceMacData(name, true);
+	ptr = decodeResourceMacData(name, true, 20);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 //emu_printf("MAC_loadLevelData %s\n", name);		
-	_spc = decodeResourceMacData(name, true);
+	_spc = decodeResourceMacData(name, true, 12);
 
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
@@ -1442,7 +1439,7 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //emu_printf("MAC_loadLevelRoom\n");	
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
-	uint8_t *ptr = decodeResourceMacData(name, true);
+	uint8_t *ptr = decodeResourceMacData(name, true, 12);
 //emu_printf("MAC_decodeImageData\n");
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 }
@@ -1558,7 +1555,7 @@ emu_printf("MAC_getImageData bad sig %x %p\n",sig,ptr);
 bool Resource::MAC_hasLevelMap(int level, int room) const {
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], room);
-	return _mac->findEntry(name) != 0;
+	return _mac->findEntry(name, 12) != 0;
 }
 
 static void stringLowerCase(char *p) {
@@ -1614,7 +1611,7 @@ static void process_commands(void* arg) {
     char name[32];
     snprintf(name, sizeof(name), "%s movie", cutscene);
     stringLowerCase(name);
-    const ResourceMacEntry* cmdEntry = resource->_mac->findEntry(name);
+    const ResourceMacEntry* cmdEntry = resource->_mac->findEntry(name, 14);
     if (!cmdEntry) {
         current_lwram = (uint8_t*)save_current_lwram;
         slave_done_flag = true;
@@ -1631,7 +1628,7 @@ void Resource::process_polygons(const char* cutscene) {
 
     snprintf(name, sizeof(name), "%s polygons", cutscene);
     stringLowerCase(name);
-    const ResourceMacEntry* polEntry = _mac->findEntry(name);
+    const ResourceMacEntry* polEntry = _mac->findEntry(name, 13);
     if (!polEntry) {
         current_lwram = (uint8_t*)save_current_lwram;
         return;
@@ -1670,7 +1667,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 	snprintf(name, sizeof(name), "%s movie", cutscene);
 	stringLowerCase(name);
 //	emu_printf("MAC_loadCutscene2 %s\n",name);	
-	const ResourceMacEntry *cmdEntry = _mac->findEntry(name);
+	const ResourceMacEntry *cmdEntry = _mac->findEntry(name, 14);
 	if (!cmdEntry) {
 		current_lwram = (uint8_t *)save_current_lwram; // vbt : inutile?
 		return;
@@ -1679,7 +1676,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 
 	snprintf(name, sizeof(name), "%s polygons", cutscene);
 	stringLowerCase(name);
-	const ResourceMacEntry *polEntry = _mac->findEntry(name);
+	const ResourceMacEntry *polEntry = _mac->findEntry(name, 13);
 	if (!polEntry) {
 		current_lwram = (uint8_t *)save_current_lwram;		
 		return;

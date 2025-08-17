@@ -50,7 +50,7 @@ struct ResourceMac {
 	bool isOpen() const { return _entries != 0; }
 	void load();
 	void loadResourceFork(uint32_t offset, uint32_t size);
-	const ResourceMacEntry *findEntry(const char *name) const;
+	const ResourceMacEntry *findEntry(const char *name, const int type) const;
 };
 
 #endif
