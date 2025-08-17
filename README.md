@@ -1,5 +1,5 @@
 REminiscence README
-Release version: 0.5.4
+Release version: 0.5.5
 -------------------------------------------------------------------------------
 
 
