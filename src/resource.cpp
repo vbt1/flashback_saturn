@@ -148,7 +148,7 @@ void Resource::load_DEM(const char *filename) {
 //			snprintf(name, sizeof(name), "Demo Level 1");
 //		}
 		
-		_dem = decodeResourceMacData(name, true, 31);
+		_dem = decodeResourceMacData(name, true, TYPE_DEMO);
 		_demLen = _resourceMacDataSize;
 		
 //	emu_printf("load_DEM %s %p %d fn %s\n", name, _dem, _demLen, filename);
@@ -1211,14 +1211,14 @@ uint8_t *Resource::decodeResourceMacText(const char *name, const char *suffix) {
 		if(strstr(name, "Movie"))
 		{
 			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "French");
-			_cine_txtFR = decodeResourceMacData(buf, false, 6);
+			_cine_txtFR = decodeResourceMacData(buf, false, TYPE_STRS);
 			snprintf(buf, sizeof(buf), "%s %s %s", name, suffix, "English");
-			_cine_txtEN = decodeResourceMacData(buf, false, 6);
+			_cine_txtEN = decodeResourceMacData(buf, false, TYPE_STRS);
 			return (_lang == LANG_FR) ? _cine_txtFR : _cine_txtEN;
 		}
 		else
 		{
-			return decodeResourceMacData(buf, false, 6);
+			return decodeResourceMacData(buf, false, TYPE_STRS);
 		}
 	}
 }
@@ -1235,6 +1235,8 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss, 
 	return data;
 }
 
+#define IS_TITLE(val) (((val) < 5000) ? -1 : (val-5000) / 100)
+
 uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool decompressLzss) {
 //emu_printf("_mac->_f.seek( off1 %d off2 %d\n",_mac->_dataOffset, entry->dataOffset);
     _mac->_f.seek(_mac->_dataOffset + entry->dataOffset);
@@ -1243,10 +1245,14 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
        return decodeLzss(_mac->_f, _resourceMacDataSize, entry);
     }
     uint8_t *data;
-	if (entry->type != 6) {
+	if (entry->type != TYPE_STRS) {
 		_mac->_f.batchSeek(4);
-		data = (entry->compressedSize >= HWRAM_SCREEN_SIZE) ? hwram_ptr : hwram_screen;
-		return _mac->_f.batchRead(data, entry->compressedSize);
+
+		const uint32_t sizeTitle[5] = {57898, 45870, 98782, 98116, 100639};
+		
+		_resourceMacDataSize = (IS_TITLE(entry->id) != -1) ? sizeTitle[IS_TITLE(entry->id)] : entry->compressedSize;
+		data = (_resourceMacDataSize >= HWRAM_SCREEN_SIZE) ? hwram_ptr : hwram_screen;
+		return _mac->_f.batchRead(data, _resourceMacDataSize);
 	} 
 	data = hwram_ptr;
 	_resourceMacDataSize = _mac->_f.readUint32BE();
@@ -1303,25 +1309,25 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 }
 
 void Resource::MAC_loadClutData() {
-//emu_printf("MAC_loadClutData\n");		
-	uint8_t *ptr = decodeResourceMacData("Flashback colors", false, 33);
+//emu_printf("MAC_loadClutData\n");
+	uint8_t *ptr = decodeResourceMacData("Flashback colors", false, TYPE_CLUT);
 	MAC_decodeDataCLUT(ptr);
 //	sat_free(ptr);
 }
 
 void Resource::MAC_loadFontData() {
 //emu_printf("MAC_loadFontData\n");	
-	_fnt = decodeResourceMacData("Font", true, 12);   // taille 19323 hwr
+	_fnt = decodeResourceMacData("Font", true, TYPE_PPSS);   // taille 19323 hwr
 }
 
 void Resource::MAC_loadIconData() {
 //emu_printf("MAC_loadIconData\n");			
-	_icn = decodeResourceMacData("Icons", true, 12);
+	_icn = decodeResourceMacData("Icons", true, TYPE_PPSS);
 }
 
 void Resource::MAC_loadPersoData() {
 //emu_printf("MAC_loadPersoData\n");				
-	_perso = decodeResourceMacData("Person", true, 12); // taille 213124 lwr
+	_perso = decodeResourceMacData("Person", true, TYPE_PPSS); // taille 213124 lwr
 }
 
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
@@ -1345,7 +1351,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 	for (int i = 0; data[i].id; ++i) {
 		if (strcmp(data[i].id, name) == 0) {
 #ifndef PRELOAD_MONSTERS
-			_monster = decodeResourceMacData(data[i].name, true, 12);
+			_monster = decodeResourceMacData(data[i].name, true, TYPE_PPSS);
 #endif
 			MAC_copyClut16(clut, 16+5, data[i].index);
 			break;
@@ -1358,7 +1364,7 @@ void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 	char name[8];
 	snprintf(name, sizeof(name), "Title %d", i);
 //emu_printf("decodeResourceMacData %s\n",name);	
-	uint8_t *ptr = decodeResourceMacData(name, (i == 6), 12);
+	uint8_t *ptr = decodeResourceMacData(name, (i == 6), TYPE_PPSS);
 	if (ptr) {
 		MAC_decodeImageData(ptr, 0, buf, 0xff);
 	}
@@ -1394,21 +1400,21 @@ void Resource::MAC_loadLevelData(int level) {
 	// .PGE
 	snprintf(name, sizeof(name), "Level %s objects", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
-	uint8_t *ptr = decodeResourceMacData(name, true, 16);
+	uint8_t *ptr = decodeResourceMacData(name, true, TYPE_OBJD);
 	decodePGE(ptr, _resourceMacDataSize);
 	sat_free(ptr);
 //emu_printf(" .ANI\n");	
 	// .OBJ
 	snprintf(name, sizeof(name), "Level %s conditions", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
-	ptr = decodeResourceMacData(name, true, 32);
+	ptr = decodeResourceMacData(name, true, TYPE_COND);
 	assert(READ_BE_UINT16(ptr) == NUM_OBJECTS);
 	decodeOBJ(ptr, _resourceMacDataSize);
 
 	// .ANI
 	snprintf(name, sizeof(name), "Level %s sequences", _macLevelNumbers[level]);
 //emu_printf("MAC_loadLevelData %s\n", name);
-	_ani = decodeResourceMacData(name, true, 35);
+	_ani = decodeResourceMacData(name, true, TYPE_ANIM);
 	assert(READ_BE_UINT16(_ani) == 0x48D);
 //emu_printf(" .OBJ\n");
 
@@ -1418,14 +1424,14 @@ void Resource::MAC_loadLevelData(int level) {
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
 //emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
-	ptr = decodeResourceMacData(name, true, 20);
+	ptr = decodeResourceMacData(name, true, TYPE_LMAP);
 	assert(_resourceMacDataSize == 0x1D00);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 //emu_printf("MAC_loadLevelData %s\n", name);		
-	_spc = decodeResourceMacData(name, true, 12);
+	_spc = decodeResourceMacData(name, true, TYPE_PPSS);
 
 	// .TBN
 	snprintf(name, sizeof(name), "Level %s", _macLevelNumbers[level]);
@@ -1439,7 +1445,7 @@ void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
 //emu_printf("MAC_loadLevelRoom\n");	
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
-	uint8_t *ptr = decodeResourceMacData(name, true, 12);
+	uint8_t *ptr = decodeResourceMacData(name, true, TYPE_PPSS);
 //emu_printf("MAC_decodeImageData\n");
 	MAC_decodeImageData(ptr, 0, dst, 0x9f);
 }

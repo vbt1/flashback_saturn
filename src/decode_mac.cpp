@@ -72,13 +72,112 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
     return dst;
 }
 
+
+#if 0
+#define IS_OBJECT(val) (((val) >= 2000 && (val) <= 2400) ? ((val - 2000) / 100) << 1 : -1 )
+#define IS_ENEMY(val)  (((val) >= 3000 && (val) <= 3400) ? ((val - 3000) / 100) << 1 : -1 )
+
+#define IS_CONDITION(val, type) ( \
+    ((type) != 32) ? -1 : \
+    ((val) >= 1100 && (val) <= 1300) ? (((val) / 100 - 11) * 2) : \
+    ((val) >= 1410 && (val) <= 1420) ? (((val) / 10 - 141 + 3) * 2) : \
+    ((val) >= 1510 && (val) <= 1520) ? (((val) / 10 - 151 + 5) * 2) : \
+    -1 \
+)
+
 uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entry) {
-//uint8_t* decodeLzss(File& f, const ResourceMacEntry *entry) {
-	uint32_t srcSize = entry->compressedSize;
-    decodedSize = entry->size;
+	
+	static const uint32_t sizeCondition[14] = {11653,   34124, 23763,  66718, 11212, 33448,  14994,  42822, 16426,  47114, 13015, 36960, 14237, 39198};
+	static const uint32_t sizeObject[10]    = {71138,  226781, 85245, 192462, 27821, 68116,  90737, 282343, 85788, 218014};
+	static const uint32_t sizeEnemy[10]     = {213124, 384909, 50572, 107256, 64094, 158183, 62196, 136948, 46992,  91069};
+
+	uint32_t srcSize = 0;
+	
+	int8_t isEnemy = IS_ENEMY(entry->id);
+	int8_t isObject = IS_OBJECT(entry->id);
+	int8_t isCondition = IS_CONDITION(entry->id, entry->type);
+	
+	if(isCondition!=-1 || isObject!=-1 || isEnemy!=-1)
+		emu_printf("type %d id %d name %s\n", entry->type,entry->id,entry->name);
+
+	if (isEnemy!=-1)
+	{
+		srcSize = sizeEnemy[isEnemy];
+		decodedSize = sizeEnemy[isEnemy+1];
+	}
+	else if(isObject!=-1)
+	{
+		srcSize = sizeObject[isObject];
+		decodedSize = sizeObject[isObject+1];
+	}
+	else if(isCondition!=-1)
+	{
+		srcSize = sizeCondition[isCondition];
+		decodedSize = sizeCondition[isCondition+1];			
+	}
+	else
+	{
+		srcSize = entry->compressedSize;
+		decodedSize = entry->size;			
+	}
+
 	f.batchSeek(8);
+
+#else
+inline int8_t is_object(uint16_t val) {
+    return (val >= 2000 && val <= 2400) ? ((val - 2000) / 100 << 1) : -1;
+}
+
+inline int8_t is_enemy(uint16_t val) {
+    return (val >= 3000 && val <= 3400) ? ((val - 3000) / 100 << 1) : -1;
+}
+
+inline int8_t is_condition(uint16_t val, uint8_t type) {
+    if (type != 32) return -1;
+
+    if (val >= 1100 && val <= 1300) 
+        return (val / 100 - 11) * 2;
+
+    if (val >= 1410 && val <= 1420) 
+        return (val / 10 - 141 + 3) * 2;
+
+    if (val >= 1510 && val <= 1520) 
+        return (val / 10 - 151 + 5) * 2;
+
+    return -1;
+}
+
+struct EntryInfo {
+    uint32_t srcSize;
+    uint32_t decodedSize;
+};
+
+// Centralized lookup for sizes
+inline EntryInfo getEntrySize(const ResourceMacEntry* entry) {
+    static const uint32_t sizeCondition[14] = {11653, 34124, 23763, 66718, 11212, 33448, 14994, 42822, 16426, 47114, 13015, 36960, 14237, 39198};
+    static const uint32_t sizeObject[10]    = {71138, 226781, 85245, 192462, 27821, 68116, 90737, 282343, 85788, 218014};
+    static const uint32_t sizeEnemy[10]     = {213124, 384909, 50572, 107256, 64094, 158183, 62196, 136948, 46992, 91069};
+
+    int8_t e = is_enemy(entry->id);
+    if(e != -1) return { sizeEnemy[e], sizeEnemy[e + 1] };
+
+    int8_t o = is_object(entry->id);
+    if(o != -1) return { sizeObject[o], sizeObject[o + 1] };
+
+    int8_t c = is_condition(entry->id, entry->type);
+    if(c != -1) return { sizeCondition[c], sizeCondition[c + 1] };
+
+    return { entry->compressedSize, entry->size };
+}
+uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry* entry) {
+    f.batchSeek(8); // Skip header
+
+    EntryInfo info = getEntrySize(entry);
+    uint32_t srcSize = info.srcSize;
+    decodedSize = info.decodedSize;
 //	emu_printf("Lzss sz2 %d %d type %d\n", srcSize, decodedSize, entry->type);
-    uint32_t alignedSize = SAT_ALIGN(decodedSize);
+#endif  
+  uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
 //    uint8_t* dst = allocate_memory(type, id, alignedSize);

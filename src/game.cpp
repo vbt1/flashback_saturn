@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
 
@@ -500,6 +500,8 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
+		_stub->_pi.quit = false;
+		_stub->_pi.escape = false;
 		handleInventory();
 	}
 	if (_stub->_pi.escape) {
@@ -1945,8 +1947,10 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 		}
 	} else if (num == 66) {
 		// open/close inventory (DOS)
+		emu_printf("play sound inventory %02d\n",num);
 	} else if (num >= 68 && num <= 75) {
 //		emu_printf("play sfx %d\n",num);
+		emu_printf("play sound something %02d\n",num);
 		
 		// in-game music
 //		_sfxPly.play(num);
@@ -1994,6 +1998,7 @@ void Game::handleInventory() {
 
 	LivePGE *selected_pge = 0;
 	LivePGE *pge = &_pgeLive[0];
+emu_printf("pge->current_inventory_PGE %x\n", pge->current_inventory_PGE);
 	if (pge->life > 0 && pge->current_inventory_PGE != 0xFF) {
 		playSound(66, 0);
 		InventoryItem items[24];

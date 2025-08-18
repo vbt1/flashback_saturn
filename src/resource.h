@@ -111,6 +111,19 @@ struct Resource {
 //		kScratchBufferSize = 0x19000 //0x20000 //512 * 448//320 * 224 + 1024
 	};
 
+	enum ResType {
+		TYPE_STRS = 6,
+		TYPE_PPSS = 12,
+		TYPE_POLY = 13,
+		TYPE_PMOV = 14,
+		TYPE_OBJD = 16,
+		TYPE_LMAP = 20,
+		TYPE_DEMO = 31,
+		TYPE_COND = 32,
+		TYPE_CLUT = 33,
+		TYPE_ANIM = 35
+	};
+
 	static const uint16_t _voicesOffsetsTable[];
 //	static const uint32_t _spmOffsetsTable[];
 //	static const char *_splNames[];

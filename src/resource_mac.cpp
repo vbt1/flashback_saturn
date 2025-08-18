@@ -2,7 +2,8 @@
 
 extern "C" {
 #include <string.h>
-#include <sl_def.h>	
+#include <sl_def.h>
+#include <sega_gfs.h>
 #include "sat_mem_checker.h"
 extern Uint8 *hwram_ptr;
 void	*malloc(size_t);
@@ -158,20 +159,29 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	}
 
 // préchargement des tailles des bgs
-
-	unsigned char target_types[] = {12, 13, 14, 16, 20, 31, 32, 33, 35};
-	int num_target_types = sizeof(target_types);
+//	unsigned char target_types[] = {TYPE_PPSS, TYPE_POLY, TYPE_PMOV, TYPE_OBJD, TYPE_LMAP, TYPE_DEMO, TYPE_COND, TYPE_CLUT, TYPE_ANIM};
+	const unsigned char target_types[] = {12, 13, 14, 16, 20, 31, 32, 33, 35};
+	const int num_target_types = sizeof(target_types);
 	uint32_t data[2];
+//	uint32_t *src = (uint32_t*)SCRATCH;
+//	GFS_Load(GFS_NameToId((int8_t*)"SIZE.BIN"), 0, (void*)src, 1156);
+	
 	for (int i = 0; i < num_target_types; ++i)
 	{
 		unsigned char value = target_types[i];
+//			emu_printf("type %d\n",value);
 		for (int j = 0; j < _types[value].count; ++j) {
 			_f.seek(_dataOffset + _entries[value][j].dataOffset);
 //			_entries[value][j].compressedSize = _f.readUint32BE();
 //			_entries[value][j].size = _f.readUint32BE();
 			_f.read(data, 8);
-			_entries[value][j].compressedSize = data[0];
-			_entries[value][j].size = data[1];
+			_entries[value][j].compressedSize = data[0] & 0xffff;
+			_entries[value][j].size = data[1] & 0xffff;
+//if(data[0]>0xffff || data[1]>0xffff || value == 32)
+//	emu_printf("type %d name %s csz %d sz %d\n", value, _entries[value][j].name, _entries[value][j].compressedSize, _entries[value][j].size);
+			_entries[value][j].size = data[1] & 0xffff;
+			emu_printf("%04x,%04x,\n",data[0], data[1] & 0xffff);
+//			emu_printf("%04x,%04x,\n",_entries[value][j].compressedSize, _entries[value][j].size);
 		}
 	}
 }
