@@ -135,7 +135,6 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 			tmp+=12;
 		}
 #else
-	
 		for (int j = 0; j < _types[i].count; ++j) {
 			_entries[i][j].id = _f.readUint16BE();
 			_entries[i][j].type = i;
@@ -159,42 +158,32 @@ void ResourceMac::loadResourceFork(uint32_t resourceOffset, uint32_t dataSize) {
 	}
 
 // préchargement des tailles des bgs
-//	unsigned char target_types[] = {TYPE_PPSS, TYPE_POLY, TYPE_PMOV, TYPE_OBJD, TYPE_LMAP, TYPE_DEMO, TYPE_COND, TYPE_CLUT, TYPE_ANIM};
-	const unsigned char target_types[] = {12, 13, 14, 16, 20, 31, 32, 33, 35};
+//	unsigned char target_types[] = {TYPE_PPSS, TYPE_POLY, TYPE_PMOV, TYPE_OBJD, TYPE_LMAP, TYPE_DEMO, TYPE_CLUT, TYPE_ANIM};
+	const unsigned char target_types[] = {12, 13, 14, 16, 20, 31, 33, 35};
 	const int num_target_types = sizeof(target_types);
+#if 0
 	uint32_t data[2];
-//	uint32_t *src = (uint32_t*)SCRATCH;
-//	GFS_Load(GFS_NameToId((int8_t*)"SIZE.BIN"), 0, (void*)src, 1156);
-	
+#else
+	uint16_t *src = (uint16_t*)SCRATCH;
+	GFS_Load(GFS_NameToId((int8_t*)"SIZE.BIN"), 0, (void*)src, 1124);
+#endif	
 	for (int i = 0; i < num_target_types; ++i)
 	{
 		unsigned char value = target_types[i];
-//			emu_printf("type %d\n",value);
 		for (int j = 0; j < _types[value].count; ++j) {
+#if 0
 			_f.seek(_dataOffset + _entries[value][j].dataOffset);
-//			_entries[value][j].compressedSize = _f.readUint32BE();
-//			_entries[value][j].size = _f.readUint32BE();
 			_f.read(data, 8);
 			_entries[value][j].compressedSize = data[0] & 0xffff;
 			_entries[value][j].size = data[1] & 0xffff;
-//if(data[0]>0xffff || data[1]>0xffff || value == 32)
-//	emu_printf("type %d name %s csz %d sz %d\n", value, _entries[value][j].name, _entries[value][j].compressedSize, _entries[value][j].size);
-			_entries[value][j].size = data[1] & 0xffff;
-			emu_printf("%04x,%04x,\n",data[0], data[1] & 0xffff);
-//			emu_printf("%04x,%04x,\n",_entries[value][j].compressedSize, _entries[value][j].size);
+			_entries[value][j].size = data[1];
+#else
+			_entries[value][j].compressedSize = *src++;
+			_entries[value][j].size = *src++;
+#endif
 		}
 	}
 }
-/*
-type 12 → PPSS rooms
-type 13 → POLY cut
-type 14 → PMOV cut
-type 16 → OBJD obj levels
-type 20 → LMAP level map
-type 31 → DEMO demos
-type 32 → COND level cond
-type 35 → ANIM level sequence
-*/
 
 const ResourceMacEntry *ResourceMac::findEntry(const char *name, const int type) const {
 //	emu_printf("findEntry %d\n", type);
@@ -205,4 +194,3 @@ const ResourceMacEntry *ResourceMac::findEntry(const char *name, const int type)
 	}
 	return 0;
 }
-
