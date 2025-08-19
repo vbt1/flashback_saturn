@@ -14,7 +14,7 @@
 
 
 #define SECTOR_SIZE 2048 // Bytes for each sector
-#define TOT_SECTOR 7
+#define TOT_SECTOR 6
 
 #define FNAME_SIZE 15
 
@@ -31,7 +31,7 @@ GFS_FILE *sat_fopen(const char *path, const int position);
 int sat_fclose(GFS_FILE *fp);
 
 int sat_fseek(GFS_FILE *stream, long offset, int whence);
-long sat_ftell(GFS_FILE *stream);
+//long sat_ftell(GFS_FILE *stream);
 
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream);
 char *sat_fgets(char *s, int size, GFS_FILE *stream);

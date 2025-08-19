@@ -97,8 +97,8 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entr
 	int8_t isObject = IS_OBJECT(entry->id);
 	int8_t isCondition = IS_CONDITION(entry->id, entry->type);
 	
-	if(isCondition!=-1 || isObject!=-1 || isEnemy!=-1)
-		emu_printf("type %d id %d name %s\n", entry->type,entry->id,entry->name);
+//	if(isCondition!=-1 || isObject!=-1 || isEnemy!=-1)
+//		emu_printf("type %d id %d name %s\n", entry->type,entry->id,entry->name);
 
 	if (isEnemy!=-1)
 	{

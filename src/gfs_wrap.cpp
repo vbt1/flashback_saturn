@@ -26,7 +26,10 @@ extern GfsMng   *gfs_mng_ptr;
 }
 
 #include "saturn_print.h"
-
+#define MNG_SVR(mng)            ((mng)->svr)
+#define SVR_NFILE(svr)          ((svr)->nfile)
+#define GFS_FILE_USED(file)     ((file)->used)
+#define MNG_FILE(mng)           ((mng)->file)
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
 #define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
 
@@ -46,6 +49,9 @@ void errGfsFunc(void *obj, int ec)
 	sprintf(texte, "ErrGfs %X %X",obj, ec); 
 	texte[49]='\0';
 
+    GfsSvr      *svr = &MNG_SVR(gfs_mng_ptr);
+    int i = SVR_NFILE(svr);
+
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
 //	emu_printf("%s\n", texte);
@@ -55,35 +61,66 @@ void errGfsFunc(void *obj, int ec)
     GFS_GetErrStat(&stat);
     ret = GFS_ERR_CODE(&stat);
 
-	sprintf(texte, "ErrGfsCode %X",ret); 
+	sprintf(texte, "ErrGfsCode %X nfiles %d",ret, i); 
+    GfsFile     *fp;	
+    fp = MNG_FILE(gfs_mng_ptr);
+    for (i = 0; i < 2; i++) {
+		emu_printf("used %d mode %d stat %d\n",     fp->used, fp->amode,fp->astat);
+		emu_printf("sct %d mode %d stat %d\n",     fp->flow.sct, fp->flow.sctcnt,fp->flow.sctmax);
+		emu_printf("fid %d name %s mode %d stat %d\n",     fp->flow.finfo.fid, GFS_IdToName(fp->flow.finfo.fid),fp->flow.finfo.sctsz,fp->flow.finfo.nsct);
+		
+        GFS_FILE_USED(fp) = FALSE;
+        ++fp;
+    }	
+	/*
+	
+typedef struct {
+Sint32 fid; // File identifier 
+CdcFile finfo;
+Sint32 sctsz; // Sector length 
+Sint32 nsct; // Number of sectors 
+Sint32 lstrm; // Number of invalid data in the last sector 
+} GfsFinfo;
+	
+	
+typedef struct {
+GfsFinfo finfo; // File information 
+GfsDtsrc dtsrc; // Source 
+Sint32 gmode; // Eject mode 
+Sint32 stat; // Execution status 
+// Flow in management
+Sint32 sct; // Number of sectors read 
+Sint32 sctcnt; // Read counter 
+Sint32 sctmax; // Maximum number of sectors read 
+} GfsFlow;
+	*/
+	
 	texte[49]='\0';
 
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
 	emu_printf("%s\n", texte);
 //	wait_vblank();
 
-	while(1);
+//	while(1);
 }
-
-
 #define GFS_LOCAL
-#define GFCD_ERR_OK             0       /* 正常終了 */
-#define GFCD_ERR_WAIT           -1      /* 処理待ち */
-#define GFCD_ERR_NOCDBLK        -2      /* CDブロックが接続されていない */
-#define GFCD_ERR_NOFILT         -3      /* 空き絞りがない */
-#define GFCD_ERR_NOBUF          -4      /* 空き区画がない */
-#define GFCD_ERR_INUSE          -5      /* 指定された資源が使用中 */
-#define GFCD_ERR_RANGE          -6      /* 引数が範囲外 */
-#define GFCD_ERR_UNUSE          -7      /* 未確保のものを操作しようとした */
-#define GFCD_ERR_QFULL          -8      /* コマンドキューがいっぱい */
-#define GFCD_ERR_NOTOWNER       -9      /* 非所有者が資源を操作しようとした */
-#define GFCD_ERR_CDC            -10     /* CDCからのエラー */
-#define GFCD_ERR_CDBFS          -11     /* CDブロックファイルシステムエラー */
-#define GFCD_ERR_TMOUT          -12     /* タイムアウト */
-#define GFCD_ERR_OPEN           -13     /* トレイが開いている */
-#define GFCD_ERR_NODISC         -14     /* ディスクが入っていない */
-#define GFCD_ERR_CDROM          -15     /* CD-ROMでないディスクが入っている */
-#define GFCD_ERR_FATAL          -16     /* ステータスがFATAL */
+#define GFCD_ERR_OK             0       /* æ­£å¸¸çµ‚äº† */
+#define GFCD_ERR_WAIT           -1      /* å‡¦ç†å¾…ã¡ */
+#define GFCD_ERR_NOCDBLK        -2      /* CDãƒ–ãƒ­ãƒƒã‚¯ãŒæŽ¥ç¶šã•ã‚Œã¦ã„ãªã„ */
+#define GFCD_ERR_NOFILT         -3      /* ç©ºãçµžã‚ŠãŒãªã„ */
+#define GFCD_ERR_NOBUF          -4      /* ç©ºãåŒºç”»ãŒãªã„ */
+#define GFCD_ERR_INUSE          -5      /* æŒ‡å®šã•ã‚ŒãŸè³‡æºãŒä½¿ç”¨ä¸­ */
+#define GFCD_ERR_RANGE          -6      /* å¼•æ•°ãŒç¯„å›²å¤– */
+#define GFCD_ERR_UNUSE          -7      /* æœªç¢ºä¿ã®ã‚‚ã®ã‚’æ“ä½œã—ã‚ˆã†ã¨ã—ãŸ */
+#define GFCD_ERR_QFULL          -8      /* ã‚³ãƒžãƒ³ãƒ‰ã‚­ãƒ¥ãƒ¼ãŒã„ã£ã±ã„ */
+#define GFCD_ERR_NOTOWNER       -9      /* éžæ‰€æœ‰è€…ãŒè³‡æºã‚’æ“ä½œã—ã‚ˆã†ã¨ã—ãŸ */
+#define GFCD_ERR_CDC            -10     /* CDCã‹ã‚‰ã®ã‚¨ãƒ©ãƒ¼ */
+#define GFCD_ERR_CDBFS          -11     /* CDãƒ–ãƒ­ãƒƒã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã‚¨ãƒ©ãƒ¼ */
+#define GFCD_ERR_TMOUT          -12     /* ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ */
+#define GFCD_ERR_OPEN           -13     /* ãƒˆãƒ¬ã‚¤ãŒé–‹ã„ã¦ã„ã‚‹ */
+#define GFCD_ERR_NODISC         -14     /* ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ãªã„ */
+#define GFCD_ERR_CDROM          -15     /* CD-ROMã§ãªã„ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ã‚‹ */
+#define GFCD_ERR_FATAL          -16     /* ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒFATAL */
 
 #define MNG_ERROR(mng)          ((mng)->error)
 
@@ -170,7 +207,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
-
+		emu_printf("reopen position %d %p pos %d\n", position, fp->fid, fp->f_seek_pos);
 		if (!position) // on conserve le cache existant
 		{
 			fp->f_seek_pos = 0;
@@ -182,7 +219,6 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 		}
 		else
 		{
-//			emu_printf("reopen position %d %p\n", position, fp->fid);
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
 		}
 	}
@@ -287,7 +323,7 @@ partial_cache:
 		} 
 	
 		else if ((((stream->f_seek_pos + dataToRead) >= end_offset) || (stream->f_seek_pos < cache_offset))) {
-///emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
+//emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
 			start_sector = stream->f_seek_pos / SECTOR_SIZE;
 			skip_bytes = stream->f_seek_pos & (SECTOR_SIZE - 1); // Use bitwise AND instead of modulo
 

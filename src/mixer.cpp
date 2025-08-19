@@ -8,7 +8,7 @@ extern "C" {
 #include <sl_def.h>
 #include <sega_cdc.h>
 #include "cdtoc.h"
-
+Bool GFCD_WaitScdqFlag(void);
 }
 #include "mixer.h"
 #include "systemstub.h"
@@ -178,6 +178,9 @@ void Mixer::stopMusic(uint8 current) {
     CdcPos poswk;
     CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
     CDC_CdSeek(&poswk);
+// vbt : ajout pour éviter des écrans noir ???	
+	GFCD_WaitScdqFlag();
+	GFCD_WaitScdqFlag();
 }
 #if 0
 void Mixer::stopMusic() {

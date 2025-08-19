@@ -20,10 +20,17 @@
 extern "C" {
 #include <string.h>
 #include "gfs_wrap.h"
+extern GfsMng   *gfs_mng_ptr;
 }
 #include "file.h"
 #include "saturn_print.h"
-
+#define MNG_SVR(mng)            ((mng)->svr)
+#define MNG_FILE(mng)           ((mng)->file)
+#define MNG_OPENMAX(mng)        ((mng)->openmax)
+#define SVR_NFILE(svr)          ((svr)->nfile)
+#define GFS_FILE_USED(file)     ((file)->used)
+#define GFS_FILE_TRANS(file)    ((file)->trans)
+#define GFS_TRN_MODE(tran)      ((tran)->mode)
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
@@ -98,12 +105,48 @@ struct stdFile : File_impl {
 
 	uint8_t *batchRead (uint8_t *ptr, uint32_t len)
 	{
+
+    GfsSvr      *svr = &MNG_SVR(gfs_mng_ptr);
+    int i = SVR_NFILE(svr);
+
+emu_printf("batchRead %d nfiles %d sz %d\n", (_fp->f_seek_pos)/SECTOR_SIZE, i, len);
+
+//    GfsFile     *fp;	
+//    fp = MNG_FILE(gfs_mng_ptr);
+//    for (i = 0; i < 2; i++) {
+		emu_printf("1used %d mode %d stat %d\n",     _fp->fid->used, _fp->fid->amode,_fp->fid->astat);
+		emu_printf("1sct %d sctcnt %d sctmax %d\n",     _fp->fid->flow.sct, _fp->fid->flow.sctcnt,_fp->fid->flow.sctmax);
+		emu_printf("1fid %d name %s mode %d stat %d\n",_fp->fid->flow.finfo.fid, GFS_IdToName(_fp->fid->flow.finfo.fid),_fp->fid->flow.finfo.sctsz,_fp->fid->flow.finfo.nsct);
+		emu_printf("1id %d sect %d pos %d\n",_fp->fid, (_fp->f_seek_pos)/SECTOR_SIZE,_fp->f_seek_pos);
+//        GFS_FILE_USED(fp) = FALSE;
+//        ++fp;
+//    }
+
+
 		Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
 		Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 		GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
 		Sint32 tot_bytes = len + skip_bytes;
 		Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 		Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+
+
+		GfsHn       gfs;
+		GftrHn      gftr;
+
+		gfs = MNG_FILE(gfs_mng_ptr);
+		for (i = 0; i < MNG_OPENMAX(gfs_mng_ptr); i++, gfs++) {
+			if (GFS_FILE_USED(gfs) == TRUE) {
+			
+				if(gfs->flow.finfo.fid!=141)
+				{
+					GFS_FILE_USED(gfs) = FALSE;
+					GFS_Close(gfs);
+				}
+			}
+		}
+
+
 		_fp->f_seek_pos += (readBytes - skip_bytes);
 		return &ptr[skip_bytes];
 	}
