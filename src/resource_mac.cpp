@@ -21,7 +21,7 @@ void	*malloc(size_t);
 
 
 //const char *ResourceMac::FILENAME1 = "Flashbck.bin";
-const char *ResourceMac::FILENAME2 = "Flashbck.rsr";
+const char *ResourceMac::FILENAME2 = "FLASHBCK.RSR";
 
 //ResourceMac::ResourceMac(const char *filePath, FileSystem *fs)
 ResourceMac::ResourceMac(const char *filePath, const char *dataPath)

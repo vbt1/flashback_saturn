@@ -139,19 +139,20 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 
 	Uint16 path_len = strlen(path);
 	strncpy(satpath, path, path_len + 1);
-
+/*
 	char *path_token = (char*)strtok(satpath, "/");
-
+emu_printf("name %s\n",path_token);
 	for (idx = 0; idx < strlen(satpath); idx++)
 		satpath[idx] = toupper(satpath[idx]);
-
+emu_printf("name %s\n",path_token);
+*/
 	GfsHn fid = NULL;
 	// OPEN FILE
-	fid = GFS_Open(GFS_NameToId((Sint8*)path_token));
+	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-		GFS_SetTmode(fid, GFS_TMODE_CPU); // DMA transfer by SCU
+		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 
 		// Encapsulate the file data
 		fp->fid = fid;

@@ -1998,7 +1998,7 @@ void Game::handleInventory() {
 
 	LivePGE *selected_pge = 0;
 	LivePGE *pge = &_pgeLive[0];
-emu_printf("pge->current_inventory_PGE %x\n", pge->current_inventory_PGE);
+
 	if (pge->life > 0 && pge->current_inventory_PGE != 0xFF) {
 		playSound(66, 0);
 		InventoryItem items[24];
