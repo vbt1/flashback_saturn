@@ -57,13 +57,6 @@ void Mixer::pauseMusic(void)
 {
 	// Get current address
 	CDC_GetCurStat(&statdata);
-
-//	emu_printf( "Mixer::pauseMusic() %d _musicTrack %d\n",_musicTrack,statdata.report.fad);
-
-	// Restore address
-//    CdcPos poswk;
-//    CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
-//    CDC_CdSeek(&poswk);
 }
 
 void Mixer::unpauseMusic(void)
@@ -178,9 +171,6 @@ void Mixer::stopMusic(uint8 current) {
     CdcPos poswk;
     CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;
     CDC_CdSeek(&poswk);
-// vbt : ajout pour éviter des écrans noir ???	
-	GFCD_WaitScdqFlag();
-	GFCD_WaitScdqFlag();
 }
 #if 0
 void Mixer::stopMusic() {

@@ -21,7 +21,7 @@ GfsDirTbl gfsDirTbl;
 GfsDirName gfsDirName[DIR_MAX];
 Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];     
 Sint32 gfsDirN;
-extern Sint32  gfcd_fatal_err; /* OPEN, NODISC, FATALの保持                */
+extern Sint32  gfcd_fatal_err;
 extern GfsMng   *gfs_mng_ptr;
 }
 
@@ -47,61 +47,11 @@ void errGfsFunc(void *obj, int ec)
 {
 	char texte[50];
 	sprintf(texte, "ErrGfs %X %X",obj, ec); 
-	texte[49]='\0';
-
-    GfsSvr      *svr = &MNG_SVR(gfs_mng_ptr);
-    int i = SVR_NFILE(svr);
-
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-//	emu_printf("%s\n", texte);
-
-    int      ret;
-    GfsErrStat  stat;
-    GFS_GetErrStat(&stat);
-    ret = GFS_ERR_CODE(&stat);
-
-	sprintf(texte, "ErrGfsCode %X nfiles %d",ret, i); 
-    GfsFile     *fp;	
-    fp = MNG_FILE(gfs_mng_ptr);
-    for (i = 0; i < 2; i++) {
-		emu_printf("used %d mode %d stat %d\n",     fp->used, fp->amode,fp->astat);
-		emu_printf("sct %d mode %d stat %d\n",     fp->flow.sct, fp->flow.sctcnt,fp->flow.sctmax);
-		emu_printf("fid %d name %s mode %d stat %d\n",     fp->flow.finfo.fid, GFS_IdToName(fp->flow.finfo.fid),fp->flow.finfo.sctsz,fp->flow.finfo.nsct);
-		
-        GFS_FILE_USED(fp) = FALSE;
-        ++fp;
-    }	
-	/*
-	
-typedef struct {
-Sint32 fid; // File identifier 
-CdcFile finfo;
-Sint32 sctsz; // Sector length 
-Sint32 nsct; // Number of sectors 
-Sint32 lstrm; // Number of invalid data in the last sector 
-} GfsFinfo;
-	
-	
-typedef struct {
-GfsFinfo finfo; // File information 
-GfsDtsrc dtsrc; // Source 
-Sint32 gmode; // Eject mode 
-Sint32 stat; // Execution status 
-// Flow in management
-Sint32 sct; // Number of sectors read 
-Sint32 sctcnt; // Read counter 
-Sint32 sctmax; // Maximum number of sectors read 
-} GfsFlow;
-	*/
 	
 	texte[49]='\0';
 
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
 	emu_printf("%s\n", texte);
-//	wait_vblank();
 
-//	while(1);
 }
 #define GFS_LOCAL
 #define GFCD_ERR_OK             0       /* æ­£å¸¸çµ‚äº† */
@@ -207,7 +157,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
-		emu_printf("reopen position %d %p pos %d\n", position, fp->fid, fp->f_seek_pos);
+//		emu_printf("reopen position %d %p pos %d\n", position, fp->fid, fp->f_seek_pos);
 		if (!position) // on conserve le cache existant
 		{
 			fp->f_seek_pos = 0;

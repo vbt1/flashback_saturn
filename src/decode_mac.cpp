@@ -96,9 +96,6 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entr
 	int8_t isEnemy = IS_ENEMY(entry->id);
 	int8_t isObject = IS_OBJECT(entry->id);
 	int8_t isCondition = IS_CONDITION(entry->id, entry->type);
-	
-//	if(isCondition!=-1 || isObject!=-1 || isEnemy!=-1)
-//		emu_printf("type %d id %d name %s\n", entry->type,entry->id,entry->name);
 
 	if (isEnemy!=-1)
 	{
@@ -227,8 +224,6 @@ static unsigned char remap[256] __attribute__((aligned(4)));
  //   static bool remap_initialized = false;
 void remap_colors()
 {
-    // Remap initialization (potential one-time setup)
-//    if (!remap_initialized) {
         memset(remap, 0, sizeof(remap));
         const unsigned char remap_values[] = {14, 15, 30, 31, 46, 47, 62, 63, 78, 79, 94, 95, 110, 111, 142, 143,
                                               126, 127, 254, 255, 174, 175, 190, 191, 206, 207, 222, 223, 238, 239};
@@ -240,8 +235,6 @@ void remap_colors()
         }
         remap[14] = 128; remap[15] = 129; remap[30] = 130; remap[31] = 131;
         remap[160] = 14; remap[161] = 15; remap[190] = 150; remap[191] = 151;
-//        remap_initialized = true;
-//    }
 }
 
 void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned char mask) {
