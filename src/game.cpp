@@ -53,6 +53,7 @@ extern Uint8 tickPerVblank;
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
+unsigned char drawingInventory = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
@@ -2000,6 +2001,7 @@ void Game::handleInventory() {
 	LivePGE *pge = &_pgeLive[0];
 
 	if (pge->life > 0 && pge->current_inventory_PGE != 0xFF) {
+		drawingInventory = true;
 		playSound(66, 0);
 		InventoryItem items[24];
 		int num_items = 0;
@@ -2086,9 +2088,11 @@ void Game::handleInventory() {
 					_vid.drawString(buf, 65, 193, 0xE4);
 				}*/
 			}
+
 			_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 			_stub->sleep(80);
+
 #ifdef DEMO
 			inp_update();
 #endif
@@ -2131,7 +2135,7 @@ void Game::handleInventory() {
 			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
 				_stub->_pi.escape = false;
 			}
-//			slSynch();
+			drawingInventory = 0;
 		}
 		// vbt : n'efface que le menu
 		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);

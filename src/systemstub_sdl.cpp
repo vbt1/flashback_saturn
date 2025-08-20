@@ -28,6 +28,7 @@ Uint8 tickPerVblank = 0;
 extern unsigned char frame_x;
 extern unsigned char frame_y;
 extern unsigned char frame_z;
+extern unsigned char drawingInventory;
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
@@ -336,18 +337,19 @@ void SystemStub_SDL::processEvents() {
 				//_pi.enter = false;
 				_pi.backspace = false;
 			else if (PAD_PUSH_START)
+			{
 				//_pi.enter = true;
-				_pi.backspace = true;
+				if(!drawingInventory)
+					_pi.backspace = true;
+			}
 			if (PAD_PULL_A)
 				_pi.space = false;
 			else if (PAD_PUSH_A)
 				_pi.space = true;
-
 			if (PAD_PULL_C)
 				_pi.enter = false;
 			else if (PAD_PUSH_C)
 				_pi.enter = true;
-
 			if (PAD_PULL_B)
 				_pi.shift = false;
 			else if (PAD_PUSH_B)
