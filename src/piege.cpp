@@ -15,6 +15,7 @@ extern "C" {
 #include "scsp.h"
 extern Uint8 *hwram_screen;
 extern Uint8 *hwram;
+extern unsigned char loadingMap;
 }
 //#include 	"saturn_print.h"
 //#include "cutscene.h"
@@ -466,6 +467,7 @@ void Game::pge_setupOtherPieges(LivePGE *pge, InitPGE *init_pge) {
 			_currentRoom = room;
 			col_prepareRoomState();
 			_loadMap = true;
+//			loadingMap = true;
 			if (_currentRoom < 0x40) {
 				LivePGE *pge_it = _pge_liveTable1[_currentRoom];
 				while (pge_it) {
@@ -1304,6 +1306,7 @@ int Game::pge_op_setPiegeDefaultAnim(ObjectOpcodeArgs *args) {
 	args->pge->room_location = init_pge->data[args->a];
 	if (init_pge->object_type == 1) {
 		_loadMap = true;
+//		loadingMap = true;
 	}
 	pge_setupDefaultAnim(args->pge);
 	return 1;

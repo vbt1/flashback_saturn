@@ -29,6 +29,7 @@ extern unsigned char frame_x;
 extern unsigned char frame_y;
 extern unsigned char frame_z;
 extern unsigned char drawingInventory;
+extern unsigned char loadingMap;
 }
 extern void snd_init();
 //extern void emu_printf(const char *format, ...);
@@ -650,17 +651,21 @@ inline void timeTick() {
 void vblIn (void) {
 //emu_printf("vblIn\n");
 	// Process input
-	uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
-	frame_y++;
-	
-	if(frame_y>=hz)
+
+	if(!loadingMap)
 	{
-		frame_z = frame_x;
-		frame_x = 0;
-		frame_y = 0;
+		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
+		frame_y++;
+
+		if(frame_y>=hz)
+		{
+			frame_z = frame_x;
+			frame_x = 0;
+			frame_y = 0;
+		}
+		sys->updateScreen(0);
 	}
 	sys->processEvents();
-	sys->updateScreen(0);
 	timeTick();
 }
 

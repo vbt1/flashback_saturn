@@ -54,6 +54,7 @@ unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
 unsigned char drawingInventory = 0;
+unsigned char loadingMap = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
@@ -386,6 +387,7 @@ void Game::resetGameState() {
 	_deathCutsceneCounter = 0;
 	_saveStateCompleted = false;
 	_loadMap = true;
+//	loadingMap = true;
 	pge_resetMessages();
 	_blinkingConradCounter = 0;
 	_pge_processOBJ = false;
@@ -1768,7 +1770,9 @@ static bool isMetro(int level, int room) {
 
 void Game::loadLevelRoom() {
 //	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+	loadingMap = true;
 	_vid.MAC_decodeMap(_currentLevel, _currentRoom);
+	loadingMap = false;
 }
 
 void Game::loadLevelData() {
