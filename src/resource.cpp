@@ -1670,6 +1670,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
     slCashPurge(); // Ensure cache coherence
 #else
 // vbt :  paraléliser les décodages !!!
+#if 0 // vbt on inverse pour lire dans l'ordre des secteurs
 	snprintf(name, sizeof(name), "%s movie", cutscene);
 	stringLowerCase(name);
 //	emu_printf("MAC_loadCutscene2 %s\n",name);	
@@ -1679,7 +1680,7 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		return;
 	}
 	_cmd = decodeResourceMacData(cmdEntry, true);
-
+#endif
 	snprintf(name, sizeof(name), "%s polygons", cutscene);
 	stringLowerCase(name);
 	const ResourceMacEntry *polEntry = _mac->findEntry(name, 13);
@@ -1688,6 +1689,18 @@ void Resource::MAC_loadCutscene(const char *cutscene) {
 		return;
 	}
 	_pol = decodeResourceMacData(polEntry, true);
+
+#if 1 // vbt on inverse pour lire dans l'ordre des secteurs
+	snprintf(name, sizeof(name), "%s movie", cutscene);
+	stringLowerCase(name);
+//	emu_printf("MAC_loadCutscene2 %s\n",name);	
+	const ResourceMacEntry *cmdEntry = _mac->findEntry(name, 14);
+	if (!cmdEntry) {
+		current_lwram = (uint8_t *)save_current_lwram; // vbt : inutile?
+		return;
+	}
+	_cmd = decodeResourceMacData(cmdEntry, true);
+#endif
 	
 //	emu_printf("cmd2 %p pol2 %p\n",_cmd, _pol);
 #endif
