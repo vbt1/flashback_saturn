@@ -7,10 +7,14 @@ extern "C"
 {
 #include "string.h"	
 }
-
+//#define DEBUG_COLLISION 1
 #include "game.h"
 #include "resource.h"
 #include "util.h"
+
+#ifdef DEBUG_COLLISION
+int previous_room = -1;
+#endif
 
 void Game::col_prepareRoomState() {
 	memset(_col_activeCollisionSlots, 0xFF, sizeof(_col_activeCollisionSlots));
@@ -28,13 +32,18 @@ void Game::col_prepareRoomState() {
 		}
 	}
 #ifdef DEBUG_COLLISION
-	printf("---\n");
+
+if(_currentRoom!=previous_room)
+{
+	emu_printf("---room %d ---\n", _currentRoom);
 	for (int y = 0; y < 7; ++y) {
 		for (int x = 0; x < 16; ++x) {
-			printf("%d", _res._ctData[0x100 + _currentRoom * 0x70 + y * 16 + x]);
+			emu_printf("%d", _res._ctData[0x100 + _currentRoom * 0x70 + y * 16 + x]);
 		}
-		printf("\n");
+		emu_printf("\n");
+		previous_room = _currentRoom;
 	}
+}
 #endif
 }
 
