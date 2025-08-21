@@ -187,8 +187,8 @@ struct SystemStub_SDL : SystemStub {
 
 //	virtual void setPalette(uint8 *palette, uint16 colors);
 	void prepareGfxMode();
-	void cleanupGfxMode();
-	void forceGfxRedraw();
+//	void cleanupGfxMode();
+//	void forceGfxRedraw();
 //	void drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch);
 
 	void load_audio_driver(void);
@@ -237,7 +237,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 }
 
 void SystemStub_SDL::destroy() {
-	cleanupGfxMode();
+//	cleanupGfxMode();
 	SYS_Exit(0);
 }
 /*
@@ -508,6 +508,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	VDP2_TVMD &= 0xFEFF;
 	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // à faire toujours en dernier
 	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
+/*
 	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
 
 	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
@@ -518,8 +519,8 @@ void SystemStub_SDL::prepareGfxMode() {
 	slScrWindow1(63 , 0 , 574 , 447 );
 	slScrWindowModeNbg1(win1_IN);
 	slScrWindowModeSPR(win0_IN);
-	
-	slScrPosNbg0(toFIXED(-63),0) ;
+*/	
+//	slScrPosNbg0(toFIXED(-63),0) ;
 	slScrPosNbg1(toFIXED(-63),0) ;
 	slSpecialPrioModeNbg0(spPRI_Dot);
 	slSpecialPrioBitNbg0(1); // obligatoire
@@ -529,7 +530,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	slSynch();  // faire un slsynch à la fin de la config
 	return;
 }
-
+/*
 void SystemStub_SDL::cleanupGfxMode() {
 	slTVOff();
 	return;
@@ -538,7 +539,7 @@ void SystemStub_SDL::cleanupGfxMode() {
 void SystemStub_SDL::forceGfxRedraw() {
 	return;
 }
-/*
+
 void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch) {
 	return;
 }*/

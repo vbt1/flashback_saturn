@@ -230,7 +230,7 @@ void Menu::displayTitleScreenMac(int num) {
 			{
 				_stub->_pi.enter = true;
 			}
-
+//			_vid->setTextPalette();
 		} while (!_stub->_pi.quit);
 	}
 }

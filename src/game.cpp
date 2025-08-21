@@ -125,16 +125,17 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 
 void Game::run() {
 
-	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
-	remap_colors();
-	SAT_preloadCMPfiles();
-
-	_randSeed = time(0);
-	_mix.init();  // vbt : evite de fragmenter la ram
 #ifdef DEBUG
 	_stub->initTimeStamp();
 	unsigned int s1 = _stub->getTimeStamp();
 #endif
+	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
+	remap_colors();
+	SAT_loadLogo();
+	SAT_preloadCMPfiles();
+	_randSeed = time(0);
+	_mix.init();  // vbt : evite de fragmenter la ram
+
 	_res.init();   // vbt : ajout pour la partie mac
 #ifdef DEBUG
 	unsigned int e1 = _stub->getTimeStamp();
@@ -189,7 +190,8 @@ void Game::run() {
 			}
 			hwram_ptr+=256;
 		}
-		SAT_preloadCDfiles();
+//		SAT_preloadCDfiles();
+
 		_res.load_TEXT();
 #ifdef DEBUG
 	_stub->initTimeStamp();
@@ -232,6 +234,42 @@ void Game::run() {
 /*		break;
 	}
 */
+
+
+#if 1
+	loadingMap = 0;
+	slTVOff();
+	memset4_fast((void *)VDP2_VRAM_B0, 0x0000, 268*1024);
+	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);	
+	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
+
+	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
+	(*sys_clip).XC = 574;
+
+	slScrWindow0(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg0(win0_IN);
+	slScrWindow1(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg1(win1_IN);
+	slScrWindowModeSPR(win0_IN);
+	slScrPosNbg0(toFIXED(-63),0);
+	slSynch();
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION
@@ -2802,6 +2840,46 @@ void Game::SAT_preloadCMPfiles()
 	GFS_Load(GFS_NameToId((int8_t *)"CARTE.CMP")  ,0,(uint8_t *)CUTCMP3,2296);
 	GFS_Load(GFS_NameToId((int8_t *)"SERRURE.CMP"),0,(uint8_t *)CUTCMP4,3512);
 	GFS_Load(GFS_NameToId((int8_t *)"MEMO.CMP")	  ,0,(uint8_t *)CUTCMP5,1167);
+}
+
+#define CRAM_BANK 0x5f00000
+
+void Game::SAT_loadLogo()
+{
+	loadingMap = 1;
+	uint16_t w = 592;
+	slBitMapNbg0(COL_TYPE_256, BM_1024x512, (void *)VDP2_VRAM_B0);	
+	int read = GFS_Load(GFS_NameToId((int8_t *)"LOGO.BIN"),0,(uint8_t *)current_lwram,59120);
+	memcpyl((void*)(CRAM_BANK + 512), (void*)current_lwram, 1024);
+
+	uint8 *srcPtr = (uint8 *)(current_lwram + 512);
+	uint8 *dstPtr2 = (uint8 *)(VDP2_VRAM_B0 + (160 * 1024) + 0);
+
+	for (uint16 idx = 0; idx < 99; ++idx) {
+		memcpyl(dstPtr2, srcPtr, w);
+		srcPtr += w;
+		dstPtr2 += 1024;		
+	}
+	slScrAutoDisp(NBG0ON);
+	slTVOn();
+	slSynch();
+#if 0
+	loadingMap = 0;
+	slTVOff();
+	memset4_fast((void *)VDP2_VRAM_B0, 0x0000, 268*1024);
+	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);	
+	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
+
+	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
+	(*sys_clip).XC = 574;
+
+	slScrWindow0(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg0(win0_IN);
+	slScrWindow1(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg1(win1_IN);
+	slScrWindowModeSPR(win0_IN);
+	slSynch();
+#endif
 }
 
 void Game::SAT_cleanRAM(unsigned char all) {
