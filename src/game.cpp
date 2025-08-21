@@ -2849,7 +2849,7 @@ void Game::SAT_loadLogo()
 	loadingMap = 1;
 	uint16_t w = 592;
 	slBitMapNbg0(COL_TYPE_256, BM_1024x512, (void *)VDP2_VRAM_B0);	
-	int read = GFS_Load(GFS_NameToId((int8_t *)"LOGO.BIN"),0,(uint8_t *)current_lwram,59120);
+	int read = GFS_Load(GFS_NameToId((int8_t *)"LOGO.BIN"),0,(uint8_t *)current_lwram,56752);
 	memcpyl((void*)(CRAM_BANK + 512), (void*)current_lwram, 1024);
 
 	uint8 *srcPtr = (uint8 *)(current_lwram + 512);
