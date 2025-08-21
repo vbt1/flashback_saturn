@@ -26,122 +26,85 @@ extern Uint8 frame_z;
 static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t alignedSize) {
 //	emu_printf("allocate_memory %d %04x\n", id, alignedSize);
     uint8_t* dst;
-
-    // Fast path for type 13 or 14
+    
+    // Most common cases first
     if (type == 13 || type == 14) {
         dst = current_lwram;
         current_lwram += alignedSize;
         return dst;
     }
-
-    if (type == 31) //  demo
-		return (uint8_t *)SCRATCH;
-
-
-    // Fast path for specific IDs
-    if (id == 3100 || id == 3300 || id == 3400) {
-        dst = current_lwram;
-        current_lwram += 4;
-        return dst;
+    
+    if (type == 31) {
+        return (uint8_t*)SCRATCH;
     }
-
-    // Fast path for type 12 with ID range or ID 4000
-    if ((type == 12 && (id - 1000) <= (1461 - 1000)) || id == 4000) {
+    
+    // Group ID checks for better branch prediction
+    if (id >= 3100 && id <= 3400) {
+        if (id == 3100 || id == 3300 || id == 3400) {
+            dst = current_lwram;
+            current_lwram += 4;
+            return dst;
+        }
+    }
+    
+    // Correct condition: (type 12 with range 1000-1461) OR id == 4000
+    if ((type == 12 && (id - 1000) <= 461) || id == 4000) {
         return hwram_screen;
     }
-
-    // Special case for ID 5500
+    
     if (id == 5500) {
         GFS_Load(GFS_NameToId((int8_t*)"CONTROLS.BIN"), 0, (void*)(current_lwram + 36352), 147456);
-		memset(current_lwram + 183808,0x00,45568);
+        memset(current_lwram + 183808, 0x00, 45568);
         return NULL;
     }
-
-    // Default case: Use hwram_ptr if possible
-    if ((int)hwram_ptr + alignedSize < end1) {
+    
+    // Default allocation
+    uint32_t new_ptr = (uint32_t)hwram_ptr + alignedSize;
+    if (new_ptr < end1) {
         dst = hwram_ptr;
-        hwram_ptr += alignedSize;
+        hwram_ptr = (uint8_t*)new_ptr;
         return dst;
     }
-
-    // Fallback to lwram
-//    emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize, end1);
-
+ //    emu_printf("lw %d id %d sz %d %x %x\n", type, id, alignedSize, ((int)hwram_ptr) + alignedSize, end1);   
     dst = current_lwram;
     current_lwram += alignedSize;
     return dst;
 }
 
-
-#if 0
-#define IS_OBJECT(val) (((val) >= 2000 && (val) <= 2400) ? ((val - 2000) / 100) << 1 : -1 )
-#define IS_ENEMY(val)  (((val) >= 3000 && (val) <= 3400) ? ((val - 3000) / 100) << 1 : -1 )
-
-#define IS_CONDITION(val, type) ( \
-    ((type) != 32) ? -1 : \
-    ((val) >= 1100 && (val) <= 1300) ? (((val) / 100 - 11) * 2) : \
-    ((val) >= 1410 && (val) <= 1420) ? (((val) / 10 - 141 + 3) * 2) : \
-    ((val) >= 1510 && (val) <= 1520) ? (((val) / 10 - 151 + 5) * 2) : \
-    -1 \
-)
-
-uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry *entry) {
-	
-	static const uint32_t sizeCondition[14] = {11653,   34124, 23763,  66718, 11212, 33448,  14994,  42822, 16426,  47114, 13015, 36960, 14237, 39198};
-	static const uint32_t sizeObject[10]    = {71138,  226781, 85245, 192462, 27821, 68116,  90737, 282343, 85788, 218014};
-	static const uint32_t sizeEnemy[10]     = {213124, 384909, 50572, 107256, 64094, 158183, 62196, 136948, 46992,  91069};
-
-	uint32_t srcSize = 0;
-	
-	int8_t isEnemy = IS_ENEMY(entry->id);
-	int8_t isObject = IS_OBJECT(entry->id);
-	int8_t isCondition = IS_CONDITION(entry->id, entry->type);
-
-	if (isEnemy!=-1)
-	{
-		srcSize = sizeEnemy[isEnemy];
-		decodedSize = sizeEnemy[isEnemy+1];
-	}
-	else if(isObject!=-1)
-	{
-		srcSize = sizeObject[isObject];
-		decodedSize = sizeObject[isObject+1];
-	}
-	else if(isCondition!=-1)
-	{
-		srcSize = sizeCondition[isCondition];
-		decodedSize = sizeCondition[isCondition+1];			
-	}
-	else
-	{
-		srcSize = entry->compressedSize;
-		decodedSize = entry->size;			
-	}
-
-	f.batchSeek(8);
-
-#else
 inline int8_t is_object(uint16_t val) {
-    return (val >= 2000 && val <= 2400) ? ((val - 2000) / 100 << 1) : -1;
+    switch (val) {
+        case 2000: return 0;
+        case 2100: return 2; 
+        case 2200: return 4;
+        case 2300: return 6;
+        case 2400: return 8;
+        default: return -1;
+    }
 }
 
 inline int8_t is_enemy(uint16_t val) {
-    return (val >= 3000 && val <= 3400) ? ((val - 3000) / 100 << 1) : -1;
+    switch (val) {
+        case 3000: return 0;
+        case 3100: return 2;
+        case 3200: return 4; 
+        case 3300: return 6;
+        case 3400: return 8;
+        default: return -1;
+    }
 }
 
 inline int8_t is_condition(uint16_t val, uint8_t type) {
     if (type != 32) return -1;
-
-    if (val >= 1100 && val <= 1300) 
-        return (val / 100 - 11) * 2;
-
-    if (val >= 1410 && val <= 1420) 
-        return (val / 10 - 141 + 3) * 2;
-
-    if (val >= 1510 && val <= 1520) 
-        return (val / 10 - 151 + 5) * 2;
-
-    return -1;
+    switch (val) {
+        case 1100: return 0;
+        case 1200: return 2;
+        case 1300: return 4;
+        case 1410: return 6;
+        case 1420: return 8;
+        case 1510: return 10;
+        case 1520: return 12;
+        default: return -1;
+    }
 }
 
 struct EntryInfo {
@@ -149,23 +112,31 @@ struct EntryInfo {
     uint32_t decodedSize;
 };
 
-// Centralized lookup for sizes
 inline EntryInfo getEntrySize(const ResourceMacEntry* entry) {
     static const uint32_t sizeCondition[14] = {11653, 34124, 23763, 66718, 11212, 33448, 14994, 42822, 16426, 47114, 13015, 36960, 14237, 39198};
     static const uint32_t sizeObject[10]    = {71138, 226781, 85245, 192462, 27821, 68116, 90737, 282343, 85788, 218014};
     static const uint32_t sizeEnemy[10]     = {213124, 384909, 50572, 107256, 64094, 158183, 62196, 136948, 46992, 91069};
-
-    int8_t e = is_enemy(entry->id);
-    if(e != -1) return { sizeEnemy[e], sizeEnemy[e + 1] };
-
-    int8_t o = is_object(entry->id);
-    if(o != -1) return { sizeObject[o], sizeObject[o + 1] };
-
-    int8_t c = is_condition(entry->id, entry->type);
-    if(c != -1) return { sizeCondition[c], sizeCondition[c + 1] };
-
+    
+    // Check most common case first (based on your ID ranges)
+    if (entry->id >= 3000) {  // Enemies likely most common
+        int8_t e = is_enemy(entry->id);
+        if(e != -1) return { sizeEnemy[e], sizeEnemy[e + 1] };
+    }
+    
+    if (entry->id >= 2000) {  // Objects
+        int8_t o = is_object(entry->id);
+        if(o != -1) return { sizeObject[o], sizeObject[o + 1] };
+    }
+    
+    // Only check conditions for type 32
+    if (entry->type == 32) {
+        int8_t c = is_condition(entry->id, entry->type);
+        if(c != -1) return { sizeCondition[c], sizeCondition[c + 1] };
+    }
+    
     return { entry->compressedSize, entry->size };
 }
+
 uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry* entry) {
     f.batchSeek(8); // Skip header
 
@@ -173,7 +144,6 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry* entr
     uint32_t srcSize = info.srcSize;
     decodedSize = info.decodedSize;
 //	emu_printf("Lzss sz2 %d %d type %d\n", srcSize, decodedSize, entry->type);
-#endif  
   uint32_t alignedSize = SAT_ALIGN(decodedSize);
 
     // Allocate memory
