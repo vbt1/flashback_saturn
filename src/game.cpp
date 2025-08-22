@@ -1738,7 +1738,7 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 }
 */
 int Game::loadMonsterSprites(LivePGE *pge) {
-//	debug(DBG_GAME, "Game::loadMonsterSprites()");
+//	emu_printf("Game::loadMonsterSprites()");
 	const InitPGE *init_pge = pge->init_PGE;
 	if (init_pge->obj_node_number != 0x49 && init_pge->object_type != 10) {
 		return 0xFFFF;
@@ -1774,9 +1774,35 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 //				Color *palette = (Color *)hwram_ptr;
 //				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 
-// on l'appelle juste pour la palette				
-				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+// on l'appelle juste pour la palette, appel supprimé		
+//				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+				unsigned int index = 0;
+				switch (_monsterNames[0][_curMonsterNum][0]) {
+					case 'j':  // junky
+						index = 0x32;
+			//            monster_name = "Junky";
+						break;
+					case 'm':  // mercenai
+						index = 0x34;
+			//            monster_name = "Mercenary";
+						break;
+					case 'r':  // replican
+						index = 0x35;
+			//            monster_name = "Replicant";
+						break;
+					case 'g':  // glue
+						index = 0x36;
+			//            monster_name = "Alien";
+						break;
+					default:
+						break; // Unknown monster
+				}
+				if (index == 0x32 && _currentLevel == 1)
+					index++;
+
 				static const int kMonsterPalette = 5;
+				_res.MAC_copyClut16(palette, kMonsterPalette + 16, index);
+
 				for (int i = 0; i < 16; ++i) {
 					const int color = 256 + kMonsterPalette * 16 + i;
 					_stub->setPaletteEntry(color, &palette[color]);

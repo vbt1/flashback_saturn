@@ -1329,7 +1329,7 @@ void Resource::MAC_loadPersoData() {
 //emu_printf("MAC_loadPersoData\n");				
 	_perso = decodeResourceMacData("Person", true, TYPE_PPSS); // taille 213124 lwr
 }
-
+/*
 void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 //emu_printf("MAC_loadMonsterData\n");
 	static const struct {
@@ -1358,7 +1358,7 @@ void Resource::MAC_loadMonsterData(const char *name, Color *clut) {
 		}
 	}
 }
-
+*/
 void Resource::MAC_loadTitleImage(int i, DecodeBuffer *buf) {
 //emu_printf("MAC_loadTitleImage\n");	
 	char name[8];
