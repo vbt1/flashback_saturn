@@ -732,6 +732,7 @@ void Game::inp_handleSpecialKeys() {
 	if (_stub->_pi.load) {
 		loadGameState(_stateSlot);
 		_stub->_pi.load = false;
+		memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
 	}
 	if (_stub->_pi.save) {
 		saveGameState(_stateSlot);
@@ -1988,10 +1989,10 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 			channel_len[i] = sfx->len;
 			pcm_play(i, sfx, volume, pcm_sample_loop_no_loop);
 		}
-	} else if (num == 66) {
+	} /*else if (num == 66) {
 		// open/close inventory (DOS)
 		emu_printf("play sound inventory %02d\n",num);
-	} else if (num >= 68 && num <= 75) {
+	}*/ else if (num >= 68 && num <= 75) {
 //		emu_printf("play sfx %d\n",num);
 		emu_printf("play sound something %02d\n",num);
 		
@@ -2044,7 +2045,7 @@ void Game::handleInventory() {
 
 	if (pge->life > 0 && pge->current_inventory_PGE != 0xFF) {
 		drawingInventory = true;
-		playSound(66, 0);
+		playSound(52, 0);
 		InventoryItem items[24];
 		int num_items = 0;
 		uint8_t inv_pge = pge->current_inventory_PGE;
@@ -2180,14 +2181,14 @@ void Game::handleInventory() {
 			drawingInventory = 0;
 		}
 		// vbt : n'efface que le menu
-		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);
+		memset4_fast(&_vid._frontLayer[280<<9],0x00, _vid._w*144);
 		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 		_stub->_pi.backspace = false;
 		if (selected_pge) {
 			pge_setCurrentInventoryObject(selected_pge);
 		}
-		playSound(66, 0);
+		playSound(52, 0);
 
 		frame_y = frame_x = 0;
 		frame_z = 30;		

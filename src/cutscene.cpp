@@ -38,11 +38,7 @@ int16_t previousStr=-1;
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 //extern volatile Uint8 audioEnabled;
-#define CLEAN_X 16
-#define CLEAN_Y 114
-#define CLEAN_W 480
-#define CLEAN_H 224
-#define CLEAN_H_MORE 304
+
 /*
 static void scalePoints(Point *pt, int count, int scale) {
 //	scale = 1; //vbt force la valeur

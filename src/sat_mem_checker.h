@@ -35,6 +35,13 @@ void *memset4_fast(void *, long, size_t);
 #define CUTCMP3 CUTCMP2+SAT_ALIGN(2472)
 #define CUTCMP4 CUTCMP3+SAT_ALIGN(2296) // SERRUE
 #define CUTCMP5 CUTCMP4+SAT_ALIGN(3512) // MEMO
+
+#define CLEAN_X 16
+#define CLEAN_Y 114
+#define CLEAN_W 480
+#define CLEAN_H 224
+#define CLEAN_H_MORE 304
+
 #define VRAM_MAX 0x67000 // ne pas toucher
 
 
