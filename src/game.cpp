@@ -1779,7 +1779,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 				unsigned int index = 0;
 				switch (_monsterNames[0][_curMonsterNum][0]) {
 					case 'j':  // junky
-						index = 0x32;
+					index = (_currentLevel != 1) ? 0x32 : 0x33;
 			//            monster_name = "Junky";
 						break;
 					case 'm':  // mercenai
@@ -1801,11 +1801,16 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 					index++;
 
 				static const int kMonsterPalette = 5;
-				_res.MAC_copyClut16(palette, kMonsterPalette + 16, index);
 
-				for (int i = 0; i < 16; ++i) {
-					const int color = 256 + kMonsterPalette * 16 + i;
-					_stub->setPaletteEntry(color, &palette[color]);
+				_res.MAC_copyClut16(palette, kMonsterPalette + 16, index);
+				const int base_color = 256 + kMonsterPalette * 16;
+				Color *palette_ptr = &palette[base_color];
+
+				for (int i = 0; i < 16; i += 4) {
+					_stub->setPaletteEntry(base_color + i,     &palette_ptr[i]);
+					_stub->setPaletteEntry(base_color + i + 1, &palette_ptr[i + 1]);
+					_stub->setPaletteEntry(base_color + i + 2, &palette_ptr[i + 2]);
+					_stub->setPaletteEntry(base_color + i + 3, &palette_ptr[i + 3]);
 				}
 //			}
 //			break;
