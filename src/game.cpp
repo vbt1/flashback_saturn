@@ -2116,10 +2116,13 @@ void Game::handleInventory() {
 				}
 			} else {
 				char buf[50];
+
 				snprintf(buf, sizeof(buf), "SCORE %08u", _score);
-				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 158, 0xE5);
+//				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 158, 0xE5);
+				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 164, 0xED);
 				snprintf(buf, sizeof(buf), "%s:%s", _res.getMenuString(LocaleData::LI_06_LEVEL), _res.getMenuString(LocaleData::LI_13_EASY + _skillLevel));
-				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 166, 0xE5);
+//				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 166, 0xE5);
+				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 195, 0xED);
 				/*if (0) { // if the protection screen code was not properly cracked...
 					static const uint8_t kCrackerText[17] = {
 						0x19, 0x08, 0x1B, 0x19, 0x11, 0x1F, 0x08, 0x67, 0x18,
