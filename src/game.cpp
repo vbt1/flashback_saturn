@@ -518,7 +518,7 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 			already_done = 1;
 		}
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
+		memset4_fast(&_vid._frontLayer[51 << 9], 0x00,32 << 9);
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
@@ -1105,7 +1105,8 @@ void Game::drawLevelTexts() {
 //			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			if (_cut._id == 0xFFFF  || _cut._id == 30 || _cut._id == 31 ) // ou !=34 ou remonter avec texttodisplay
 			{
-				drawString(str, 176, 26, 0xE6, true);
+//				drawString(str, 176, 26, 0xE6, true);
+				drawString(str, 176, 26, 0xE5, true);
 				_cut._id = 0xFFFF;
 			}
 
@@ -1797,8 +1798,6 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 					default:
 						break; // Unknown monster
 				}
-				if (index == 0x32 && _currentLevel == 1)
-					index++;
 
 				static const int kMonsterPalette = 5;
 
