@@ -107,12 +107,13 @@ void Cutscene::updatePalette() {
 		const uint8_t *p = _palBuf;
 		for (int i = 0; i < 32; ++i) {
 			const uint16_t color = READ_BE_UINT16(p); p += 2;
-			uint8 t = (color == 0) ? 0 : 3;
+
+			uint8 t = (color == 0) ? 0 : 1;
 			Color c;
 // vbt correction des couleurs			
-			c.r = ((color & 0xF00) >> 6) | t;
-			c.g = ((color & 0x0F0) >> 2) | t;
-			c.b = ((color & 0x00F) << 2) | t;
+			c.r = ((color & 0xF00) >> 7) | t;
+			c.g = ((color & 0x0F0) >> 3) | t;
+			c.b = ((color & 0x00F) << 1) | t;
 			_stub->setPaletteEntry(0x1C0 + i, &c);
 		}
 		_newPal = false;

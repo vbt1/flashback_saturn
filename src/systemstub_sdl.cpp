@@ -250,25 +250,20 @@ void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 
 		_pal[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn
 	}
-	
 }
 */
 void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
-	uint8 r = (c->r << 2) | (c->r & 3);
-	uint8 g = (c->g << 2) | (c->g & 3);
-	uint8 b = (c->b << 2) | (c->b & 3);
-
-	_pal[i] = RGB(r>>3,g>>3,b>>3);
+	_pal[i] = RGB(c->r, c->g, c->b);
 }
 
 void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
-	Uint8 b = ((_pal[i] >> 10) & 0x1F) << 1;
-	Uint8 g = ((_pal[i] >> 5)  & 0x1F) << 1;
-	Uint8 r = ((_pal[i] >> 0)  & 0x1F) << 1;
+	Uint8 b = ((_pal[i] >> 10) & 0x1F);
+	Uint8 g = ((_pal[i] >> 5)  & 0x1F);
+	Uint8 r = ((_pal[i] >> 0)  & 0x1F);
 
-	c->r = r | 1;
-	c->g = g | 1;
-	c->b = b | 1;
+	c->r = r;
+	c->g = g;
+	c->b = b;
 }
 
 void SystemStub_SDL::setOverscanColor(uint8 i) {
@@ -679,12 +674,12 @@ uint8 isNTSC (void) {
 
 
 void SCU_DMAWait(void) {
-	Uint32 res;
+//	Uint32 res;
 
-	while((res = DMA_ScuResult()) == 2);
-	
+	while((DMA_ScuResult()) == 2);
+/*	
 	if(res == 1) {
 		//emu_printf("SCU DMA COPY FAILED!\n");
-	}
+	}*/
 }
 

@@ -955,19 +955,21 @@ bool Game::handleContinueAbort() {
 	playCutscene(0x48);
 	
 	char textBuf[50];
-	int timeout = 100;
+	int timeout = 109;
 	int current_color = 0;
-	uint8_t colors[] = { 0xE4, 0xE5 };
+	uint8_t colors[] = { 0xE4, 0xE3 };  //0xE3 ou ED blanc, E4 rouge, E5 jaune
+	uint8_t colors2[] = { 0xE4, 0xE5 };  //0xE3 ou ED blanc, E4 rouge, E5 jaune
+
 	uint8_t color_inc = 0xFF;
-	Color col;
-	_stub->getPaletteEntry(0xE4, &col);
+//	Color col;
+//	_stub->getPaletteEntry(0xE4, &col);
 
 	while (timeout >= 0 && !_stub->_pi.quit) {
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawString(str, (264 - strlen(str) * 8) / 2, 76, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_02_TIME);
-		
+
 		sprintf(textBuf, "%s: %d", str, timeout / 10);
 		memset(&_vid._frontLayer[(127<<1)*512],0x00,14*512);
 		_vid.drawString(textBuf, 61, 127, 0xE3);
@@ -997,25 +999,7 @@ bool Game::handleContinueAbort() {
 					++current_color;
 				}
 			}
-/*		}
-		else
-		{
-			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-				if (current_color > 0) {
-					SWAP(colors[current_color], colors[current_color - 1]);
-					--current_color;
-				}
-			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-				if (current_color < 1) {
-					SWAP(colors[current_color], colors[current_color + 1]);
-					++current_color;
-				}
-			}
-		}
-*/
+
 		if (_stub->_pi.enter) {
 // vbt : corrige la ram quand on continue
 			SAT_cleanRAM (LWRAM);
@@ -1028,25 +1012,10 @@ bool Game::handleContinueAbort() {
 		}
 		_stub->copyRect(0, 0, _vid._w, 400, _vid._frontLayer, _vid._w);
 
-		static const int COLOR_STEP = 8;
-		static const int COLOR_MIN = 16;
-		static const int COLOR_MAX = 256 - 16;
-		if (col.b >= COLOR_MAX) {
-			color_inc = 0;
-		} else if (col.b < COLOR_MIN) {
-			color_inc = 0xFF;
-		}
-		if (color_inc == 0xFF) {
-			col.b += COLOR_STEP;
-			col.g += COLOR_STEP;
-		} else {
-			col.b -= COLOR_STEP;
-			col.g -= COLOR_STEP;
-		}
-		_stub->setPaletteEntry(0xE4, &col);
 		_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
+		colors[current_color]=colors2[(timeout / 5) % 2];
 	}
 	memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);

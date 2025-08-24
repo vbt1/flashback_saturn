@@ -127,9 +127,9 @@ void Video::fadeOutPalette() {
 		for (int c = 0; c < 512; ++c) {
 			Color col;
 			_stub->getPaletteEntry(c, &col);
-			col.r = col.r * step >> 4;
-			col.g = col.g * step >> 4;
-			col.b = col.b * step >> 4;
+			col.r = col.r * step >> 5;
+			col.g = col.g * step >> 5;
+			col.b = col.b * step >> 5;
 			_stub->setPaletteEntry(c, &col);
 		}
 //		fullRefresh(); // vbt casse le fadeout des controles
