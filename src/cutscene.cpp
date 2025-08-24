@@ -1186,7 +1186,7 @@ static bool _drawMemoSetShapes;
 static uint32_t _memoSetOffset;
 
 static void readSetPalette(const uint8_t *p, uint16_t offset, uint16_t *palette);
-
+/*
 static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuffer) {
 	int index = -1;
 	int currentSum = 0;
@@ -1205,7 +1205,7 @@ static int findSetPaletteColor(const uint16_t color, const uint16_t *paletteBuff
 	}
 	return index;
 }
-
+*/
 
 void Cutscene::op_copyScreen() {
 //	emu_printf("Cutscene::op_copyScreen()\n");
