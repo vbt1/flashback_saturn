@@ -1774,11 +1774,8 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 				const int base_color = 256 + kMonsterPalette * 16;
 				Color *palette_ptr = &palette[base_color];
 
-				for (int i = 0; i < 16; i += 4) {
+				for (int i = 0; i < 16; i++) {
 					_stub->setPaletteEntry(base_color + i,     &palette_ptr[i]);
-					_stub->setPaletteEntry(base_color + i + 1, &palette_ptr[i + 1]);
-					_stub->setPaletteEntry(base_color + i + 2, &palette_ptr[i + 2]);
-					_stub->setPaletteEntry(base_color + i + 3, &palette_ptr[i + 3]);
 				}
 //			}
 //			break;
