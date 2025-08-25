@@ -2337,88 +2337,79 @@ bool Game::loadGameState(uint8 slot) {
 	return true;
 }
 
-void Game::saveState(SAVE_BUFFER *sbuf) {
-	sbuf->buffer[sbuf->idx] = _skillLevel; sbuf->idx++;
-	WRITE_UINT32((sbuf->buffer + sbuf->idx), _score); sbuf->idx += 4;
-
+void Game::saveState(SAVE_BUFFER *f) {
+	f->writeByte(_skillLevel);
+	f->writeUint32BE(_score);
 	if (_col_slots2Cur == 0) {
-		WRITE_UINT32((sbuf->buffer + sbuf->idx), 0xFFFFFFFF); sbuf->idx += 4;
+		f->writeUint32BE(0xFFFFFFFF);
 	} else {
-		WRITE_UINT32((sbuf->buffer + sbuf->idx), (_col_slots2Cur - &_col_slots2[0])); sbuf->idx += 4;
+		f->writeUint32BE(_col_slots2Cur - &_col_slots2[0]);
 	}
 	if (_col_slots2Next == 0) {
-		WRITE_UINT32((sbuf->buffer + sbuf->idx), 0xFFFFFFFF); sbuf->idx += 4;
+		f->writeUint32BE(0xFFFFFFFF);
 	} else {
-		WRITE_UINT32((sbuf->buffer + sbuf->idx), (_col_slots2Next - &_col_slots2[0])); sbuf->idx += 4;
+		f->writeUint32BE(_col_slots2Next - &_col_slots2[0]);
 	}
 	for (int i = 0; i < _res._pgeNum; ++i) {
 		LivePGE *pge = &_pgeLive[i];
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->obj_type); sbuf->idx += 2;
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->pos_x); sbuf->idx += 2;
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->pos_y); sbuf->idx += 2;
-		sbuf->buffer[sbuf->idx] = pge->anim_seq; sbuf->idx++;
-		sbuf->buffer[sbuf->idx] = pge->room_location; sbuf->idx++;
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->life); sbuf->idx += 2;
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->counter_value); sbuf->idx += 2;
-		sbuf->buffer[sbuf->idx] = pge->collision_slot; sbuf->idx++;
-		sbuf->buffer[sbuf->idx] = pge->next_inventory_PGE; sbuf->idx++;
-		sbuf->buffer[sbuf->idx] = pge->current_inventory_PGE; sbuf->idx++;
-		sbuf->buffer[sbuf->idx] = pge->ref_inventory_PGE; sbuf->idx++;
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->anim_number); sbuf->idx += 2;
-		sbuf->buffer[sbuf->idx] = pge->flags; sbuf->idx++;
-		sbuf->buffer[sbuf->idx] = pge->index; sbuf->idx++;
-		WRITE_UINT16((sbuf->buffer + sbuf->idx), pge->first_obj_number); sbuf->idx += 2;
+		f->writeUint16BE(pge->obj_type);
+		f->writeUint16BE(pge->pos_x);
+		f->writeUint16BE(pge->pos_y);
+		f->writeByte(pge->anim_seq);
+		f->writeByte(pge->room_location);
+		f->writeUint16BE(pge->life);
+		f->writeUint16BE(pge->counter_value);
+		f->writeByte(pge->collision_slot);
+		f->writeByte(pge->next_inventory_PGE);
+		f->writeByte(pge->current_inventory_PGE);
+		f->writeByte(pge->ref_inventory_PGE);
+		f->writeUint16BE(pge->anim_number);
+		f->writeByte(pge->flags);
+		f->writeByte(pge->index);
+		f->writeUint16BE(pge->first_obj_number);
 		if (pge->next_PGE_in_room == 0) {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), 0xFFFFFFFF); sbuf->idx += 4;
+			f->writeUint32BE(0xFFFFFFFF);
 		} else {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), (pge->next_PGE_in_room - &_pgeLive[0])); sbuf->idx += 4;
+			f->writeUint32BE(pge->next_PGE_in_room - &_pgeLive[0]);
 		}
 		if (pge->init_PGE == 0) {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), 0xFFFFFFFF); sbuf->idx += 4;
+			f->writeUint32BE(0xFFFFFFFF);
 		} else {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), (pge->init_PGE - &_res._pgeInit[0])); sbuf->idx += 4;
+			f->writeUint32BE(pge->init_PGE - &_res._pgeInit[0]);
 		}
 	}
-	
-	Uint32 idx = 0;
-	for(idx = 0; idx < 0x1C00; idx++) {
-		sbuf->buffer[sbuf->idx] = _res._ctData[0x100 + idx]; sbuf->idx++;
-	}
-	//f->write(&_res._ctData[0x100], 0x1C00);
+	f->write((const Uint8*)&_res._ctData[0x100], 0x1C00);
 	for (CollisionSlot2 *cs2 = &_col_slots2[0]; cs2 < _col_slots2Cur; ++cs2) {
 		if (cs2->next_slot == 0) {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), 0xFFFFFFFF); sbuf->idx += 4;
+			f->writeUint32BE(0xFFFFFFFF);
 		} else {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), (cs2->next_slot - &_col_slots2[0])); sbuf->idx += 4;
+			f->writeUint32BE(cs2->next_slot - &_col_slots2[0]);
 		}
 		if (cs2->unk2 == 0) {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), 0xFFFFFFFF); sbuf->idx += 4;
+			f->writeUint32BE(0xFFFFFFFF);
 		} else {
-			WRITE_UINT32((sbuf->buffer + sbuf->idx), (cs2->unk2 - &_res._ctData[0x100])); sbuf->idx += 4;
+			f->writeUint32BE(cs2->unk2 - &_res._ctData[0x100]);
 		}
-		sbuf->buffer[sbuf->idx] = cs2->data_size; sbuf->idx++;
-		//f->write(cs2->data_buf, 0x10);
-		for(idx = 0; idx < 0x10; idx++) {
-			sbuf->buffer[sbuf->idx] = (cs2->data_buf[idx]); sbuf->idx++;
-		}
+		f->writeByte(cs2->data_size);
+		f->write(cs2->data_buf, 0x10);
 	}
-	WRITE_UINT16((sbuf->buffer + sbuf->idx), _pge_opGunVar);
+	f->writeUint16BE(_pge_opGunVar);
 }
 
-void Game::loadState(SAVE_BUFFER *sbuf) {
-	uint16 i;
-	uint32 off;
-	_skillLevel = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-	_score = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+void Game::loadState(SAVE_BUFFER *f) {
+	uint16_t i;
+	uint32_t off;
+	_skillLevel = f->readByte();
+	_score = f->readUint32BE();
 	memset(_pge_liveTable2, 0, sizeof(_pge_liveTable2));
 	memset(_pge_liveTable1, 0, sizeof(_pge_liveTable1));
-	off = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+	off = f->readUint32BE();
 	if (off == 0xFFFFFFFF) {
 		_col_slots2Cur = 0;
 	} else {
 		_col_slots2Cur = &_col_slots2[0] + off;
 	}
-	off = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+	off = f->readUint32BE();
 	if (off == 0xFFFFFFFF) {
 		_col_slots2Next = 0;
 	} else {
@@ -2426,56 +2417,50 @@ void Game::loadState(SAVE_BUFFER *sbuf) {
 	}
 	for (i = 0; i < _res._pgeNum; ++i) {
 		LivePGE *pge = &_pgeLive[i];
-		pge->obj_type = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		pge->pos_x = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		pge->pos_y = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		pge->anim_seq = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->room_location = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->life = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		pge->counter_value = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		pge->collision_slot = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->next_inventory_PGE = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->current_inventory_PGE = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->ref_inventory_PGE = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->anim_number = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		pge->flags = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->index = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		pge->first_obj_number = READ_LE_UINT16(sbuf->buffer + sbuf->idx); sbuf->idx += 2;
-		off = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+		pge->obj_type = f->readUint16BE();
+		pge->pos_x = f->readUint16BE();
+		pge->pos_y = f->readUint16BE();
+		pge->anim_seq = f->readByte();
+		pge->room_location = f->readByte();
+		pge->life = f->readUint16BE();
+		pge->counter_value = f->readUint16BE();
+		pge->collision_slot = f->readByte();
+		pge->next_inventory_PGE = f->readByte();
+		pge->current_inventory_PGE = f->readByte();
+		pge->ref_inventory_PGE = f->readByte();
+		pge->anim_number = f->readUint16BE();
+		pge->flags = f->readByte();
+		pge->index = f->readByte();
+		pge->first_obj_number = f->readUint16BE();
+		off = f->readUint32BE();
 		if (off == 0xFFFFFFFF) {
 			pge->next_PGE_in_room = 0;
 		} else {
 			pge->next_PGE_in_room = &_pgeLive[0] + off;
 		}
-		off = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+		off = f->readUint32BE();
 		if (off == 0xFFFFFFFF) {
 			pge->init_PGE = 0;
 		} else {
 			pge->init_PGE = &_res._pgeInit[0] + off;
 		}
 	}
-	
-	Uint32 idx;
-	for(idx = 0; idx < 0x1C00; idx++) {
-		_res._ctData[0x100 + idx] = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-	}
+	f->read((Uint8*)&_res._ctData[0x100], 0x1C00);
 	for (CollisionSlot2 *cs2 = &_col_slots2[0]; cs2 < _col_slots2Cur; ++cs2) {
-		off = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+		off = f->readUint32BE();
 		if (off == 0xFFFFFFFF) {
 			cs2->next_slot = 0;
 		} else {
 			cs2->next_slot = &_col_slots2[0] + off;
 		}
-		off = READ_LE_UINT32(sbuf->buffer + sbuf->idx); sbuf->idx += 4;
+		off = f->readUint32BE();
 		if (off == 0xFFFFFFFF) {
 			cs2->unk2 = 0;
 		} else {
 			cs2->unk2 = &_res._ctData[0x100] + off;
 		}
-		cs2->data_size = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		for(idx = 0; idx < 0x10; idx++) {
-			cs2->data_buf[idx] = sbuf->buffer[sbuf->idx]; sbuf->idx++;
-		}
+		cs2->data_size = f->readByte();
+		f->read(cs2->data_buf, 0x10);
 	}
 	for (i = 0; i < _res._pgeNum; ++i) {
 		if (_res._pgeInit[i].skill <= _skillLevel) {

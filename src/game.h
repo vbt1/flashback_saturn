@@ -24,6 +24,49 @@
 typedef struct {
 	Uint8 *buffer;  //[SAV_BUFSIZE]; // 10 Kilobytes of save buffer
 	Uint32 idx; // Index of current position inside the buffer
+	
+    void writeByte(Uint8 value) {
+        buffer[idx++] = value;
+    }
+    
+    void writeUint16BE(Uint16 value) {
+        WRITE_UINT16(buffer + idx, value);
+        idx += 2;
+    }
+    
+    void writeUint32BE(Uint32 value) {
+        WRITE_UINT32(buffer + idx, value);
+        idx += 4;
+    }
+	
+    void write(const Uint8* data, size_t count) {
+        for (size_t i = 0; i < count; i++) {
+            buffer[idx++] = data[i];
+        }
+    }
+	
+    Uint8 readByte() {
+        return buffer[idx++];
+    }
+    
+    Uint16 readUint16BE() {
+        Uint16 value = READ_LE_UINT16(buffer + idx);
+        idx += 2;
+        return value;
+    }
+    
+    Uint32 readUint32BE() {
+        Uint32 value = READ_LE_UINT32(buffer + idx);
+        idx += 4;
+        return value;
+    }
+    
+    void read(Uint8* data, size_t count) {
+        for (size_t i = 0; i < count; i++) {
+            data[i] = buffer[idx++];
+        }
+    }
+	
 } SAVE_BUFFER;
 
 struct File;
@@ -395,8 +438,8 @@ struct Game {
 	void makeGameStateName(uint8_t slot, char *buf);
 	bool saveGameState(uint8_t slot);
 	bool loadGameState(uint8_t slot);
-	void saveState(SAVE_BUFFER *sbuf);
-	void loadState(SAVE_BUFFER *sbuf);
+	void saveState(SAVE_BUFFER *f);
+	void loadState(SAVE_BUFFER *f);
 
 	void SAT_loadLogo();
 	void SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr);
