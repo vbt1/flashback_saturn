@@ -1036,7 +1036,7 @@ void Game::printLevelCode() {
 void Game::printSaveStateCompleted() {
 	if (_saveStateCompleted) {
 		const char *str = _res.getMenuString(LocaleData::LI_05_COMPLETED);
-		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE6);
+		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE5);
 	}
 }
 int hasLevelText = false;
