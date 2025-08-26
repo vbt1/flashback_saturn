@@ -1264,30 +1264,30 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 void Resource::MAC_decodeImageData(const uint8_t *ptr, int i, DecodeBuffer *dst, unsigned char mask) {
 //emu_printf("MAC_decodeImageData %p %p %i %x\n",ptr,dst,i,READ_BE_UINT16(ptr));
 	const uint8_t *basePtr = ptr;
-	const uint16_t sig = READ_BE_UINT16(ptr); ptr += 2;
+	const uint16_t sig = READ_BE_UINT16(ptr); //ptr += 2;
 //	assert(sig == 0xC211 || sig == 0xC103);
 	if(sig != 0xC211 && sig != 0xC103)
 	{
 		return;
 	}
 //	const int count = ((uint16_t*)ptr)[0]; ptr += 2;
-	const int count = READ_BE_UINT16(ptr); ptr += 2;
+	const int count = READ_BE_UINT16(ptr+2); //ptr += 2;
 //	assert(i < count);
 	if(i>=count)
 		return;
-	ptr += 4;
+	ptr += 8;
 	const uint32_t offset = READ_BE_UINT32(ptr + i * 4);
 	if (offset != 0) {
 		ptr = basePtr + offset;
-		const int w = READ_BE_UINT16(ptr); ptr += 2;
-		const int h = READ_BE_UINT16(ptr); ptr += 2;
+		const int w = READ_BE_UINT16(ptr); //ptr += 2;
+		const int h = READ_BE_UINT16(ptr+2); //ptr += 2;
 
 		switch (sig) {
 		case 0xC211:
-			decodeC211(ptr + 4, w, h, dst);
+			decodeC211(ptr + 8, w, h, dst);
 			break;
 		case 0xC103:
-			decodeC103(ptr, w, h, dst, mask);
+			decodeC103(ptr + 4, w, h, dst, mask);
 			break;
 		}
 	}
@@ -1302,9 +1302,9 @@ void Resource::MAC_decodeDataCLUT(const uint8_t *ptr) {
 		const int index = READ_BE_UINT16(ptr); ptr += 2;
 		assert(i == index);
 		// ignore lower bits
-		_clut[i].r = (ptr[0] & 0xff) >> 2; ptr += 2;
-		_clut[i].g = (ptr[0] & 0xff) >> 2; ptr += 2;
-		_clut[i].b = (ptr[0] & 0xff) >> 2; ptr += 2;
+		_clut[i].r = (ptr[0] & 0xff) >> 3; ptr += 2;
+		_clut[i].g = (ptr[0] & 0xff) >> 3; ptr += 2;
+		_clut[i].b = (ptr[0] & 0xff) >> 3; ptr += 2;
 	}
 }
 
@@ -1442,7 +1442,7 @@ void Resource::MAC_loadLevelData(int level) {
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
-//emu_printf("MAC_loadLevelRoom\n");	
+emu_printf("MAC_loadLevelRoom %d\n", i);	
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true, TYPE_PPSS);
