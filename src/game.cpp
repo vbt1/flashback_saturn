@@ -880,6 +880,9 @@ bool Game::handleConfigPanel() {
 	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
 
+	SaveStateEntry sav[5];
+	int num = _menu.SAT_getSaveStates(sav);
+
 	_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
 
 	while (!_stub->_pi.quit) {
@@ -928,6 +931,11 @@ bool Game::handleConfigPanel() {
 			_stub->_pi.enter = false;
 			switch (current) {
 			case MENU_ITEM_LOAD:
+
+//			_stateSlot = currentSave + 1; on l'a déjà
+				_menu._stateSlot = _stateSlot;
+				_menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
+emu_printf("save %s room %s level %d\n",sav[_stateSlot-1].filename,sav[_stateSlot-1].comment, _menu._level);
 				_stub->_pi.load = true;
 				break;
 			case MENU_ITEM_SAVE:

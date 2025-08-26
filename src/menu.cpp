@@ -471,7 +471,7 @@ bool Menu::handleResumeScreen() {
 			char description[10];
 			int level = (sav[i].comment[0] - '0') - 1;
 			int room = atoi(sav[i].comment + 2);
-			sprintf(description, "Room %d", room);
+			sprintf(description, "%s Room %d", sav[i].filename, room);
 			
 			drawString(_levelNames[level], 5 + i * 3, 4, (currentSave == i) ? 2 : 3);
 			drawString( description, 6 + i  * 3, 4, (currentSave == i) ? 2 : 3);
@@ -669,7 +669,6 @@ void Menu::handleTitleScreen() {
 //				break;
 			case MENU_OPTION_ITEM_RESUME:
 				if(handleResumeScreen()) {
-//					loadGameState(slot);
 					return;
 				}
 				break;
