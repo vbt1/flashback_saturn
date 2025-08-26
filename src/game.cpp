@@ -336,11 +336,13 @@ for (i=0;i<100;i++)
 			
 			if(_menu._stateSlot == -1)
 			{
+emu_printf("here1\n");
 				_skillLevel = _menu._skill;
 				_currentLevel = _menu._level;
 			}
 			else
 			{
+emu_printf("here2\n");
 				_currentLevel = _menu._level;
 //				_currentRoom = _menu._room;
 //				loadGameState(_menu._stateSlot);
@@ -375,6 +377,7 @@ for (i=0;i<100;i++)
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 //			clearStateRewind();
+emu_printf("loadLevelData!!!\n");
 			loadLevelData();
 //emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
@@ -487,11 +490,13 @@ void Game::mainLoop() {
 			pge_process(pge);
 		}
 	}
+	
 	if (oldLevel != _currentLevel) {
 		/*if (_res._isDemo) {
 			_currentLevel = oldLevel;
 		}*/
 //emu_printf("6hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+emu_printf("change level\n");
 		changeLevel();
 //emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
@@ -934,9 +939,10 @@ bool Game::handleConfigPanel() {
 
 //			_stateSlot = currentSave + 1; on l'a déjà
 				_menu._stateSlot = _stateSlot;
-				_menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
+				_currentLevel = _menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
 emu_printf("save %s room %s level %d\n",sav[_stateSlot-1].filename,sav[_stateSlot-1].comment, _menu._level);
 				_stub->_pi.load = true;
+				loadLevelData();
 				break;
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
