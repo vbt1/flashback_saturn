@@ -8,7 +8,10 @@ extern "C" {
 	#include 	<string.h>
 #include <sl_def.h>
 #include <sgl.h>
+#include <sega_bup.h>
+#include <sega_per.h>
 #include "sega_sys.h"
+#include "sat_mem_checker.h"
 extern Uint8 *current_lwram;
 }
 
@@ -25,6 +28,7 @@ extern Uint8 *current_lwram;
 
 Menu::Menu(Resource *res, SystemStub *stub, Video *vid)
 	: _res(res), _stub(stub), _vid(vid) {
+	_stateSlot = -1;
 }
 
 void Menu::drawString(const char *str, int16_t y, int16_t x, uint8_t colorConfig) {
@@ -376,6 +380,7 @@ bool Menu::handleLevelScreen() {
 	_vid->fullRefresh();
 	_vid->fadeOut();
 	loadPicture("menu2");
+	_stateSlot = -1;
 
 	_vid->setTextPalette(); // vbt : ajout
 	int currentSkill = _skill;
@@ -446,6 +451,68 @@ bool Menu::handleLevelScreen() {
 	return false;
 }
 
+bool Menu::handleResumeScreen() {
+	emu_printf("Menu::handleResumeScreen()\n");
+	memset(_vid->_frontLayer, 0, _vid->_layerSize);
+	_vid->_fullRefresh = true;
+	_vid->fullRefresh();
+	_vid->fadeOut();
+	loadPicture("menu2");
+	_stateSlot = -1;
+	int currentSave = 0;
+	
+	_vid->setTextPalette(); // vbt : ajout
+	SaveStateEntry sav[5];
+	int num = SAT_getSaveStates(sav);
+	_stub->_pi.quit = false;
+
+	do {
+		for (int i = 0; i < num; ++i) {
+			char description[10];
+			int level = (sav[i].comment[0] - '0') - 1;
+			int room = atoi(sav[i].comment + 2);
+			sprintf(description, "Room %d", room);
+			
+			drawString(_levelNames[level], 5 + i * 3, 4, (currentSave == i) ? 2 : 3);
+			drawString( description, 6 + i  * 3, 4, (currentSave == i) ? 2 : 3);
+		}
+
+//		_vid->updateScreen();
+		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+		_stub->sleep(EVENTS_DELAY);
+		_stub->processEvents();
+
+		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
+			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+			if (currentSave > 0) {
+				--currentSave;
+			} else {
+				currentSave = num-1;
+			}
+		}
+		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+			if (currentSave < num-1) {
+				++currentSave;
+			} else {
+				currentSave = 0;
+			}
+		}
+		if (_stub->_pi.escape) {
+			_stub->_pi.escape = false;
+			break;
+		}
+		if (_stub->_pi.enter) {
+			_stateSlot = currentSave + 1;
+			_level = (sav[currentSave].comment[0] - '0') - 1;
+			_stub->_pi.enter = false;
+			return true;
+		}
+	} while (!_stub->_pi.quit);
+
+	return false;
+}
+
 void Menu::handleTitleScreen() {
 //	debug(DBG_MENU, "Menu::handleTitleScreen()");
 
@@ -461,6 +528,10 @@ void Menu::handleTitleScreen() {
 
 	menuItems[menuItemsCount].str = LocaleData::LI_07_START;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_START;
+	++menuItemsCount;
+	
+	menuItems[menuItemsCount].str = LocaleData::LI_18_RESUME_GAME;
+	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_RESUME;
 	++menuItemsCount;
 //	if (!_res->_isDemo) {
 /*		if (g_options.enable_password_menu) {
@@ -579,11 +650,13 @@ void Menu::handleTitleScreen() {
 			_stub->_pi.enter = false;
 			selectedItem = currentEntry;
 		}
-		
+
 		if (selectedItem != -1) {
+			uint8 slot = -1;
 			_selectedOption = menuItems[selectedItem].opt;
 			switch (_selectedOption) {
 			case MENU_OPTION_ITEM_START:
+				_stateSlot = -1;
 				_level = 0;
 				return;
 //			case MENU_OPTION_ITEM_SKILL:
@@ -594,6 +667,12 @@ void Menu::handleTitleScreen() {
 //					return;
 //				}
 //				break;
+			case MENU_OPTION_ITEM_RESUME:
+				if(handleResumeScreen()) {
+//					loadGameState(slot);
+					return;
+				}
+				break;
 			case MENU_OPTION_ITEM_LEVEL:
 				if (handleLevelScreen()) {
 					return;
@@ -668,3 +747,36 @@ const char *Menu::getLevelPassword(int level, int skill) const {
 	return _passwordsDOS[skill * LEVELS_COUNT + level];
 }
 */
+
+int Menu::SAT_getSaveStates(SaveStateEntry* table)
+{
+    BupDir      DirTb[5];
+    BupDate     DateTb;
+    BupConfig   conf[3];
+    
+    Uint8  *rle_buf       = (Uint8  *)SCRATCH;
+    Uint32 *libBakBuf     = (Uint32 *)(SCRATCH+10000);
+    Uint32 *BackUpRamWork = (Uint32 *)(SCRATCH+10000+0x4000);
+
+    PER_SMPC_RES_DIS(); // Disable reset
+    BUP_Init(libBakBuf, BackUpRamWork, conf);    
+    
+    int num = BUP_Dir(0,(Uint8 *)"rs",4,DirTb);
+
+    for (int i = 0; i < num; i++) {
+        strncpy(table[i].filename, (char*)DirTb[i].filename, sizeof(table[i].filename)-1);
+        table[i].filename[sizeof(table[i].filename)-1] = '\0';
+
+        strncpy(table[i].comment, (char*)DirTb[i].comment, sizeof(table[i].comment)-1);
+        table[i].comment[sizeof(table[i].comment)-1] = '\0';
+/*
+		emu_printf("FileName :%11s\n",DirTb[i].filename);
+		emu_printf("Comment  :%10s\n",DirTb[i].comment);
+		emu_printf("Language :%10d\n",DirTb[i].language);
+		BUP_GetDate(DirTb[i].date,&DateTb);
+		emu_printf("Date     :%04d-%02d-%02d %2d:%02d\n", ((Uint16)DateTb.year)+1980, DateTb.month,DateTb.day, DateTb.time,DateTb.min);
+*/
+	}
+
+    return num; // number of entries found
+}

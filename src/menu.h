@@ -13,6 +13,11 @@ struct Resource;
 struct SystemStub;
 struct Video;
 
+struct SaveStateEntry {
+    char filename[4];
+    char comment[6];
+};
+
 struct Menu {
 	enum {
 		MENU_OPTION_ITEM_START,
@@ -21,7 +26,8 @@ struct Menu {
 		MENU_OPTION_ITEM_LEVEL,
 		MENU_OPTION_ITEM_INFO,
 		MENU_OPTION_ITEM_DEMO,
-		MENU_OPTION_ITEM_QUIT
+		MENU_OPTION_ITEM_QUIT,
+		MENU_OPTION_ITEM_RESUME
 	};
 	enum {
 		SCREEN_TITLE,
@@ -72,6 +78,7 @@ struct Menu {
 
 	int _skill;
 	int _level;
+	int8_t _stateSlot;
 
 	uint8_t _charVar1;
 	uint8_t _charVar2;
@@ -91,7 +98,8 @@ struct Menu {
 	bool handlePasswordScreen();
 	bool handleLevelScreen();
 	void handleTitleScreen();
-
+	bool handleResumeScreen();
+	int SAT_getSaveStates(SaveStateEntry* table);
 //	const char *getLevelPassword(int level, int skill) const;
 };
 

@@ -432,7 +432,7 @@ struct Game {
 
 
 	// save/load state
-	uint8_t _stateSlot;
+	int8_t _stateSlot;
 	bool _validSaveState;
 
 	void makeGameStateName(uint8_t slot, char *buf);

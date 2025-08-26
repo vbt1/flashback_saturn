@@ -30,18 +30,7 @@ extern "C" {
 #include "pcm.h"
 #include "scsp.h"
 #include "sat_mem_checker.h"
-#define	BUP_LIB_ADDRESS		(*(volatile Uint32 *)(0x6000350+8))
-#define	BUP_VECTOR_ADDRESS	(*(volatile Uint32 *)(0x6000350+4))
 
-#define	BUP_Init	((void (*)(volatile Uint32 *lib,Uint32 *work,BupConfig tp[3])) (BUP_LIB_ADDRESS))
-#define	BUP_Format	((Sint32 (*)(Uint32 device)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+8)))
-#define	BUP_Stat	((Sint32 (*)(Uint32 device,Uint32 datasize,BupStat *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+12)))
-#define	BUP_Write	((Sint32 (*)(Uint32 device,BupDir *tb,volatile Uint8 *data,Uint8 wmode)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+16)))
-#define	BUP_Read	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+20)))
-#define	BUP_Delete	((Sint32 (*)(Uint32 device,Uint8 *filename)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+24)))
-#define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
-#define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
-#define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
 #define TVSTAT	(*(Uint16 *)0x25F80004)
 
 extern Uint8 *current_lwram;
@@ -344,8 +333,21 @@ for (i=0;i<100;i++)
 			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 			_demoBin = -1;
 			_res._isDemo = false;
-			_skillLevel = _menu._skill;
-			_currentLevel = _menu._level;
+			
+			if(_menu._stateSlot == -1)
+			{
+				_skillLevel = _menu._skill;
+				_currentLevel = _menu._level;
+			}
+			else
+			{
+				_currentLevel = _menu._level;
+//				_currentRoom = _menu._room;
+//				loadGameState(_menu._stateSlot);
+				_stateSlot = _menu._stateSlot;
+				_stub->_pi.load = true;
+//				loadGameState(_stateSlot);
+			}
 		}
 		pcm_sample_stop(PCM_VOICE);
 		_mix.stopMusic(0); // vbt à remettre
@@ -508,6 +510,8 @@ void Game::mainLoop() {
 			_currentRoom = _pgeLive[0].room_location;
 			_mix.pauseMusic();
 // obligatoire pour reprendre où ca en était meme pour les démos
+if(_stub->_pi.load)
+	goto vbt_skip;
 			loadLevelRoom();
 emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,0x300000-CUTCMP1);
 			_loadMap = false;
@@ -572,6 +576,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	}
 
 	already_done = 0;
+vbt_skip:
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -625,7 +630,8 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
-	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */) {
+	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */
+	&& _menu._stateSlot == -1) {
 //		ToggleWidescreenStack tws(_stub, false);
 /*		if (_res._hasSeqData) {
 			int num = 0;
@@ -732,7 +738,7 @@ void Game::inp_handleSpecialKeys() {
 	if (_stub->_pi.load) {
 		loadGameState(_stateSlot);
 		_stub->_pi.load = false;
-		memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
+//		memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
 	}
 	if (_stub->_pi.save) {
 		saveGameState(_stateSlot);
@@ -2223,10 +2229,7 @@ void Game::makeGameDemoName(char *buf) {
 }
 */
 void Game::makeGameStateName(uint8 slot, char *buf) {
-	if(slot==0)
-		sprintf(buf, "rs%d", slot);
-	else
-		sprintf(buf, "rs%d-%02d", _currentLevel + 1, slot);
+	sprintf(buf, "rs%d", slot);
 }
 
 bool Game::saveGameState(uint8 slot) {
@@ -2300,6 +2303,7 @@ bool Game::saveGameState(uint8 slot) {
 }
 
 bool Game::loadGameState(uint8 slot) {
+	emu_printf("loadGameState(%d)\n", slot);
 //	bool success = false;
 	char stateFile[8];
 	makeGameStateName(slot, stateFile);
@@ -2331,9 +2335,11 @@ bool Game::loadGameState(uint8 slot) {
 	BUP_Dir(0, (Uint8*)stateFile, 1, dir);
 
 	int cmprSize = dir[0].datasize;
-//emu_printf("cmprSize %d\n",cmprSize);
+emu_printf("cmprSize %d\n",cmprSize);
 	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
 	loadState(&sbuf);
+	
+	memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
 	return true;
 }
 
