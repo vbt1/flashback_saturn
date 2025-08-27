@@ -47,7 +47,8 @@ unsigned char loadingMap = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
-
+int hasLevelText = false;
+int previousText_num = -1;
 //extern volatile Uint8 audioEnabled;
 #include "saturn_print.h"
 #include "lz.h"
@@ -336,19 +337,16 @@ for (i=0;i<100;i++)
 			
 			if(_menu._stateSlot == -1)
 			{
-emu_printf("here1\n");
 				_skillLevel = _menu._skill;
 				_currentLevel = _menu._level;
 			}
 			else
 			{
-emu_printf("here2\n");
 				_currentLevel = _menu._level;
 //				_currentRoom = _menu._room;
-//				loadGameState(_menu._stateSlot);
 				_stateSlot = _menu._stateSlot;
 				_stub->_pi.load = true;
-//				loadGameState(_stateSlot);
+				previousText_num = -1;
 			}
 		}
 		pcm_sample_stop(PCM_VOICE);
@@ -378,7 +376,9 @@ emu_printf("here2\n");
 			_score = 0;
 //			clearStateRewind();
 emu_printf("loadLevelData!!!\n");
+
 			loadLevelData();
+			_cut._id = 0xFFFF;
 //emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
 			_endLoop = false;
@@ -629,7 +629,7 @@ void Game::updateTiming() {
 */
 void Game::playCutscene(int id) {
 //if(id>0)
-//emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram);
+//emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x slot %d\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram, _menu._stateSlot);
 //		return;   // vbt : pour ne pas lire les videos
 
 	if (id != -1) {
@@ -942,7 +942,18 @@ bool Game::handleConfigPanel() {
 				_currentLevel = _menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
 emu_printf("save %s room %s level %d\n",sav[_stateSlot-1].filename,sav[_stateSlot-1].comment, _menu._level);
 				_stub->_pi.load = true;
+
+				_vid.setTextPalette();
+				_vid.setPalette0xF();
+	//			_stub->setOverscanColor(0xE0);
+				_stub->setOverscanColor(0x00);
+				memset(_vid._backLayer, 0xE0, _vid._layerSize);
+				_vid._unkPalSlot1 = 0;
+				_vid._unkPalSlot2 = 0;
+				_score = 0;
+
 				loadLevelData();
+				_cut._id = 0xFFFF;
 				break;
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
@@ -1059,8 +1070,7 @@ void Game::printSaveStateCompleted() {
 		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE5);
 	}
 }
-int hasLevelText = false;
-int previousText_num = -1;
+
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
@@ -2113,12 +2123,28 @@ void Game::handleInventory() {
 						selected_pge = items[item_it].live_pge;
 						uint8_t txt_num = items[item_it].init_pge->text_num;
 						const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
-						drawString(str, Video::GAMESCREEN_W, 189, 0xED, true);
+
+						const char *str2 = (const char *)str;
+						int len = 0;
+						len = *str2;
+						++str2;
+
+						char txt[50];
+						snprintf(txt+1, len+1,"%s", str2);
+
+						if (items[item_it].init_pge->init_flags & 4) {
+							sprintf(txt,"%s %d", txt, selected_pge->life);
+						}
+						*txt = strlen(txt);
+//						drawString(str, Video::GAMESCREEN_W, 189, 0xED, true);
+						drawString((const uint8_t*)txt, Video::GAMESCREEN_W, 195, 0xED, true);
+/*
 						if (items[item_it].init_pge->init_flags & 4) {
 							char buf[10];
 							snprintf(buf, sizeof(buf), "%d", selected_pge->life);
 							_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 197, 0xED);
 						}
+*/
 					}
 					icon_x_pos += 32;
 				}
@@ -2349,11 +2375,11 @@ bool Game::loadGameState(uint8 slot) {
 	BUP_Dir(0, (Uint8*)stateFile, 1, dir);
 
 	int cmprSize = dir[0].datasize;
-emu_printf("cmprSize %d\n",cmprSize);
+//emu_printf("cmprSize %d\n",cmprSize);
 	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
 	loadState(&sbuf);
-	
 	memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
+	_menu._stateSlot = -1;
 	return true;
 }
 

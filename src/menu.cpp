@@ -471,7 +471,7 @@ bool Menu::handleResumeScreen() {
 			char description[10];
 			int level = (sav[i].comment[0] - '0') - 1;
 			int room = atoi(sav[i].comment + 2);
-			sprintf(description, "%s Room %d", sav[i].filename, room);
+			sprintf(description, "Room %d", room);
 			
 			drawString(_levelNames[level], 5 + i * 3, 4, (currentSave == i) ? 2 : 3);
 			drawString( description, 6 + i  * 3, 4, (currentSave == i) ? 2 : 3);
@@ -749,7 +749,8 @@ const char *Menu::getLevelPassword(int level, int skill) const {
 
 int Menu::SAT_getSaveStates(SaveStateEntry* table)
 {
-    BupDir      DirTb[5];
+emu_printf("SAT_getSaveStates\n");
+    BupDir      DirTb[1];
     BupDate     DateTb;
     BupConfig   conf[3];
     
@@ -760,22 +761,29 @@ int Menu::SAT_getSaveStates(SaveStateEntry* table)
     PER_SMPC_RES_DIS(); // Disable reset
     BUP_Init(libBakBuf, BackUpRamWork, conf);    
     
-    int num = BUP_Dir(0,(Uint8 *)"rs",4,DirTb);
+    int num = 0;
 
-    for (int i = 0; i < num; i++) {
-        strncpy(table[i].filename, (char*)DirTb[i].filename, sizeof(table[i].filename)-1);
-        table[i].filename[sizeof(table[i].filename)-1] = '\0';
+    for (int i = 1; i < 4; i++) {
+		char search[4];
+		sprintf(search,"rs%d",i);
+		int r = BUP_Dir(0,(Uint8 *)search,1,DirTb);
 
-        strncpy(table[i].comment, (char*)DirTb[i].comment, sizeof(table[i].comment)-1);
-        table[i].comment[sizeof(table[i].comment)-1] = '\0';
+		if(r)
+		{
+			strncpy(table[num].filename, (char*)DirTb[0].filename, sizeof(table[num].filename)-1);
+			table[num].filename[sizeof(table[num].filename)-1] = '\0';
+
+			strncpy(table[num].comment, (char*)DirTb[0].comment, sizeof(table[num].comment)-1);
+			table[num].comment[sizeof(table[num].comment)-1] = '\0';
+			num++;
+		}
 /*
-		emu_printf("FileName :%11s\n",DirTb[i].filename);
-		emu_printf("Comment  :%10s\n",DirTb[i].comment);
-		emu_printf("Language :%10d\n",DirTb[i].language);
-		BUP_GetDate(DirTb[i].date,&DateTb);
+		emu_printf("FileName :%11s\n",DirTb[0].filename);
+		emu_printf("Comment  :%10s\n",DirTb[0].comment);
+		emu_printf("Language :%10d\n",DirTb[0].language);
+		BUP_GetDate(DirTb[0].date,&DateTb);
 		emu_printf("Date     :%04d-%02d-%02d %2d:%02d\n", ((Uint16)DateTb.year)+1980, DateTb.month,DateTb.day, DateTb.time,DateTb.min);
 */
 	}
-
     return num; // number of entries found
 }
