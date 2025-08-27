@@ -99,7 +99,7 @@ struct Menu {
 	bool handleLevelScreen();
 	void handleTitleScreen();
 	bool handleResumeScreen();
-	int SAT_getSaveStates(SaveStateEntry* table);
+	int SAT_getSaveStates(SaveStateEntry* table, Bool all);
 //	const char *getLevelPassword(int level, int skill) const;
 };
 

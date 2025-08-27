@@ -1215,7 +1215,7 @@ const char *const LocaleData::_textsTableFR[LocaleData::LI_NUM] = {
 	"ABANDONNER",
 	"CHARGER",
 	"SAUVEGARDER",
-	"PARTIE",
+	"SLOT",
 	"DEMO"
 };
 

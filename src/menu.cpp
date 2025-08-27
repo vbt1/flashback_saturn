@@ -463,7 +463,7 @@ bool Menu::handleResumeScreen() {
 	
 	_vid->setTextPalette(); // vbt : ajout
 	SaveStateEntry sav[5];
-	int num = SAT_getSaveStates(sav);
+	int num = SAT_getSaveStates(sav, false);
 	_stub->_pi.quit = false;
 
 	do {
@@ -747,9 +747,9 @@ const char *Menu::getLevelPassword(int level, int skill) const {
 }
 */
 
-int Menu::SAT_getSaveStates(SaveStateEntry* table)
+int Menu::SAT_getSaveStates(SaveStateEntry* table, Bool all)
 {
-emu_printf("SAT_getSaveStates\n");
+//emu_printf("SAT_getSaveStates\n");
     BupDir      DirTb[1];
     BupDate     DateTb;
     BupConfig   conf[3];
@@ -768,13 +768,18 @@ emu_printf("SAT_getSaveStates\n");
 		sprintf(search,"rs%d",i);
 		int r = BUP_Dir(0,(Uint8 *)search,1,DirTb);
 
-		if(r)
+		if(r | all)
 		{
-			strncpy(table[num].filename, (char*)DirTb[0].filename, sizeof(table[num].filename)-1);
-			table[num].filename[sizeof(table[num].filename)-1] = '\0';
-
-			strncpy(table[num].comment, (char*)DirTb[0].comment, sizeof(table[num].comment)-1);
-			table[num].comment[sizeof(table[num].comment)-1] = '\0';
+			if (r)
+			{
+				strncpy(table[num].comment, (char*)DirTb[0].comment, sizeof(table[num].comment) - 1);
+				table[num].comment[sizeof(table[num].comment) - 1] = '\0';
+			}
+			else
+			{
+				strncpy(table[num].comment, "Empty", sizeof(table[num].comment) - 1);
+				table[num].comment[sizeof(table[num].comment) - 1] = '\0';
+			}
 			num++;
 		}
 /*

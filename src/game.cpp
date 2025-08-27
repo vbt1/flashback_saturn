@@ -375,8 +375,6 @@ for (i=0;i<100;i++)
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
 //			clearStateRewind();
-emu_printf("loadLevelData!!!\n");
-
 			loadLevelData();
 			_cut._id = 0xFFFF;
 //emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
@@ -886,18 +884,26 @@ bool Game::handleConfigPanel() {
 	int current = 0;
 
 	SaveStateEntry sav[5];
-	int num = _menu.SAT_getSaveStates(sav);
+	int num = _menu.SAT_getSaveStates(sav, true);
 
 	_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+	char tempStr[30];
 
+	sprintf(tempStr, "BLOCKS : %u", getFreeSaveBlocks());
+	
 	while (!_stub->_pi.quit) {
+	_menu.drawString(tempStr, y + 11, 9, 1);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_18_RESUME_GAME), y + 2, 9, colors[0]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 4, 9, colors[1]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 6, 9, colors[2]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_21_SAVE_GAME), y + 8, 9, colors[3]);
 		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
-		char buf[32];
-		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
+		char buf[16];
+//		snprintf(buf, sizeof(buf), "%s<%d>: %s", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot, sav[_stateSlot-1].comment);
+		
+		const char *cmt = sav[_stateSlot-1].comment;
+		snprintf(buf, sizeof(buf), "%s<%d>: %s%s", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot, (cmt[0] != 'E') ? "L" : "", cmt);		
+		
 		_menu.drawString(buf, y + 10, 9, 1);
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
@@ -937,23 +943,24 @@ bool Game::handleConfigPanel() {
 			switch (current) {
 			case MENU_ITEM_LOAD:
 
-//			_stateSlot = currentSave + 1; on l'a déjà
-				_menu._stateSlot = _stateSlot;
-				_currentLevel = _menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
-emu_printf("save %s room %s level %d\n",sav[_stateSlot-1].filename,sav[_stateSlot-1].comment, _menu._level);
-				_stub->_pi.load = true;
+				if (cmt[0] != 'E') // pas de sauvegarde
+				{
+					_menu._stateSlot = _stateSlot;
+					_currentLevel = _menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
+					_stub->_pi.load = true;
 
-				_vid.setTextPalette();
-				_vid.setPalette0xF();
-	//			_stub->setOverscanColor(0xE0);
-				_stub->setOverscanColor(0x00);
-				memset(_vid._backLayer, 0xE0, _vid._layerSize);
-				_vid._unkPalSlot1 = 0;
-				_vid._unkPalSlot2 = 0;
-				_score = 0;
+					_vid.setTextPalette();
+					_vid.setPalette0xF();
+		//			_stub->setOverscanColor(0xE0);
+					_stub->setOverscanColor(0x00);
+					memset(_vid._backLayer, 0xE0, _vid._layerSize);
+					_vid._unkPalSlot1 = 0;
+					_vid._unkPalSlot2 = 0;
+					_score = 0;
 
-				loadLevelData();
-				_cut._id = 0xFFFF;
+					loadLevelData();
+					_cut._id = 0xFFFF;
+				}
 				break;
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
