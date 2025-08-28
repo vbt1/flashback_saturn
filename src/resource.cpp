@@ -1453,11 +1453,15 @@ emu_printf("MAC_loadLevelRoom %d\n", i);
 void Resource::MAC_clearClut16(Color *clut, uint8_t dest) {
         memset(&clut[dest * 16], 0, 16 * sizeof(Color));
 }
-
+/*
 void Resource::MAC_copyClut16(Color *clut, uint8_t dest, uint8_t src) {
 	memcpy(&clut[dest * 16], &_clut[src * 16], 16 * sizeof(Color));
 }
-
+*/
+void Resource::MAC_copyClutN(Color *clut, uint8_t dest, uint8_t src, uint8_t count) {
+    memcpy(&clut[dest * 16], &_clut[src * 16], count * sizeof(Color));
+}
+#if 0
 void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     const int num = _macLevelNumbers[level][0] - '1';
     int offset = _macLevelColorOffsets[num];
@@ -1533,7 +1537,78 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
         clut[128 + i] = tmp[lut_index];
     }
 }
+#else
+void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
+    const int num = _macLevelNumbers[level][0] - '1';
+    int offset = _macLevelColorOffsets[num];
+    int conradPal = 0x30;
+    
+    // Special case for certain rooms in level 1 - optimized check
+    if (level == 1) {
+        // Single condition check instead of multiple OR operations
+        if ((room >= 27 && room <= 30) || (room >= 35 && room <= 37) || 
+            room == 45 || room == 46) {
+            offset = 32;
+            conradPal = 0x31;
+        }
+    }
 
+	MAC_copyClutN(clut, 0, offset, 64);
+	MAC_copyClutN(clut, 8, offset, 64); 
+    
+    // Single pass copy and swap operation
+    // Pre-allocate on stack instead of dynamic allocation
+    Color tmp[256] __attribute__((aligned(8))); // 8-byte alignment for SuperH2
+    
+    // Use optimized memory copy (SuperH2 has efficient block transfer)
+    memcpy(tmp, clut, sizeof(Color) * 256);
+
+	MAC_copyClutN(clut, 16,offset, 64);
+    
+    // Character and icon palettes - batch operations
+    MAC_copyClutN(clut, 0x14, conradPal, 16);
+    MAC_copyClutN(clut, 0x1A, _macLevelColorOffsets[0] + 2, 16);
+
+    MAC_copyClutN(clut, 0x0C, 0x37, 32);  // Copies 0x37,0x38 to 0x0C,0x0D
+    MAC_copyClutN(clut, 0x1C, 0x37, 32);  // Copies 0x37,0x38 to 0x1C,0x1D
+    
+	// Level 1 metro palette - optimized
+    if (level == 1) {
+        Color *metro_base = &clut[0x1F * 16];
+        // Unrolled for better performance
+        for (int i = 0; i < 15; i += 3) {
+            metro_base[i] = tmp[i + 1];
+            metro_base[i + 1] = tmp[i + 2];
+            metro_base[i + 2] = tmp[i + 3];
+        }
+        metro_base[15] = tmp[1]; // 4bpp only
+    }
+    
+    // LUT-based color swap - use static const for better cache locality
+    static const unsigned char lut[30] __attribute__((aligned(4))) = {
+        14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
+        126,127,254,255,174,175,190,191,206,207,222,223,238,239
+    };
+    
+    // Set white color once
+    clut[69] = {255, 255, 255}; // C++ aggregate initialization
+    
+    // Optimized swap loop - unroll by 2 for SuperH2 dual-issue
+    for (int i = 0; i < 30; i += 2) {
+        int idx1 = lut[i];
+        int idx2 = lut[i + 1];
+        
+        // Batch the swaps
+        Color temp1 = clut[idx1];
+        Color temp2 = clut[idx2];
+        
+        clut[idx1] = tmp[128 + i];
+        clut[idx2] = tmp[128 + i + 1];
+        clut[128 + i] = temp1;
+        clut[128 + i + 1] = temp2;
+    }
+}
+#endif
 const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 //emu_printf("MAC_getImageData basePtr %p offset %02x %p %p\n",ptr,0,ptr + i * 4,current_lwram);
 	const uint8_t *basePtr = ptr;
@@ -1784,4 +1859,68 @@ void Resource::MAC_closeMainFile()
 void Resource::MAC_reopenMainFile()
 {
 	_mac->_f.open(ResourceMac::FILENAME2, _dataPath, last_position);
+}
+
+void Resource::SAT_previewRoom(int level, int room, Color *clut)
+{
+	DecodeBuffer buf{};
+
+	int src_w = 512;
+	int src_h = 448;
+	int dst_w = 256;
+	int dst_h = 224;
+
+	buf.ptr = (uint8_t *)current_lwram;
+	buf.dst_w = src_w;
+	buf.dst_h = src_h;
+
+	char name[16];
+	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], room);
+	uint8_t *ptr = decodeResourceMacData(name, true, 12);
+	MAC_decodeImageData(ptr, 0, &buf, 0xff);
+
+	uint8_t *src    = (uint8_t *)current_lwram;
+	uint8_t *target = (uint8_t *)hwram_ptr;
+
+	for (int y = 0; y < dst_h; y++) {
+		for (int x = 0; x < dst_w; x++) {
+			target[y * dst_w + x] = src[(y * 2) * src_w + (x * 2)];
+		}
+	}
+
+	const int num = _macLevelNumbers[level][0] - '1';
+	int offset = _macLevelColorOffsets[num];
+	if (level == 1) {
+		switch (room) {
+		case 27:
+		case 28:
+		case 29:
+		case 30:
+		case 35:
+		case 36:
+		case 37:
+		case 45:
+		case 46:
+			offset = 32;
+			break;
+		}
+	}
+	MAC_copyClutN(clut, 0, offset, 64);
+	MAC_copyClutN(clut, 8, offset, 64);
+	
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = (256/8)<<8|224;
+    user_sprite.CTRL = 0;
+    user_sprite.XA = -128;
+    user_sprite.YA = -10;
+    user_sprite.GRDA = 0;
+    size_t spriteVramOffset;
+	
+	spriteVramOffset = 0x80000 - (256*224);
+    slTransferEntry((void*)target, (void*)(SpriteVRAM + spriteVramOffset), 256*224);
+
+    user_sprite.SRCA = spriteVramOffset / 8;
+    slSetSprite(&user_sprite, toFIXED2(240));
 }

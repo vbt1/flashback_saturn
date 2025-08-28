@@ -172,7 +172,7 @@ void Menu::displayTitleScreenMac(int num) {
 
 	for (int i = 0; i < 12; ++i) {
 		Color palette[16];
-		_res->MAC_copyClut16(palette, 0, clutBaseColor + i);
+		_res->MAC_copyClutN(palette, 0, clutBaseColor + i, 16);
 		const int basePaletteColor = i * 16;
 		for (int j = 0; j < 16; ++j) {
 			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
@@ -183,7 +183,7 @@ void Menu::displayTitleScreenMac(int num) {
 	if (num == kMacTitleScreen_MacPlay) {
 		Color palette[16];
 		for (int i = 0; i < 2; ++i) {
-			_res->MAC_copyClut16(palette, 0, 55 + i);
+			_res->MAC_copyClutN(palette, 0, 55 + i, 16);
 			const int basePaletteColor = (12 + i) * 16;
 			for (int j = 0; j < 16; ++j) {
 				_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
@@ -452,7 +452,7 @@ bool Menu::handleLevelScreen() {
 }
 
 bool Menu::handleResumeScreen() {
-	emu_printf("Menu::handleResumeScreen()\n");
+//	emu_printf("Menu::handleResumeScreen()\n");
 	memset(_vid->_frontLayer, 0, _vid->_layerSize);
 	_vid->_fullRefresh = true;
 	_vid->fullRefresh();
@@ -460,12 +460,17 @@ bool Menu::handleResumeScreen() {
 	loadPicture("menu2");
 	_stateSlot = -1;
 	int currentSave = 0;
-	
+	int loaded = -1;
+
 	_vid->setTextPalette(); // vbt : ajout
-	SaveStateEntry sav[5];
+	SaveStateEntry sav[4];
 	int num = SAT_getSaveStates(sav, false);
 	_stub->_pi.quit = false;
 
+	memset((uint8_t *)FRONT,0x00, _vid->_layerSize);
+
+	slPrioritySpr0(7);
+///--------------------------------------
 	do {
 		for (int i = 0; i < num; ++i) {
 			char description[10];
@@ -475,9 +480,21 @@ bool Menu::handleResumeScreen() {
 			
 			drawString(_levelNames[level], 5 + i * 3, 4, (currentSave == i) ? 2 : 3);
 			drawString( description, 6 + i  * 3, 4, (currentSave == i) ? 2 : 3);
-		}
 
-//		_vid->updateScreen();
+			if (i == currentSave && loaded != currentSave){
+				Color clut[384];
+				_res->SAT_previewRoom(level, room, clut);
+
+				for (int color = 0; color < 12 * 16; ++color) {
+					int j = color / 16;
+					if (j < 4 || j >= 8) {
+						_stub->setPaletteEntry(0x100 + color, &clut[color]);
+					}
+				}
+				loaded=currentSave;
+				slSynch();
+			}
+		}
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
@@ -503,13 +520,14 @@ bool Menu::handleResumeScreen() {
 			break;
 		}
 		if (_stub->_pi.enter) {
+			slPrioritySpr0(4);
 			_stateSlot = currentSave + 1;
 			_level = (sav[currentSave].comment[0] - '0') - 1;
 			_stub->_pi.enter = false;
 			return true;
 		}
 	} while (!_stub->_pi.quit);
-
+	slPrioritySpr0(4);
 	return false;
 }
 

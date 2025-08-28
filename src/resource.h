@@ -334,6 +334,7 @@ const uint8_t *getCineString(int num) const {
 	void MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst);
 	void MAC_clearClut16(Color *clut, uint8_t dest);
 	void MAC_copyClut16(Color *clut, uint8_t dest, uint8_t src);
+	void MAC_copyClutN(Color *clut, uint8_t dest, uint8_t src, uint8_t count);
 	void MAC_setupRoomClut(int level, int room, Color *clut);
 	const uint8_t *MAC_getImageData(const uint8_t *ptr, int i);
 	bool MAC_hasLevelMap(int level, int room) const;
@@ -380,6 +381,7 @@ const uint8_t *getCineString(int num) const {
 //		assert(0);
 		return -1;
 	}
+	void SAT_previewRoom(int level, int room, Color *clut);
 };
 
 #endif // RESOURCE_H__

@@ -883,7 +883,7 @@ bool Game::handleConfigPanel() {
 	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
 
-	SaveStateEntry sav[5];
+	SaveStateEntry sav[4];
 	int num = _menu.SAT_getSaveStates(sav, true);
 
 	_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
@@ -1807,7 +1807,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 
 				static const int kMonsterPalette = 5;
 
-				_res.MAC_copyClut16(palette, kMonsterPalette + 16, index);
+				_res.MAC_copyClutN(palette, kMonsterPalette + 16, index, 16);
 				const int base_color = 256 + kMonsterPalette * 16;
 				Color *palette_ptr = &palette[base_color];
 
@@ -1978,14 +1978,14 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 //	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
-int channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+unsigned char channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < NUM_SFXS) {
 		SoundFx *sfx = &_res._sfxList[num];
 		if (sfx->data) {
 //		emu_printf("play sound %02d volume : softVol %d calc : %d\n",num,softVol, (Mixer::MAX_VOLUME >> (2 * softVol))-1);
-			const int volume = (Mixer::MAX_VOLUME >> (2 * softVol))-1;
+			const unsigned char volume = (Mixer::MAX_VOLUME >> (2 * softVol))-1;
 
 			int i=0;
 // vbtvbt
@@ -2014,7 +2014,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 				slot1->kyonex = 0;
 				asm("nop");	*/			
 				i=0;
-				memset(channel_len,0,16*sizeof(int));
+				memset(channel_len,0,16);
 //				memset(&channel_len[17],0,14*sizeof(int));
 			}
 
