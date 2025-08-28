@@ -207,7 +207,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 	load_audio_driver(); // Load M68K audio driver
 //slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	init_cdda();
-	sound_external_audio_enable(5, 5);
+	sound_external_audio_enable(7, 7);
 	prepareGfxMode(); // Prepare graphic output
 //		//emu_printf("prepareGfxMode\n");	
 //slPrint((char *)"setup_input     ",slLocate(10,12));

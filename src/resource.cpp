@@ -1442,7 +1442,7 @@ void Resource::MAC_loadLevelData(int level) {
 }
 
 void Resource::MAC_loadLevelRoom(int level, int i, DecodeBuffer *dst) {
-emu_printf("MAC_loadLevelRoom %d\n", i);	
+//emu_printf("MAC_loadLevelRoom %d\n", i);	
 	char name[16];
 	snprintf(name, sizeof(name), "Level %c Room %d", _macLevelNumbers[level][0], i);
 	uint8_t *ptr = decodeResourceMacData(name, true, TYPE_PPSS);
