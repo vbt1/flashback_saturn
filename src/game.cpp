@@ -1143,7 +1143,7 @@ static int getLineLength(const uint8_t *str) {
 
 void Game::drawStoryTexts() {
 	if (_textToDisplay != 0xFFFF) {
-		uint8_t textColor = 0xE8;
+		uint8_t textColor = 0xE5;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;

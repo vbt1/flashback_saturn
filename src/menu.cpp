@@ -598,7 +598,6 @@ void Menu::handleTitleScreen() {
 			break;
 		}
 	}
-
 	_stub->initTimeStamp();
 
 	while (!_stub->_pi.quit) {
