@@ -1585,15 +1585,12 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     }
     
     // LUT-based color swap - use static const for better cache locality
-    static const unsigned char lut[30] __attribute__((aligned(4))) = {
+	static const unsigned char lut[30] __attribute__((aligned(4))) = {
         14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
         126,127,254,255,174,175,190,191,206,207,222,223,238,239
     };
-    
-    // Set white color once
-    clut[69] = {255, 255, 255}; // C++ aggregate initialization
-    
-    // Optimized swap loop - unroll by 2 for SuperH2 dual-issue
+	uint8_t is_room59 = (level==1 && room==59) ? 1:0;
+
     for (int i = 0; i < 30; i += 2) {
         int idx1 = lut[i];
         int idx2 = lut[i + 1];
@@ -1601,11 +1598,15 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
         // Batch the swaps
         Color temp1 = clut[idx1];
         Color temp2 = clut[idx2];
-        
-        clut[idx1] = tmp[128 + i];
+
         clut[idx2] = tmp[128 + i + 1];
-        clut[128 + i] = temp1;
         clut[128 + i + 1] = temp2;
+
+        if(is_room59 && (i==6))
+			continue;
+
+        clut[idx1] = tmp[128 + i];
+        clut[128 + i] = temp1;
     }
 }
 #endif

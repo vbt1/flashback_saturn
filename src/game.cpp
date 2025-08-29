@@ -1160,7 +1160,7 @@ void Game::drawStoryTexts() {
 				if (*str == '@' /* Floppy version */ || *str == '~' /* CD version */) {
 					switch (str[1]) {
 					case '1':
-						textColor = 0xE9;
+						textColor = 0xE5;
 						break;
 					case '2':
 						textColor = 0xEB;
@@ -1298,7 +1298,7 @@ _vid.drawString(toto, 1, 88, 0xE7);
 			}*/
 		}
 //emu_printf("clean storytext\n");			
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
+		memset4_fast(&_vid._frontLayer[51 << 9], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 		_mix.unpauseMusic();
 		_textToDisplay = 0xFFFF;
@@ -1910,16 +1910,25 @@ void Game::loadLevelData() {
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
  /// vbt : pour afficher les bgs	
- /*
+/*
 slScrAutoDisp(NBG0ON|NBG1ON|SPRON);	
 	for (int i = _currentRoom;i <  _currentRoom+n;i++)
 	{
+		Color clut[512];
+		_res.MAC_setupRoomClut(_currentLevel, i, clut);
+
+		const int baseColor = 256;
+		for (int i = 0; i < 256; ++i) {
+			int color = baseColor + i;
+			_stub->setPaletteEntry(color, &clut[color]);
+		}
+
 		_vid.MAC_decodeMap(_currentLevel, i);
 		char str[60];
 		sprintf(str,"room %02d",i);
 		_vid.drawString(str, 4, 60, 0xE7);
 
-		_vid.SAT_displayPalette();
+//		_vid.SAT_displayPalette();
 	}
 	slScrAutoDisp(NBG1ON|SPRON);
 emu_printf("pge_loadForCurrentLevel %d\n",n);	
