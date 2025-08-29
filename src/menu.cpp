@@ -609,7 +609,7 @@ void Menu::handleTitleScreen() {
 		if(s2>=45000)
 		{
 			_stub->_pi.enter = true;
-			currentEntry = 3;
+			currentEntry = MENU_OPTION_ITEM_DEMO;
 		}
 			
 		if (_nextScreen == SCREEN_TITLE) {
