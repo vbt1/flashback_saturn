@@ -59,7 +59,8 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
     }
     
     // Default allocation
-    uint32_t new_ptr = (uint32_t)hwram_ptr + alignedSize;
+	uint32_t new_ptr = (uint32_t)hwram_ptr + (type == 20 ? 0 : alignedSize);
+
     if (new_ptr < end1) {
         dst = hwram_ptr;
         hwram_ptr = (uint8_t*)new_ptr;

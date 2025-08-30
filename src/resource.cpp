@@ -1256,8 +1256,11 @@ uint8_t *Resource::decodeResourceMacData(const ResourceMacEntry *entry, bool dec
 	} 
 	data = hwram_ptr;
 	_resourceMacDataSize = _mac->_f.readUint32BE();
-	hwram_ptr += SAT_ALIGN(_resourceMacDataSize);
+
 	_mac->_f.read(data, _resourceMacDataSize);
+	if (entry->type == TYPE_STRS)
+		hwram_ptr+= SAT_ALIGN(_resourceMacDataSize);
+
 	return data;
 }
 
@@ -1423,9 +1426,10 @@ void Resource::MAC_loadLevelData(int level) {
 //emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
-//emu_printf("CT load¨%s %d\n",name,_resourceMacDataSize);
+//emu_printf("CT load¨%s %d hwram_ptr %p\n",name,_resourceMacDataSize, hwram_ptr);
 	ptr = decodeResourceMacData(name, true, TYPE_LMAP);
 	assert(_resourceMacDataSize == 0x1D00);
+//emu_printf("ram map %p sz %d\n", ptr, _resourceMacDataSize);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
 	// .SPC
@@ -1589,8 +1593,12 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
         14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
         126,127,254,255,174,175,190,191,206,207,222,223,238,239
     };
-	uint8_t is_room59 = (level==1 && room==59) ? 1:0;
+    // Set white color once
+// vbt : on vire pour voir
+//    clut[69] = {255, 255, 255};
 
+	uint8_t is_room59 = (level==1 && room==59) ? 1:0;
+// couleur 62
     for (int i = 0; i < 30; i += 2) {
         int idx1 = lut[i];
         int idx2 = lut[i + 1];
