@@ -376,7 +376,10 @@ for (i=0;i<100;i++)
 			_score = 0;
 //			clearStateRewind();
 			loadLevelData();
-			_cut._id = 0xFFFF;
+
+			if(_menu._stateSlot != -1)
+				_cut._id = 0xFFFF;
+
 //emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
 			_endLoop = false;
@@ -428,7 +431,6 @@ void Game::resetGameState() {
 	_deathCutsceneCounter = 0;
 	_saveStateCompleted = false;
 	_loadMap = true;
-//	loadingMap = true;
 	pge_resetMessages();
 	_blinkingConradCounter = 0;
 	_pge_processOBJ = false;

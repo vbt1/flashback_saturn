@@ -183,6 +183,8 @@ int16_t Game::col_getGridData(LivePGE *pge, int16_t dy, int16_t dx) {
 		room_ct_data += pge_grid_x + (pge_grid_y + 6) * 16 + next_room * 0x70;
 		return (int16_t)room_ct_data[0x100];
 	} else if (pge_grid_y >= 7) {
+	emu_printf("room %d\n",pge->room_location);
+		
 		room_ct_data = &_res._ctData[CT_DOWN_ROOM];
 		next_room = room_ct_data[pge->room_location];
 		if (next_room < 0) return 1;
