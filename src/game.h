@@ -208,9 +208,9 @@ struct Game {
 	uint16_t _pge_opGunVar;
 	uint16_t _pge_compareVar1;
 	uint16_t _pge_compareVar2;
-	uint8_t _pge_zoomPiegeNum;
-	uint8_t _pge_zoomCounter;
-	int _pge_zoomX, _pge_zoomY;
+//	uint8_t _pge_zoomPiegeNum;
+//	uint8_t _pge_zoomCounter;
+//	int _pge_zoomX, _pge_zoomY;
 
 	void pge_resetMessages();
 	void pge_clearMessages(uint8_t pge_index);

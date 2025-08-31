@@ -436,9 +436,9 @@ void Game::resetGameState() {
 	_pge_processOBJ = false;
 	_pge_opGunVar = 0;
 	_textToDisplay = 0xFFFF;
-	_pge_zoomPiegeNum = 0;
-	_pge_zoomCounter = 0;
-	_pge_zoomX = _pge_zoomY = 0;
+//	_pge_zoomPiegeNum = 0;
+//	_pge_zoomCounter = 0;
+//	_pge_zoomX = _pge_zoomY = 0;
 }
 
 uint8_t already_done = 0;
@@ -2107,9 +2107,9 @@ void Game::handleInventory() {
 		bool display_score = false;
 
 		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
-			static const int icon_spr_w = 16;
+/*			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
-/*			switch (_res._type) {
+			switch (_res._type) {
 			case kResourceTypeDOS: {
 					// draw inventory background
 					int icon_num = 31;
@@ -2142,27 +2142,24 @@ void Game::handleInventory() {
 						uint8_t txt_num = items[item_it].init_pge->text_num;
 						const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
 
-						const char *str2 = (const char *)str;
-						int len = 0;
-						len = *str2;
-						++str2;
-
-						char txt[50];
-						snprintf(txt+1, len+1,"%s", str2);
-
-						if (items[item_it].init_pge->init_flags & 4) {
-							sprintf(txt,"%s %d", txt, selected_pge->life);
-						}
-						*txt = strlen(txt);
 //						drawString(str, Video::GAMESCREEN_W, 189, 0xED, true);
-						drawString((const uint8_t*)txt, Video::GAMESCREEN_W, 195, 0xED, true);
-/*
-						if (items[item_it].init_pge->init_flags & 4) {
-							char buf[10];
-							snprintf(buf, sizeof(buf), "%d", selected_pge->life);
-							_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 197, 0xED);
+
+						if (items[item_it].init_pge->init_flags & 4) 
+						{
+							const char *str2 = (const char *)str;
+							int len = *str2;
+							++str2;
+
+							char txt[50];
+							snprintf(txt+1, len+1,"%s", str2);
+							sprintf(txt,"%s %d", txt, selected_pge->life);
+							*txt = strlen(txt);
+							drawString((const uint8_t*)txt, Video::GAMESCREEN_W, 195, 0xED, true);
 						}
-*/
+						else
+						{
+							drawString(str, Video::GAMESCREEN_W, 195, 0xED, true);
+						}
 					}
 					icon_x_pos += 32;
 				}
