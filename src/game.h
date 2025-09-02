@@ -16,7 +16,7 @@
 #include "video.h"
 #include "saturn_print.h"
 
-#define SAV_BUFSIZE (1024 * 10)
+#define SAV_BUFSIZE (1024 * 20)
 
 #undef assert
 #define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}

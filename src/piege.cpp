@@ -2212,13 +2212,13 @@ void Game::pge_sendMessage(uint8_t src_pge_index, uint8_t dst_pge_index, int16_t
 		if (dst_pge_index == 0 && (_blinkingConradCounter != 0 || (_cheats & kCheatNoHit) != 0)) {
 			return;
 		}
-		if (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) {
+/*		if (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) {
 			const int type = _pgeLive[dst_pge_index].init_PGE->object_type;
 			if (type == 1 || type == 10) {
 				_pge_zoomPiegeNum = dst_pge_index;
 				_pge_zoomCounter = 0;
 			}
-		}
+		}*/
 	}
 	MessagePGE *le = _pge_nextFreeMessage;
 	if (le) {
