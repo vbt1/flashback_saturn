@@ -24,7 +24,7 @@
 typedef struct {
 	Uint8 *buffer;  //[SAV_BUFSIZE]; // 10 Kilobytes of save buffer
 	Uint32 idx; // Index of current position inside the buffer
-	
+#if 0	
     void writeByte(Uint8 value) {
         buffer[idx++] = value;
     }
@@ -66,7 +66,7 @@ typedef struct {
             data[i] = buffer[idx++];
         }
     }
-	
+#endif	
 } SAVE_BUFFER;
 
 struct File;
