@@ -469,8 +469,8 @@ bool Menu::handleResumeScreen() {
 
 	memset((uint8_t *)FRONT,0x00, _vid->_layerSize);
 
-	slPrioritySpr0(7);
 ///--------------------------------------
+	slPrioritySpr0(7);
 	do {
 		for (int i = 0; i < num; ++i) {
 			char description[10];
@@ -495,6 +495,12 @@ bool Menu::handleResumeScreen() {
 				slSynch();
 			}
 		}
+		
+		if(num == 0)
+		{
+			drawString((_res->_lang == LANG_FR) ? "Aucune sauvegarde" : "No Saves", 6 + 0 * 3, 4, 3);
+		}
+		
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
@@ -524,7 +530,7 @@ bool Menu::handleResumeScreen() {
 			_stateSlot = currentSave + 1;
 			_level = (sav[currentSave].comment[0] - '0') - 1;
 			_stub->_pi.enter = false;
-			return true;
+			return (num != 0);
 		}
 	} while (!_stub->_pi.quit);
 	slPrioritySpr0(4);
