@@ -38,14 +38,11 @@ static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t 
         return (uint8_t*)SCRATCH;
     }
     
-    // Group ID checks for better branch prediction
-    if (id >= 3100 && id <= 3400) {
-        if (id == 3100 || id == 3300 || id == 3400) {
-            dst = current_lwram;
-            current_lwram += 4;
-            return dst;
-        }
-    }
+	if (id == 3100 || id == 3300 || id == 3400) {
+		dst = current_lwram;
+		current_lwram += 4;
+		return dst;
+	}
     
     // Correct condition: (type 12 with range 1000-1461) OR id == 4000
     if ((type == 12 && (id - 1000) <= 461) || id == 4000) {
@@ -154,8 +151,10 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry* entr
 
 	uint8_t* batch = (uint8_t*)SCRATCH+4096;
 	if(decodedSize>300000)
+	{
+//		emu_printf("Lzss sz2 %d %d type %d\n", srcSize, decodedSize, entry->type);
 		batch = (uint8_t*)FRONT;
-
+	}
 	batch = f.batchRead(batch, srcSize);
 
     uint8_t* const end = dst + decodedSize;

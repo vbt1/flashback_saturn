@@ -18,7 +18,7 @@ extern "C"
 extern Uint8 *hwram_screen;
 extern Uint8 *hwram_ptr;
 extern Uint8 *current_lwram;
-//extern Uint8 *save_current_lwram;
+extern Uint8 *save_current_lwram;
 extern Uint8 frame_x;
 extern Uint8 frame_y;
 extern Uint8 frame_z;
@@ -1588,7 +1588,9 @@ void Cutscene::play() {
 				}
 				break;
 			case 8: // save checkpoints
-				playSet((uint8_t *)CUTCMP1, 0x5E4);
+//	void playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnload, int frameNumber);
+			
+				playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
 				break;
 			case 19:
 				//if (g_options.play_serrure_cutscene) 
@@ -1657,7 +1659,7 @@ static void readSetPalette(const uint8_t *p, uint16_t offset, uint16_t *palette)
 }
 
 void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y) {
-//emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d)\n",p,offset,x,y);	
+emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d)\n",p,offset,x,y);	
 	const int count = READ_BE_UINT16(p + offset); offset += 2;
 	for (int i = 0; i < count - 1; ++i) {
 		offset += 5; // shape_marker
@@ -1699,47 +1701,125 @@ static uint16_t readSetShapeOffset(const uint8_t *p, int offset) {
 	}
 	return offset;
 }
-
+	struct SetShape {
+		uint16_t offset;
+		uint16_t size;
+	};
 static const int kMaxShapesCount = 16;
 static const int kMaxPaletteSize = 32;
+SetShape foregroundShapes[kMaxShapesCount];
 
-void Cutscene::playSet(const uint8_t *p, int offset) {
+void Cutscene::playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnload, int frameNumber) {
 	SetShape backgroundShapes[kMaxShapesCount];
 	const int bgCount = READ_BE_UINT16(p + offset); offset += 2;
-	if(bgCount > kMaxShapesCount)
-		return;
-	
-	for (int i = 0; i < bgCount; ++i) {
-		uint16_t nextOffset = readSetShapeOffset(p, offset);
-		backgroundShapes[i].offset = offset;
-		backgroundShapes[i].size = nextOffset - offset;
-		offset = nextOffset + 45;
+	int frames;
+//	if(bgCount > kMaxShapesCount)
+//		return;
+	if(doPrepare)
+	{
+//		save_current_lwram = (uint8_t *)current_lwram;
+		for (int i = 0; i < bgCount; ++i) {
+			uint16_t nextOffset = readSetShapeOffset(p, offset);
+			backgroundShapes[i].offset = offset;
+			backgroundShapes[i].size = nextOffset - offset;
+			offset = nextOffset + 45;
+		}
+		const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
+
+		for (int i = 0; i < fgCount; ++i) {
+			uint16_t nextOffset = readSetShapeOffset(p, offset);
+			foregroundShapes[i].offset = offset;
+			foregroundShapes[i].size = nextOffset - offset;
+			offset = nextOffset + 45;
+		}
+		prepare();
+
+	//	_gfx.setLayer(_backPage);
+
+		offset = 10;
+		frames = READ_BE_UINT16(p + offset); offset += 2;
+		transferAux = 1;
+		_frameDelay = 5;
+
+		_gfx._layer = _backPage;
+//		emu_printf("nb frames %d\n", frames);
 	}
-	SetShape foregroundShapes[kMaxShapesCount];
-	const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
+	else
+	{
+/*
+	_frontPage = (uint8_t *)hwram_screen;
+//	_backPage = (uint8_t *)_frontPage+IMG_SIZE;
+	_backPage = (uint8_t *)SCRATCH+4096;//hwram_ptr; //SCRATCH
+	_auxPage = (uint8_t *)hwram_screen+IMG_SIZE;
+//		transferAux = 1;
+//	memset4_fast(_backPage, 0x00, IMG_SIZE);
+//	memset4_fast(_frontPage, 0x00, IMG_SIZE+IMG_SIZE/2);
+//		offset = 12+22*frameNumber;
 
-	if(fgCount > kMaxShapesCount)
-		return;
+		for (int i = 0; i < bgCount; ++i) {
+			uint16_t nextOffset = readSetShapeOffset(p, offset);
+			backgroundShapes[i].offset = offset;
+			backgroundShapes[i].size = nextOffset - offset;
+			offset = nextOffset + 45;
+		}
+		const int fgCount = READ_BE_UINT16(p + offset); offset += 2;
 
-	for (int i = 0; i < fgCount; ++i) {
-		uint16_t nextOffset = readSetShapeOffset(p, offset);
-		foregroundShapes[i].offset = offset;
-		foregroundShapes[i].size = nextOffset - offset;
-		offset = nextOffset + 45;
+		for (int i = 0; i < fgCount; ++i) {
+			uint16_t nextOffset = readSetShapeOffset(p, offset);
+			foregroundShapes[i].offset = offset;
+			foregroundShapes[i].size = nextOffset - offset;
+			offset = nextOffset + 45;
+		}
+*/
+//	memset4_fast(_frontPage, 0x00, IMG_SIZE);
+//	memset4_fast(_backPage, 0x00, IMG_SIZE);
+
+	const int w = 240;
+	const int h = 128;
+	const int x = 0;//(Video::GAMESCREEN_W - w) / 2;
+	const int y = 0;//50;
+	const int sw = w;// * _vid->_layerScale;
+	const int sh = h;// * _vid->_layerScale;
+	const int sx = x; //* _vid->_layerScale;
+	const int sy = y;// * _vid->_layerScale;
+	_gfx.setClippingRect(sx, sy, sw, sh);
+
+		_gfx._layer = _backPage;
+//		SWAP(_frontPage, _backPage);
+		switch(frameNumber)
+		{
+			case 0:  offset = 12;	break;
+			case 1:  offset = 34;	break;
+			case 84: offset = 2832;	break;
+			case 94: offset = 3088;	break;
+		}
+	memset4_fast(_frontPage, 0x00, IMG_SIZE);
+//	memset4_fast(_backPage, 0x00, IMG_SIZE);
+emu_printf("frameNumber %d offset %d\n",frameNumber, offset);	
+		_frameDelay = 0;
 	}
-	prepare();
-//	_gfx.setLayer(_backPage);
-	_gfx._layer = _backPage;
 
-	offset = 10;
-	const int frames = READ_BE_UINT16(p + offset); offset += 2;
-	transferAux = 1;
-	_frameDelay = 5;
-	
-	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
+    const int start = (frameNumber >= 0) ? frameNumber : 0;
+    const int end   = (frameNumber >= 0) ? (start + 1) : frames; // run just one frame when frameNumber >= 0
+
+
+//	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
+    for (int i = start; i < end && (!_stub->_pi.quit && !_interrupted); ++i) {
+//------------------------------		
+	/*
+	memset4_fast(&_vid->_frontLayer[51 << 9], 0x00,16 << 9);
+	_stub->copyRect(0, 51, _vid->_w, 16, _vid->_frontLayer, _vid->_w);	
+	char toto[50];
+	sprintf(toto,"i %d                           " ,i);
+	_vid->drawString(toto, 20, 38, 0xE5);
+	_stub->copyRect(0, 76, _vid->_w, 16, _vid->_frontLayer, _vid->_w);
+	*/
+//------------------------------		
 		const int shapeBg = READ_BE_UINT16(p + offset); offset += 2;
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
 		uint16_t paletteBuffer[16];
+
+emu_printf("i %d off %d trans %d layer %p fgShap.offset %d fgShap.size %d count %d\n",i,offset,transferAux,_gfx._layer, foregroundShapes[shapeBg].offset, foregroundShapes[shapeBg].size, count);
 
 		if(transferAux)
 		{
@@ -1758,6 +1838,8 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 			const int shapeX = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 			const int shapeY = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 
+//emu_printf("fg %d x %d y %d\n",shapeFg,shapeX,shapeY);
+
 			if(newpal)
 			{
 				readSetPalette(p, foregroundShapes[shapeFg].offset + foregroundShapes[shapeFg].size, paletteBuffer);
@@ -1768,18 +1850,29 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 		}
 		updateScreen();
 		memset4_fast(_frontPage, 0, IMG_SIZE);
+//	memset4_fast(_backPage, 0x00, IMG_SIZE);
 
-		_stub->processEvents();
-		if (_stub->_pi.backspace && !_res->_isDemo) {
-			_stub->_pi.backspace = false;
-			_interrupted = true;
+		if(frameNumber<0)
+		{
+			_stub->processEvents();
+			if (_stub->_pi.backspace && !_res->_isDemo) {
+				_stub->_pi.backspace = false;
+				_interrupted = true;
+			}
 		}
 	}
-
-	unload();
-	_interrupted = false;
-	_stop = true; // pour reprendre la musique
 	
-	frame_y = frame_x = 0;
-	frame_z = 30;
+//	if(frameNumber>=0)
+//		SWAP(_frontPage, _backPage);
+	
+//	current_lwram = (uint8_t *)save_current_lwram;
+	if(doUnload)
+	{
+		unload();
+		_interrupted = false;
+		_stop = true; // pour reprendre la musique
+		
+		frame_y = frame_x = 0;
+		frame_z = 30;
+	}
 }

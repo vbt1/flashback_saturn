@@ -518,7 +518,7 @@ emu_printf("change level\n");
 if(_stub->_pi.load)
 	goto vbt_skip;
 			loadLevelRoom();
-emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,0x300000-CUTCMP1);
+emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6)*-1);
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -1853,7 +1853,7 @@ void Game::loadLevelData() {
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
 //	switch (_res._type) {
-#if 0		
+#if 0
 	case kResourceTypeDOS:
 		_res.load(lvl->name, Resource::OT_MBK);
 		_res.load(lvl->name, Resource::OT_CT);
@@ -1892,8 +1892,20 @@ void Game::loadLevelData() {
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_res.MAC_loadLevelData(_currentLevel);
+emu_printf("deuxieme 84\n");
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 84);
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 84);
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
+		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
+		
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, -1);
+//while(1);
 		SAT_preloadMonsters();
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 94);
+		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		SAT_preloadSpc();
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 94);
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
 //	}
@@ -1938,6 +1950,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 64);
 #ifdef DEMO
 	if (_demoBin != -1) {
 		_cut._id = 0xFFFF;
@@ -1955,10 +1968,13 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
+//	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 80);
 	pge_resetMessages();
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
+//	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, -1);
 // vbt : bon endroit pour lire la piste audio
 	_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
 //emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
@@ -2443,6 +2459,19 @@ void Game::saveState(SAVE_BUFFER *f) {
 		}
 	}
 	f->write((const Uint8*)&_res._ctData[0x100], 0x1C00);
+	
+//emu_printf("name save level\n");
+/*
+for(int xx= 0; xx< (256 + 112 * 64); xx+=16)
+{
+	emu_printf("x%03d %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", xx,
+	_res._ctData[xx+0],_res._ctData[xx+1],_res._ctData[xx+2],_res._ctData[xx+3],_res._ctData[xx+4],
+	_res._ctData[xx+5],_res._ctData[xx+6],_res._ctData[xx+7],_res._ctData[xx+8],_res._ctData[xx+9],
+	_res._ctData[xx+10],_res._ctData[xx+11],_res._ctData[xx+12],_res._ctData[xx+13],_res._ctData[xx+14],
+	_res._ctData[xx+15]);
+}
+*/	
+	
 	for (CollisionSlot2 *cs2 = &_col_slots2[0]; cs2 < _col_slots2Cur; ++cs2) {
 		if (cs2->next_slot == 0) {
 			f->writeUint32BE(0xFFFFFFFF);
@@ -3020,22 +3049,16 @@ static void process_commands(void* arg) {
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
-	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-	_stub->copyRect(0, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
-#ifdef USE_SLAVE	
-	_res.MAC_closeMainFile();
-	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
-	_res.MAC_reopenMainFile();
-//	_cut.playSet(current_lwram, 0x2B14);
-    SlaveData slaveData = { &_cut };
-current_lwram+=SAT_ALIGN(21623);
-    emu_printf("slSlaveFunc %p\n", current_lwram);
-    // Pass process_commands and slaveData to slSlaveFunc
-    slSlaveFunc(reinterpret_cast<void (*)()>(process_commands), &slaveData);
-    emu_printf("wait_for_slave\n");
- //   wait_for_slave(); // Wait for slave to complete
-    emu_printf("wait_for_slave end\n");
-#endif
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 1);
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
+emu_printf("premier 84\n");
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
+
+	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
+//playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
+//	_cut.playSet((uint8_t *)CUTCMP1, 0x5E4);
+	_stub->copyRect(0, 76, _vid._w, 16, _vid._frontLayer, _vid._w);
 }
 
 void Game::SAT_preloadCMPfiles()
@@ -3045,6 +3068,7 @@ void Game::SAT_preloadCMPfiles()
 	GFS_Load(GFS_NameToId((int8_t *)"CARTE.CMP")  ,0,(uint8_t *)CUTCMP3,2296);
 	GFS_Load(GFS_NameToId((int8_t *)"SERRURE.CMP"),0,(uint8_t *)CUTCMP4,3512);
 	GFS_Load(GFS_NameToId((int8_t *)"MEMO.CMP")	  ,0,(uint8_t *)CUTCMP5,1167);
+	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
 }
 
 #define CRAM_BANK 0x5f00000
