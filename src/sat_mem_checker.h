@@ -28,13 +28,14 @@ void *memset4_fast(void *, long, size_t);
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 #define HWRAM_SCREEN_SIZE 50000//(128*240*2)+(64*240)
 // si on modifie scratch et front, la sequence de fin a des glitchs ...
-#define SCRATCH 0x2e7000
-#define FRONT   0x2aeff8
-#define CUTCMP1 0x2AAFF8				// CAILLOU
-#define CUTCMP2 CUTCMP1+SAT_ALIGN(6361) // ASC
-#define CUTCMP3 CUTCMP2+SAT_ALIGN(2472)
-#define CUTCMP4 CUTCMP3+SAT_ALIGN(2296) // SERRUE
-#define CUTCMP5 CUTCMP4+SAT_ALIGN(3512) // MEMO
+#define SCRATCH (int)ADR_WORKRAM_L_END-0x14000
+#define FRONT   SCRATCH-(512*448)
+#define CUTCMP1 FRONT-SAT_ALIGN(6361)	//16ko dispo			// CAILLOU
+#define CUTCMP2 CUTCMP1-SAT_ALIGN(2472) // ASC
+#define CUTCMP3 CUTCMP2-SAT_ALIGN(2296)
+#define CUTCMP4 CUTCMP3-SAT_ALIGN(3512) // SERRURE
+#define CUTCMP5 CUTCMP4-SAT_ALIGN(1167) // MEMO
+#define CUTCMP6 CUTCMP5-SAT_ALIGN(21623) // CDFILES?
 
 #define CLEAN_X 16
 #define CLEAN_Y 114

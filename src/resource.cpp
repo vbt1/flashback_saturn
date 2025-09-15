@@ -1422,7 +1422,7 @@ void Resource::MAC_loadLevelData(int level) {
 //emu_printf(" .OBJ\n");
 
 //emu_printf("decodeOBJ3 free %p\n",ptr);		
-	sat_free(ptr);
+//	sat_free(ptr);
 //emu_printf(" .CT\n");
 	// .CT
 	snprintf(name, sizeof(name), "Level %c map", _macLevelNumbers[level][0]);
@@ -1432,6 +1432,18 @@ void Resource::MAC_loadLevelData(int level) {
 //emu_printf("ram map %p sz %d\n", ptr, _resourceMacDataSize);
 	memcpy(_ctData, ptr, _resourceMacDataSize);
 	sat_free(ptr);
+	
+//emu_printf("name %s start level\n", name);
+/*
+for(int xx= 0; xx< (256 + 112 * 64); xx+=16)
+{
+	emu_printf("x%03d %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", xx,
+	_ctData[xx+0],_ctData[xx+1],_ctData[xx+2],_ctData[xx+3],_ctData[xx+4],
+	_ctData[xx+5],_ctData[xx+6],_ctData[xx+7],_ctData[xx+8],_ctData[xx+9],
+	_ctData[xx+10],_ctData[xx+11],_ctData[xx+12],_ctData[xx+13],_ctData[xx+14],
+	_ctData[xx+15]);
+}
+*/
 	// .SPC
 	snprintf(name, sizeof(name), "Objects %c", _macLevelNumbers[level][0]);
 //emu_printf("MAC_loadLevelData %s\n", name);		
@@ -1659,7 +1671,7 @@ static void stringLowerCase(char *p) {
 
 void Resource::MAC_unloadCutscene() {
 	current_lwram = (uint8_t *)save_current_lwram;
-//	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
+	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
 //	sat_free(_pol);
 	_pol = 0;
 //	sat_free(_cmd);

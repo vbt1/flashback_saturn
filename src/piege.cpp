@@ -992,6 +992,27 @@ int Game::pge_op_setCollisionState1(ObjectOpcodeArgs *args) {
 }
 
 int Game::pge_op_setCollisionState0(ObjectOpcodeArgs *args) {
+/*
+	emu_printf("pge_op_setCollisionState0 %d %d room %d obj_type %d pos_x %d pos_y %d colslot %d\n", 
+	args->a, args->b, args->pge->room_location, 
+	args->pge->obj_type, args->pge->pos_x, 
+	args->pge->pos_y, args->pge->collision_slot);
+*/
+/*	
+	LivePGE *pge; // arg0
+	int16_t a; // arg2
+	int16_t b; // arg4
+	
+	uint16_t obj_type;
+	int16_t pos_x;
+	int16_t pos_y;
+	uint8_t anim_seq;
+	uint8_t room_location;
+	int16_t life;
+	int16_t counter_value;
+	uint8_t collision_slot;	
+	
+*/
 	return pge_updateCollisionState(args->pge, args->a, 0);
 }
 
@@ -2107,6 +2128,11 @@ void Game::pge_addToInventory(LivePGE *pge1, LivePGE *pge2, LivePGE *pge3) {
 
 int Game::pge_updateCollisionState(LivePGE *pge, int16_t pge_dy, uint8_t value) {
 	const uint8_t pge_collision_data_len = pge->init_PGE->collision_data_len;
+	
+//	emu_printf("pge_updateCollisionState %d %d room %d obj_type %d pos_x %d pos_y %d colslot %d\n", 
+//	pge_dy, value, pge->room_location, pge->obj_type, 
+//	pge->pos_x, pge->pos_y, pge->collision_slot);	
+	
 	if (pge->room_location < 0x40) {
 		int8_t *grid_data = &_res._ctData[0x100] + 0x70 * pge->room_location;
 		int16_t pge_pos_y = ((pge->pos_y / 36) & ~1) + pge_dy;
@@ -2155,6 +2181,7 @@ int Game::pge_updateCollisionState(LivePGE *pge, int16_t pge_dy, uint8_t value) 
 			uint8_t *dst = &slot1->data_buf[0];
 			int8_t *src = grid_data;
 			int n = pge_collision_data_len;
+//			emu_printf("n>=0x10 ? %02x\n", n);
 			assert(n < 0x10);
 			while (n--) {
 				*dst++ = *src;
@@ -2212,13 +2239,13 @@ void Game::pge_sendMessage(uint8_t src_pge_index, uint8_t dst_pge_index, int16_t
 		if (dst_pge_index == 0 && (_blinkingConradCounter != 0 || (_cheats & kCheatNoHit) != 0)) {
 			return;
 		}
-		if (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) {
+/*		if (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) {
 			const int type = _pgeLive[dst_pge_index].init_PGE->object_type;
 			if (type == 1 || type == 10) {
 				_pge_zoomPiegeNum = dst_pge_index;
 				_pge_zoomCounter = 0;
 			}
-		}
+		}*/
 	}
 	MessagePGE *le = _pge_nextFreeMessage;
 	if (le) {
