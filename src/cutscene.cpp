@@ -1829,7 +1829,13 @@ emu_printf("i %d off %d trans %d layer %p fgShap.offset %d fgShap.size %d count 
 			packPixels(_backPage, _auxPage, IMG_SIZE);
 			clearBackPage();
 		}
-		_gfx._layer = _frontPage;
+		if(frameNumber>=0)
+		{
+			memset4_fast(_backPage, 0x00, IMG_SIZE);
+			_gfx._layer = _backPage;
+		}
+		else
+			_gfx._layer = _frontPage;
 //		_gfx.setLayer(_frontPage);
 		int newpal = 1;
 

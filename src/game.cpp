@@ -1892,20 +1892,10 @@ void Game::loadLevelData() {
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_res.MAC_loadLevelData(_currentLevel);
-emu_printf("deuxieme 84\n");
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 84);
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 84);
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
 		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
-		
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, -1);
-//while(1);
 		SAT_preloadMonsters();
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 94);
 		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		SAT_preloadSpc();
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 94);
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
 //	}
@@ -3050,14 +3040,7 @@ void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
-	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 1);
-	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
-emu_printf("premier 84\n");
-	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
-
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
-//playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
-//	_cut.playSet((uint8_t *)CUTCMP1, 0x5E4);
 	_stub->copyRect(0, 76, _vid._w, 16, _vid._frontLayer, _vid._w);
 }
 
