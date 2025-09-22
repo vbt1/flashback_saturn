@@ -269,7 +269,7 @@ static void _LZ_Uncompress_Single(unsigned char *in, unsigned char *out, unsigne
 {
     unsigned char marker, symbol;
     unsigned int i, inpos, outpos, length, offset;
-    unsigned int max_outsize = 15000; // Or pass as parameter from LZW header (2984?)
+    unsigned int max_outsize = 20000; // Or pass as parameter from LZW header (2984?)
     
     if(insize < 1)
         return;

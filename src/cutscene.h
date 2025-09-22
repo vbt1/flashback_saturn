@@ -161,7 +161,6 @@ struct Cutscene {
 	void play();
 
 	void drawSetShape(const uint8_t *p, uint16_t offset, int x, int y);
-//	void playSet(const uint8_t *p, int offset);
 	void playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnload, int frameNumber);
 	void packPixels(uint8_t *back, uint8_t *aux, size_t size);
 };

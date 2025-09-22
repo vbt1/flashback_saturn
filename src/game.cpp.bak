@@ -30,18 +30,7 @@ extern "C" {
 #include "pcm.h"
 #include "scsp.h"
 #include "sat_mem_checker.h"
-#define	BUP_LIB_ADDRESS		(*(volatile Uint32 *)(0x6000350+8))
-#define	BUP_VECTOR_ADDRESS	(*(volatile Uint32 *)(0x6000350+4))
 
-#define	BUP_Init	((void (*)(volatile Uint32 *lib,Uint32 *work,BupConfig tp[3])) (BUP_LIB_ADDRESS))
-#define	BUP_Format	((Sint32 (*)(Uint32 device)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+8)))
-#define	BUP_Stat	((Sint32 (*)(Uint32 device,Uint32 datasize,BupStat *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+12)))
-#define	BUP_Write	((Sint32 (*)(Uint32 device,BupDir *tb,volatile Uint8 *data,Uint8 wmode)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+16)))
-#define	BUP_Read	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+20)))
-#define	BUP_Delete	((Sint32 (*)(Uint32 device,Uint8 *filename)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+24)))
-#define	BUP_Dir 	((Sint32 (*)(Uint32 device,Uint8 *filename,Uint16 tbsize,BupDir *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+28)))
-#define	BUP_Verify	((Sint32 (*)(Uint32 device,Uint8 *filename,volatile Uint8 *data)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+32)))
-#define	BUP_SetDate	((Uint32 (*)(BupDate *tb)) (*(Uint32 *)(BUP_VECTOR_ADDRESS+40)))
 #define TVSTAT	(*(Uint16 *)0x25F80004)
 
 extern Uint8 *current_lwram;
@@ -53,10 +42,13 @@ extern Uint8 tickPerVblank;
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
+unsigned char drawingInventory = 0;
+unsigned char loadingMap = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
-
+int hasLevelText = false;
+int previousText_num = -1;
 //extern volatile Uint8 audioEnabled;
 #include "saturn_print.h"
 #include "lz.h"
@@ -123,16 +115,25 @@ Game::Game(SystemStub *stub, const char *dataPath, const char *savePath, int lev
 
 void Game::run() {
 
+#ifdef DEBUG
+	_stub->initTimeStamp();
+	unsigned int s1 = _stub->getTimeStamp();
+#endif
 	_stub->init("REminiscence", Video::GAMESCREEN_W*2, Video::GAMESCREEN_H*2);
 	remap_colors();
+	SAT_loadLogo();
 	SAT_preloadCMPfiles();
-
 	_randSeed = time(0);
 	_mix.init();  // vbt : evite de fragmenter la ram
+
 	_res.init();   // vbt : ajout pour la partie mac
+#ifdef DEBUG
+	unsigned int e1 = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","init", e1-s1);
+#endif
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+30000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
@@ -179,7 +180,8 @@ void Game::run() {
 			}
 			hwram_ptr+=256;
 		}
-		SAT_preloadCDfiles();
+//		SAT_preloadCDfiles();
+
 		_res.load_TEXT();
 #ifdef DEBUG
 	_stub->initTimeStamp();
@@ -210,12 +212,54 @@ void Game::run() {
 #ifdef DEBUG
 	et = _stub->getTimeStamp();
 	emu_printf("--duration %s : %d\n","sound", et-st);
+	_stub->initTimeStamp();
+	st = _stub->getTimeStamp();
 #endif	
 // à redeplacer
 		_res.MAC_loadCutsceneText(); // vbt déplacé
+#ifdef DEBUG
+	et = _stub->getTimeStamp();
+	emu_printf("--duration %s : %d\n","cut text", et-st);
+#endif	
 /*		break;
 	}
 */
+
+
+#if 1
+	loadingMap = 0;
+	slTVOff();
+	memset4_fast((void *)VDP2_VRAM_B0, 0x0000, 268*1024);
+	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);	
+	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
+
+	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
+	(*sys_clip).XC = 574;
+
+	slScrWindow0(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg0(win0_IN);
+	slScrWindow1(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg1(win1_IN);
+	slScrWindowModeSPR(win0_IN);
+	slScrPosNbg0(toFIXED(-63),0);
+	slSynch();
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 hwram = (uint8_t *)hwram_ptr;
 
 #ifndef BYPASS_PROTECTION
@@ -290,8 +334,20 @@ for (i=0;i<100;i++)
 			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 			_demoBin = -1;
 			_res._isDemo = false;
-			_skillLevel = _menu._skill;
-			_currentLevel = _menu._level;
+			
+			if(_menu._stateSlot == -1)
+			{
+				_skillLevel = _menu._skill;
+				_currentLevel = _menu._level;
+			}
+			else
+			{
+				_currentLevel = _menu._level;
+//				_currentRoom = _menu._room;
+				_stateSlot = _menu._stateSlot;
+				_stub->_pi.load = true;
+				previousText_num = -1;
+			}
 		}
 		pcm_sample_stop(PCM_VOICE);
 		_mix.stopMusic(0); // vbt à remettre
@@ -320,6 +376,10 @@ for (i=0;i<100;i++)
 			_score = 0;
 //			clearStateRewind();
 			loadLevelData();
+
+			if(_menu._stateSlot != -1)
+				_cut._id = 0xFFFF;
+
 //emu_printf("4hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 			resetGameState();
 			_endLoop = false;
@@ -376,9 +436,9 @@ void Game::resetGameState() {
 	_pge_processOBJ = false;
 	_pge_opGunVar = 0;
 	_textToDisplay = 0xFFFF;
-	_pge_zoomPiegeNum = 0;
-	_pge_zoomCounter = 0;
-	_pge_zoomX = _pge_zoomY = 0;
+//	_pge_zoomPiegeNum = 0;
+//	_pge_zoomCounter = 0;
+//	_pge_zoomX = _pge_zoomY = 0;
 }
 
 uint8_t already_done = 0;
@@ -430,11 +490,13 @@ void Game::mainLoop() {
 			pge_process(pge);
 		}
 	}
+	
 	if (oldLevel != _currentLevel) {
 		/*if (_res._isDemo) {
 			_currentLevel = oldLevel;
 		}*/
 //emu_printf("6hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+emu_printf("change level\n");
 		changeLevel();
 //emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
@@ -453,8 +515,10 @@ void Game::mainLoop() {
 			_currentRoom = _pgeLive[0].room_location;
 			_mix.pauseMusic();
 // obligatoire pour reprendre où ca en était meme pour les démos
+if(_stub->_pi.load)
+	goto vbt_skip;
 			loadLevelRoom();
-emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,0x300000-CUTCMP1);
+emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6)*-1);
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -463,7 +527,7 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
 			already_done = 1;
 		}
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00,32*_vid._w);
+		memset4_fast(&_vid._frontLayer[51 << 9], 0x00,32 << 9);
 	}
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
@@ -486,6 +550,8 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 	drawStoryTexts();
 	if (_stub->_pi.backspace) {
 		_stub->_pi.backspace = false;
+		_stub->_pi.quit = false;
+		_stub->_pi.escape = false;
 		handleInventory();
 	}
 	if (_stub->_pi.escape) {
@@ -515,6 +581,7 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	}
 
 	already_done = 0;
+vbt_skip:
 	inp_handleSpecialKeys();
 /*	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
@@ -562,13 +629,14 @@ void Game::updateTiming() {
 */
 void Game::playCutscene(int id) {
 //if(id>0)
-//emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram);
+//emu_printf("Cutscene::playCutscene() _id=0x%X c%p s %p\nposition_vram_aft_monster%x position_vram %x slot %d\n", id , current_lwram, save_current_lwram,position_vram_aft_monster, position_vram, _menu._stateSlot);
 //		return;   // vbt : pour ne pas lire les videos
 
 	if (id != -1) {
 		_cut._id = id;
 	}
-	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */) {
+	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */
+	&& _menu._stateSlot == -1) {
 //		ToggleWidescreenStack tws(_stub, false);
 /*		if (_res._hasSeqData) {
 			int num = 0;
@@ -675,6 +743,7 @@ void Game::inp_handleSpecialKeys() {
 	if (_stub->_pi.load) {
 		loadGameState(_stateSlot);
 		_stub->_pi.load = false;
+//		memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
 	}
 	if (_stub->_pi.save) {
 		saveGameState(_stateSlot);
@@ -816,16 +885,27 @@ bool Game::handleConfigPanel() {
 	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
 
-	_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+	SaveStateEntry sav[4];
+	int num = _menu.SAT_getSaveStates(sav, true);
 
+	_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
+	char tempStr[30];
+
+	sprintf(tempStr, "BLOCKS : %u", getFreeSaveBlocks());
+	
 	while (!_stub->_pi.quit) {
+	_menu.drawString(tempStr, y + 11, 9, 1);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_18_RESUME_GAME), y + 2, 9, colors[0]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 4, 9, colors[1]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 6, 9, colors[2]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_21_SAVE_GAME), y + 8, 9, colors[3]);
 		_vid.fillRect(Video::CHAR_W * (x + 1), Video::CHAR_H * (y + 10), Video::CHAR_W * (w - 2), Video::CHAR_H, 0xE2);
-		char buf[32];
-		snprintf(buf, sizeof(buf), "%s < %02d >", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot);
+		char buf[16];
+//		snprintf(buf, sizeof(buf), "%s<%d>: %s", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot, sav[_stateSlot-1].comment);
+		
+		const char *cmt = sav[_stateSlot-1].comment;
+		snprintf(buf, sizeof(buf), "%s<%d>: %s%s", _res.getMenuString(LocaleData::LI_22_SAVE_SLOT), _stateSlot, (cmt[0] != 'E') ? "L" : "", cmt);		
+		
 		_menu.drawString(buf, y + 10, 9, 1);
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
@@ -864,7 +944,25 @@ bool Game::handleConfigPanel() {
 			_stub->_pi.enter = false;
 			switch (current) {
 			case MENU_ITEM_LOAD:
-				_stub->_pi.load = true;
+
+				if (cmt[0] != 'E') // pas de sauvegarde
+				{
+					_menu._stateSlot = _stateSlot;
+					_currentLevel = _menu._level = (sav[_stateSlot-1].comment[0] - '0') - 1;
+					_stub->_pi.load = true;
+
+					_vid.setTextPalette();
+					_vid.setPalette0xF();
+		//			_stub->setOverscanColor(0xE0);
+					_stub->setOverscanColor(0x00);
+					memset(_vid._backLayer, 0xE0, _vid._layerSize);
+					_vid._unkPalSlot1 = 0;
+					_vid._unkPalSlot2 = 0;
+					_score = 0;
+
+					loadLevelData();
+					_cut._id = 0xFFFF;
+				}
 				break;
 			case MENU_ITEM_SAVE:
 				_stub->_pi.save = true;
@@ -897,19 +995,21 @@ bool Game::handleContinueAbort() {
 	playCutscene(0x48);
 	
 	char textBuf[50];
-	int timeout = 100;
+	int timeout = 109;
 	int current_color = 0;
-	uint8_t colors[] = { 0xE4, 0xE5 };
+	uint8_t colors[] = { 0xE4, 0xE3 };  //0xE3 ou ED blanc, E4 rouge, E5 jaune
+	uint8_t colors2[] = { 0xE4, 0xE5 };  //0xE3 ou ED blanc, E4 rouge, E5 jaune
+
 	uint8_t color_inc = 0xFF;
-	Color col;
-	_stub->getPaletteEntry(0xE4, &col);
+//	Color col;
+//	_stub->getPaletteEntry(0xE4, &col);
 
 	while (timeout >= 0 && !_stub->_pi.quit) {
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawString(str, (264 - strlen(str) * 8) / 2, 76, 0xE3);
 		str = _res.getMenuString(LocaleData::LI_02_TIME);
-		
+
 		sprintf(textBuf, "%s: %d", str, timeout / 10);
 		memset(&_vid._frontLayer[(127<<1)*512],0x00,14*512);
 		_vid.drawString(textBuf, 61, 127, 0xE3);
@@ -939,25 +1039,7 @@ bool Game::handleContinueAbort() {
 					++current_color;
 				}
 			}
-/*		}
-		else
-		{
-			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-				if (current_color > 0) {
-					SWAP(colors[current_color], colors[current_color - 1]);
-					--current_color;
-				}
-			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-				if (current_color < 1) {
-					SWAP(colors[current_color], colors[current_color + 1]);
-					++current_color;
-				}
-			}
-		}
-*/
+
 		if (_stub->_pi.enter) {
 // vbt : corrige la ram quand on continue
 			SAT_cleanRAM (LWRAM);
@@ -970,25 +1052,10 @@ bool Game::handleContinueAbort() {
 		}
 		_stub->copyRect(0, 0, _vid._w, 400, _vid._frontLayer, _vid._w);
 
-		static const int COLOR_STEP = 8;
-		static const int COLOR_MIN = 16;
-		static const int COLOR_MAX = 256 - 16;
-		if (col.b >= COLOR_MAX) {
-			color_inc = 0;
-		} else if (col.b < COLOR_MIN) {
-			color_inc = 0xFF;
-		}
-		if (color_inc == 0xFF) {
-			col.b += COLOR_STEP;
-			col.g += COLOR_STEP;
-		} else {
-			col.b -= COLOR_STEP;
-			col.g -= COLOR_STEP;
-		}
-		_stub->setPaletteEntry(0xE4, &col);
 		_stub->processEvents();
 		_stub->sleep(100);
 		--timeout;
+		colors[current_color]=colors2[(timeout / 5) % 2];
 	}
 	memset4_fast(_vid._frontLayer,0x00,_vid._layerSize);
 	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
@@ -1009,11 +1076,10 @@ void Game::printLevelCode() {
 void Game::printSaveStateCompleted() {
 	if (_saveStateCompleted) {
 		const char *str = _res.getMenuString(LocaleData::LI_05_COMPLETED);
-		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE6);
+		_vid.drawString(str, (176 - strlen(str) * Video::CHAR_W) / 2, 34, 0xE5);
 	}
 }
-int hasLevelText = false;
-int previousText_num = -1;
+
 void Game::drawLevelTexts() {
 	LivePGE *pge = &_pgeLive[0];
 	int8_t obj = col_findCurrentCollidingObject(pge, 3, 0xFF, 0xFF, &pge);
@@ -1047,7 +1113,8 @@ void Game::drawLevelTexts() {
 //			memset4_fast(&_vid._frontLayer[51*_vid._w],0x00,16*_vid._w);	
 			if (_cut._id == 0xFFFF  || _cut._id == 30 || _cut._id == 31 ) // ou !=34 ou remonter avec texttodisplay
 			{
-				drawString(str, 176, 26, 0xE6, true);
+//				drawString(str, 176, 26, 0xE6, true);
+				drawString(str, 176, 26, 0xE5, true);
 				_cut._id = 0xFFFF;
 			}
 
@@ -1078,7 +1145,7 @@ static int getLineLength(const uint8_t *str) {
 
 void Game::drawStoryTexts() {
 	if (_textToDisplay != 0xFFFF) {
-		uint8_t textColor = 0xE8;
+		uint8_t textColor = 0xE5;
 		const uint8_t *str = _res.getGameString(_textToDisplay);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
@@ -1095,7 +1162,7 @@ void Game::drawStoryTexts() {
 				if (*str == '@' /* Floppy version */ || *str == '~' /* CD version */) {
 					switch (str[1]) {
 					case '1':
-						textColor = 0xE9;
+						textColor = 0xE5;
 						break;
 					case '2':
 						textColor = 0xEB;
@@ -1233,7 +1300,7 @@ _vid.drawString(toto, 1, 88, 0xE7);
 			}*/
 		}
 //emu_printf("clean storytext\n");			
-		memset4_fast(&_vid._frontLayer[51*_vid._w], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
+		memset4_fast(&_vid._frontLayer[51 << 9], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 		_mix.unpauseMusic();
 		_textToDisplay = 0xFFFF;
@@ -1680,7 +1747,7 @@ void Game::drawCharacter(const uint8_t *dataPtr, int16_t pos_x, int16_t pos_y, u
 }
 */
 int Game::loadMonsterSprites(LivePGE *pge) {
-//	debug(DBG_GAME, "Game::loadMonsterSprites()");
+//	emu_printf("Game::loadMonsterSprites()");
 	const InitPGE *init_pge = pge->init_PGE;
 	if (init_pge->obj_node_number != 0x49 && init_pge->object_type != 10) {
 		return 0xFFFF;
@@ -1716,12 +1783,38 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 //				Color *palette = (Color *)hwram_ptr;
 //				_cut._stop=true; // vbt bidouille pour relancer la piste audio
 
-// on l'appelle juste pour la palette				
-				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+// on l'appelle juste pour la palette, appel supprimé		
+//				_res.MAC_loadMonsterData(_monsterNames[0][_curMonsterNum], palette);
+				unsigned int index = 0;
+				switch (_monsterNames[0][_curMonsterNum][0]) {
+					case 'j':  // junky
+					index = (_currentLevel != 1) ? 0x32 : 0x33;
+			//            monster_name = "Junky";
+						break;
+					case 'm':  // mercenai
+						index = 0x34;
+			//            monster_name = "Mercenary";
+						break;
+					case 'r':  // replican
+						index = 0x35;
+			//            monster_name = "Replicant";
+						break;
+					case 'g':  // glue
+						index = 0x36;
+			//            monster_name = "Alien";
+						break;
+					default:
+						break; // Unknown monster
+				}
+
 				static const int kMonsterPalette = 5;
-				for (int i = 0; i < 16; ++i) {
-					const int color = 256 + kMonsterPalette * 16 + i;
-					_stub->setPaletteEntry(color, &palette[color]);
+
+				_res.MAC_copyClutN(palette, kMonsterPalette + 16, index, 16);
+				const int base_color = 256 + kMonsterPalette * 16;
+				Color *palette_ptr = &palette[base_color];
+
+				for (int i = 0; i < 16; i++) {
+					_stub->setPaletteEntry(base_color + i,     &palette_ptr[i]);
 				}
 //			}
 //			break;
@@ -1751,14 +1844,16 @@ static bool isMetro(int level, int room) {
 
 void Game::loadLevelRoom() {
 //	emu_printf("Game::loadLevelMap() room=%d\n", _currentRoom);
+	loadingMap = true;
 	_vid.MAC_decodeMap(_currentLevel, _currentRoom);
+	loadingMap = false;
 }
 
 void Game::loadLevelData() {
 	_res.clearLevelRes();
 	const Level *lvl = &_gameLevels[_currentLevel];
 //	switch (_res._type) {
-#if 0		
+#if 0
 	case kResourceTypeDOS:
 		_res.load(lvl->name, Resource::OT_MBK);
 		_res.load(lvl->name, Resource::OT_CT);
@@ -1797,7 +1892,9 @@ void Game::loadLevelData() {
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_res.MAC_loadLevelData(_currentLevel);
+		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
 		SAT_preloadMonsters();
+		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		break;
@@ -1817,16 +1914,25 @@ void Game::loadLevelData() {
 	_currentRoom = _res._pgeInit[0].init_room;
 	uint16_t n = _res._pgeNum;
  /// vbt : pour afficher les bgs	
- /*
+/*
 slScrAutoDisp(NBG0ON|NBG1ON|SPRON);	
 	for (int i = _currentRoom;i <  _currentRoom+n;i++)
 	{
+		Color clut[512];
+		_res.MAC_setupRoomClut(_currentLevel, i, clut);
+
+		const int baseColor = 256;
+		for (int i = 0; i < 256; ++i) {
+			int color = baseColor + i;
+			_stub->setPaletteEntry(color, &clut[color]);
+		}
+
 		_vid.MAC_decodeMap(_currentLevel, i);
 		char str[60];
 		sprintf(str,"room %02d",i);
 		_vid.drawString(str, 4, 60, 0xE7);
 
-		_vid.SAT_displayPalette();
+//		_vid.SAT_displayPalette();
 	}
 	slScrAutoDisp(NBG1ON|SPRON);
 emu_printf("pge_loadForCurrentLevel %d\n",n);	
@@ -1834,6 +1940,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
+//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 64);
 #ifdef DEMO
 	if (_demoBin != -1) {
 		_cut._id = 0xFFFF;
@@ -1851,10 +1958,13 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 			_pge_liveTable1[pge->room_location] = pge;
 		}
 	}
+//	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 80);
 	pge_resetMessages();
 	_validSaveState = false;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
+//	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, -1);
 // vbt : bon endroit pour lire la piste audio
 	_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
 //emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
@@ -1885,14 +1995,14 @@ void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
 //	_vid.markBlockAsDirty(x, y, 16, 16, _vid._layerScale);
 }
 
-int channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+unsigned char channel_len[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 void Game::playSound(uint8_t num, uint8_t softVol) {
 	if (num < NUM_SFXS) {
 		SoundFx *sfx = &_res._sfxList[num];
 		if (sfx->data) {
 //		emu_printf("play sound %02d volume : softVol %d calc : %d\n",num,softVol, (Mixer::MAX_VOLUME >> (2 * softVol))-1);
-			const int volume = (Mixer::MAX_VOLUME >> (2 * softVol))-1;
+			const unsigned char volume = (Mixer::MAX_VOLUME >> (2 * softVol))-1;
 
 			int i=0;
 // vbtvbt
@@ -1921,7 +2031,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 				slot1->kyonex = 0;
 				asm("nop");	*/			
 				i=0;
-				memset(channel_len,0,16*sizeof(int));
+				memset(channel_len,0,16);
 //				memset(&channel_len[17],0,14*sizeof(int));
 			}
 
@@ -1929,10 +2039,12 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 			channel_len[i] = sfx->len;
 			pcm_play(i, sfx, volume, pcm_sample_loop_no_loop);
 		}
-	} else if (num == 66) {
+	} /*else if (num == 66) {
 		// open/close inventory (DOS)
-	} else if (num >= 68 && num <= 75) {
+		emu_printf("play sound inventory %02d\n",num);
+	}*/ else if (num >= 68 && num <= 75) {
 //		emu_printf("play sfx %d\n",num);
+		emu_printf("play sound something %02d\n",num);
 		
 		// in-game music
 //		_sfxPly.play(num);
@@ -1980,8 +2092,10 @@ void Game::handleInventory() {
 
 	LivePGE *selected_pge = 0;
 	LivePGE *pge = &_pgeLive[0];
+
 	if (pge->life > 0 && pge->current_inventory_PGE != 0xFF) {
-		playSound(66, 0);
+		drawingInventory = true;
+		playSound(52, 0);
 		InventoryItem items[24];
 		int num_items = 0;
 		uint8_t inv_pge = pge->current_inventory_PGE;
@@ -1999,9 +2113,9 @@ void Game::handleInventory() {
 		bool display_score = false;
 
 		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
-			static const int icon_spr_w = 16;
+/*			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
-/*			switch (_res._type) {
+			switch (_res._type) {
 			case kResourceTypeDOS: {
 					// draw inventory background
 					int icon_num = 31;
@@ -2033,11 +2147,24 @@ void Game::handleInventory() {
 						selected_pge = items[item_it].live_pge;
 						uint8_t txt_num = items[item_it].init_pge->text_num;
 						const uint8_t *str = _res.getTextString(_currentLevel, txt_num);
-						drawString(str, Video::GAMESCREEN_W, 189, 0xED, true);
-						if (items[item_it].init_pge->init_flags & 4) {
-							char buf[10];
-							snprintf(buf, sizeof(buf), "%d", selected_pge->life);
-							_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 197, 0xED);
+
+//						drawString(str, Video::GAMESCREEN_W, 189, 0xED, true);
+
+						if (items[item_it].init_pge->init_flags & 4) 
+						{
+							const char *str2 = (const char *)str;
+							int len = *str2;
+							++str2;
+
+							char txt[50];
+							snprintf(txt+1, len+1,"%s", str2);
+							sprintf(txt,"%s %d", txt, selected_pge->life);
+							*txt = strlen(txt);
+							drawString((const uint8_t*)txt, Video::GAMESCREEN_W, 195, 0xED, true);
+						}
+						else
+						{
+							drawString(str, Video::GAMESCREEN_W, 195, 0xED, true);
 						}
 					}
 					icon_x_pos += 32;
@@ -2052,10 +2179,13 @@ void Game::handleInventory() {
 				}
 			} else {
 				char buf[50];
+
 				snprintf(buf, sizeof(buf), "SCORE %08u", _score);
-				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 158, 0xE5);
+//				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 158, 0xE5);
+				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 164, 0xED);
 				snprintf(buf, sizeof(buf), "%s:%s", _res.getMenuString(LocaleData::LI_06_LEVEL), _res.getMenuString(LocaleData::LI_13_EASY + _skillLevel));
-				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 166, 0xE5);
+//				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 166, 0xE5);
+				_vid.drawString(buf, (114 - strlen(buf) * Video::CHAR_W) / 2 + 72, 195, 0xED);
 				/*if (0) { // if the protection screen code was not properly cracked...
 					static const uint8_t kCrackerText[17] = {
 						0x19, 0x08, 0x1B, 0x19, 0x11, 0x1F, 0x08, 0x67, 0x18,
@@ -2067,9 +2197,11 @@ void Game::handleInventory() {
 					_vid.drawString(buf, 65, 193, 0xE4);
 				}*/
 			}
+
 			_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 			_stub->updateScreen(0);
 			_stub->sleep(80);
+
 #ifdef DEMO
 			inp_update();
 #endif
@@ -2112,17 +2244,17 @@ void Game::handleInventory() {
 			if (_stub->_pi.escape) {   // vbt désactive le menu de load/save si dans menu ingame
 				_stub->_pi.escape = false;
 			}
-//			slSynch();
+			drawingInventory = 0;
 		}
 		// vbt : n'efface que le menu
-		memset4_fast(&_vid._frontLayer[280*512],0x00, _vid._w*144);
+		memset4_fast(&_vid._frontLayer[280<<9],0x00, _vid._w*144);
 		_stub->copyRect(112, 280, 288, 144, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 		_stub->_pi.backspace = false;
 		if (selected_pge) {
 			pge_setCurrentInventoryObject(selected_pge);
 		}
-		playSound(66, 0);
+		playSound(52, 0);
 
 		frame_y = frame_x = 0;
 		frame_z = 30;		
@@ -2158,10 +2290,7 @@ void Game::makeGameDemoName(char *buf) {
 }
 */
 void Game::makeGameStateName(uint8 slot, char *buf) {
-	if(slot==0)
-		sprintf(buf, "rs%d", slot);
-	else
-		sprintf(buf, "rs%d-%02d", _currentLevel + 1, slot);
+	sprintf(buf, "rs%d", slot);
 }
 
 bool Game::saveGameState(uint8 slot) {
@@ -2181,10 +2310,12 @@ bool Game::saveGameState(uint8 slot) {
 //	Uint32 BackUpRamWork[2048];
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
-	Uint8  *rle_buf		 = (Uint8  *)SCRATCH; //_res._scratchBuffer;
-	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+10000);
-	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+10000+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+10000+0x6000);
+	Uint8  *rle_buf		 = (Uint8  *)SCRATCH;
+	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+SAV_BUFSIZE);
+	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+SAV_BUFSIZE+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
+	memset(sbuf.buffer, 0, SAV_BUFSIZE);
+	
 
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2235,6 +2366,7 @@ bool Game::saveGameState(uint8 slot) {
 }
 
 bool Game::loadGameState(uint8 slot) {
+	emu_printf("loadGameState(%d)\n", slot);
 //	bool success = false;
 	char stateFile[8];
 	makeGameStateName(slot, stateFile);
@@ -2246,11 +2378,12 @@ bool Game::loadGameState(uint8 slot) {
 	
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
-	Uint8  *rle_buf		 = (Uint8  *)SCRATCH; //_res._scratchBuffer;
-	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+10000);
-	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+10000+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+10000+0x6000);
-	memset(rle_buf, 0, 40000);
+	Uint8  *rle_buf		 = (Uint8  *)SCRATCH;
+	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+SAV_BUFSIZE);
+	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+SAV_BUFSIZE+0x4000);
+	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
+
+	memset(sbuf.buffer, 0, SAV_BUFSIZE);
 
 	Uint32 i;
 	int32 status;
@@ -2269,9 +2402,83 @@ bool Game::loadGameState(uint8 slot) {
 //emu_printf("cmprSize %d\n",cmprSize);
 	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
 	loadState(&sbuf);
+	memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
+	_menu._stateSlot = -1;
 	return true;
 }
-
+#if 0
+void Game::saveState(SAVE_BUFFER *f) {
+	f->writeByte(_skillLevel);
+	f->writeUint32BE(_score);
+	if (_col_slots2Cur == 0) {
+		f->writeUint32BE(0xFFFFFFFF);
+	} else {
+		f->writeUint32BE(_col_slots2Cur - &_col_slots2[0]);
+	}
+	if (_col_slots2Next == 0) {
+		f->writeUint32BE(0xFFFFFFFF);
+	} else {
+		f->writeUint32BE(_col_slots2Next - &_col_slots2[0]);
+	}
+	for (int i = 0; i < _res._pgeNum; ++i) {
+		LivePGE *pge = &_pgeLive[i];
+		f->writeUint16BE(pge->obj_type);
+		f->writeUint16BE(pge->pos_x);
+		f->writeUint16BE(pge->pos_y);
+		f->writeByte(pge->anim_seq);
+		f->writeByte(pge->room_location);
+		f->writeUint16BE(pge->life);
+		f->writeUint16BE(pge->counter_value);
+		f->writeByte(pge->collision_slot);
+		f->writeByte(pge->next_inventory_PGE);
+		f->writeByte(pge->current_inventory_PGE);
+		f->writeByte(pge->ref_inventory_PGE);
+		f->writeUint16BE(pge->anim_number);
+		f->writeByte(pge->flags);
+		f->writeByte(pge->index);
+		f->writeUint16BE(pge->first_obj_number);
+		if (pge->next_PGE_in_room == 0) {
+			f->writeUint32BE(0xFFFFFFFF);
+		} else {
+			f->writeUint32BE(pge->next_PGE_in_room - &_pgeLive[0]);
+		}
+		if (pge->init_PGE == 0) {
+			f->writeUint32BE(0xFFFFFFFF);
+		} else {
+			f->writeUint32BE(pge->init_PGE - &_res._pgeInit[0]);
+		}
+	}
+	f->write((const Uint8*)&_res._ctData[0x100], 0x1C00);
+	
+//emu_printf("name save level\n");
+/*
+for(int xx= 0; xx< (256 + 112 * 64); xx+=16)
+{
+	emu_printf("x%03d %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", xx,
+	_res._ctData[xx+0],_res._ctData[xx+1],_res._ctData[xx+2],_res._ctData[xx+3],_res._ctData[xx+4],
+	_res._ctData[xx+5],_res._ctData[xx+6],_res._ctData[xx+7],_res._ctData[xx+8],_res._ctData[xx+9],
+	_res._ctData[xx+10],_res._ctData[xx+11],_res._ctData[xx+12],_res._ctData[xx+13],_res._ctData[xx+14],
+	_res._ctData[xx+15]);
+}
+*/	
+	
+	for (CollisionSlot2 *cs2 = &_col_slots2[0]; cs2 < _col_slots2Cur; ++cs2) {
+		if (cs2->next_slot == 0) {
+			f->writeUint32BE(0xFFFFFFFF);
+		} else {
+			f->writeUint32BE(cs2->next_slot - &_col_slots2[0]);
+		}
+		if (cs2->unk2 == 0) {
+			f->writeUint32BE(0xFFFFFFFF);
+		} else {
+			f->writeUint32BE(cs2->unk2 - &_res._ctData[0x100]);
+		}
+		f->writeByte(cs2->data_size);
+		f->write(cs2->data_buf, 0x10);
+	}
+	f->writeUint16BE(_pge_opGunVar);
+}
+#else
 void Game::saveState(SAVE_BUFFER *sbuf) {
 	sbuf->buffer[sbuf->idx] = _skillLevel; sbuf->idx++;
 	WRITE_UINT32((sbuf->buffer + sbuf->idx), _score); sbuf->idx += 4;
@@ -2339,7 +2546,101 @@ void Game::saveState(SAVE_BUFFER *sbuf) {
 	}
 	WRITE_UINT16((sbuf->buffer + sbuf->idx), _pge_opGunVar);
 }
+#endif
 
+#if 0
+void Game::loadState(SAVE_BUFFER *f) {
+	uint16_t i;
+	uint32_t off;
+	_skillLevel = f->readByte();
+	_score = f->readUint32BE();
+	memset(_pge_liveTable2, 0, sizeof(_pge_liveTable2));
+	memset(_pge_liveTable1, 0, sizeof(_pge_liveTable1));
+	off = f->readUint32BE();
+	if (off == 0xFFFFFFFF) {
+		_col_slots2Cur = 0;
+	} else {
+		_col_slots2Cur = &_col_slots2[0] + off;
+	}
+	off = f->readUint32BE();
+	if (off == 0xFFFFFFFF) {
+		_col_slots2Next = 0;
+	} else {
+		_col_slots2Next = &_col_slots2[0] + off;
+	}
+	for (i = 0; i < _res._pgeNum; ++i) {
+		LivePGE *pge = &_pgeLive[i];
+		pge->obj_type = f->readUint16BE();
+		pge->pos_x = f->readUint16BE();
+		pge->pos_y = f->readUint16BE();
+		pge->anim_seq = f->readByte();
+		pge->room_location = f->readByte();
+		pge->life = f->readUint16BE();
+		pge->counter_value = f->readUint16BE();
+		pge->collision_slot = f->readByte();
+		pge->next_inventory_PGE = f->readByte();
+		pge->current_inventory_PGE = f->readByte();
+		pge->ref_inventory_PGE = f->readByte();
+		pge->anim_number = f->readUint16BE();
+		pge->flags = f->readByte();
+		pge->index = f->readByte();
+		pge->first_obj_number = f->readUint16BE();
+		off = f->readUint32BE();
+		if (off == 0xFFFFFFFF) {
+			pge->next_PGE_in_room = 0;
+		} else {
+			pge->next_PGE_in_room = &_pgeLive[0] + off;
+		}
+		off = f->readUint32BE();
+		if (off == 0xFFFFFFFF) {
+			pge->init_PGE = 0;
+		} else {
+			pge->init_PGE = &_res._pgeInit[0] + off;
+		}
+	}
+	f->read((Uint8*)&_res._ctData[0x100], 0x1C00);
+	for (CollisionSlot2 *cs2 = &_col_slots2[0]; cs2 < _col_slots2Cur; ++cs2) {
+		off = f->readUint32BE();
+		if (off == 0xFFFFFFFF) {
+			cs2->next_slot = 0;
+		} else {
+			cs2->next_slot = &_col_slots2[0] + off;
+		}
+		off = f->readUint32BE();
+		if (off == 0xFFFFFFFF) {
+			cs2->unk2 = 0;
+		} else {
+			cs2->unk2 = &_res._ctData[0x100] + off;
+		}
+		cs2->data_size = f->readByte();
+		f->read(cs2->data_buf, 0x10);
+	}
+	for (i = 0; i < _res._pgeNum; ++i) {
+		if (_res._pgeInit[i].skill <= _skillLevel) {
+			LivePGE *pge = &_pgeLive[i];
+			if (pge->flags & 4) {
+				_pge_liveTable2[pge->index] = pge;
+			}
+			pge->next_PGE_in_room = _pge_liveTable1[pge->room_location];
+			_pge_liveTable1[pge->room_location] = pge;
+		}
+	}
+	resetGameState();
+	_pge_opGunVar = f->readUint16BE();
+	
+//emu_printf("name load level\n");
+/*
+for(int xx= 0; xx< (256 + 112 * 64); xx+=16)
+{
+	emu_printf("x%03d %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", xx,
+	_res._ctData[xx+0],_res._ctData[xx+1],_res._ctData[xx+2],_res._ctData[xx+3],_res._ctData[xx+4],
+	_res._ctData[xx+5],_res._ctData[xx+6],_res._ctData[xx+7],_res._ctData[xx+8],_res._ctData[xx+9],
+	_res._ctData[xx+10],_res._ctData[xx+11],_res._ctData[xx+12],_res._ctData[xx+13],_res._ctData[xx+14],
+	_res._ctData[xx+15]);
+}
+*/	
+}
+#else
 void Game::loadState(SAVE_BUFFER *sbuf) {
 	uint16 i;
 	uint32 off;
@@ -2425,6 +2726,7 @@ void Game::loadState(SAVE_BUFFER *sbuf) {
 	resetGameState();
 }
 
+#endif
 void Game::clearSaveSlots(uint8 level) {
 	BupConfig conf[3];
 	BupStat sttb;
@@ -2680,7 +2982,7 @@ void Game::SAT_preloadMonsters() {
 #ifdef DEBUG
 	unsigned int st = _stub->getTimeStamp();
 #endif
-					_res._monster = _res.decodeResourceMacData(data[i].name, true);
+					_res._monster = _res.decodeResourceMacData(data[i].name, true, 12);
 #ifdef DEBUG
 	unsigned int se = _stub->getTimeStamp();
 	emu_printf("--lzss %d enn : %d\n",i,se-st);	
@@ -2750,22 +3052,20 @@ static void process_commands(void* arg) {
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
-	_vid.drawString("Loading Please wait", 20, 40, 0xE5);
-	_stub->copyRect(0, 80, _vid._w, 16, _vid._frontLayer, _vid._w);
-#ifdef USE_SLAVE	
-	_res.MAC_closeMainFile();
-	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(void *)current_lwram,21623);
-	_res.MAC_reopenMainFile();
-//	_cut.playSet(current_lwram, 0x2B14);
-    SlaveData slaveData = { &_cut };
-current_lwram+=SAT_ALIGN(21623);
-    emu_printf("slSlaveFunc %p\n", current_lwram);
-    // Pass process_commands and slaveData to slSlaveFunc
-    slSlaveFunc(reinterpret_cast<void (*)()>(process_commands), &slaveData);
-    emu_printf("wait_for_slave\n");
- //   wait_for_slave(); // Wait for slave to complete
-    emu_printf("wait_for_slave end\n");
-#endif
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
+<<<<<<< HEAD
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 1);
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
+emu_printf("premier 84\n");
+	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
+
+	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
+//playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
+//	_cut.playSet((uint8_t *)CUTCMP1, 0x5E4);
+=======
+	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
+>>>>>>> 8ac868ac8ea26af20d89061f5fa0077b0315518d
+	_stub->copyRect(0, 76, _vid._w, 16, _vid._frontLayer, _vid._w);
 }
 
 void Game::SAT_preloadCMPfiles()
@@ -2775,6 +3075,47 @@ void Game::SAT_preloadCMPfiles()
 	GFS_Load(GFS_NameToId((int8_t *)"CARTE.CMP")  ,0,(uint8_t *)CUTCMP3,2296);
 	GFS_Load(GFS_NameToId((int8_t *)"SERRURE.CMP"),0,(uint8_t *)CUTCMP4,3512);
 	GFS_Load(GFS_NameToId((int8_t *)"MEMO.CMP")	  ,0,(uint8_t *)CUTCMP5,1167);
+	GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
+}
+
+#define CRAM_BANK 0x5f00000
+
+void Game::SAT_loadLogo()
+{
+	loadingMap = 1;
+	uint16_t w = 592;
+	slBitMapNbg0(COL_TYPE_256, BM_1024x512, (void *)VDP2_VRAM_B0);	
+	int read = GFS_Load(GFS_NameToId((int8_t *)"LOGO.BIN"),0,(uint8_t *)current_lwram,56752);
+	memcpyl((void*)(CRAM_BANK + 512), (void*)current_lwram, 1024);
+
+	uint8 *srcPtr = (uint8 *)(current_lwram + 512);
+	uint8 *dstPtr2 = (uint8 *)(VDP2_VRAM_B0 + (160 * 1024) + 0);
+
+	for (uint16 idx = 0; idx < 99; ++idx) {
+		memcpyl(dstPtr2, srcPtr, w);
+		srcPtr += w;
+		dstPtr2 += 1024;		
+	}
+	slScrAutoDisp(NBG0ON);
+	slTVOn();
+	slSynch();
+#if 0
+	loadingMap = 0;
+	slTVOff();
+	memset4_fast((void *)VDP2_VRAM_B0, 0x0000, 268*1024);
+	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);	
+	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
+
+	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
+	(*sys_clip).XC = 574;
+
+	slScrWindow0(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg0(win0_IN);
+	slScrWindow1(63 , 0 , 574 , 447 );
+	slScrWindowModeNbg1(win1_IN);
+	slScrWindowModeSPR(win0_IN);
+	slSynch();
+#endif
 }
 
 void Game::SAT_cleanRAM(unsigned char all) {
