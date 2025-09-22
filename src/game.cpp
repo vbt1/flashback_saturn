@@ -3041,18 +3041,7 @@ void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
-<<<<<<< HEAD
-	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 1);
-	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
-emu_printf("premier 84\n");
-	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
-
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
-//playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
-//	_cut.playSet((uint8_t *)CUTCMP1, 0x5E4);
-=======
-	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
->>>>>>> 8ac868ac8ea26af20d89061f5fa0077b0315518d
 	_stub->copyRect(0, 76, _vid._w, 16, _vid._frontLayer, _vid._w);
 }
 
