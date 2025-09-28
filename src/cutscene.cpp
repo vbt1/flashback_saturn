@@ -1659,7 +1659,7 @@ static void readSetPalette(const uint8_t *p, uint16_t offset, uint16_t *palette)
 }
 
 void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y) {
-emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d)\n",p,offset,x,y);	
+//emu_printf("Cutscene::drawSetShape(%p,%d,%d,%d)\n",p,offset,x,y);	
 	const int count = READ_BE_UINT16(p + offset); offset += 2;
 	for (int i = 0; i < count - 1; ++i) {
 		offset += 5; // shape_marker
@@ -1795,7 +1795,7 @@ void Cutscene::playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnlo
 		}
 	memset4_fast(_frontPage, 0x00, IMG_SIZE);
 //	memset4_fast(_backPage, 0x00, IMG_SIZE);
-emu_printf("frameNumber %d offset %d\n",frameNumber, offset);	
+//emu_printf("frameNumber %d offset %d\n",frameNumber, offset);	
 		_frameDelay = 0;
 	}
 
@@ -1819,7 +1819,7 @@ emu_printf("frameNumber %d offset %d\n",frameNumber, offset);
 		const int count = READ_BE_UINT16(p + offset); offset += 2;
 		uint16_t paletteBuffer[16];
 
-emu_printf("i %d off %d trans %d layer %p fgShap.offset %d fgShap.size %d count %d\n",i,offset,transferAux,_gfx._layer, foregroundShapes[shapeBg].offset, foregroundShapes[shapeBg].size, count);
+//emu_printf("i %d off %d trans %d layer %p fgShap.offset %d fgShap.size %d count %d\n",i,offset,transferAux,_gfx._layer, foregroundShapes[shapeBg].offset, foregroundShapes[shapeBg].size, count);
 
 		if(transferAux)
 		{

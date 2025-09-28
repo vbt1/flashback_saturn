@@ -1671,7 +1671,7 @@ static void stringLowerCase(char *p) {
 
 void Resource::MAC_unloadCutscene() {
 	current_lwram = (uint8_t *)save_current_lwram;
-	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
+//	emu_printf("MAC_unloadCutscene %p\n", current_lwram);
 //	sat_free(_pol);
 	_pol = 0;
 //	sat_free(_cmd);

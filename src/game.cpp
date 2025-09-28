@@ -2042,20 +2042,21 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	} /*else if (num == 66) {
 		// open/close inventory (DOS)
 		emu_printf("play sound inventory %02d\n",num);
-	}*/ else if (num >= 68 && num <= 75) {
+	}*/ else if (num >= 68 && num <= 77) {
 //		emu_printf("play sfx %d\n",num);
-		emu_printf("play sound something %02d\n",num);
+//		emu_printf("play sound something %02d\n",num);
 		
 		// in-game music
 //		_sfxPly.play(num);
 // 		_mix.playMusic(num); // vbt ࠶oir entre les 2
-	} else if (num == 76) {
+//	} else if (num == 76) {
 		// metro
-	} else if (num == 77) {
+//	} else if (num == 77) {
 		// triggered when Conrad draw his gun
-	} else {
+	} 
+//	else {
 //		warning("Unknown sound num %d", num);
-	}
+//	}
 }
 
 uint16_t Game::getRandomNumber() {
@@ -2366,7 +2367,7 @@ bool Game::saveGameState(uint8 slot) {
 }
 
 bool Game::loadGameState(uint8 slot) {
-	emu_printf("loadGameState(%d)\n", slot);
+//	emu_printf("loadGameState(%d)\n", slot);
 //	bool success = false;
 	char stateFile[8];
 	makeGameStateName(slot, stateFile);

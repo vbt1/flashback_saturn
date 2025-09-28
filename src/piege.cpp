@@ -1800,9 +1800,20 @@ int Game::pge_op_isNotFacingConrad(ObjectOpcodeArgs *args) {
 				} else {
 					dx = pge->pos_x - pge_conrad->pos_x;
 				}
+//				if (dx > 0 && dx < args->a * 16) {
+	if (_currentLevel == 5 && _currentRoom == 10)
+	{
+				int n=-8;
+				if ((dx-n) > 0 && (dx-n) < args->a * 4) {
+					return 0xFFFF;
+				}	
+	}
+	else
+	{
 				if (dx > 0 && dx < args->a * 16) {
 					return 0xFFFF;
 				}
+	}
 			}
 		} else if (args->a == 0) {
 			if (pge->room_location < 0x40) {
