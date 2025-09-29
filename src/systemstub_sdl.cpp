@@ -61,8 +61,6 @@ extern void snd_init();
 #define TVSTAT	(*(Uint16 *)0x25F80004)
 #define CRAM_BANK 0x5f00000 // Beginning of color ram memory addresses
 #define BACK_COL_ADR (VDP2_VRAM_A1 + 0x1fffe) // Address for background colour
-//#define LOW_WORK_RAM 0x00200000 // Beginning of LOW WORK RAM (1Mb)
-//#define LOW_WORK_RAM_SIZE 0x100000
 
 #ifdef _352_CLOCK_
 #define HOR_OFFSET (-29.0)

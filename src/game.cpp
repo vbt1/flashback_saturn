@@ -44,6 +44,7 @@ unsigned char frame_y = 0;
 unsigned char frame_z = 0;
 unsigned char drawingInventory = 0;
 unsigned char loadingMap = 0;
+short sav0_size = 0;
 void	*malloc(size_t);
 }
 extern void sat_restart_audio(void);
@@ -1961,6 +1962,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 //	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 80);
 	pge_resetMessages();
 	_validSaveState = false;
+	sav0_size = 0;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
@@ -2314,53 +2316,67 @@ bool Game::saveGameState(uint8 slot) {
 	Uint8  *rle_buf		 = (Uint8  *)SCRATCH;
 	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+SAV_BUFSIZE);
 	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+SAV_BUFSIZE+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
+	sbuf.buffer	 	 	 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
 	memset(sbuf.buffer, 0, SAV_BUFSIZE);
-	
-
+/*	
+	if(slot == kIngameSaveSlot)
+	{
+		rle_buf		 	 = (Uint8  *)(SAV0);
+	}
+*/
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
 	int cmprSize = LZ_Compress(sbuf.buffer, rle_buf, sbuf.idx);
-
-	PER_SMPC_RES_DIS(); // Disable reset
-		BUP_Init(libBakBuf, BackUpRamWork, conf);
-		if( BUP_Stat(0, 0, &sttb) == BUP_UNFORMAT) 
-		{	
-			BUP_Format(0);
-		}
-	PER_SMPC_RES_ENA(); // Enable reset
-
-	if (sttb.freeblock > 0) { // Not sure of the size of a block
-		memset(writetb.filename, 0, 9);
-		memset(writetb.comment, 0, 9);
-
-		strncpy((char*) writetb.filename, stateFile, 11);
-		strncpy((char*) writetb.comment, hdrdesc, 10);
-
-		writetb.language = BUP_ENGLISH;
-
-		time = PER_GET_TIM();
-
-		datetb.year = (Uint8) (
-					  (Uint16)(time[6] >> 4)   * 1000
-					 +(Uint16)(time[5] >> 4)   * 10
-					 +(Uint16)(time[5] & 0x0F) - 1980);
-		datetb.month = time[4] & 0x0F;
-		datetb.day = ((time[3] >> 4) * 10) + (time[3] & 0x0F);
-		datetb.time = ((time[2] >> 4) * 10) + (time[2] & 0x0F);
-		datetb.min = ((time[1] >> 4) * 10) + (time[1] & 0x0F);
-
-		writetb.date = BUP_SetDate(&datetb);
-		writetb.datasize = (cmprSize) + 1;
-
-		Sint32 verify;
+emu_printf("cmprSize %d\n",cmprSize);
+	//if(slot != kIngameSaveSlot)
+	if(1)
+	{
 		PER_SMPC_RES_DIS(); // Disable reset
-			BUP_Write(0, &writetb, rle_buf, OFF);
-			verify = BUP_Verify(0, writetb.filename, rle_buf);
+			BUP_Init(libBakBuf, BackUpRamWork, conf);
+			if( BUP_Stat(0, 0, &sttb) == BUP_UNFORMAT) 
+			{
+				BUP_Format(0);
+			}
 		PER_SMPC_RES_ENA(); // Enable reset
 
-		if (verify == 0)
-			success = true;
+		if (sttb.freeblock > 0) { // Not sure of the size of a block
+			memset(writetb.filename, 0, 9);
+			memset(writetb.comment, 0, 9);
+
+			strncpy((char*) writetb.filename, stateFile, 11);
+			strncpy((char*) writetb.comment, hdrdesc, 10);
+
+			writetb.language = BUP_ENGLISH;
+
+			time = PER_GET_TIM();
+
+			datetb.year = (Uint8) (
+						  (Uint16)(time[6] >> 4)   * 1000
+						 +(Uint16)(time[5] >> 4)   * 10
+						 +(Uint16)(time[5] & 0x0F) - 1980);
+			datetb.month = time[4] & 0x0F;
+			datetb.day = ((time[3] >> 4) * 10) + (time[3] & 0x0F);
+			datetb.time = ((time[2] >> 4) * 10) + (time[2] & 0x0F);
+			datetb.min = ((time[1] >> 4) * 10) + (time[1] & 0x0F);
+
+			writetb.date = BUP_SetDate(&datetb);
+			writetb.datasize = (cmprSize) + 1;
+
+			Sint32 verify;
+			PER_SMPC_RES_DIS(); // Disable reset
+				BUP_Write(0, &writetb, rle_buf, OFF);
+				verify = BUP_Verify(0, writetb.filename, rle_buf);
+			PER_SMPC_RES_ENA(); // Enable reset
+
+			if (verify == 0)
+				success = true;
+		}
+		else
+		{
+			sav0_size = (cmprSize) + 1;
+emu_printf("save sav0_size %d\n",sav0_size);
+			success   = true;
+		}
 	}
 	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._layerSize); // utilisé pour la compression
 	return success;
@@ -2376,31 +2392,37 @@ bool Game::loadGameState(uint8 slot) {
 	BupDir	dir[1];
 //	Uint32 libBakBuf[4096];
 //	Uint32 BackUpRamWork[2048];
-	
+	int cmprSize;
+
 	memset(&sbuf, 0, sizeof(SAVE_BUFFER));
 
 	Uint8  *rle_buf		 = (Uint8  *)SCRATCH;
 	Uint32 *libBakBuf    = (Uint32 *)(SCRATCH+SAV_BUFSIZE);
 	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+SAV_BUFSIZE+0x4000);
-	sbuf.buffer	 		 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
-
+	sbuf.buffer	 	 	 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
 	memset(sbuf.buffer, 0, SAV_BUFSIZE);
 
-	Uint32 i;
-	int32 status;
+	if(slot == kIngameSaveSlot)
+	{
+		rle_buf		 	 = (Uint8  *)(SAV0);
+		cmprSize 		 = sav0_size;
+emu_printf("load sav0_size %d\n",sav0_size);
+	}
+	else
+	{
+		int32 status;
 
-	// Load save from saturn backup memory
-	PER_SMPC_RES_DIS(); // Disable reset
-		BUP_Init(libBakBuf, BackUpRamWork, conf);
-		status = BUP_Read(0, (Uint8*)stateFile, rle_buf);
-	PER_SMPC_RES_ENA(); // Enable reset
-	if (status != 0)
-		return false;
+		// Load save from saturn backup memory
+		PER_SMPC_RES_DIS(); // Disable reset
+			BUP_Init(libBakBuf, BackUpRamWork, conf);
+			status = BUP_Read(0, (Uint8*)stateFile, rle_buf);
+		PER_SMPC_RES_ENA(); // Enable reset
+		if (status != 0)
+			return false;
 
-	BUP_Dir(0, (Uint8*)stateFile, 1, dir);
-
-	int cmprSize = dir[0].datasize;
-//emu_printf("cmprSize %d\n",cmprSize);
+		BUP_Dir(0, (Uint8*)stateFile, 1, dir);
+		cmprSize = dir[0].datasize;
+	}
 	LZ_Uncompress(rle_buf, sbuf.buffer, cmprSize);
 	loadState(&sbuf);
 	memset4_fast(&_vid._frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9); // vbt : corrige bug en fin de mission ?
@@ -2450,7 +2472,7 @@ void Game::saveState(SAVE_BUFFER *f) {
 		}
 	}
 	f->write((const Uint8*)&_res._ctData[0x100], 0x1C00);
-	
+
 //emu_printf("name save level\n");
 /*
 for(int xx= 0; xx< (256 + 112 * 64); xx+=16)
@@ -2522,7 +2544,7 @@ void Game::saveState(SAVE_BUFFER *sbuf) {
 			WRITE_UINT32((sbuf->buffer + sbuf->idx), (pge->init_PGE - &_res._pgeInit[0])); sbuf->idx += 4;
 		}
 	}
-	
+
 	Uint32 idx = 0;
 	for(idx = 0; idx < 0x1C00; idx++) {
 		sbuf->buffer[sbuf->idx] = _res._ctData[0x100 + idx]; sbuf->idx++;

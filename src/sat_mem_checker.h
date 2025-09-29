@@ -23,8 +23,10 @@ void *memset4_fast(void *, long, size_t);
 #define LOW_WORK_RAM_START 0x00280000 // Beginning of LOW WORK RAM (1Mb)
 #define LOW_WORK_RAM_SIZE 0x300000-LOW_WORK_RAM_START
 
+#define SAV0    		0x200000
+#define SAV0_SIZE		7152
+//#define VBT_L_START    ((volatile void *)(SAV0+SAV0_SIZE))
 #define VBT_L_START    ((volatile void *)(0x200000))
-//#define LOW_WORK_RAM_START    ((volatile void *)(0x290000))
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 #define HWRAM_SCREEN_SIZE 50000//(128*240*2)+(64*240)
 // si on modifie scratch et front, la sequence de fin a des glitchs ...
