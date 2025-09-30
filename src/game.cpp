@@ -519,7 +519,7 @@ emu_printf("change level\n");
 if(_stub->_pi.load)
 	goto vbt_skip;
 			loadLevelRoom();
-emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6));
+//emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6));
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -2318,18 +2318,16 @@ bool Game::saveGameState(uint8 slot) {
 	Uint32 *BackUpRamWork= (Uint32 *)(SCRATCH+SAV_BUFSIZE+0x4000);
 	sbuf.buffer	 	 	 = (Uint8  *)(SCRATCH+SAV_BUFSIZE+0x6000);
 	memset(sbuf.buffer, 0, SAV_BUFSIZE);
-/*	
+
 	if(slot == kIngameSaveSlot)
 	{
 		rle_buf		 	 = (Uint8  *)(SAV0);
 	}
-*/
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
 	int cmprSize = LZ_Compress(sbuf.buffer, rle_buf, sbuf.idx);
-emu_printf("cmprSize %d\n",cmprSize);
-	//if(slot != kIngameSaveSlot)
-	if(1)
+
+	if(slot != kIngameSaveSlot)
 	{
 		PER_SMPC_RES_DIS(); // Disable reset
 			BUP_Init(libBakBuf, BackUpRamWork, conf);
@@ -2371,19 +2369,18 @@ emu_printf("cmprSize %d\n",cmprSize);
 			if (verify == 0)
 				success = true;
 		}
-		else
-		{
-			sav0_size = (cmprSize) + 1;
-emu_printf("save sav0_size %d\n",sav0_size);
-			success   = true;
-		}
+	}
+	else
+	{
+		sav0_size = (cmprSize) + 1;
+		success   = true;
 	}
 	memset4_fast(&_vid._frontLayer[0], 0x00, _vid._layerSize); // utilisé pour la compression
 	return success;
 }
 
 bool Game::loadGameState(uint8 slot) {
-//	emu_printf("loadGameState(%d)\n", slot);
+	emu_printf("loadGameState(%d)\n", slot);
 //	bool success = false;
 	char stateFile[8];
 	makeGameStateName(slot, stateFile);
@@ -2406,7 +2403,6 @@ bool Game::loadGameState(uint8 slot) {
 	{
 		rle_buf		 	 = (Uint8  *)(SAV0);
 		cmprSize 		 = sav0_size;
-emu_printf("load sav0_size %d\n",sav0_size);
 	}
 	else
 	{
