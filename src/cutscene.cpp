@@ -19,9 +19,11 @@ extern Uint8 *hwram_screen;
 extern Uint8 *hwram_ptr;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
+#ifdef FRAME
 extern Uint8 frame_x;
 extern Uint8 frame_y;
 extern Uint8 frame_z;
+#endif
 void *memset4_fast(void *, long, size_t);
 Uint8 transferAux=0;
 extern Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
@@ -168,8 +170,9 @@ DecodeBuffer buf{};
 	DMA_ScuMemCopy(aux, hwram_ptr, size);
 	SCU_DMAWait();
     slSetSprite(&user_sprite, toFIXED2(240));
+#ifdef FRAME
     frame_x++;
-
+#endif
 	if(_id == 0x48)
 	{
 		_vid->SAT_displayMeshSprite(-229, 239, -82, -36);
@@ -1588,8 +1591,6 @@ void Cutscene::play() {
 				}
 				break;
 			case 8: // save checkpoints
-//	void playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnload, int frameNumber);
-			
 				playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
 				break;
 			case 19:
@@ -1836,8 +1837,9 @@ void Cutscene::playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnlo
 		unload();
 		_interrupted = false;
 		_stop = true; // pour reprendre la musique
-		
+#ifdef FRAME	
 		frame_y = frame_x = 0;
 		frame_z = 30;
+#endif
 	}
 }

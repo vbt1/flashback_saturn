@@ -13,9 +13,11 @@ extern Uint8 *hwram_ptr;
 extern Uint8 *hwram_screen;
 extern Uint8 *current_lwram;
 extern unsigned int end1;
+#ifdef FRAME
 extern Uint8 frame_x;
 extern Uint8 frame_y;
 extern Uint8 frame_z;
+#endif
 }
 
 
@@ -302,8 +304,10 @@ void decodeC103(const uint8_t *src, int w, int h, DecodeBuffer *buf, unsigned ch
     }
 
     slTVOn();
+#ifdef FRAME
     frame_y = frame_x = 0;
     frame_z = 30;
+#endif
 }
 
 void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {

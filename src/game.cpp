@@ -39,9 +39,11 @@ extern Uint8 *soundAddr;
 extern volatile Uint32 ticker;
 extern volatile Uint8  tick_wrap;
 extern Uint8 tickPerVblank;
+#ifdef FRAME
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
+#endif
 unsigned char drawingInventory = 0;
 unsigned char loadingMap = 0;
 short sav0_size = 0;
@@ -71,6 +73,7 @@ extern Uint8 *hwram_screen;
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern unsigned int end1;
+Uint8 *sav0;
 }
 void remap_colors();
 static SAVE_BUFFER sbuf;
@@ -134,7 +137,7 @@ void Game::run() {
 #endif
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+30000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+26000+HWRAM_SCREEN_SIZE+SAV0_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
@@ -143,7 +146,8 @@ void Game::run() {
 		hwram_ptr = (unsigned char *)hwram;
 		hwram_screen = hwram_ptr;
 		hwram_ptr += HWRAM_SCREEN_SIZE;
-	
+		sav0 = hwram_ptr;
+		hwram_ptr += SAV0_SIZE;
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 		_vid.setTextPalette();
@@ -519,7 +523,7 @@ emu_printf("change level\n");
 if(_stub->_pi.load)
 	goto vbt_skip;
 			loadLevelRoom();
-//emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6));
+emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6));
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -592,6 +596,7 @@ vbt_skip:
 		}
 	}*/
 //	_vid.SAT_displayPalette();
+#ifdef FRAME
 	frame_x++;
 	unsigned char c1 = frame_z/10;
 	unsigned char c2 = frame_z%10;
@@ -612,7 +617,7 @@ vbt_skip:
 	user_sprite.SRCA = 0x200+32*c2;
 	user_sprite.XA   = 240;
 	slSetSprite(&user_sprite, 130<<16);	// fps	
-
+#endif
 //	_vid.SAT_displaySpritesPalette();
 	slSynch();  // vbt : permet l'affichage de sprites, le principal
 }
@@ -726,8 +731,10 @@ void Game::playCutscene(int id) {
 			_mix.stopMusic(1);
 			_cut.playCredits();
 		}
+#ifdef FRAME
 		frame_y = frame_x = 0;
 		frame_z = 30;
+#endif
 	}
 	else
 	{  // vbt pour les niveaux sans video
@@ -984,10 +991,10 @@ bool Game::handleConfigPanel() {
 		_stub->copyRect(112, 160, 288, 208, _vid._frontLayer, _vid._w);
 		_stub->updateScreen(0);
 	}
-	
+#ifdef FRAME
 	frame_y = frame_x = 0;
 	frame_z = 30;
-	
+#endif	
 	return (current == MENU_ITEM_ABORT);
 }
 
@@ -1307,8 +1314,10 @@ _vid.drawString(toto, 1, 88, 0xE7);
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;
+#ifdef FRAME
 		frame_y = frame_x = 0;
 		frame_z = 30;
+#endif
 	}
 }
 
@@ -2258,9 +2267,10 @@ void Game::handleInventory() {
 			pge_setCurrentInventoryObject(selected_pge);
 		}
 		playSound(52, 0);
-
+#ifdef FRAME
 		frame_y = frame_x = 0;
-		frame_z = 30;		
+		frame_z = 30;
+#endif		
 	}
 }
 #ifdef DEMO
@@ -2321,7 +2331,7 @@ bool Game::saveGameState(uint8 slot) {
 
 	if(slot == kIngameSaveSlot)
 	{
-		rle_buf		 	 = (Uint8  *)(SAV0);
+		rle_buf		 	 = (Uint8  *)(sav0);
 	}
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2401,7 +2411,7 @@ bool Game::loadGameState(uint8 slot) {
 
 	if(slot == kIngameSaveSlot)
 	{
-		rle_buf		 	 = (Uint8  *)(SAV0);
+		rle_buf		 	 = (Uint8  *)(sav0);
 		cmprSize 		 = sav0_size;
 	}
 	else
@@ -3117,7 +3127,7 @@ void Game::SAT_loadLogo()
 void Game::SAT_cleanRAM(unsigned char all) {
 //emu_printf("ram clean %d\n",all);
 		if (all & 1)
-			hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
+			hwram_ptr = hwram+HWRAM_SCREEN_SIZE+SAV0_SIZE;
 		if (all & 8)
 			position_vram = 0x1000;
 		if (all & 4)

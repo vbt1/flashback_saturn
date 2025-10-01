@@ -25,9 +25,11 @@ extern "C" {
 #include "cdtoc.h"
 volatile Uint32 ticker = 0;
 Uint8 tickPerVblank = 0;
+#ifdef FRAME
 extern unsigned char frame_x;
 extern unsigned char frame_y;
 extern unsigned char frame_z;
+#endif
 extern unsigned char drawingInventory;
 extern unsigned char loadingMap;
 }
@@ -649,6 +651,7 @@ void vblIn (void) {
 	if(!loadingMap)
 	{
 		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
+#ifdef FRAME
 		frame_y++;
 
 		if(frame_y>=hz)
@@ -657,6 +660,7 @@ void vblIn (void) {
 			frame_x = 0;
 			frame_y = 0;
 		}
+#endif
 		sys->updateScreen(0);
 	}
 	sys->processEvents();
