@@ -1902,10 +1902,8 @@ void Game::loadLevelData() {
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_res.MAC_loadLevelData(_currentLevel);
-if(_currentLevel!=1)
 		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
 		SAT_preloadMonsters();
-if(_currentLevel!=1)
 		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
@@ -1976,9 +1974,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	sav0_size = 0;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
-if(_currentLevel!=1)
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
-//	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, -1);
 // vbt : bon endroit pour lire la piste audio
 	_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
 //emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
@@ -3072,7 +3068,6 @@ static void process_commands(void* arg) {
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
-if(_currentLevel!=1)
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
 	_stub->copyRect(0, 76, _vid._w, 16, _vid._frontLayer, _vid._w);
