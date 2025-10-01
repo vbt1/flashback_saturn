@@ -73,7 +73,7 @@ extern Uint8 *hwram_screen;
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;
 extern unsigned int end1;
-Uint8 *sav0;
+//Uint8 *sav0;
 }
 void remap_colors();
 static SAVE_BUFFER sbuf;
@@ -137,7 +137,7 @@ void Game::run() {
 #endif
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+26000+HWRAM_SCREEN_SIZE+SAV0_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+34000+HWRAM_SCREEN_SIZE;//+SAV0_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
@@ -146,8 +146,8 @@ void Game::run() {
 		hwram_ptr = (unsigned char *)hwram;
 		hwram_screen = hwram_ptr;
 		hwram_ptr += HWRAM_SCREEN_SIZE;
-		sav0 = hwram_ptr;
-		hwram_ptr += SAV0_SIZE;
+//		sav0 = hwram_ptr;
+//		hwram_ptr += SAV0_SIZE;
 		_res.MAC_loadClutData(); // scratch buffer  = "Flashback colors"
 		_res.MAC_loadFontData(); // hwram taille 3352 = "Font"
 		_vid.setTextPalette();
@@ -1902,8 +1902,10 @@ void Game::loadLevelData() {
 		SAT_preloadCDfiles();
 		slScrAutoDisp(NBG1ON);
 		_res.MAC_loadLevelData(_currentLevel);
+if(_currentLevel!=1)
 		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 84);
 		SAT_preloadMonsters();
+if(_currentLevel!=1)
 		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 		SAT_preloadSpc();
 		slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
@@ -1974,6 +1976,7 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	sav0_size = 0;
 	memset4_fast(&_vid._frontLayer[0],0x00,_vid._w* 100);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
+if(_currentLevel!=1)
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 //	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, -1);
 // vbt : bon endroit pour lire la piste audio
@@ -2331,7 +2334,7 @@ bool Game::saveGameState(uint8 slot) {
 
 	if(slot == kIngameSaveSlot)
 	{
-		rle_buf		 	 = (Uint8  *)(sav0);
+		rle_buf		 	 = (Uint8  *)(SAV0);
 	}
 	// SAVE INSTR. HERE!
 	saveState(&sbuf);
@@ -2411,7 +2414,7 @@ bool Game::loadGameState(uint8 slot) {
 
 	if(slot == kIngameSaveSlot)
 	{
-		rle_buf		 	 = (Uint8  *)(sav0);
+		rle_buf		 	 = (Uint8  *)(SAV0);
 		cmprSize 		 = sav0_size;
 	}
 	else
@@ -3069,6 +3072,7 @@ static void process_commands(void* arg) {
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
+if(_currentLevel!=1)
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);
 	_stub->copyRect(0, 76, _vid._w, 16, _vid._frontLayer, _vid._w);
@@ -3127,7 +3131,7 @@ void Game::SAT_loadLogo()
 void Game::SAT_cleanRAM(unsigned char all) {
 //emu_printf("ram clean %d\n",all);
 		if (all & 1)
-			hwram_ptr = hwram+HWRAM_SCREEN_SIZE+SAV0_SIZE;
+			hwram_ptr = hwram+HWRAM_SCREEN_SIZE;
 		if (all & 8)
 			position_vram = 0x1000;
 		if (all & 4)
