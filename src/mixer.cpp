@@ -165,8 +165,7 @@ void Mixer::stopMusic(uint8 current) {
 	{
 		CDC_GetCurStat(&statdata);
 	}
-	emu_printf( "Mixer::stopMusic(%d) _musicTrack %d %d\n",current, _musicTrack,statdata.report.fad);
-
+//	emu_printf( "Mixer::stopMusic(%d) _musicTrack %d %d\n",current, _musicTrack,statdata.report.fad);
 	// Restore address
     CdcPos poswk;
     CDC_POS_PTYPE(&poswk) = CDC_PTYPE_DFL;

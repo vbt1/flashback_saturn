@@ -19,7 +19,8 @@
 #define SAV_BUFSIZE (1024 * 20)
 
 #undef assert
-#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+//#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+#define assert(x) if(!(x)){}
 
 typedef struct {
 	Uint8 *buffer;  //[SAV_BUFSIZE]; // 10 Kilobytes of save buffer

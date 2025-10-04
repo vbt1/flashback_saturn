@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-#define DEBUG 1
+//#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
 
@@ -142,7 +142,9 @@ void Game::run() {
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
 		end1 += (int)hwram;
-		emu_printf("hwram ****%p*** %x*\n",hwram, end1);	
+#ifdef DEBUG
+		emu_printf("hwram ****%p*** %x*\n",hwram, end1);
+#endif
 		hwram_ptr = (unsigned char *)hwram;
 		hwram_screen = hwram_ptr;
 		hwram_ptr += HWRAM_SCREEN_SIZE;
@@ -336,7 +338,8 @@ for (i=0;i<100;i++)
 		} else
 #endif
 		{
-			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
+// vbt : activation des cheatcodes
+//			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 			_demoBin = -1;
 			_res._isDemo = false;
 			
@@ -501,7 +504,9 @@ void Game::mainLoop() {
 			_currentLevel = oldLevel;
 		}*/
 //emu_printf("6hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
+#ifdef DEBUG
 emu_printf("change level\n");
+#endif
 		changeLevel();
 //emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
@@ -523,7 +528,9 @@ emu_printf("change level\n");
 if(_stub->_pi.load)
 	goto vbt_skip;
 			loadLevelRoom();
+#ifdef DEBUG
 emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6));
+#endif
 			_loadMap = false;
  // vbt à mettre si slave reduit les plantages
 			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
@@ -1945,12 +1952,10 @@ slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 //		_vid.SAT_displayPalette();
 	}
 	slScrAutoDisp(NBG1ON|SPRON);
-emu_printf("pge_loadForCurrentLevel %d\n",n);	
 */
 	while (n--) {
 		pge_loadForCurrentLevel(n);
 	}
-//		_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 64);
 #ifdef DEMO
 	if (_demoBin != -1) {
 		_cut._id = 0xFFFF;
@@ -1977,7 +1982,6 @@ emu_printf("pge_loadForCurrentLevel %d\n",n);
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 // vbt : bon endroit pour lire la piste audio
 	_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
-//emu_printf("2xhwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {
@@ -2053,9 +2057,6 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 		// open/close inventory (DOS)
 		emu_printf("play sound inventory %02d\n",num);
 	}*/ else if (num >= 68 && num <= 77) {
-//		emu_printf("play sfx %d\n",num);
-//		emu_printf("play sound something %02d\n",num);
-		
 		// in-game music
 //		_sfxPly.play(num);
 // 		_mix.playMusic(num); // vbt ࠶oir entre les 2
@@ -2389,7 +2390,9 @@ bool Game::saveGameState(uint8 slot) {
 }
 
 bool Game::loadGameState(uint8 slot) {
+#ifdef DEBUG
 	emu_printf("loadGameState(%d)\n", slot);
+#endif
 //	bool success = false;
 	char stateFile[8];
 	makeGameStateName(slot, stateFile);
@@ -2478,18 +2481,6 @@ void Game::saveState(SAVE_BUFFER *f) {
 	}
 	f->write((const Uint8*)&_res._ctData[0x100], 0x1C00);
 
-//emu_printf("name save level\n");
-/*
-for(int xx= 0; xx< (256 + 112 * 64); xx+=16)
-{
-	emu_printf("x%03d %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", xx,
-	_res._ctData[xx+0],_res._ctData[xx+1],_res._ctData[xx+2],_res._ctData[xx+3],_res._ctData[xx+4],
-	_res._ctData[xx+5],_res._ctData[xx+6],_res._ctData[xx+7],_res._ctData[xx+8],_res._ctData[xx+9],
-	_res._ctData[xx+10],_res._ctData[xx+11],_res._ctData[xx+12],_res._ctData[xx+13],_res._ctData[xx+14],
-	_res._ctData[xx+15]);
-}
-*/	
-	
 	for (CollisionSlot2 *cs2 = &_col_slots2[0]; cs2 < _col_slots2Cur; ++cs2) {
 		if (cs2->next_slot == 0) {
 			f->writeUint32BE(0xFFFFFFFF);

@@ -43,7 +43,8 @@ extern void snd_init();
  #include "saturn_print.h"
 
 #undef assert
-#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+//#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+#define assert(x) if(!(x)){}
 /*
 #undef VDP2_VRAM_A0
 #define VDP2_VRAM_A0 NULL 

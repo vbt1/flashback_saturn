@@ -1139,7 +1139,9 @@ void Resource::load_CMP(uint8_t *p) {
 	if (data[0].packedSize == data[0].size) {
 		memcpy(_pol, tmp + data[0].offset, data[0].packedSize);
 	} else if (!bytekiller_unpack(_pol, data[0].size, tmp + data[0].offset, data[0].packedSize)) {
+#ifdef DEBUG_RES
 		emu_printf("Bad CRC for cutscene polygon data\n");
+#endif
 	}
 //	_cmd = (uint8_t *)sat_malloc(data[1].size);
 	_cmd = (uint8_t *)current_lwram;
@@ -1151,7 +1153,9 @@ void Resource::load_CMP(uint8_t *p) {
 	if (data[1].packedSize == data[1].size) {
 		memcpy(_cmd, tmp + data[1].offset, data[1].packedSize);
 	} else if (!bytekiller_unpack(_cmd, data[1].size, tmp + data[1].offset, data[1].packedSize)) {
+#ifdef DEBUG_RES
 		emu_printf("Bad CRC for cutscene command data\n");
+#endif
 	}
 	tmp = NULL;
 //	sat_free(tmp);
@@ -1637,7 +1641,7 @@ const uint8_t *Resource::MAC_getImageData(const uint8_t *ptr, int i) {
 	ptr += 2;
 	if(sig != 0xC211)
 	{
-emu_printf("MAC_getImageData bad sig %x %p\n",sig,ptr);		
+//emu_printf("MAC_getImageData bad sig %x %p\n",sig,ptr);		
 		return NULL;
 	}
 	const int count = READ_BE_UINT16(ptr);

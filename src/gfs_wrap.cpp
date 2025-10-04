@@ -42,7 +42,7 @@ static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 
 static Uint32 cache_offset = 0;
 // Used for initialization and such
-
+#ifdef DEBUG_GFS
 void errGfsFunc(void *obj, int ec)
 {
 	char texte[50];
@@ -53,6 +53,8 @@ void errGfsFunc(void *obj, int ec)
 	emu_printf("%s\n", texte);
 
 }
+#endif
+
 #define GFS_LOCAL
 #define GFCD_ERR_OK             0       /* æ­£å¸¸çµ‚äº† */
 #define GFCD_ERR_WAIT           -1      /* å‡¦ç†å¾…ã¡ */
@@ -120,8 +122,9 @@ void init_GFS() { //Initialize GFS system
     GFS_DIRTBL_DIRNAME(&gfsDirTbl) = gfsDirName;
     GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;
     gfsDirN = GFS_Init(OPEN_MAX, gfsLibWork, &gfsDirTbl);
-//	dir_depth = 0;
+#ifdef DEBUG_GFS
 	GFS_SetErrFunc((GfsErrFunc)errGfsFunc, NULL );
+#endif
 	memset4_fast(cache, 0, CACHE_SIZE);
 }
 
@@ -194,7 +197,9 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 		case SEEK_SET:
 			if(offset < 0 || offset >= stream->f_size)
 			{
+#ifdef DEBUG_GFS
 				emu_printf("SEEK_SET failed !\n");
+#endif
 				return -1;
 			}
 			stream->f_seek_pos = offset;

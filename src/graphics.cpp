@@ -827,7 +827,7 @@ gfx_fillArea:
 	else
 	{
 		SAT_fillMesh();
-		emu_printf("dy=%d color %d hasAlpha%d\n",dy,color,hasAlpha);
+//		emu_printf("dy=%d color %d hasAlpha%d\n",dy,color,hasAlpha);
 	}
 #endif
 }
@@ -905,6 +905,6 @@ void Graphics::SAT_fillMesh()
 	uint8_t start_y = *pts++;
 	int16_t x1 = *pts++;
 	int16_t x2 = *pts++;
-	emu_printf("start_y %d x1 %d x2 %d\n",start_y,x1,x2);
+//	emu_printf("start_y %d x1 %d x2 %d\n",start_y,x1,x2);
 }
 #endif

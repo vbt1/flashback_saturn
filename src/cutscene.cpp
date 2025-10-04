@@ -1363,7 +1363,9 @@ void Cutscene::mainLoop(uint16_t num, uint16_t name) {
 	
 	if (_id != 0x4A && !_creditsSequence) {
 //		_ply->play(_musicTableDOS[_id],0);
+#ifdef DEBUG_CUT
 emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
+#endif
 		_mix.playMusic(_musicTableDOS[_id]);
 	}
 
@@ -1388,7 +1390,9 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		} else if (count != 0) {
 			const int startOffset = READ_BE_UINT16(p + 2);
 			if (startOffset != 0) {
+#ifdef DEBUG_CUT
 				emu_printf("startOffset %d count %d num %d\n", startOffset, count, num);
+#endif
 			}
 		}
 		p += _baseOffset;
@@ -1431,7 +1435,9 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 }
 
 bool Cutscene::load(uint16_t cutName) {
+#ifdef DEBUG_CUT
 emu_printf(" Cutscene::load %d id %d\n", cutName, _id);
+#endif
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
