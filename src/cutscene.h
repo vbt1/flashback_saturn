@@ -31,6 +31,7 @@ struct Cutscene {
 
 	enum {
 		kCineDebut = 0,
+		kCineMemoEnd = 17,
 		kCineChute = 47,
 		kCineMemo = 48,
 		kCineVoyage = 52,
@@ -152,7 +153,7 @@ struct Cutscene {
 
 	uint8_t fetchNextCmdByte();
 	uint16_t fetchNextCmdWord();
-	void mainLoop(uint16_t num);
+	void mainLoop(uint16_t num, uint16_t name);
 	bool load(uint16_t cutName);
 	void unload();
 	void prepare();

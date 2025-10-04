@@ -1352,10 +1352,9 @@ uint16_t Cutscene::fetchNextCmdWord() {
 	return i;
 }
 
-void Cutscene::mainLoop(uint16_t num) {
+void Cutscene::mainLoop(uint16_t num, uint16_t name) {
 	_frameDelay = 5;
 	_tstamp = _stub->getTimeStamp();
-
 	Color c;
 	c.r = c.g = c.b = 0;
 	for (int i = 0; i < 0x20; ++i) {
@@ -1406,7 +1405,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 
 	_paletteNum = -1;
 	_isConcavePolygonShape = false;
-	_drawMemoSetShapes = (_id == kCineMemo);
+	_drawMemoSetShapes = (_id == kCineMemo || name == kCineMemoEnd);
 	_memoSetOffset = 0;
 	while (!_stub->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
@@ -1432,7 +1431,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 }
 
 bool Cutscene::load(uint16_t cutName) {
-//emu_printf(" Cutscene::load %d id %d\n", cutName, _id);
+emu_printf(" Cutscene::load %d id %d\n", cutName, _id);
 //	assert(cutName != 0xFFFF);
 	if(cutName == 0xFFFF)
 		return 0;
@@ -1564,7 +1563,7 @@ void Cutscene::playCredits() {
 		uint16_t cutOff  = offsets[cut_id * 2 + 1];
 
 		if (load(cutName)) {
-			mainLoop(cutOff);
+			mainLoop(cutOff, cutName);
 			unload();
 		}
 		_mix.stopMusic(1);
@@ -1641,7 +1640,7 @@ void Cutscene::play() {
 		} else*/
 		if (cutName != 0xFFFF) {
 			if (load(cutName)) {
-				mainLoop(cutOff);
+				mainLoop(cutOff, cutName);
 				unload();
 			}
 		}
