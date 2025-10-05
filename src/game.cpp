@@ -1,7 +1,7 @@
 #define PRELOAD_MONSTERS 1
 //#define USE_SLAVE 1
 //#define VIDEO_PLAYER 1
-//#define DEBUG 1
+#define DEBUG 1
 #define DEMO 1
 #define BPP8 1
 
@@ -2390,9 +2390,8 @@ bool Game::saveGameState(uint8 slot) {
 }
 
 bool Game::loadGameState(uint8 slot) {
-#ifdef DEBUG
-	emu_printf("loadGameState(%d)\n", slot);
-#endif
+//	emu_printf("loadGameState(%d)\n", slot);
+
 //	bool success = false;
 	char stateFile[8];
 	makeGameStateName(slot, stateFile);
@@ -3058,6 +3057,8 @@ static void process_commands(void* arg) {
 
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
+	if(_currentLevel==1)
+		GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);

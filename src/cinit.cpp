@@ -54,7 +54,7 @@ int	main( void )
 #define CS1(x)                  (0x24000000UL + (x))
 extern void emu_printf(const char *format, ...);
 
-#if 0
+#if 1
 void emu_printf(const char *format, ...)
 {
 #if 1
