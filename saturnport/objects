@@ -19,12 +19,13 @@ SRCS = 	$(SRCDIR)/gfs_wrap.cpp \
 		$(SRCDIR)/lzwlib.cpp \
 		$(SRCDIR)/lz.cpp \
 		$(SRCDIR)/cinit.cpp \
-		$(SRCDIR)/pcm.cpp
+		$(SRCDIR)/pcm.cpp \
+		$(SRCDIR)/c++-support.cpp
 
 SYSOBJS = $(SRCDIR)/workarea.o $(SRCDIR)/low.o
 OBJS = $(SRCS:.cpp=.o)
 LIBS = C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_gfs2.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_per.a \
-$(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a 
+$(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a -lc -lgcc
 
 #L:\saturn\SBL6\SEGALIB\LIB\vbtelf4
 

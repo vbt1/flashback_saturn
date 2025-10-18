@@ -28,9 +28,9 @@ SGLIDR = $(SGLDIR)/inc
 
 #SGLDIR = $(DEVKIT)/sgl
 #SGLIDR = $(SGLDIR)/inc
-SGLLDR = C:/vbt/saturn/SBL6/SEGALIB/LIB/vbtelf4
+SGLLDR = l:/saturn/SBL6/SEGALIB/LIB/vbtelf4
 
-SBLDIR = C:/vbt/saturn/SBL6/SEGALIB
+SBLDIR = l:/saturn/SBL6/SEGALIB
 SBLIDR = $(SBLDIR)/INCLUDE
 SBLLDR = $(SBLDIR)/lib
 
@@ -40,8 +40,8 @@ OBJECTS = ./objects
 # -D_352_CLOCK_ Enables 352xYYY resolution to set saturn clock speed to 28mhz, graphic stretching
 # might cause some artifacts
 # option
-CCFLAGS  = -fpermissive-fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IC:/vbt/saturn/vbtsh10/toolchain/sh-elf/include -nostdlib
-CXXFLAGS = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -IC:/vbt/saturn/vbtsh10/toolchain/sh-elf/include -nostdlib
+CCFLAGS  = -nodefaultlibs -fpermissive-fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -Il:/saturn/vbtsh10/toolchain/sh-elf/include -nostdlib
+CXXFLAGS = -nodefaultlibs -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno-rtti -fno-exceptions -nostdlib -m2 -c -I$(DEVKIT)/tooldir/include -I$(SRCDIR) -I$(SGLIDR) -I$(SBLIDR) -Il:/saturn/vbtsh10/toolchain/sh-elf/include -nostdlib
 
 # -m2 must be specified in LDFLAGS so the linker will search the SH2 lib dirs
 # Specify path of libsgl.a by using "-L" option
@@ -49,7 +49,7 @@ CXXFLAGS = -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIAN -DBYPASS_PROTECTION -Os -fno
 # Sega's ld might not understand the --format command used here...
 
 LDFLAGS = -m2 -fpermissive -L$(SGLLDR) -L$(SBLLDR) -Xlinker --strip-debug -Xlinker -T$(LDFILE) -Xlinker -Map \
-          -Xlinker $(MPFILE) -Xlinker -e -Xlinker ___Start -nostartfiles -fno-builtin 
+          -Xlinker $(MPFILE) -Xlinker -e -Xlinker ___Start -nostartfiles -fno-builtin -nodefaultlibs 
 DFLAGS =
 # source_program
 include $(OBJECTS)
