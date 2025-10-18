@@ -135,7 +135,7 @@ void Game::run() {
 #endif
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+34000+HWRAM_SCREEN_SIZE;//+SAV0_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+66000+34000+HWRAM_SCREEN_SIZE;//+SAV0_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
@@ -3055,8 +3055,8 @@ static void process_commands(void* arg) {
 
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
-	if(_currentLevel==1)
-		GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
+//	if(_currentLevel==1)
+//		GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);

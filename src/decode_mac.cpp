@@ -24,7 +24,7 @@ extern Uint8 frame_z;
 #include "util.h"
 
 static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t alignedSize) {
-//	emu_printf("allocate_memory %d %04x\n", id, alignedSize);
+//	emu_printf("allocate_memory type %d %d %04x\n", type, id, alignedSize);
     uint8_t* dst;
     
     // Most common cases first
