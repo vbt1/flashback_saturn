@@ -31,7 +31,7 @@ void *memset4_fast(void *, long, size_t);
 #define HWRAM_SCREEN_SIZE 50000//(128*240*2)+(64*240)
 // si on modifie scratch et front, la sequence de fin a des glitchs ...
 
-#define SCRATCH ((int)ADR_WORKRAM_L_END-0x16000)
+#define SCRATCH ((int)ADR_WORKRAM_L_END-0x18000)
 #define FRONT   (SCRATCH-(512*448))
 #define CUTCMP1 (FRONT-SAT_ALIGN(6361))	//16ko dispo			// CAILLOU
 #define CUTCMP2 (CUTCMP1-SAT_ALIGN(2472)) // ASC

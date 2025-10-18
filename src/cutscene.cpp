@@ -1523,6 +1523,7 @@ slSynch(); // VBT : à remettre // utile
 	_stub->_pi.enter = false;
 	_stub->_pi.space = false;
 	_stub->_pi.shift = false;
+	_stub->_pi.backspace = false; // vbt : fix level 4 when you die and stop cutscene on electricity
 	_interrupted = false;
 	_stop = false;
 	hasText = false;
