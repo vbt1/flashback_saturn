@@ -12,11 +12,7 @@ extern "C"
 #include <cstdarg>
 #include "util.h"
 
-#include "saturn_print.h"
-
 //uint16 g_debugMask;
-
-//static char buf[128];
 
 void debug(uint16 cm, const char *msg, ...) {
 	return;

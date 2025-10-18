@@ -34,7 +34,6 @@ int16_t previousStr=-1;
 #include "resource.h"
 #include "systemstub.h"
 #include "cutscene.h"
-#include "saturn_print.h"
 #include "video.h"
 
 extern Uint32 position_vram;

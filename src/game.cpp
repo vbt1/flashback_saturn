@@ -52,8 +52,6 @@ void	*malloc(size_t);
 extern void sat_restart_audio(void);
 int hasLevelText = false;
 int previousText_num = -1;
-//extern volatile Uint8 audioEnabled;
-#include "saturn_print.h"
 #include "lz.h"
 
 #include <ctime>

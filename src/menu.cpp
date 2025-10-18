@@ -22,7 +22,6 @@ extern Uint8 *current_lwram;
 #include "systemstub.h"
 #include "video.h"
 #include "menu.h"
-#include "saturn_print.h"
 
 #undef sleep 
 

@@ -25,7 +25,6 @@ extern Sint32  gfcd_fatal_err;
 extern GfsMng   *gfs_mng_ptr;
 }
 
-#include "saturn_print.h"
 #define MNG_SVR(mng)            ((mng)->svr)
 #define SVR_NFILE(svr)          ((svr)->nfile)
 #define GFS_FILE_USED(file)     ((file)->used)
@@ -33,11 +32,8 @@ extern GfsMng   *gfs_mng_ptr;
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
 #define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
 
-static char satpath[25];
-//static char current_path[15][16];
-//static char current_path[3][16];
+//static char satpath[25];
 
-//static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 
 static Uint32 cache_offset = 0;
@@ -130,19 +126,19 @@ void init_GFS() { //Initialize GFS system
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
 //slSynch();
-	memset(satpath, 0, 25);
+//	memset(satpath, 0, 25);
 
 	if (path == NULL) 
 	{	
 		return NULL; // nothing to do...
 	}
-	Uint16 idx;
 	static GFS_FILE fp[1];
+/*	Uint16 idx;
 	idx = 0;
 
 	Uint16 path_len = strlen(path);
 	strncpy(satpath, path, path_len + 1);
-/*
+
 	char *path_token = (char*)strtok(satpath, "/");
 emu_printf("name %s\n",path_token);
 	for (idx = 0; idx < strlen(satpath); idx++)
@@ -151,7 +147,7 @@ emu_printf("name %s\n",path_token);
 */
 	GfsHn fid = NULL;
 	// OPEN FILE
-	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
+	fid = GFS_Open(GFS_NameToId((Sint8*)path));
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;

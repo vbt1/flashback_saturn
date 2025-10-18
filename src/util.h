@@ -32,5 +32,8 @@ extern void warning(const char *msg, ...);
 
 extern void string_lower(char *p);
 extern void string_upper(char *p);
-
+extern "C" {
+void emu_printf(const char *format, ...);
+void SCU_DMAWait(void);
+}
 #endif // UTIL_H__

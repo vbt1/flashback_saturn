@@ -20,10 +20,8 @@ extern Uint8 frame_z;
 #endif
 }
 
-
 #include "decode_mac.h"
 #include "util.h"
-#include "saturn_print.h"
 
 static uint8_t* allocate_memory(const uint8_t type, const uint16_t id, uint32_t alignedSize) {
 //	emu_printf("allocate_memory %d %04x\n", id, alignedSize);
