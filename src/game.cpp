@@ -77,7 +77,7 @@ void remap_colors();
 static SAVE_BUFFER sbuf;
 /* *** */
 static Uint32 getFreeSaveBlocks(void);
-static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
+//static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
 
 static Uint32 getFreeSaveBlocks(void) {
 	BupConfig conf[3];
@@ -2301,7 +2301,7 @@ void Game::makeGameDemoName(char *buf) {
 }
 */
 void Game::makeGameStateName(uint8 slot, char *buf) {
-	sprintf(buf, "rs%d", slot);
+	sprintf(buf, "FLASHB%d", slot);
 }
 
 bool Game::saveGameState(uint8 slot) {
@@ -2731,6 +2731,7 @@ void Game::loadState(SAVE_BUFFER *sbuf) {
 }
 
 #endif
+#if 0
 void Game::clearSaveSlots(uint8 level) {
 	BupConfig conf[3];
 	BupStat sttb;
@@ -2754,7 +2755,7 @@ void Game::clearSaveSlots(uint8 level) {
 		}
 	}
 }
-
+#endif
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
 //	emu_printf("AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p\n", stateNum, x, y, dataPtr, pge);
 //	assert(stateNum < 4);

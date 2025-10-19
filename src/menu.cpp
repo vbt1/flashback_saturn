@@ -787,7 +787,7 @@ int Menu::SAT_getSaveStates(SaveStateEntry* table, Bool all)
 
     for (int i = 1; i < 4; i++) {
 		char search[4];
-		sprintf(search,"rs%d",i);
+		sprintf(search,"FLASHB%d",i);
 		int r = BUP_Dir(0,(Uint8 *)search,1,DirTb);
 
 		if(r | all)
