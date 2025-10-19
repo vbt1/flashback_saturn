@@ -720,14 +720,28 @@ void Game::playCutscene(int id) {
 			}
 		}*/
 //		emu_printf("_cut._id %d _music %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
+		if (id == 0xD)
+		{
+			_res.SAT_preloadIntro2();
+		}
 		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
-			{
-				_cut._id = 0x4A; // second part of the introduction cutscene
-				_mix.pauseMusic(); // vbt : on sauvegarde la position cdda			
-				_cut.play();
-			}
+			_cut._id = 0x4A; // second part of the introduction cutscene
+#if 0
+			_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
+			_cut.play();
+#else
+			_res._pol = _res._pol2;
+			_res._cmd = _res._cmd2;
+			_cut.prepare();
+			const uint16_t *offsets = _cut._offsetsTableDOS;
+			uint16_t cutName = offsets[_cut._id * 2 + 0];
+			uint16_t cutOff  = offsets[_cut._id * 2 + 1];
+			_cut.mainLoop(cutOff, cutName);
+			_cut.unload();
+			_cut._id = 0xFFFF;
+#endif
 		}
 
 		_mix.stopMusic(0);

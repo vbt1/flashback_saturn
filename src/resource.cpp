@@ -1947,3 +1947,17 @@ void Resource::SAT_previewRoom(int level, int room, Color *clut)
     user_sprite.SRCA = spriteVramOffset / 8;
     slSetSprite(&user_sprite, toFIXED2(240));
 }
+
+void Resource::SAT_preloadIntro2()
+{
+	char name[16];
+	snprintf(name, sizeof(name), "intro2 polygons");
+	const ResourceMacEntry *polEntry = _mac->findEntry(name, 13);
+
+	_pol2 = decodeResourceMacData(polEntry, true);
+
+	snprintf(name, sizeof(name), "intro2 movie");
+	const ResourceMacEntry *cmdEntry = _mac->findEntry(name, 14);
+
+	_cmd2 = decodeResourceMacData(cmdEntry, true);	
+}
