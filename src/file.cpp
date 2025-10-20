@@ -22,7 +22,6 @@ extern "C" {
 #include "gfs_wrap.h"
 }
 #include "file.h"
-#include "saturn_print.h"
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 

@@ -11,8 +11,6 @@ extern "C" {
 #include "sat_mem_checker.h"
 extern Uint8 *hwram;
 }
-#include "saturn_print.h"
-
 /*
 void *sat_malloc(size_t size) {
 	void *mem = NULL;

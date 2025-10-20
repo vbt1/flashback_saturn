@@ -52,8 +52,6 @@ void	*malloc(size_t);
 extern void sat_restart_audio(void);
 int hasLevelText = false;
 int previousText_num = -1;
-//extern volatile Uint8 audioEnabled;
-#include "saturn_print.h"
 #include "lz.h"
 
 #include <ctime>
@@ -79,7 +77,7 @@ void remap_colors();
 static SAVE_BUFFER sbuf;
 /* *** */
 static Uint32 getFreeSaveBlocks(void);
-static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
+//static void	clearSaveSlots(Uint8 level); // Clear all save slots except the one of the specified level
 
 static Uint32 getFreeSaveBlocks(void) {
 	BupConfig conf[3];
@@ -137,7 +135,7 @@ void Game::run() {
 #endif
 
 //		end1 = 584000+28000+HWRAM_SCREEN_SIZE; // vbt : marge de 20ko environ
-		end1 = 584000+34000+HWRAM_SCREEN_SIZE;//+SAV0_SIZE; // vbt : marge de 20ko environ
+		end1 = 584000+66000+34000+HWRAM_SCREEN_SIZE;//+SAV0_SIZE; // vbt : marge de 20ko environ
 	
 		hwram = (Uint8 *)malloc(end1);//(282344);
 //		memset(hwram,0x00,end1);
@@ -722,14 +720,28 @@ void Game::playCutscene(int id) {
 			}
 		}*/
 //		emu_printf("_cut._id %d _music %d\n",_cut._id,_cut._musicTableDOS[_cut._id]);
+		if (id == 0xD)
+		{
+			_res.SAT_preloadIntro2();
+		}
 		_cut.play();
 		if (id == 0xD && !_cut._interrupted) {
 //			if (!_res.isAmiga()) 
-			{
-				_cut._id = 0x4A; // second part of the introduction cutscene
-				_mix.pauseMusic(); // vbt : on sauvegarde la position cdda			
-				_cut.play();
-			}
+			_cut._id = 0x4A; // second part of the introduction cutscene
+#if 0
+			_mix.pauseMusic(); // vbt : on sauvegarde la position cdda
+			_cut.play();
+#else
+			_res._pol = _res._pol2;
+			_res._cmd = _res._cmd2;
+			_cut.prepare();
+			const uint16_t *offsets = _cut._offsetsTableDOS;
+			uint16_t cutName = offsets[_cut._id * 2 + 0];
+			uint16_t cutOff  = offsets[_cut._id * 2 + 1];
+			_cut.mainLoop(cutOff, cutName);
+			_cut.unload();
+			_cut._id = 0xFFFF;
+#endif
 		}
 
 		_mix.stopMusic(0);
@@ -2303,7 +2315,7 @@ void Game::makeGameDemoName(char *buf) {
 }
 */
 void Game::makeGameStateName(uint8 slot, char *buf) {
-	sprintf(buf, "rs%d", slot);
+	sprintf(buf, "FLASHB%d", slot);
 }
 
 bool Game::saveGameState(uint8 slot) {
@@ -2733,6 +2745,7 @@ void Game::loadState(SAVE_BUFFER *sbuf) {
 }
 
 #endif
+#if 0
 void Game::clearSaveSlots(uint8 level) {
 	BupConfig conf[3];
 	BupStat sttb;
@@ -2756,7 +2769,7 @@ void Game::clearSaveSlots(uint8 level) {
 		}
 	}
 }
-
+#endif
 void AnimBuffers::addState(uint8_t stateNum, int16_t x, int16_t y, const uint8_t *dataPtr, LivePGE *pge, uint8_t w, uint8_t h) {
 //	emu_printf("AnimBuffers::addState() stateNum=%d x=%d y=%d dataPtr=%p pge=%p\n", stateNum, x, y, dataPtr, pge);
 //	assert(stateNum < 4);
@@ -3057,8 +3070,8 @@ static void process_commands(void* arg) {
 
 void Game::SAT_preloadCDfiles() {
 	memset4_fast(&_vid._frontLayer[51 << 9], 0x00,16 << 9);
-	if(_currentLevel==1)
-		GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
+//	if(_currentLevel==1)
+//		GFS_Load(GFS_NameToId((int8_t *)"CDFILES.CMP"),0,(uint8_t *)CUTCMP6,21623);
 	_stub->copyRect(0, 51, _vid._w, 16, _vid._frontLayer, _vid._w);	
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, true, false, 0);
 	_vid.drawString("Loading Please wait", 20, 38, 0xE5);

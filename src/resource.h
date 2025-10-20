@@ -14,7 +14,6 @@ extern "C" {
 #include "intern.h"
 #include "resource_aba.h"
 #include "resource_mac.h"
-#include "saturn_print.h"
 
 struct DecodeBuffer;
 struct File;
@@ -176,6 +175,8 @@ struct Resource {
 //	uint8_t _numSfx;
 	uint8_t *_cmd;
 	uint8_t *_pol;
+	uint8_t *_cmd2;
+	uint8_t *_pol2;
 //	uint8_t *_cineStrings[NUM_CUTSCENE_TEXTS];
 	uint8_t *_cine_off;
 	uint8_t *_cine_txt;
@@ -382,6 +383,7 @@ const uint8_t *getCineString(int num) const {
 		return -1;
 	}
 	void SAT_previewRoom(int level, int room, Color *clut);
+	void SAT_preloadIntro2();
 };
 
 #endif // RESOURCE_H__

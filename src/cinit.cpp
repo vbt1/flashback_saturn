@@ -7,7 +7,6 @@ extern "C" {
 void *memset4_fast(void *, long, size_t);
 }
 
-#include 	"saturn_print.h"
 #include 	"systemstub.h"
 #include "sat_mem_checker.h"
 

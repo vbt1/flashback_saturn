@@ -9,7 +9,6 @@ extern "C"
 {
 #include <sl_def.h>	
 #include "sat_mem_checker.h"
-#include "saturn_print.h"
 #include <string.h>
 extern Uint32 position_vram;
 extern Uint32 position_vram_aft_monster;

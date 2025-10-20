@@ -17,11 +17,6 @@ extern Uint8 *hwram_screen;
 extern Uint8 *hwram;
 extern unsigned char loadingMap;
 }
-//#include 	"saturn_print.h"
-//#include "cutscene.h"
-//#include "resource.h"
-
-//#include "game.h"
 
 void Game::pge_resetMessages() {
 	memset(_pge_messagesTable, 0, sizeof(_pge_messagesTable));

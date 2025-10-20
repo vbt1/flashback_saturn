@@ -32,8 +32,6 @@ static void process_cmd();
 
 void init_GFS();
 }
-#include "saturn_print.h"
-
 #include "decode_mac.h"
 #include "file.h"
 #include "unpack.h"
@@ -957,9 +955,9 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 	int iObj = 0;
 	for (int i = 0; i < _numObjectNodes; ++i) {
 		if (prevOffset != offsets[i]) {
-//emu_printf("current_lwram size %d %p\n",sizeof(ObjectNode), current_lwram);
-			ObjectNode *on = (ObjectNode *)current_lwram;
-			current_lwram += SAT_ALIGN(sizeof(ObjectNode));
+//emu_printf("hwram_ptr size %d %p\n",sizeof(ObjectNode), hwram_ptr);
+			ObjectNode *on = (ObjectNode *)hwram_ptr;
+			hwram_ptr += SAT_ALIGN(sizeof(ObjectNode));
 //			if (!on) {
 //				emu_printf("Unable to allocate ObjectNode num=%d\n", i);
 //			}
@@ -971,9 +969,9 @@ void Resource::decodeOBJ(const uint8_t *tmp, int size) {
 #if 0
 //			on->objects = (Object *)sat_malloc(sizeof(Object) * on->num_objects);
 #else
-//emu_printf("current_lwram size %d %p\n",sizeof(Object) * on->num_objects, current_lwram);	
-			on->objects = (Object *)current_lwram;
-			current_lwram += SAT_ALIGN(sizeof(Object) * on->num_objects);
+//emu_printf("hwram_ptr2 size %d %p\n",sizeof(Object) * on->num_objects, hwram_ptr);	
+			on->objects = (Object *)hwram_ptr;
+			hwram_ptr += SAT_ALIGN(sizeof(Object) * on->num_objects);
 #endif
 			for (int j = 0; j < on->num_objects; ++j) {
 				Object *obj = &on->objects[j];
@@ -1948,4 +1946,18 @@ void Resource::SAT_previewRoom(int level, int room, Color *clut)
 
     user_sprite.SRCA = spriteVramOffset / 8;
     slSetSprite(&user_sprite, toFIXED2(240));
+}
+
+void Resource::SAT_preloadIntro2()
+{
+	char name[16];
+	snprintf(name, sizeof(name), "intro2 polygons");
+	const ResourceMacEntry *polEntry = _mac->findEntry(name, 13);
+
+	_pol2 = decodeResourceMacData(polEntry, true);
+
+	snprintf(name, sizeof(name), "intro2 movie");
+	const ResourceMacEntry *cmdEntry = _mac->findEntry(name, 14);
+
+	_cmd2 = decodeResourceMacData(cmdEntry, true);	
 }

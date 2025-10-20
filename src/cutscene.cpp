@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 //#define DEBUG_CUTSCENE 1
+//#define DEBUG_CUT 1
 //#define SUBTITLE_SPRITE 1
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
 extern "C"
@@ -34,7 +35,6 @@ int16_t previousStr=-1;
 #include "resource.h"
 #include "systemstub.h"
 #include "cutscene.h"
-#include "saturn_print.h"
 #include "video.h"
 
 extern Uint32 position_vram;
@@ -166,7 +166,7 @@ DecodeBuffer buf{};
 
     uint8_t *aux = (uint8_t *)(SpriteVRAM + spriteVramOffset);  // Use pointers to avoid array indexing overhead
 
-	packPixels(_frontPage, hwram_ptr, IMG_SIZE);
+	SAT_packPixels(_frontPage, hwram_ptr, IMG_SIZE);
 	DMA_ScuMemCopy(aux, hwram_ptr, size);
 	SCU_DMAWait();
     slSetSprite(&user_sprite, toFIXED2(240));
@@ -194,7 +194,7 @@ DecodeBuffer buf{};
 
     // Debug loop for _backPage
     uint8_t *aux2 = (uint8_t *)(SpriteVRAM + cgaddr1);
-    packPixels(_backPage, aux2, IMG_SIZE);
+    SAT_packPixels(_backPage, aux2, IMG_SIZE);
  //   slTransferEntry(temp, aux2, IMG_SIZE / 2);
     _vid->SAT_displaySprite((uint8_t *)cgaddr1, -320, -224, 128, 240);
 
@@ -202,7 +202,7 @@ DecodeBuffer buf{};
 
     // Debug loop for _frontPage
     uint8_t *aux1 = (uint8_t *)(SpriteVRAM + cgaddr3 * 8);
-    packPixels(_frontPage, aux1, IMG_SIZE);
+    SAT_packPixels(_frontPage, aux1, IMG_SIZE);
 //    slTransferEntry(temp, aux1, IMG_SIZE / 2);
     _vid->SAT_displaySprite((uint8_t *)(cgaddr3 * 8), -320, -96, 128, 240);
 
@@ -595,7 +595,7 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 	}
 }
 
-void Cutscene::packPixels(uint8_t *back, uint8_t *aux, size_t size) {
+void Cutscene::SAT_packPixels(uint8_t *back, uint8_t *aux, size_t size) {
 /*
    uint32_t *b = (uint32_t *)back;
     for (size_t i = 0, j = 0; i < size / 4; i += 4, j += 8) {
@@ -675,7 +675,7 @@ void Cutscene::op_drawShape() {
     }
 
     if (_clearScreen != 0) {
-        packPixels(_backPage, _auxPage, IMG_SIZE);
+        SAT_packPixels(_backPage, _auxPage, IMG_SIZE);
         clearBackPage();
         transferAux = 1;
     }
@@ -1398,7 +1398,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 		p += _baseOffset;
 	}
 // vbt déplacé !!!
-	if(_id == 0x4A || _creditsSequence)
+	if(/*_id == 0x4A ||*/ _creditsSequence)
 	{
 		_mix.unpauseMusic();
 	}
@@ -1799,7 +1799,7 @@ void Cutscene::playSet(const uint8_t *p, int offset, bool doPrepare, bool doUnlo
 			readSetPalette(p, backgroundShapes[shapeBg].offset + backgroundShapes[shapeBg].size, paletteBuffer);
 			copyPalette((uint8_t *)paletteBuffer, 0);
 			drawSetShape(p, backgroundShapes[shapeBg].offset, 0, 0);
-			packPixels(_backPage, _auxPage, IMG_SIZE);
+			SAT_packPixels(_backPage, _auxPage, IMG_SIZE);
 			clearBackPage();
 		}
 		if(frameNumber>=0)
