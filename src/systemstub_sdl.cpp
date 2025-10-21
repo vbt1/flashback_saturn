@@ -18,7 +18,7 @@ extern "C" {
 #endif
 //#include <sega_snd.h>
 //#include "sega_csh.h"
-//#include "sega_spr.h"
+#include "sega_tim.h"
 #include <sega_sys.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
@@ -231,7 +231,7 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 		tickPerVblank = 20;
 
 	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
-
+	TIM_FRT_INIT(0);
 	return;
 }
 
@@ -382,11 +382,43 @@ void SystemStub_SDL::sleep(uint32 duration) {
 	while(wait_tick >= ticker);
 }
 
+/*
+void SystemStub_SDL::sleep(uint32 duration_ms) {
+    uint32 start = getTimeStamp();
+    uint32 target = start + duration_ms;
+
+    // Busy-wait until current time >= target
+    do {
+        getTimeStamp();  // update ticker
+    } while ((int32)(ticker - target) < 0);
+}*/
+uint32 SystemStub_SDL::getTimeStamp() {
+/*
+    static uint16 prev_count = 0;
+    Uint16 count = TIM_FRT_GET_16();
+
+    // Compute difference, handling wraparound
+    uint16 diff = (count >= prev_count)
+        ? (count - prev_count)
+        : (0x10000 - prev_count + count);
+
+    prev_count = count;
+
+    // Convert diff to microseconds and accumulate
+    float diff_us = TIM_FRT_CNT_TO_MCR(diff);
+ //   ticker += (uint32)diff_us;
+	ticker += (uint32)(diff_us / 1000.0f);
+*/
+    return ticker; // microseconds, will grow past 100 ms
+}
+
+/*
 uint32 SystemStub_SDL::getTimeStamp() {
 	return ticker;
 }
-
+*/
 void SystemStub_SDL::initTimeStamp() {
+//	TIM_FRT_SET_16(0);
 	ticker = 0;
 }
 #ifdef SOUND
@@ -646,7 +678,7 @@ inline void timeTick() {
 void vblIn (void) {
 //emu_printf("vblIn\n");
 	// Process input
-
+//	TIM_FRT_SET_16(0);
 	if(!loadingMap)
 	{
 		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;

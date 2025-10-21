@@ -573,6 +573,9 @@ void Menu::handleTitleScreen() {
 	menuItems[menuItemsCount].str = LocaleData::LI_10_INFO;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_INFO;
 	++menuItemsCount;
+	menuItems[menuItemsCount].str = LocaleData::LI_24_OPTIONS;
+	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_OPTIONS;
+	++menuItemsCount;
 	menuItems[menuItemsCount].str = LocaleData::LI_23_DEMO;
 	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_DEMO;
 	++menuItemsCount;

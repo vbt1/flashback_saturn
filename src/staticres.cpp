@@ -1216,7 +1216,8 @@ const char *const LocaleData::_textsTableFR[LocaleData::LI_NUM] = {
 	"CHARGER",
 	"SAUVEGARDER",
 	"SLOT",
-	"DEMO"
+	"DEMO",
+	"OPTIONS"
 };
 
 const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
@@ -1242,7 +1243,8 @@ const char *const LocaleData::_textsTableEN[LocaleData::LI_NUM] = {
 	"LOAD GAME",
 	"SAVE GAME",
 	"SLOT",
-	"DEMO"
+	"DEMO",
+	"OPTIONS"
 };
 
 /*

@@ -47,6 +47,7 @@ struct LocaleData {
 		LI_21_SAVE_GAME,
 		LI_22_SAVE_SLOT,
 		LI_23_DEMO,
+		LI_24_OPTIONS,
 
 		LI_NUM
 	};

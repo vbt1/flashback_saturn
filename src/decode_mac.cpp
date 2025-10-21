@@ -111,9 +111,9 @@ struct EntryInfo {
 };
 
 inline EntryInfo getEntrySize(const ResourceMacEntry* entry) {
-    static const uint32_t sizeCondition[14] = {11653, 34124, 23763, 66718, 11212, 33448, 14994, 42822, 16426, 47114, 13015, 36960, 14237, 39198};
-    static const uint32_t sizeObject[10]    = {71138, 226781, 85245, 192462, 27821, 68116, 90737, 282343, 85788, 218014};
-    static const uint32_t sizeEnemy[10]     = {213124, 384909, 50572, 107256, 64094, 158183, 62196, 136948, 46992, 91069};
+    const uint32_t sizeCondition[14] = {11653, 34124, 23763, 66718, 11212, 33448, 14994, 42822, 16426, 47114, 13015, 36960, 14237, 39198};
+    const uint32_t sizeObject[10]    = {71138, 226781, 85245, 192462, 27821, 68116, 90737, 282343, 85788, 218014};
+    const uint32_t sizeEnemy[10]     = {213124, 384909, 50572, 107256, 64094, 158183, 62196, 136948, 46992, 91069};
     
     // Check most common case first (based on your ID ranges)
     if (entry->id >= 3000) {  // Enemies likely most common

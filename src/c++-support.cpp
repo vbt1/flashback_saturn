@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+extern "C" {
+void 	free(void *ptr);
+void	*malloc(size_t);
+}
+
 extern "C"
 void __cxa_pure_virtual(void) {
     /* Pure C++ virtual call; abort! */
@@ -42,7 +47,7 @@ void operator delete(void* ptr, unsigned int) {
 }
 
 extern "C"
-void __used
+void 
 __global_ctors(void)
 {
     extern void (*__ctors[])(void);
@@ -56,7 +61,7 @@ __global_ctors(void)
 }
 
 extern "C"
-void __used
+void 
 __global_dtors(void)
 {
     extern void (*__dtors[])(void);
