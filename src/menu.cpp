@@ -265,51 +265,73 @@ void Menu::handleOptionsScreen() {
 	loadPicture("menu3");
 	_vid->fullRefresh();
 	_vid->setTextPalette(); // vbt : ajout	
-	drawString("OPTIONS", 12, 4, 3);
-	int currentSkill = _skill;
-	do {
-		drawString("STRETCH SCREEN",   15, 3, (currentSkill == 0) ? 2 : 3);
-		drawString("VOICES", 17, 3, (currentSkill == 1) ? 2 : 3);
-		drawString("MUSIC", 19, 3, (currentSkill == 2) ? 2 : 3);
-		drawString("CHEATS", 21, 3, (currentSkill == 2) ? 2 : 3);
+	drawString("OPTIONS", 8, 4, 3);
+	drawString("SAVE (A)", 23, 4, 3);
+//	int currentSkill = _skill;
+	uint8_t currentLine = 0;
+	uint8_t selected = 0;
 
-		_vid->updateScreen();
+	// Menu data
+	const char *labels[] = {
+		"LANGUAGE",
+		"STRETCH SCREEN",
+		"VOICES",
+		"MUSIC",
+		"EXTRA CUTSCENES",
+		"CHEATS"
+	};
+
+	const char *leftOptions[] = {
+		"ENG", "YES", "YES", "YES", "YES", "YES"
+	};
+	const char *rightOptions[] = {
+		"FRA", "NO",  "NO",  "NO",  "NO",  "NO"
+	};
+
+	const uint8_t yPositions[] = { 11, 13, 15, 17, 19, 21 };
+	const uint8_t numLines = sizeof(labels) / sizeof(labels[0]);
+
+	do {
+		for (uint8_t i = 0; i < numLines; ++i) {
+			drawString(labels[i], yPositions[i], 3, (currentLine == i) ? 2 : 3);
+			drawString(leftOptions[i],  yPositions[i], 22, !(selected & (1 << i)) ? 2 : 3);
+			drawString(rightOptions[i], yPositions[i], 27,  (selected & (1 << i)) ? 2 : 3);
+
+			if (currentLine == i) {
+				if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
+					_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+					selected &= ~(1 << i);
+				}
+				if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+					_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+					selected |= (1 << i);
+				}
+			}
+		}
+		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
-//		_stub->processEvents();
+		_stub->processEvents();
 
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
-			switch (currentSkill) {
-			case kSkillNormal:
-				currentSkill = kSkillEasy;
-				break;
-			case kSkillExpert:
-				currentSkill = kSkillNormal;
-				break;
-			}
+			if(currentLine>0)
+				currentLine--;
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-			switch (currentSkill) {
-			case kSkillEasy:
-				currentSkill = kSkillNormal;
-				break;
-			case kSkillNormal:
-				currentSkill = kSkillExpert;
-				break;
-			}
+			if(currentLine<5)
+				currentLine++;
 		}
 		if (_stub->_pi.escape) {
 			_stub->_pi.escape = false;
 			break;
 		}
-		if (_stub->_pi.enter) {
+/*		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
-			_skill = currentSkill;
+//			_skill = currentSkill;
 			return;
-		}
+		}*/
 	} while (!_stub->_pi.quit);
-	_skill = 1;
 }
 
 /*
@@ -847,7 +869,7 @@ int Menu::SAT_getSaveStates(SaveStateEntry* table, Bool all)
 
     for (int i = 1; i < 4; i++) {
 		char search[4];
-		sprintf(search,"FLASHB%d",i);
+		sprintf(search,"FLASHBCK_0%d",i);
 		int r = BUP_Dir(0,(Uint8 *)search,1,DirTb);
 
 		if(r | all)

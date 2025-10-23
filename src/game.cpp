@@ -2315,12 +2315,12 @@ void Game::makeGameDemoName(char *buf) {
 }
 */
 void Game::makeGameStateName(uint8 slot, char *buf) {
-	sprintf(buf, "FLASHB%d", slot);
+	sprintf(buf, "FLASHBCK_0%d", slot);
 }
 
 bool Game::saveGameState(uint8 slot) {
 	bool success = false;
-	char stateFile[8];
+	char stateFile[12];
 	char hdrdesc[10];
 	makeGameStateName(slot, stateFile);
 	sprintf(hdrdesc, "%d-%d", _currentLevel + 1, _currentRoom);
@@ -2405,7 +2405,7 @@ bool Game::loadGameState(uint8 slot) {
 //	emu_printf("loadGameState(%d)\n", slot);
 
 //	bool success = false;
-	char stateFile[8];
+	char stateFile[12];
 	makeGameStateName(slot, stateFile);
 
 	BupConfig conf[3];
