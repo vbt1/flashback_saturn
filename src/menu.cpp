@@ -338,6 +338,24 @@ void Menu::handleOptionsScreen() {
 		_res->setLanguage(LANG_EN);
 	else
 		_res->setLanguage(LANG_FR);
+	
+	if(!(selected & (1 << 1)))
+	{
+		slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
+		slScrWindow0(0 , 0 , 640 , 447 );
+//		slScrPosNbg0(127,0);
+	}
+	else
+	{
+		slZoomNbg0(toFIXED(1.0), toFIXED(1.0));
+		slScrWindow0(63 , 0 , 574 , 447 );
+		slScrWindowModeNbg0(win0_IN);
+		slScrWindow1(63 , 0 , 574 , 447 );
+		slScrWindowModeNbg1(win1_IN);
+		slScrWindowModeSPR(win0_IN);
+//		slScrPosNbg0(toFIXED(-63),0);
+	}
+	slSynch();
 }
 
 /*

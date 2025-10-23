@@ -547,7 +547,11 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
 	}*/
-	slScrPosNbg0(toFIXED(-63), -_vid._shakeOffset << 16);
+	if(!(selected & (1 << 1)))
+		slScrPosNbg0(0, -_vid._shakeOffset << 16);
+	else	
+		slScrPosNbg0(toFIXED(-63), -_vid._shakeOffset << 16);
+
 	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224 + _vid._shakeOffset);
 
 	prepareAnims();
