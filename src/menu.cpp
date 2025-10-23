@@ -332,6 +332,12 @@ void Menu::handleOptionsScreen() {
 			return;
 		}*/
 	} while (!_stub->_pi.quit);
+
+// vbt : gestion de la langue
+	if(!(selected & (1 << 0)))
+		_res->setLanguage(LANG_EN);
+	else
+		_res->setLanguage(LANG_FR);
 }
 
 /*
@@ -664,16 +670,13 @@ void Menu::handleTitleScreen() {
 
 	int currentEntry = 0;
 
+/*
 	static const struct {
 		Language lang;
 //		const uint8_t *bitmap16x12;
 	} languages[] = {
 		{ LANG_EN   },
 		{ LANG_FR   },
-/*		{ LANG_DE },
-		{ LANG_SP },
-		{ LANG_IT },
-		{ LANG_JP },*/
 	};
 	int currentLanguage = 0;
 	for (int i = 0; i < ARRAYSIZE(languages); ++i) {
@@ -681,13 +684,13 @@ void Menu::handleTitleScreen() {
 			currentLanguage = i;
 			break;
 		}
-	}
+	}*/
 	_stub->initTimeStamp();
 
 	while (!_stub->_pi.quit) {
 
 		int selectedItem = -1;
-		int previousLanguage = currentLanguage;
+//		int previousLanguage = currentLanguage;
 
 		unsigned int s2 = _stub->getTimeStamp();
 		if(s2>=45000)
@@ -711,7 +714,7 @@ void Menu::handleTitleScreen() {
 		}
 
 //		if (g_options.enable_language_selection) 
-		{
+/*		{
 			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 				if (currentLanguage != 0) {
@@ -728,7 +731,7 @@ void Menu::handleTitleScreen() {
 					currentLanguage = 0;
 				}
 			}
-		}
+		}*/
 		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (currentEntry != 0) {
@@ -796,13 +799,14 @@ void Menu::handleTitleScreen() {
 			continue;
 		}
 
+/*
 		if (previousLanguage != currentLanguage) {
 			_res->setLanguage(languages[currentLanguage].lang);
 			// clear previous language text
 			memcpy(_vid->_frontLayer, _vid->_backLayer, _vid->GAMESCREEN_W * _vid->GAMESCREEN_H * 4);
 			_stub->initTimeStamp();
 		}
-
+*/
 		// draw the options
 		const int yPos = 26 - menuItemsCount * 2;
 		for (int i = 0; i < menuItemsCount; ++i) {
