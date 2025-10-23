@@ -258,6 +258,60 @@ void Menu::handleInfoScreen() {
 		}
 	} while (!_stub->_pi.quit);
 }
+
+void Menu::handleOptionsScreen() {
+//	debug(DBG_MENU, "Menu::handleSkillScreen()");
+	_vid->fadeOut();
+	loadPicture("menu3");
+	_vid->fullRefresh();
+	_vid->setTextPalette(); // vbt : ajout	
+	drawString("OPTIONS", 12, 4, 3);
+	int currentSkill = _skill;
+	do {
+		drawString("STRETCH SCREEN",   15, 3, (currentSkill == 0) ? 2 : 3);
+		drawString("VOICES", 17, 3, (currentSkill == 1) ? 2 : 3);
+		drawString("MUSIC", 19, 3, (currentSkill == 2) ? 2 : 3);
+		drawString("CHEATS", 21, 3, (currentSkill == 2) ? 2 : 3);
+
+		_vid->updateScreen();
+		_stub->sleep(EVENTS_DELAY);
+//		_stub->processEvents();
+
+		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
+			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+			switch (currentSkill) {
+			case kSkillNormal:
+				currentSkill = kSkillEasy;
+				break;
+			case kSkillExpert:
+				currentSkill = kSkillNormal;
+				break;
+			}
+		}
+		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+			switch (currentSkill) {
+			case kSkillEasy:
+				currentSkill = kSkillNormal;
+				break;
+			case kSkillNormal:
+				currentSkill = kSkillExpert;
+				break;
+			}
+		}
+		if (_stub->_pi.escape) {
+			_stub->_pi.escape = false;
+			break;
+		}
+		if (_stub->_pi.enter) {
+			_stub->_pi.enter = false;
+			_skill = currentSkill;
+			return;
+		}
+	} while (!_stub->_pi.quit);
+	_skill = 1;
+}
+
 /*
 void Menu::handleSkillScreen() {
 //	debug(DBG_MENU, "Menu::handleSkillScreen()");
@@ -704,6 +758,9 @@ void Menu::handleTitleScreen() {
 				break;
 			case MENU_OPTION_ITEM_INFO:
 				handleInfoScreen();
+				break;
+			case MENU_OPTION_ITEM_OPTIONS:
+				handleOptionsScreen();
 				break;
 			case MENU_OPTION_ITEM_DEMO:
 				_stub->initTimeStamp();

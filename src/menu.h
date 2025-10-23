@@ -100,6 +100,7 @@ struct Menu {
 	bool handleLevelScreen();
 	void handleTitleScreen();
 	bool handleResumeScreen();
+	void handleOptionsScreen();
 	int SAT_getSaveStates(SaveStateEntry* table, Bool all);
 //	const char *getLevelPassword(int level, int skill) const;
 };
