@@ -13,6 +13,7 @@ extern "C" {
 #include "sega_sys.h"
 #include "sat_mem_checker.h"
 extern Uint8 *current_lwram;
+Uint8 selected = 34;
 }
 
 #include "decode_mac.h"
@@ -266,10 +267,9 @@ void Menu::handleOptionsScreen() {
 	_vid->fullRefresh();
 	_vid->setTextPalette(); // vbt : ajout	
 	drawString("OPTIONS", 8, 4, 3);
-	drawString("SAVE (A)", 23, 4, 3);
+//	drawString("SAVE (A)", 23, 4, 3);
 //	int currentSkill = _skill;
 	uint8_t currentLine = 0;
-	uint8_t selected = 0;
 
 	// Menu data
 	const char *labels[] = {
@@ -621,7 +621,7 @@ void Menu::handleTitleScreen() {
 	_charVar4 = 0;
 	_charVar5 = 0;
 
-	static const int MAX_MENU_ITEMS = 6;
+	static const int MAX_MENU_ITEMS = 7;
 	Item menuItems[MAX_MENU_ITEMS];
 	int menuItemsCount = 0;
 

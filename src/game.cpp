@@ -39,6 +39,7 @@ extern Uint8 *soundAddr;
 extern volatile Uint32 ticker;
 extern volatile Uint8  tick_wrap;
 extern Uint8 tickPerVblank;
+extern Uint8 selected;
 #ifdef FRAME
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
@@ -337,7 +338,11 @@ for (i=0;i<100;i++)
 #endif
 		{
 // vbt : activation des cheatcodes
-//			_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
+			if(!(selected & (1 << 5)))
+				_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
+			else
+				_cheats = 0;
+
 			_demoBin = -1;
 			_res._isDemo = false;
 			
