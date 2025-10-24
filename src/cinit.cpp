@@ -39,7 +39,7 @@ int	main( void )
 	slInitSystem(TV_640x448, (TEXTURE*)NULL, 1); // Init SGL
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 
-	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
+	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_B0);
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
 //	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 	slZdspLevel(7); // vbt : ne pas d?placer !!!

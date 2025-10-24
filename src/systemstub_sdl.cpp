@@ -534,18 +534,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	VDP2_TVMD &= 0xFEFF;
 	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // à faire toujours en dernier
 	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
-/*
-	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
 
-	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
-	(*sys_clip).XC = 574;
-
-	slScrWindow0(63 , 0 , 574 , 447 );
-	slScrWindowModeNbg0(win0_IN);
-	slScrWindow1(63 , 0 , 574 , 447 );
-	slScrWindowModeNbg1(win1_IN);
-	slScrWindowModeSPR(win0_IN);
-*/	
 //	slScrPosNbg0(toFIXED(-63),0) ;
 	slScrPosNbg1(toFIXED(-63),0) ;
 	slSpecialPrioModeNbg0(spPRI_Dot);

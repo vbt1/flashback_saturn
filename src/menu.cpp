@@ -127,6 +127,7 @@ void Menu::loadPicture(const char *prefix) {
 			}
 		}
 	memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
+	memset(_vid->_frontLayer, 0x00, _vid->_layerSize); // vbt : vire l'image sur la layer texte
 //	_vid->updateWidescreen();
 }
 
@@ -206,6 +207,7 @@ void Menu::displayTitleScreenMac(int num) {
 		_vid->setTextPalette();
 //		_mix->playMusic(1); // vbt : déplacé, musique du menu
 	}
+//	memset(_vid->_frontLayer, 0x11, w * h);
 //	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);	
 	
 	if (num == kMacTitleScreen_MacPlay || num == kMacTitleScreen_Presage) 
@@ -343,7 +345,17 @@ void Menu::handleOptionsScreen() {
 	{
 		slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
 		slScrWindow0(0 , 0 , 640 , 447 );
-//		slScrPosNbg0(127,0);
+
+	slWindow(0 , 0 , 640 , 447 , 241 ,320 , 224);
+
+		slScrWindow0(0 , 0 , 640 , 447 );
+		slScrWindowModeNbg0(win0_IN);
+		slScrWindow1(0 , 0 , 640 , 447 );
+		slScrWindowModeNbg1(win1_IN);
+		slScrWindowModeSPR(win0_IN);
+		slScrPosNbg0(0, 0);
+		SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
+		(*sys_clip).XC = 640;
 	}
 	else
 	{
@@ -353,7 +365,7 @@ void Menu::handleOptionsScreen() {
 		slScrWindow1(63 , 0 , 574 , 447 );
 		slScrWindowModeNbg1(win1_IN);
 		slScrWindowModeSPR(win0_IN);
-//		slScrPosNbg0(toFIXED(-63),0);
+		slScrPosNbg0(toFIXED(-63),0);
 	}
 	slSynch();
 }
