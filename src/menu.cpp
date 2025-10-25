@@ -18,11 +18,9 @@ Uint8 selected = 34;
 
 #include "decode_mac.h"
 #include "game.h"
-#include "menu.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "video.h"
-#include "menu.h"
 
 #undef sleep 
 
@@ -138,6 +136,7 @@ void Menu::displayTitleScreenMac(int num) {
 
 	slScrTransparent(NBG0ON|!NBG1ON);
 	slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
+	slScrWindow1(63 , 0 , 574 , 447 );
 	slBMPaletteNbg1(2); // passage à la palette non recalculée	
 
 	DecodeBuffer buf{};
@@ -336,23 +335,23 @@ void Menu::handleOptionsScreen() {
 	} while (!_stub->_pi.quit);
 
 // vbt : gestion de la langue
-	if(!(selected & (1 << 0)))
+	if(!SEL_LANG)
 		_res->setLanguage(LANG_EN);
 	else
 		_res->setLanguage(LANG_FR);
 	
-	if(!(selected & (1 << 1)))
+	if(!SEL_STCH)
 	{
 		slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
 		slScrWindow0(0 , 0 , 640 , 447 );
 
-	slWindow(0 , 0 , 640 , 447 , 241 ,320 , 224);
+		slWindow(0 , 0 , 640 , 447 , 241 ,320 , 224);
 
 		slScrWindow0(0 , 0 , 640 , 447 );
-		slScrWindowModeNbg0(win0_IN);
+//		slScrWindowModeNbg0(win0_IN);
 		slScrWindow1(0 , 0 , 640 , 447 );
-		slScrWindowModeNbg1(win1_IN);
-		slScrWindowModeSPR(win0_IN);
+//		slScrWindowModeNbg1(win1_IN);
+//		slScrWindowModeSPR(win0_IN);
 		slScrPosNbg0(0, 0);
 		SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
 		(*sys_clip).XC = 640;
@@ -361,10 +360,10 @@ void Menu::handleOptionsScreen() {
 	{
 		slZoomNbg0(toFIXED(1.0), toFIXED(1.0));
 		slScrWindow0(63 , 0 , 574 , 447 );
-		slScrWindowModeNbg0(win0_IN);
+//		slScrWindowModeNbg0(win0_IN);
 		slScrWindow1(63 , 0 , 574 , 447 );
-		slScrWindowModeNbg1(win1_IN);
-		slScrWindowModeSPR(win0_IN);
+//		slScrWindowModeNbg1(win1_IN);
+//		slScrWindowModeSPR(win0_IN);
 		slScrPosNbg0(toFIXED(-63),0);
 	}
 	slSynch();

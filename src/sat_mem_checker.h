@@ -40,6 +40,13 @@ void *memset4_fast(void *, long, size_t);
 #define CUTCMP5 (CUTCMP4-SAT_ALIGN(1167)) // MEMO
 #define CUTCMP6 (CUTCMP5-SAT_ALIGN(21623)) // CDFILES?
 
+#define SEL_LANG (selected & (1 << 0))
+#define SEL_STCH (selected & (1 << 1))
+#define SEL_VOIC (selected & (1 << 2))
+#define SEL_MSIC (selected & (1 << 3))
+#define SEL_CUTS (selected & (1 << 4))
+#define SEL_CHEA (selected & (1 << 5))
+
 /*
 #define SCRATCH 0x2e7000
 #define FRONT   0x2aeff8

@@ -15,6 +15,7 @@ extern Uint32 position_vram_aft_monster;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_screen;
 extern Uint8 *hwram_ptr;
+extern Uint8 selected;
 }
 #include "file.h"
 #include "decode_mac.h"
@@ -646,13 +647,18 @@ uint32_t Video::SAT_copySpriteToVram(void* src, DecodeBuffer &buf, size_t dataSi
 void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, unsigned short w)
 {
 	SPRITE user_sprite;
-	user_sprite.CTRL=0;
-	user_sprite.COLR = 0xc0;		
+	user_sprite.CTRL= 0;
+	user_sprite.COLR= 0xc0;
 	user_sprite.PMOD= CL16Bnk| ECdis | 0x0800;// | ECenb | SPdis;  // pas besoin pour les sprites
 	user_sprite.SRCA= ((int)ptrsp)/8;
-	user_sprite.SIZE=(w/8)<<8|h;
-	user_sprite.XA=63+x;
-	user_sprite.YA=y;
+	user_sprite.SIZE= (w/8)<<8|h;
+	user_sprite.YA  = y;
+
+	if (SEL_STCH) {
+		user_sprite.XA = 63 + x;
+	} else {
+		user_sprite.XA = (x * 6) / 5;  // x * 1.2 en arithmétique entière
+	}
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
@@ -664,9 +670,14 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf) {
     user_sprite.COLR = (spr.color != -1) ? (spr.color<<4) : 0;
     user_sprite.PMOD = (spr.color != -1) ? (CL16Bnk | ECdis | 0x0800) : (CL256Bnk | ECdis | 0x0800);
     user_sprite.SIZE = spr.size;
-    user_sprite.XA = 63 + (buf.dst_x - 320);
     user_sprite.YA = buf.dst_y - 224;
     user_sprite.GRDA = 0;
+
+	if (SEL_STCH) {
+		user_sprite.XA = (buf.dst_x - 257);
+	} else {
+		user_sprite.XA = ((buf.dst_x - 256) * 6) / 5;  // x * 1.2 en arithmétique entière
+	}
 	
     user_sprite.SRCA = spr.cgaddr;
     slSetSprite(&user_sprite, toFIXED2(10)); // à remettre // ennemis et objets
