@@ -342,7 +342,7 @@ void Menu::handleOptionsScreen() {
 	
 	if(!SEL_STCH)
 	{
-		slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
+		slZoomNbg0(52500, toFIXED(1.0));
 		slScrWindow0(0 , 0 , 640 , 447 );
 
 		slWindow(0 , 0 , 640 , 447 , 241 ,320 , 224);

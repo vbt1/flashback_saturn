@@ -653,12 +653,7 @@ void Video::SAT_displaySprite(uint8_t *ptrsp, int x, int y, unsigned short h, un
 	user_sprite.SRCA= ((int)ptrsp)/8;
 	user_sprite.SIZE= (w/8)<<8|h;
 	user_sprite.YA  = y;
-
-	if (SEL_STCH) {
-		user_sprite.XA = 63 + x;
-	} else {
-		user_sprite.XA = (x * 6) / 5;  // x * 1.2 en arithmétique entière
-	}
+	user_sprite.XA  = 63 + x;
 	
 	slSetSprite(&user_sprite, toFIXED2(10));	// à remettre // ennemis et objets
 }
@@ -676,7 +671,15 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf) {
 	if (SEL_STCH) {
 		user_sprite.XA = (buf.dst_x - 257);
 	} else {
-		user_sprite.XA = ((buf.dst_x - 256) * 6) / 5;  // x * 1.2 en arithmétique entière
+		uint16_t size  = spr.size;
+		uint8_t h	   = size & 0xFF;
+		uint8_t w_div8 = size >> 8;
+		uint16_t w	   = w_div8 * 8;
+
+		user_sprite.CTRL |= (FUNC_Sprite | _ZmLT);//FUNC_Sprite | 0x1f00;
+		user_sprite.XA = ((buf.dst_x * 5) >> 2) - 318;
+		user_sprite.XB = (w * 5) >> 2;
+		user_sprite.YB = h;
 	}
 	
     user_sprite.SRCA = spr.cgaddr;

@@ -522,8 +522,6 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
 //	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
-//	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
-
 
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	slBack1ColSet((void *)BACK_COL_ADR, 0x8000); // Black color background
