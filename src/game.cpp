@@ -1258,34 +1258,41 @@ void Game::drawStoryTexts() {
 					yPos += 8;
 				}
 			}*/
+
+			volatile scsp_dbg_reg_t *dbg_reg;
 			uint8_t *voiceSegmentData = 0;
 			uint32_t voiceSegmentLen = 0;
 			uint32_t next = 0;
-//			_textToDisplay=0;
-			if(textSegmentsCount==1)
-				_mix.pauseMusic();
-			//_mix.stopMusic();
-			pcm_sample_stop(PCM_VOICE);
-			volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(PCM_VOICE);
-			volatile scsp_dbg_reg_t *dbg_reg = (scsp_dbg_reg_t *)get_scsp_dbg_reg();
-			dbg_reg->mslc= PCM_VOICE;
-			_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
-//			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
-//			if (voiceSegmentData) {
-			if (voiceSegmentLen) 
-			{
-				uint32_t address = (uint32_t)soundAddr;
-				if(voiceSegmentLen<9216)
-					voiceSegmentLen = 9216;
-				SoundFx sfx;
 
-				sfx.freq = 11035;
-				sfx.len = voiceSegmentLen;
-				sfx.data = soundAddr;
-//				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
-				pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_no_loop);
-//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
+			if(!SEL_VOIC)
+			{
+				if(textSegmentsCount==1)
+					_mix.pauseMusic();
+				//_mix.stopMusic();
+				pcm_sample_stop(PCM_VOICE);
+				volatile scsp_slot_regs_t *slot = (scsp_slot_regs_t *)get_scsp_slot(PCM_VOICE);
+				dbg_reg = (scsp_dbg_reg_t *)get_scsp_dbg_reg();
+				dbg_reg->mslc= PCM_VOICE;
+				_res.load_VCE(_textToDisplay, textSpeechSegment++, &voiceSegmentData, &voiceSegmentLen);
+	//			emu_printf("load_VCE XXXX %d nb seg %d size %d current segment %d\n",_textToDisplay,textSegmentsCount,voiceSegmentLen,textSpeechSegment-1);
+
+				if (voiceSegmentLen) 
+				{
+					uint32_t address = (uint32_t)soundAddr;
+					if(voiceSegmentLen<9216)
+						voiceSegmentLen = 9216;
+					SoundFx sfx;
+
+					sfx.freq = 11035;
+					sfx.len = voiceSegmentLen;
+					sfx.data = soundAddr;
+	//				emu_printf("load_VCE num %d len %d segment %d addr %x\n",_textToDisplay,voiceSegmentLen,textSpeechSegment,address);
+					pcm_play(PCM_VOICE, &sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_no_loop);
+	//				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);  // vbt ࠲emettre
+				}
 			}
+			else
+				textSpeechSegment++;
 /*
 char toto[100];
 sprintf(toto,"sta ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
@@ -1295,6 +1302,7 @@ _vid.drawString(toto, 1, 78, 0xE7);
 //emu_printf("draw story text\n");	
 			_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
 
+
 			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
 				/*if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
@@ -1302,32 +1310,38 @@ _vid.drawString(toto, 1, 78, 0xE7);
 //sprintf(toto,"%06d %06d %d", (dbg_reg->ca+1)*4096,voiceSegmentLen-1,((dbg_reg->ca+1)*4096>=voiceSegmentLen-1));
 //_vid.drawString(toto, 1, 70, 0xE7);
 //emu_printf("(dbg_reg->ca+1)*4096 %d voiceSegmentLen %d comp %d\n",(dbg_reg->ca+1)*4096,voiceSegmentLen,((dbg_reg->ca+1)*4096>=voiceSegmentLen-1));
-				if((dbg_reg->ca+1)*4096>=voiceSegmentLen-1
-				|| (next>=voiceSegmentLen-1 && dbg_reg->ca==0))
+				if(!SEL_VOIC)
 				{
+					if((dbg_reg->ca+1)*4096>=voiceSegmentLen-1
+					|| (next>=voiceSegmentLen-1 && dbg_reg->ca==0))
+					{
 /*
 sprintf(toto,"end ca%x sa%x lsa%d lea%04x", dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 _vid.drawString(toto, 1, 88, 0xE7);
 				emu_printf("end play slot %d ca %04x sa %d lsa %04x lea %04x\n",PCM_VOICE, dbg_reg->ca,slot->sa,slot->lsa,slot->lea);
 				_stub->sleep(2000);
 */
-					pcm_sample_stop(PCM_VOICE);
-					break;
+						pcm_sample_stop(PCM_VOICE);
+						break;
+					}
+					next=(dbg_reg->ca+2)*4096;
 				}
-				next=(dbg_reg->ca+2)*4096;
 #ifdef DEMO
 				inp_update();
 #endif
 				_stub->sleep(80);
 			}
 
-			if (voiceSegmentLen) {
-				pcm_sample_stop(PCM_VOICE);
-//				_mix.stopAll();
-//				sat_free(voiceSegmentData);
-			}
 			_stub->_pi.quit = false;
 			_stub->_pi.backspace = false;
+
+			if(!SEL_VOIC)
+			{
+				if (voiceSegmentLen) {
+				pcm_sample_stop(PCM_VOICE);
+//				_mix.stopAll();
+				}
+			}
 //			if (_res._type == kResourceTypeMac) {
 				if (textSpeechSegment >= textSegmentsCount) {
 					break;
