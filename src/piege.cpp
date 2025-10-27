@@ -3,19 +3,19 @@
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
  */
 #define DEMO 1
- extern "C" {
-#include 	<string.h>
-}
 #include "game.h"
 #include "resource.h"
 #include "systemstub.h"
 #include "util.h"
-extern "C" {
+ extern "C" {
+#include 	<string.h>
 #include "pcm.h"
 #include "scsp.h"
+#include "sat_mem_checker.h"
 extern Uint8 *hwram_screen;
 extern Uint8 *hwram;
 extern unsigned char loadingMap;
+extern Uint8 selected;
 }
 
 void Game::pge_resetMessages() {
@@ -1487,9 +1487,12 @@ int Game::pge_op_setCollisionState2(ObjectOpcodeArgs *args) {
 
 int Game::pge_op_saveState(ObjectOpcodeArgs *args) {
 	_saveStateCompleted = true;
-	pcm_sample_stop(PCM_VOICE);
+	if(!SEL_VOIC)
+		pcm_sample_stop(PCM_VOICE);
+	
 	_validSaveState = saveGameState(kIngameSaveSlot);
-	if (_validSaveState /*&& g_options.play_gamesaved_sound*/) {
+
+	if (_validSaveState && !SEL_VOIC /*&& g_options.play_gamesaved_sound*/) {
 		SoundFx *sfx = &_res._sfxList[NUM_SFXS];		
 //		_mix.play(Resource::_gameSavedSoundData, Resource::_gameSavedSoundLen, 8000, Mixer::MAX_VOLUME);
 		pcm_play(PCM_VOICE, sfx, (Mixer::MAX_VOLUME>>1)-1, pcm_sample_loop_no_loop);
