@@ -325,7 +325,7 @@ void Menu::handleOptionsScreen() {
 		}
 		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
-			if(currentLine<5)
+			if(currentLine<6)
 				currentLine++;
 		}
 		if (_stub->_pi.escape) {
@@ -337,27 +337,28 @@ void Menu::handleOptionsScreen() {
 //			_skill = currentSkill;
 			return;
 		}*/
-
-		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
-			switch (currentSkill) {
-			case kSkillNormal:
-				currentSkill = kSkillEasy;
-				break;
-			case kSkillExpert:
-				currentSkill = kSkillNormal;
-				break;
+		if (currentLine == 6) {
+			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+				switch (currentSkill) {
+				case kSkillNormal:
+					currentSkill = kSkillEasy;
+					break;
+				case kSkillExpert:
+					currentSkill = kSkillNormal;
+					break;
+				}
 			}
-		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
-			switch (currentSkill) {
-			case kSkillEasy:
-				currentSkill = kSkillNormal;
-				break;
-			case kSkillNormal:
-				currentSkill = kSkillExpert;
-				break;
+			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+				switch (currentSkill) {
+				case kSkillEasy:
+					currentSkill = kSkillNormal;
+					break;
+				case kSkillNormal:
+					currentSkill = kSkillExpert;
+					break;
+				}
 			}
 		}
 	} while (!_stub->_pi.quit);
