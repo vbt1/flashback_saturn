@@ -291,8 +291,13 @@ void Menu::handleOptionsScreen() {
 
 	const uint8_t yPositions[] = { 11, 13, 15, 17, 19, 21 };
 	const uint8_t numLines = sizeof(labels) / sizeof(labels[0]);
+	int currentSkill = _skill;
 
 	do {
+		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  3, (currentSkill == 0) ? 2 : 3);
+		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 13, (currentSkill == 1) ? 2 : 3);
+		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 23, (currentSkill == 2) ? 2 : 3);
+
 		for (uint8_t i = 0; i < numLines; ++i) {
 			drawString(labels[i], yPositions[i], 3, (currentLine == i) ? 2 : 3);
 			drawString(leftOptions[i],  yPositions[i], 22, !(selected & (1 << i)) ? 2 : 3);
@@ -332,8 +337,32 @@ void Menu::handleOptionsScreen() {
 //			_skill = currentSkill;
 			return;
 		}*/
+
+		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
+			_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+			switch (currentSkill) {
+			case kSkillNormal:
+				currentSkill = kSkillEasy;
+				break;
+			case kSkillExpert:
+				currentSkill = kSkillNormal;
+				break;
+			}
+		}
+		if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+			_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+			switch (currentSkill) {
+			case kSkillEasy:
+				currentSkill = kSkillNormal;
+				break;
+			case kSkillNormal:
+				currentSkill = kSkillExpert;
+				break;
+			}
+		}
 	} while (!_stub->_pi.quit);
 
+	_skill = currentSkill;
 // vbt : gestion de la langue
 	if(!SEL_LANG)
 		_res->setLanguage(LANG_EN);
@@ -481,16 +510,16 @@ bool Menu::handleLevelScreen() {
 	_stateSlot = -1;
 
 	_vid->setTextPalette(); // vbt : ajout
-	int currentSkill = _skill;
+//	int currentSkill = _skill;
 	int currentLevel = _level;
 	do {
 		for (int i = 0; i < LEVELS_COUNT; ++i) {
 			drawString(_levelNames[i], 5 + i * 2, 4, (currentLevel == i) ? 2 : 3);
 		}
 
-		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  4, (currentSkill == 0) ? 2 : 3);
-		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 14, (currentSkill == 1) ? 2 : 3);
-		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 24, (currentSkill == 2) ? 2 : 3);
+//		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  4, (currentSkill == 0) ? 2 : 3);
+//		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 14, (currentSkill == 1) ? 2 : 3);
+//		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 24, (currentSkill == 2) ? 2 : 3);
 
 //		_vid->updateScreen();
 		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
@@ -513,7 +542,7 @@ bool Menu::handleLevelScreen() {
 				currentLevel = 0;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
+/*		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
 			_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 			switch (currentSkill) {
 			case kSkillNormal:
@@ -535,13 +564,13 @@ bool Menu::handleLevelScreen() {
 				break;
 			}
 		}
-		if (_stub->_pi.escape) {
+*/		if (_stub->_pi.escape) {
 			_stub->_pi.escape = false;
 			break;
 		}
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
-			_skill = currentSkill;
+//			_skill = currentSkill;
 			_level = currentLevel;
 			return true;
 		}
