@@ -677,7 +677,7 @@ void Video::SAT_displaySprite(SAT_sprite spr, DecodeBuffer buf) {
 		uint16_t w	   = w_div8 * 8;
 
 		user_sprite.CTRL |= (FUNC_Sprite | _ZmLT);//FUNC_Sprite | 0x1f00;
-		user_sprite.XA = ((buf.dst_x * 5) >> 2) - 318;
+		user_sprite.XA = ((buf.dst_x * 5) >> 2) - 319;
 		user_sprite.XB = (w * 5) >> 2;
 		user_sprite.YB = h;
 	}

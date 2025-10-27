@@ -339,33 +339,21 @@ void Menu::handleOptionsScreen() {
 		_res->setLanguage(LANG_EN);
 	else
 		_res->setLanguage(LANG_FR);
-	
-	if(!SEL_STCH)
-	{
-		slZoomNbg0(52500, toFIXED(1.0));
-		slScrWindow0(0 , 0 , 640 , 447 );
 
-		slWindow(0 , 0 , 640 , 447 , 241 ,320 , 224);
+	const struct {
+		int zoom, xc, xOff, xPos;
+	} cfg[] = {
+		{52500, 640, 0, 0},
+		{toFIXED(1.0), 574, 63, toFIXED(-63)}
+	};
 
-		slScrWindow0(0 , 0 , 640 , 447 );
-//		slScrWindowModeNbg0(win0_IN);
-		slScrWindow1(0 , 0 , 640 , 447 );
-//		slScrWindowModeNbg1(win1_IN);
-//		slScrWindowModeSPR(win0_IN);
-		slScrPosNbg0(0, 0);
-		SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
-		(*sys_clip).XC = 640;
-	}
-	else
-	{
-		slZoomNbg0(toFIXED(1.0), toFIXED(1.0));
-		slScrWindow0(63 , 0 , 574 , 447 );
-//		slScrWindowModeNbg0(win0_IN);
-		slScrWindow1(63 , 0 , 574 , 447 );
-//		slScrWindowModeNbg1(win1_IN);
-//		slScrWindowModeSPR(win0_IN);
-		slScrPosNbg0(toFIXED(-63),0);
-	}
+	const int i = SEL_STCH ? 1 : 0;
+	slZoomNbg0(cfg[i].zoom, toFIXED(1.0));
+	slWindow(cfg[i].xOff, 0, cfg[i].xc, 447, 241, 320, 224);
+	slScrWindow0(cfg[i].xOff, 0, cfg[i].xc, 447);
+	slScrWindow1(cfg[i].xOff, 0, cfg[i].xc, 447);
+	slScrPosNbg0(cfg[i].xPos, 0);
+	((SPRITE *)SpriteVRAM)->XC = cfg[i].xc;
 	slSynch();
 }
 

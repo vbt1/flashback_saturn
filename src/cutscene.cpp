@@ -20,6 +20,7 @@ extern Uint8 *hwram_screen;
 extern Uint8 *hwram_ptr;
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
+extern Uint8 selected;
 #ifdef FRAME
 extern Uint8 frame_x;
 extern Uint8 frame_y;
@@ -1452,12 +1453,15 @@ emu_printf(" Cutscene::load %d id %d\n", cutName, _id);
 	}
 	else
 	{
-		if(cutName==12)
-			_res->load_CMP((uint8_t *)CUTCMP2);
-		else if (cutName==31)
-			_res->load_CMP((uint8_t *)CUTCMP4);
-		else if (cutName==2)
-			_res->load_CMP((uint8_t *)CUTCMP3);
+		if (!SEL_CUTS)
+		{
+			if(cutName==12)
+				_res->load_CMP((uint8_t *)CUTCMP2);
+			else if (cutName==31)
+				_res->load_CMP((uint8_t *)CUTCMP4);
+			else if (cutName==2)
+				_res->load_CMP((uint8_t *)CUTCMP3);
+		}
 	}
 // fix bug on displaying key cutscene
 //	memset4_fast(&_vid->_frontLayer[CLEAN_Y << 9], 0x0000, CLEAN_H << 9);
@@ -1597,7 +1601,8 @@ void Cutscene::play() {
 				}
 				break;
 			case 8: // save checkpoints
-				playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
+				if (!SEL_CUTS)
+					playSet((uint8_t *)CUTCMP1, 0x5E4, true, true, -1);
 				break;
 			case 19:
 				//if (g_options.play_serrure_cutscene) 
