@@ -656,8 +656,6 @@ void Game::playCutscene(int id) {
 
 	if (id != -1) {
 		_cut._id = id;
-		if (SEL_CUTS && id == 8)
-			return;
 	}
 	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */
 	&& _menu._stateSlot == -1) {

@@ -1587,6 +1587,8 @@ void Cutscene::play() {
 		_textCurBuf = NULL;
 //		emu_printf("Cutscene::play() _id=0x%X c%p \n", _id , current_lwram);
 		_creditsSequence = false;
+		if (SEL_CUTS && _id == 8)
+			return;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
 
