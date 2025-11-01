@@ -1410,7 +1410,7 @@ emu_printf("_id %d _music %d\n",_id,_musicTableDOS[_id]);
 
 	_paletteNum = -1;
 	_isConcavePolygonShape = false;
-	_drawMemoSetShapes = (_id == kCineMemo || name == kCineMemoEnd);
+	_drawMemoSetShapes = (_id == kCineMemo || name == kCineMemoEnd) && !SEL_CUTS;
 	_memoSetOffset = 0;
 	while (!_stub->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
