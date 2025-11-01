@@ -336,7 +336,7 @@ for (i=0;i<100;i++)
 #endif
 		{
 // vbt : activation des cheatcodes
-			if(!(selected & (1 << 5)))
+			if(!SEL_CHEA)
 				_cheats = kCheatOneHitKill | kCheatNoHit | kCheatOneHitKill;
 			else
 				_cheats = 0;
@@ -545,7 +545,7 @@ emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,
 /*	if (_res.isDOS() && (_stub->_pi.dbgMask & PlayerInput::DF_AUTOZOOM) != 0) {
 		pge_updateZoom();
 	}*/
-	if(!(selected & (1 << 1)))
+	if(!SEL_STCH)
 	{
 		slScrPosNbg0(0, -_vid._shakeOffset << 16);
 		slWindow(0 , 0 , 640 , 447 , 241 ,320 , 224 + _vid._shakeOffset);
@@ -657,8 +657,7 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
-	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 /* && _cut._id != 22 && _cut._id != 23 && _cut._id != 24 */
-	&& _menu._stateSlot == -1) {
+	if (_cut._id != 0xFFFF && _cut._id != 30 && _cut._id != 31 && _menu._stateSlot == -1) {
 //		ToggleWidescreenStack tws(_stub, false);
 /*		if (_res._hasSeqData) {
 			int num = 0;
@@ -754,8 +753,8 @@ void Game::playCutscene(int id) {
 			_cut._id = 0xFFFF;
 #endif
 		}
+//		if(SEL_CUTS && (_cut._id == 8 || _cut._id == 19 || _cut._id == 22 || _cut._id == 23 || _cut._id == 24 ))
 
-		_mix.stopMusic(0);
 		if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
 			_mix.stopMusic(1);

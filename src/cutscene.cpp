@@ -1584,11 +1584,12 @@ void Cutscene::playCredits() {
 
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
+		if (SEL_CUTS && (_id == 8 || _id == 19 || _id == 22 || _id == 23 || _id == 24))
+			return;
+
 		_textCurBuf = NULL;
 //		emu_printf("Cutscene::play() _id=0x%X c%p \n", _id , current_lwram);
 		_creditsSequence = false;
-		if (SEL_CUTS && _id == 8)
-			return;
 		prepare();
 		const uint16_t *offsets = _offsetsTableDOS;
 
@@ -1660,6 +1661,7 @@ void Cutscene::play() {
 		}
 		if (_id != 0x3D) {
 			_id = 0xFFFF;
+			_mix.stopMusic(0);
 		}
 	}
 }

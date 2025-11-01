@@ -264,7 +264,7 @@ void Menu::handleInfoScreen() {
 void Menu::handleOptionsScreen() {
 //	debug(DBG_MENU, "Menu::handleSkillScreen()");
 	_vid->fadeOut();
-	loadPicture("menu3");
+	loadPicture("menu2");
 	_vid->fullRefresh();
 	_vid->setTextPalette(); // vbt : ajout	
 	drawString("OPTIONS", 8, 4, 3);
