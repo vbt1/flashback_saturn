@@ -753,7 +753,6 @@ void Game::playCutscene(int id) {
 			_cut._id = 0xFFFF;
 #endif
 		}
-//		if(SEL_CUTS && (_cut._id == 8 || _cut._id == 19 || _cut._id == 22 || _cut._id == 23 || _cut._id == 24 ))
 
 		if (_cut._id == 0x3D) {
 			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
@@ -1353,7 +1352,12 @@ _vid.drawString(toto, 1, 88, 0xE7);
 //emu_printf("clean storytext\n");			
 		memset4_fast(&_vid._frontLayer[51 << 9], 0x00, _vid._w*yPos*4);    // vbt : inutile pour la fin d'un message de plus d'une ligne
 		_stub->copyRect(0, 51, _vid._w, yPos*4, _vid._frontLayer, _vid._w);
-		_mix.unpauseMusic();
+
+		if(!SEL_VOIC)
+		{
+			_mix.unpauseMusic();
+		}
+
 		_textToDisplay = 0xFFFF;
 		_stub->_pi.backspace = false;
 		_stub->_pi.quit = false;

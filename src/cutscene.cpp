@@ -1585,8 +1585,10 @@ void Cutscene::playCredits() {
 void Cutscene::play() {
 	if (_id != 0xFFFF) {
 		if (SEL_CUTS && (_id == 8 || _id == 19 || _id == 22 || _id == 23 || _id == 24))
+		{
+			_id = 0xFFFF;
 			return;
-
+		}
 		_textCurBuf = NULL;
 //		emu_printf("Cutscene::play() _id=0x%X c%p \n", _id , current_lwram);
 		_creditsSequence = false;
@@ -1660,8 +1662,9 @@ void Cutscene::play() {
 			}
 		}
 		if (_id != 0x3D) {
+			if(_id != 0x4A)
+				_mix.stopMusic(0);
 			_id = 0xFFFF;
-			_mix.stopMusic(0);
 		}
 	}
 }
