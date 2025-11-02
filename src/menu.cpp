@@ -507,26 +507,30 @@ bool Menu::handlePasswordScreen() {
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
 	memset(_vid->_frontLayer, 0, _vid->_layerSize);
-	_vid->_fullRefresh = true;
-	_vid->fullRefresh();
+
 	_vid->fadeOut();
+	_vid->setIconsPalette();
 	loadPicture("menu2");
+	GFS_Load(GFS_NameToId((int8_t*)"LEVEL.BIN"), 0, (void*)(current_lwram + 36352), 19456);
+	_vid->fullRefresh();
+	_vid->setTextPalette(); // vbt : ajout
+
 	_stateSlot = -1;
 
-	_vid->setTextPalette(); // vbt : ajout
 //	int currentSkill = _skill;
 	int currentLevel = _level;
+	_stub->copyRect(0, 71, _vid->_w, 38, current_lwram, _vid->_w);
+
 	do {
 		for (int i = 0; i < LEVELS_COUNT; ++i) {
-			drawString(_levelNames[i], 5 + i * 2, 4, (currentLevel == i) ? 2 : 3);
+			drawString(_levelNames[i], 9 + i * 2, 4, (currentLevel == i) ? 2 : 3);
 		}
-
 //		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  4, (currentSkill == 0) ? 2 : 3);
 //		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 14, (currentSkill == 1) ? 2 : 3);
 //		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 23, 24, (currentSkill == 2) ? 2 : 3);
 
 //		_vid->updateScreen();
-		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+		_stub->copyRect(0, 109, _vid->_w, _vid->_h-109, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
 
