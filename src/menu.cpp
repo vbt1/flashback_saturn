@@ -10,6 +10,7 @@ extern "C" {
 #include <sgl.h>
 #include <sega_bup.h>
 #include <sega_per.h>
+#include <sega_gfs.h>
 #include "sega_sys.h"
 #include "sat_mem_checker.h"
 extern Uint8 *current_lwram;
@@ -118,7 +119,7 @@ void Menu::loadPicture(const char *prefix) {
 				displayTitleScreenMac(screens[i].num);
 				if (screens[i].num == kMacTitleScreen_Controls) {
 //					memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
-					_stub->copyRect(0, 0, _vid->_w, _vid->_h, current_lwram, _vid->_w);
+					_stub->copyRect(0, 38, _vid->_w, _vid->_h-38, current_lwram, _vid->_w);
 					displayTitleScreenMac(kMacTitleScreen_LeftEye);
 				}
 				break;
@@ -262,14 +263,14 @@ void Menu::handleInfoScreen() {
 }
 
 void Menu::handleOptionsScreen() {
-//	debug(DBG_MENU, "Menu::handleSkillScreen()");
+//	debug(DBG_MENU, "Menu::handleOptionsScreen()");
 	_vid->fadeOut();
+	_vid->setIconsPalette();
 	loadPicture("menu2");
+	GFS_Load(GFS_NameToId((int8_t*)"OPTIONS.BIN"), 0, (void*)(current_lwram + 36352), 19456);
 	_vid->fullRefresh();
 	_vid->setTextPalette(); // vbt : ajout	
-	drawString("OPTIONS", 8, 4, 3);
-//	drawString("SAVE (A)", 23, 4, 3);
-//	int currentSkill = _skill;
+//	drawString("OPTIONS", 8, 4, 3);
 	uint8_t currentLine = 0;
 
 	// Menu data
@@ -293,6 +294,8 @@ void Menu::handleOptionsScreen() {
 	const uint8_t numLines = sizeof(labels) / sizeof(labels[0]);
 	int currentSkill = _skill;
 
+	_stub->copyRect(0, 71, _vid->_w, 38, current_lwram, _vid->_w);
+
 	do {
 		drawString(_res->getMenuString(LocaleData::LI_13_EASY),   23,  3, (currentSkill == 0) ? 2 : 3);
 		drawString(_res->getMenuString(LocaleData::LI_14_NORMAL), 23, 13, (currentSkill == 1) ? 2 : 3);
@@ -314,7 +317,7 @@ void Menu::handleOptionsScreen() {
 				}
 			}
 		}
-		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+		_stub->copyRect(0, 109, _vid->_w, _vid->_h-109, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
 
