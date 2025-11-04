@@ -218,6 +218,10 @@ void Menu::displayTitleScreenMac(int num) {
 		_stub->updateScreen(0);
 		_stub->initTimeStamp();
 
+		Color c;
+		c.r = c.g = c.b = 6;
+		_stub->setPaletteEntry(191, &c);
+
 		do {
 			_stub->sleep(EVENTS_DELAY);
 			_stub->processEvents();
