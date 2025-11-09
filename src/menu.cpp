@@ -247,8 +247,6 @@ void Menu::displayTitleScreenMac(int num) {
 
 void Menu::handleInfoScreen() {
 //	debug(DBG_MENU, "Menu::handleInfoScreen()");
-	_vid->fadeOut();
-	_vid->setIconsPalette();
 	loadPicture("instru_e");
 
 	do {
@@ -268,13 +266,7 @@ void Menu::handleInfoScreen() {
 
 void Menu::handleOptionsScreen() {
 //	debug(DBG_MENU, "Menu::handleOptionsScreen()");
-	_vid->fadeOut();
-	_vid->setIconsPalette();
-	loadPicture("menu2");
 	GFS_Load(GFS_NameToId((int8_t*)"OPTIONS.BIN"), 0, (void*)(current_lwram + 36352), 19456);
-	_vid->fullRefresh();
-	_vid->setTextPalette(); // vbt : ajout	
-//	drawString("OPTIONS", 8, 4, 3);
 	uint8_t currentLine = 0;
 
 	// Menu data
@@ -510,18 +502,9 @@ bool Menu::handlePasswordScreen() {
 */
 bool Menu::handleLevelScreen() {
 //	debug(DBG_MENU, "Menu::handleLevelScreen()");
-	memset(_vid->_frontLayer, 0, _vid->_layerSize);
-
-	_vid->fadeOut();
-	_vid->setIconsPalette();
-	loadPicture("menu2");
 	GFS_Load(GFS_NameToId((int8_t*)"LEVEL.BIN"), 0, (void*)(current_lwram + 36352), 19456);
-	_vid->fullRefresh();
-	_vid->setTextPalette(); // vbt : ajout
-
 	_stateSlot = -1;
 
-//	int currentSkill = _skill;
 	int currentLevel = _level;
 	_stub->copyRect(0, 71, _vid->_w, 38, current_lwram, _vid->_w);
 
@@ -592,16 +575,12 @@ bool Menu::handleLevelScreen() {
 
 bool Menu::handleResumeScreen() {
 //	emu_printf("Menu::handleResumeScreen()\n");
-	memset(_vid->_frontLayer, 0, _vid->_layerSize);
-	_vid->_fullRefresh = true;
-	_vid->fullRefresh();
-	_vid->fadeOut();
-	loadPicture("menu2");
+	GFS_Load(GFS_NameToId((int8_t*)"RESUME.BIN"), 0, (void*)(current_lwram), 19456);
+
 	_stateSlot = -1;
 	int currentSave = 0;
 	int loaded = -1;
 
-	_vid->setTextPalette(); // vbt : ajout
 	SaveStateEntry sav[4];
 	int num = SAT_getSaveStates(sav, false);
 	_stub->_pi.quit = false;
@@ -609,6 +588,14 @@ bool Menu::handleResumeScreen() {
 	memset((uint8_t *)FRONT,0x00, _vid->_layerSize);
 
 ///--------------------------------------
+	for(int i =0;i<19456;i++)
+	{
+		if(current_lwram[i]!=0)
+		{
+			_vid->_backLayer[i+(18<<9)] = current_lwram[i];
+		}
+	}
+
 	slPrioritySpr0(7);
 	do {
 		for (int i = 0; i < num; ++i) {
@@ -640,7 +627,7 @@ bool Menu::handleResumeScreen() {
 			drawString((_res->_lang == LANG_FR) ? "Aucune sauvegarde" : "No Saves", 6 + 0 * 3, 4, 3);
 		}
 		
-		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _vid->_frontLayer, _vid->_w);
+		_stub->copyRect(0, 38, _vid->_w, _vid->_h-38, _vid->_frontLayer, _vid->_w);
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
 
@@ -814,8 +801,23 @@ void Menu::handleTitleScreen() {
 		}
 
 		if (selectedItem != -1) {
-			uint8 slot = -1;
+			memset(_vid->_frontLayer, 0, _vid->_layerSize);
+
+			_vid->fadeOut();
+			_stub->copyRect(0, 109, _vid->_w, _vid->_h-109, _vid->_frontLayer, _vid->_w);
+
+			_vid->setIconsPalette();
+			_vid->fullRefresh();
+			_vid->setTextPalette(); // vbt : ajout
+
 			_selectedOption = menuItems[selectedItem].opt;
+
+			if(_selectedOption == MENU_OPTION_ITEM_RESUME  || 
+			   _selectedOption == MENU_OPTION_ITEM_LEVEL ||
+			   _selectedOption == MENU_OPTION_ITEM_OPTIONS )
+			{
+				loadPicture("menu2");
+			}
 			switch (_selectedOption) {
 			case MENU_OPTION_ITEM_START:
 				_stateSlot = -1;
