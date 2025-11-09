@@ -444,7 +444,7 @@ struct Game {
 	void SAT_loadLogo();
 	void SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t* destPtr);
 	void SAT_preloadMonsters();
-	void SAT_preloadSpc();
+	inline void SAT_preloadSpc();
 	void SAT_preloadPerso();
 	void SAT_preloadIcon();
 	void SAT_preloadCDfiles();

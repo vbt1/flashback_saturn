@@ -270,7 +270,7 @@ void Menu::handleOptionsScreen() {
 	uint8_t currentLine = 0;
 
 	// Menu data
-	const char *labels[] = {
+	static const char *labels[] = {
 		"LANGUAGE",
 		"STRETCH SCREEN",
 		"VOICES",
@@ -279,15 +279,15 @@ void Menu::handleOptionsScreen() {
 		"CHEATS"
 	};
 
-	const char *leftOptions[] = {
+	static const char *leftOptions[] = {
 		"ENG", "YES", "YES", "YES", "YES", "YES"
 	};
-	const char *rightOptions[] = {
+	static const char *rightOptions[] = {
 		"FRA", "NO",  "NO",  "NO",  "NO",  "NO"
 	};
 
-	const uint8_t yPositions[] = { 11, 13, 15, 17, 19, 21 };
-	const uint8_t numLines = sizeof(labels) / sizeof(labels[0]);
+	static const uint8_t yPositions[] = { 11, 13, 15, 17, 19, 21 };
+	static const uint8_t numLines = sizeof(labels) / sizeof(labels[0]);
 	int currentSkill = _skill;
 
 	_stub->copyRect(0, 71, _vid->_w, 38, current_lwram, _vid->_w);
@@ -364,12 +364,9 @@ void Menu::handleOptionsScreen() {
 
 	_skill = currentSkill;
 // vbt : gestion de la langue
-	if(!SEL_LANG)
-		_res->setLanguage(LANG_EN);
-	else
-		_res->setLanguage(LANG_FR);
+	_res->setLanguage(SEL_LANG ? LANG_FR : LANG_EN);
 
-	const struct {
+	static const struct {
 		int zoom, xc, xOff, xPos;
 	} cfg[] = {
 		{52500, 640, 0, 0},
@@ -587,6 +584,16 @@ bool Menu::handleResumeScreen() {
 
 	memset((uint8_t *)FRONT,0x00, _vid->_layerSize);
 
+	Color clut[256];
+//	_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
+//	_res->MAC_copyClut16(clut, 0x1D, 0x38);
+	_res->MAC_copyClutN(clut, 0x0C, 0x37, 32);  // icons
+
+	const int baseColor = 12 * 16;
+	for (int i = 0; i < 32; ++i) {
+		_stub->setPaletteEntry(baseColor + i, &clut[baseColor + i]);
+	}
+
 ///--------------------------------------
 	for(int i =0;i<19456;i++)
 	{
@@ -666,50 +673,19 @@ bool Menu::handleResumeScreen() {
 void Menu::handleTitleScreen() {
 //	debug(DBG_MENU, "Menu::handleTitleScreen()");
 
-	_charVar1 = 0;
-	_charVar2 = 0;
-	_charVar3 = 0;
-	_charVar4 = 0;
-	_charVar5 = 0;
+	_charVar1 = _charVar2 = _charVar3 = _charVar4 = _charVar5 = 0;
 
-	static const int MAX_MENU_ITEMS = 7;
-	Item menuItems[MAX_MENU_ITEMS];
-	int menuItemsCount = 0;
-
-	menuItems[menuItemsCount].str = LocaleData::LI_07_START;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_START;
-	++menuItemsCount;
+	static const Item menuItems[] = {
+		{LocaleData::LI_07_START, MENU_OPTION_ITEM_START},
+		{LocaleData::LI_18_RESUME_GAME, MENU_OPTION_ITEM_RESUME},
+		{LocaleData::LI_06_LEVEL, MENU_OPTION_ITEM_LEVEL},
+		{LocaleData::LI_10_INFO, MENU_OPTION_ITEM_INFO},
+		{LocaleData::LI_24_OPTIONS, MENU_OPTION_ITEM_OPTIONS},
+		{LocaleData::LI_23_DEMO, MENU_OPTION_ITEM_DEMO},
+		{LocaleData::LI_11_QUIT, MENU_OPTION_ITEM_QUIT}
+	};
+	const int menuItemsCount = 7;
 	
-	menuItems[menuItemsCount].str = LocaleData::LI_18_RESUME_GAME;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_RESUME;
-	++menuItemsCount;
-//	if (!_res->_isDemo) {
-/*		if (g_options.enable_password_menu) {
-			menuItems[menuItemsCount].str = LocaleData::LI_08_SKILL;
-			menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_SKILL;
-			++menuItemsCount;
-			menuItems[menuItemsCount].str = LocaleData::LI_09_PASSWORD;
-			menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_PASSWORD;
-			++menuItemsCount;
-		} else*/ {
-			menuItems[menuItemsCount].str = LocaleData::LI_06_LEVEL;
-			menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_LEVEL;
-			++menuItemsCount;
-		}
-//	}
-	menuItems[menuItemsCount].str = LocaleData::LI_10_INFO;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_INFO;
-	++menuItemsCount;
-	menuItems[menuItemsCount].str = LocaleData::LI_24_OPTIONS;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_OPTIONS;
-	++menuItemsCount;
-	menuItems[menuItemsCount].str = LocaleData::LI_23_DEMO;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_DEMO;
-	++menuItemsCount;
-	menuItems[menuItemsCount].str = LocaleData::LI_11_QUIT;
-	menuItems[menuItemsCount].opt = MENU_OPTION_ITEM_QUIT;
-	++menuItemsCount;
-
 	_selectedOption = -1;
 	_nextScreen = SCREEN_TITLE;
 
@@ -746,7 +722,6 @@ void Menu::handleTitleScreen() {
 			
 		if (_nextScreen == SCREEN_TITLE) {
 			memset(_vid->_frontLayer, 0, _vid->_layerSize);
-			_vid->_fullRefresh = true;
 			_vid->fullRefresh();
 			_vid->fadeOut();
 			loadPicture("menu1");

@@ -171,15 +171,13 @@ void Game::run() {
 			// on copie dans vdp1
 				TEXTURE tx = TEXDEF(16, 16, position_vram);
 #ifdef BPP8
-				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*16);
-				position_vram += (256*4)>>2;
-				SCU_DMAWait();
+				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 256);
 #else
-				_vid.convert_8bpp_to_4bpp_inplace(buf.ptr, 16 * 16);
-				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 16*8);
-				position_vram += (256*4)>>2;
-				SCU_DMAWait();
+				_vid.convert_8bpp_to_4bpp_inplace(buf.ptr, 256);
+				DMA_ScuMemCopy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)buf.ptr, 128);
 #endif
+				position_vram += 256;
+				SCU_DMAWait();
 				position_vram_aft_monster = position_vram;
 			}
 			hwram_ptr+=256;
@@ -1169,7 +1167,7 @@ void Game::drawLevelTexts() {
 	previousText_num = pge->init_PGE->text_num;
 	_saveStateCompleted = false;
 }
-
+/*
 static int getLineLength(const uint8_t *str) {
 	int len = 0;
 	while (*str && *str != 0xB && *str != 0xA) {
@@ -1178,7 +1176,7 @@ static int getLineLength(const uint8_t *str) {
 	}
 	return len;
 }
-
+*/
 void Game::drawStoryTexts() {
 	if (_textToDisplay != 0xFFFF) {
 		uint8_t textColor = 0xE5;
@@ -2864,26 +2862,27 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 
 		if(j == SPR_METRO)
 		{
-/*
-palette utilisée
-0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x07, 0x09,
-0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x20
-0x20=> couleur 245 (couleur 6)
-*/
-			for ( uint16_t i = 0; i < width * height;i++)
+			uint32_t count = (uint32_t)width * height;
+			uint8_t *p = destPtr;
+			uint8_t *end = p + count;
+
+			while (p < end)
 			{
-				if (destPtr[i] != 0)
+				uint8_t v = *p;
+				if (v != 0)
 				{
-					if(destPtr[i]<0x20)
-						destPtr[i]+=239;
+					if (v < 0x20)
+						v = (uint8_t)(v + 239);
 					else
-						destPtr[i]=245;
-					if(destPtr[i]==254)
-						destPtr[i]=246;
+						v = 245;
+					if (v == 254)
+						v = 246;
+
+					if (v == 240)
+						v = 255;
+					*p = v;
 				}
-//				else
-				if (destPtr[i] == 240)
-					destPtr[i] = 255; // 4bpp only
+				p++;
 			}
 			_vid.convert_8bpp_to_4bpp_inplace(destPtr, width * height);
 			sprData->color = 15;
@@ -3048,7 +3047,7 @@ void Game::SAT_preloadMonsters() {
 #endif
 }
 
-void Game::SAT_preloadSpc() {
+inline void Game::SAT_preloadSpc() {
 #ifdef DEBUG2
 		Color clut[512];
 		_res.MAC_setupRoomClut(_currentLevel, _currentRoom, clut);		

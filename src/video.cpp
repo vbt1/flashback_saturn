@@ -32,9 +32,9 @@ Video::Video(Resource *res, SystemStub *stub)
 	_layerSize = _w * _h;
 	_frontLayer = (uint8_t *)FRONT;
 
-	memset(&_frontLayer[0], 0, _w * _h);
+	memset(&_frontLayer[0], 0, _layerSize);
 	_backLayer = (uint8_t *)VDP2_VRAM_B0;
-	memset(_backLayer, 0, _w * _h); // vbt à remettre
+	memset(_backLayer, 0, _layerSize); // vbt à remettre
 	_fullRefresh = true;
 	_shakeOffset = 0;
 	_charFrontColor = 0;
@@ -61,7 +61,6 @@ Video::~Video() {
 
 void Video::updateScreen() {
 	//	debug(DBG_VIDEO, "Video::updateScreen()");
-//	_fullRefresh = false;
 	if (_fullRefresh) {
 		_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
 		_stub->updateScreen(_shakeOffset);
@@ -127,9 +126,9 @@ void Video::fadeOutPalette() {
 		for (int c = 0; c < 512; ++c) {
 			Color col;
 			_stub->getPaletteEntry(c, &col);
-			col.r = col.r * step >> 5;
-			col.g = col.g * step >> 5;
-			col.b = col.b * step >> 5;
+			col.r = (col.r * step) >> 5;
+			col.g = (col.g * step) >> 5;
+			col.b = (col.b * step) >> 5;
 			_stub->setPaletteEntry(c, &col);
 		}
 //		fullRefresh(); // vbt casse le fadeout des controles
@@ -207,8 +206,7 @@ void Video::setIconsPalette() {
 
 	const int baseColor = 12 * 16 + 256;
 	for (int i = 0; i < 32; ++i) {
-		int color = baseColor + i;
-		_stub->setPaletteEntry(color, &clut[color]);
+		_stub->setPaletteEntry(baseColor + i, &clut[baseColor + i]);
 	}
 }
 
@@ -290,23 +288,26 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
     const uint8_t shadow = _charShadowColor;
 
     // Process 16 rows
-    for (int i = 0; i < 16; i++) {
-        // Process 16 pixels per row in groups of 4
-        uint8_t *rowDst = dstPtr;
-        const uint8_t *rowSrc = srcData;
-        for (int j = 0; j < 16; j += 4) {
-            uint8_t src0 = rowSrc[j];
-            uint8_t src1 = rowSrc[j + 1];
-            uint8_t src2 = rowSrc[j + 2];
-            uint8_t src3 = rowSrc[j + 3];
-            rowDst[j]     = src0 == SHADOW_PIXEL ? shadow : (src0 == FRONT_PIXEL ? foreground : rowDst[j]);
-            rowDst[j + 1] = src1 == SHADOW_PIXEL ? shadow : (src1 == FRONT_PIXEL ? foreground : rowDst[j + 1]);
-            rowDst[j + 2] = src2 == SHADOW_PIXEL ? shadow : (src2 == FRONT_PIXEL ? foreground : rowDst[j + 2]);
-            rowDst[j + 3] = src3 == SHADOW_PIXEL ? shadow : (src3 == FRONT_PIXEL ? foreground : rowDst[j + 3]);
-        }
-        dstPtr += rowAdvance;
-        srcData += 16;
-    }
+	for (int i = 0; i < 16; i++) {
+		uint8_t *rowDst = dstPtr;
+
+		// Unrolled loop for 16 pixels (4 iterations of 4 pixels)
+		for (int j = 0; j < 4; j++) {
+			uint8_t src0 = srcData[0];
+			uint8_t src1 = srcData[1];
+			uint8_t src2 = srcData[2];
+			uint8_t src3 = srcData[3];
+
+			rowDst[0] = (src0 == SHADOW_PIXEL) ? shadow : ((src0 == FRONT_PIXEL) ? foreground : rowDst[0]);
+			rowDst[1] = (src1 == SHADOW_PIXEL) ? shadow : ((src1 == FRONT_PIXEL) ? foreground : rowDst[1]);
+			rowDst[2] = (src2 == SHADOW_PIXEL) ? shadow : ((src2 == FRONT_PIXEL) ? foreground : rowDst[2]);
+			rowDst[3] = (src3 == SHADOW_PIXEL) ? shadow : ((src3 == FRONT_PIXEL) ? foreground : rowDst[3]);
+
+			rowDst += 4;
+			srcData += 4;
+		}
+		dstPtr += pitch;
+	}
 }
 /*
 #include <cstdint>
@@ -406,11 +407,11 @@ void Video::MAC_drawStringChar(uint8_t *dst, int pitch, int x, int y, const uint
     // Compute source and destination pointers
     const uint8_t *src = fontData + ((chr - CHAR_OFFSET) << 8);
     unsigned short *dstShort = (unsigned short*)(dst + (y * 2) * 512 + (x * 2));
-    
+
     // Precompute colors
     const uint8_t foreground = color;
     const uint8_t shadow = _charShadowColor;
-    
+
     // Render 16 rows of 16 pixels (8 shorts per row)
     for (int row = 0; row < 16; ++row) {
         // Process 8 pairs of pixels per row
@@ -438,18 +439,12 @@ const char *Video::drawString(const char *str, int16_t x, int16_t y, uint8_t col
 //	emu_printf("Video::drawString('%s', %d, %d, 0x%X)\n", str, x, y, col);
 	const uint8_t *fnt = _res->_fnt;
 	int len = 0;
-	while (1) {
-		const uint8_t c = *str++;
-		if (c == 0 || c == 0xB || c == 0xA) {
-			break;
-		}
-//		(this->*_drawChar)(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
-		this->MAC_drawStringChar(_frontLayer, _w, x + len * CHAR_W, y, fnt, col, c);
+	uint8_t c;
+
+	while ((c = *str++) && c != 0xB && c != 0xA) {
+		MAC_drawStringChar(_frontLayer, _w, x + (len * CHAR_W), y, fnt, col, c);
 		++len;
 	}
-//	_stub->copyRect(x, (y<<1), _w, 16, _frontLayer, _w);	
-// vbt à voir s'il faut garder le copyrect
-//	markBlockAsDirty(x, y, len * CHAR_W, CHAR_H, _layerScale);
 	return str - 1;
 }
 
@@ -503,10 +498,9 @@ void Video::MAC_decodeMap(int level, int room) {
 	for (int j = 0; j < 16; ++j) {
 		bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
 		int start = specialTextColor ? 14 : 0;
-		int end = specialTextColor ? 16 : 16;
 
-		for (int i = start; i < end; ++i) {
-			const int color = j * 16 + i;
+		for (int i = start; i < 16; ++i) {
+			const int color = (j << 4) + i;
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
@@ -517,16 +511,19 @@ void Video::MAC_decodeMap(int level, int room) {
 			continue;
 		}
 		for (int i = 0; i < 16; ++i) {
-			const int color = j * 16 + i + 256;
+			const int color = (j << 4) + i + 256;
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
 }
 
 void Video::fillRect(int x, int y, int w, int h, uint8_t color) {
-	uint8_t *p = _frontLayer + y * _layerScale * _w + x * _layerScale;
-	for (int j = 0; j < h * _layerScale; ++j) {
-		memset(p, color, w * _layerScale);
+	uint8_t *p = _frontLayer + (y * _layerScale * _w) + (x * _layerScale);
+	const int fillWidth = w * _layerScale;
+	const int fillHeight = h * _layerScale;
+
+	for (int j = 0; j < fillHeight; ++j) {
+		memset(p, color, fillWidth);
 		p += _w;
 	}
 }
@@ -750,9 +747,7 @@ void Video::convert_8bpp_to_4bpp_inplace(uint8_t *buffer, size_t pixel_count) {
     // Process two pixels at a time, overwriting the input
     // Process two pixels at a time, overwriting the input
     for (size_t i = 0; i < pixel_count; i += 2) {
-		uint8_t hi = buffer[i];
-		uint8_t lo = buffer[i + 1] & 0xF;
-		buffer[i>>1] = (hi << 4) | lo;
+		buffer[i >> 1] = (buffer[i] << 4) | (buffer[i + 1] & 0xF);
 	}
 }
 /*
