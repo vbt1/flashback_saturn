@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 //#include <assert.h>
 extern "C" {
 #include <string.h>
@@ -363,7 +363,7 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     for (uint16_t i = 0; i < count; i++) {
                         *target = odd ? (*target | color) : (color << 4);
                         target += odd;
-                        odd = !odd;
+                        odd ^= 1;
                     }
                 } else { // 8bpp font or menu
                     uint8_t *target = dst + row_offset + x + (buf->type == 2 ? buf->dst_x : 0);
@@ -385,7 +385,6 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
         case 0x60: // Copy
             if (buf->type == 1) { // 4bpp
                 uint8_t *target = dst + row_offset + (x >> 1);
-                uint8_t odd = x & 1;
                 uint16_t i;
                 for (i = 0; i + 1 < count; i += 2) {
                     uint8_t color1 = *src++ & 0x0F;
@@ -393,6 +392,7 @@ void decodeC211(const uint8_t *src, int w, int h, DecodeBuffer *buf) {
                     *target++ = (color1 << 4) | color2;
                 }
                 if (i < count) {
+					uint8_t odd = x & 1;
                     uint8_t color = *src++ & 0x0F;
                     *target = odd ? (*target | color) : (color << 4);
                 }
