@@ -1,6 +1,6 @@
 #pragma GCC optimize ("O2")
 #define PRELOAD_MONSTERS 1
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -491,10 +491,11 @@ void Video::MAC_decodeMap(int level, int room) {
 	unsigned int e = _stub->getTimeStamp();
 	emu_printf("--duration bg : %d\n",e-s);
 #endif
-	Color roomPalette[512];
-//	Color *roomPalette = (Color *)hwram_ptr;
-	_res->MAC_setupRoomClut(level, room, roomPalette);
 
+	Color roomPalette[512];
+	_res->MAC_setupRoomClut(level, room, roomPalette);
+#if 0
+//	Color *roomPalette = (Color *)hwram_ptr;
 	for (int j = 0; j < 16; ++j) {
 		bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
 		int start = specialTextColor ? 14 : 0;
@@ -515,6 +516,23 @@ void Video::MAC_decodeMap(int level, int room) {
 			_stub->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
+#else
+	for (int j = 0; j < 16; ++j) {
+    bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
+    int start = specialTextColor ? 14 : 0;
+    for (int i = start; i < 16; ++i) {
+        const int color = (j << 4) + i;
+        _stub->setPaletteEntry(color, &roomPalette[color]);
+    }
+
+    if (j != 5 && j != 7 && j != 14) {
+        for (int i = 0; i < 16; ++i) {
+            const int color = (j << 4) + i + 256;
+            _stub->setPaletteEntry(color, &roomPalette[color]);
+        }
+    }
+}
+#endif
 }
 
 void Video::fillRect(int x, int y, int w, int h, uint8_t color) {

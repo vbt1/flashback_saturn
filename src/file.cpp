@@ -22,8 +22,6 @@ extern "C" {
 #include "gfs_wrap.h"
 }
 #include "file.h"
-#define GFS_BYTE_SCT(byte, sctsiz)  \
-    ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
 struct File_impl {
     bool _ioErr;
@@ -94,16 +92,22 @@ struct stdFile : File_impl {
         }
     }
 
-	uint8_t *batchRead (uint8_t *ptr, uint32_t len)
+#define SECTOR_SHIFT 11
+#define SECTOR_MASK  0x7FF
+
+	uint8_t *batchRead(uint8_t *ptr, uint32_t len)
 	{
-		Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-		Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+		Uint32 start_sector = _fp->f_seek_pos >> SECTOR_SHIFT;
+		Uint32 skip_bytes = _fp->f_seek_pos & SECTOR_MASK;
+
 		GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-		Sint32 tot_bytes = len + skip_bytes;
-		Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+
+		Uint32 tot_bytes = len + skip_bytes;
+		Uint32 tot_sectors = (tot_bytes + SECTOR_MASK) >> SECTOR_SHIFT;
 		Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
-		_fp->f_seek_pos += (readBytes - skip_bytes);
-		return &ptr[skip_bytes];
+		_fp->f_seek_pos += readBytes - skip_bytes;
+
+		return ptr + skip_bytes;
 	}
 };
 

@@ -509,6 +509,8 @@ emu_printf("change level\n");
 		changeLevel();
 //emu_printf("7hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,_vid._layerSize);
 		_pge_opGunVar = 0;
+		if(SEL_MSIC)
+			return;
 		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique, changement de niveau
 		return;
 	}
@@ -531,11 +533,16 @@ if(_stub->_pi.load)
 emu_printf("9hwram free %08d lwram used %08d lwram2 %08d\n",end1-(int)hwram_ptr,(int)current_lwram-0x200000,((int)ADR_WORKRAM_L_END-CUTCMP6));
 #endif
 			_loadMap = false;
+
+			if(!SEL_MSIC)
+			{
  // vbt à mettre si slave reduit les plantages
-			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
-				_mix.unpauseMusic(); // vbt : on reprend où la musique était
-			else
-				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+				if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+					_mix.unpauseMusic(); // vbt : on reprend où la musique était
+				else
+					_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
+			}
+			// vbt : ajout sinon pas de musique
 			already_done = 1;
 		}
 		memset4_fast(&_vid._frontLayer[51 << 9], 0x00,32 << 9);
@@ -588,12 +595,14 @@ if (/*_demoBin != -1*/ 0 || handleConfigPanel()) {
 	if(_cut._stop) // utile si on vien de lire une cutscene 
 	// trouver le bon moyen de pas le faire 2x
 	{
-		if(!already_done)
-
-		if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
-			_mix.unpauseMusic(); // vbt : on reprend où la musique était
-		else
-			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+		if(!SEL_MSIC)
+		{
+			if(!already_done)
+			if(statdata.report.fad!=0xFFFFFF && statdata.report.fad!=0)
+				_mix.unpauseMusic(); // vbt : on reprend où la musique était
+			else
+				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel); // vbt : ajout sinon pas de musique	
+		}
 		_cut._stop = false;
 //		_stub->_pi.backspace = false;
 //		_stub->_pi.quit = false;
@@ -753,8 +762,11 @@ void Game::playCutscene(int id) {
 		}
 
 		if (_cut._id == 0x3D) {
-			_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
-			_mix.stopMusic(1);
+			if(!SEL_MSIC)
+			{
+				_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
+				_mix.stopMusic(1);
+			}
 			_cut.playCredits();
 		}
 #ifdef FRAME
@@ -2019,7 +2031,10 @@ slScrAutoDisp(NBG0ON|NBG1ON|SPRON);
 	_stub->copyRect(0, 0, _vid._w, 100, _vid._frontLayer, _vid._w);
 	_cut.playSet((uint8_t *)CUTCMP6, 0x2B14, false, false, 94);
 // vbt : bon endroit pour lire la piste audio
-	_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
+	if(!SEL_MSIC)
+	{
+		_mix.playMusic(Mixer::MUSIC_TRACK + _currentLevel);
+	}
 }
 
 void Game::drawIcon(uint8_t iconNum, int16_t x, int16_t y, uint8_t colMask) {

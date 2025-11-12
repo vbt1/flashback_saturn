@@ -8,6 +8,8 @@ extern "C" {
 #include <sl_def.h>
 #include <sega_cdc.h>
 #include "cdtoc.h"
+#include "sat_mem_checker.h"
+extern Uint8 selected;
 Bool GFCD_WaitScdqFlag(void);
 }
 #include "mixer.h"
@@ -54,6 +56,8 @@ uint32 Mixer::getSampleRate() const {
 
 void Mixer::pauseMusic(void)
 {
+	if(SEL_MSIC)
+		return;
 	// Get current address
 	CDC_GetCurStat(&statdata);
 }
@@ -61,6 +65,8 @@ void Mixer::pauseMusic(void)
 void Mixer::unpauseMusic(void)
 {
 //	emu_printf( "Mixer::unpauseMusic() _musicTrack %d %d\n",_musicTrack,statdata.report.fad);
+	if(SEL_MSIC)
+		return;
 
 	CdcPly ply;
 
