@@ -1873,16 +1873,10 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 					default:
 						break; // Unknown monster
 				}
-
 				static const int kMonsterPalette = 5;
-
 				_res.MAC_copyClutN(palette, kMonsterPalette + 16, index, 16);
 				const int base_color = 256 + kMonsterPalette * 16;
-				Color *palette_ptr = &palette[base_color];
-
-				for (int i = 0; i < 16; i++) {
-					_stub->setPaletteEntry(base_color + i,     &palette_ptr[i]);
-				}
+				_stub->setPaletteRange(base_color, &palette[base_color], 16);
 //			}
 //			break;
 //		}
@@ -2956,27 +2950,6 @@ void Game::SAT_loadSpriteData(const uint8_t* spriteData, int baseIndex, uint8_t*
 }
 
 /*
-void Game::SAT_preloadIcon()
-{
-		Color clut[512];
-		_res.MAC_setupRoomClut(_currentLevel, _currentRoom, clut);		
-
-		const int baseColor = 256;
-		for (int i = 0; i < 256; ++i) {
-			int color = baseColor + i;
-			_stub->setPaletteEntry(color, &clut[color]);
-		}
-					
-	for (int i = 0; i <= 34;i++)
-	{
-//		int frame = _res.MAC_getPersoFrame(i);
-		
-//		if(frame>=0)
-			_vid.MAC_drawSprite(60, 60, _res._icn, i, 0, 0);
-		slSynch();
-	}
-}
-
 void Game::SAT_preloadPerso()
 {
 		Color clut[512];

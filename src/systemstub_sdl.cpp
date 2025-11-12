@@ -167,6 +167,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void destroy();
 	virtual void setPaletteEntry(uint16 i, const Color *c);
 	virtual void getPaletteEntry(uint16 i, Color *c);
+	virtual void setPaletteRange(uint16 start, const Color *c, int count);
 	virtual void setOverscanColor(uint8 i);
 	virtual void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
 	virtual void updateScreen(int shakeOffset);
@@ -253,6 +254,12 @@ void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 */
 void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
 	_pal[i] = RGB(c->r, c->g, c->b);
+}
+
+void SystemStub_SDL::setPaletteRange(uint16 start, const Color *c, int count) {
+	for (int i = 0; i < count; ++i) {
+		_pal[start + i] = RGB(c[i].r, c[i].g, c[i].b);
+	}
 }
 
 void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {

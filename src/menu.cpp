@@ -175,10 +175,8 @@ void Menu::displayTitleScreenMac(int num) {
 		Color palette[16];
 		_res->MAC_copyClutN(palette, 0, clutBaseColor + i, 16);
 		const int basePaletteColor = i * 16;
-		for (int j = 0; j < 16; ++j) {
-			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
-			_stub->setPaletteEntry(256+basePaletteColor + j, &palette[j]);
-		}
+		_stub->setPaletteRange(basePaletteColor, palette, 16);
+		_stub->setPaletteRange(256 + basePaletteColor, palette, 16);
 	}
 
 	if (num == kMacTitleScreen_MacPlay) {
@@ -186,9 +184,7 @@ void Menu::displayTitleScreenMac(int num) {
 		for (int i = 0; i < 2; ++i) {
 			_res->MAC_copyClutN(palette, 0, 55 + i, 16);
 			const int basePaletteColor = (12 + i) * 16;
-			for (int j = 0; j < 16; ++j) {
-				_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
-			}
+			_stub->setPaletteRange(basePaletteColor, palette, 16);
 		}
 	} else if (num == kMacTitleScreen_Presage) {
 		Color c;
@@ -585,11 +581,8 @@ bool Menu::handleResumeScreen() {
 
 	Color clut[32];
 	_res->MAC_copyClutN(clut, 0, 0x37, 32);  // icons
-
 	const int baseColor = 12 * 16;
-	for (int i = 0; i < 32; ++i) {
-		_stub->setPaletteEntry(baseColor + i, &clut[i]);
-	}
+	_stub->setPaletteRange(baseColor, clut, 32);
 
 ///--------------------------------------
 	for(int i =0;i<19456;i++)
@@ -615,12 +608,8 @@ bool Menu::handleResumeScreen() {
 				Color clut[192];
 				_res->SAT_previewRoom(level, room, clut);
 
-				for (int color = 0; color < 12 * 16; ++color) {
-					int j = color / 16;
-					if (j < 4 || j >= 8) {
-						_stub->setPaletteEntry(0x100 + color, &clut[color]);
-					}
-				}
+				_stub->setPaletteRange(0x100, &clut[0], 64);
+				_stub->setPaletteRange(0x100 + 128, &clut[128], 64);
 				loaded=currentSave;
 				slSynch();
 			}

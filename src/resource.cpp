@@ -1561,74 +1561,61 @@ void Resource::MAC_setupRoomClut(int level, int room, Color *clut) {
     int offset = _macLevelColorOffsets[num];
     int conradPal = 0x30;
     
-    // Special case for certain rooms in level 1 - optimized check
+    // Combine level checks - use single branch
     if (level == 1) {
-        // Single condition check instead of multiple OR operations
-        if ((room >= 27 && room <= 30) || (room >= 35 && room <= 37) || 
-            room == 45 || room == 46) {
+        unsigned int r = room;
+        if (((r - 27) <= 3) | ((r - 35) <= 2) | ((r - 45) <= 1)) {
             offset = 32;
             conradPal = 0x31;
         }
     }
-
-	MAC_copyClutN(clut, 0, offset, 64);
-	MAC_copyClutN(clut, 8, offset, 64); 
     
-    // Single pass copy and swap operation
-    // Pre-allocate on stack instead of dynamic allocation
-    Color tmp[256] __attribute__((aligned(8))); // 8-byte alignment for SuperH2
+    MAC_copyClutN(clut, 0, offset, 64);
+    MAC_copyClutN(clut, 8, offset, 64);
     
-    // Use optimized memory copy (SuperH2 has efficient block transfer)
-    memcpy(tmp, clut, sizeof(Color) * 256);
-
-	MAC_copyClutN(clut, 16,offset, 64);
+    Color tmp[256] __attribute__((aligned(4)));
+    memcpyl(tmp, clut, sizeof(Color) << 8);
     
-    // Character and icon palettes - batch operations
+    MAC_copyClutN(clut, 16, offset, 64);
     MAC_copyClutN(clut, 0x14, conradPal, 16);
     MAC_copyClutN(clut, 0x1A, _macLevelColorOffsets[0] + 2, 16);
-
-    MAC_copyClutN(clut, 0x0C, 0x37, 32);  // Copies 0x37,0x38 to 0x0C,0x0D
-    MAC_copyClutN(clut, 0x1C, 0x37, 32);  // Copies 0x37,0x38 to 0x1C,0x1D
     
-	// Level 1 metro palette - optimized
+    MAC_copyClutN(clut, 0x0C, 0x37, 32);
+    MAC_copyClutN(clut, 0x1C, 0x37, 32);
+    
     if (level == 1) {
-        Color *metro_base = &clut[0x1F * 16];
-        // Unrolled for better performance
-        for (int i = 0; i < 15; i += 3) {
-            metro_base[i] = tmp[i + 1];
-            metro_base[i + 1] = tmp[i + 2];
-            metro_base[i + 2] = tmp[i + 3];
-        }
-        metro_base[15] = tmp[1]; // 4bpp only
+        Color *metro = &clut[0x1F0];
+        Color *t = tmp;
+        metro[0]=t[1]; metro[1]=t[2]; metro[2]=t[3];
+        metro[3]=t[4]; metro[4]=t[5]; metro[5]=t[6];
+        metro[6]=t[7]; metro[7]=t[8]; metro[8]=t[9];
+        metro[9]=t[10]; metro[10]=t[11]; metro[11]=t[12];
+        metro[12]=t[13]; metro[13]=t[14]; metro[14]=t[15];
+        metro[15]=t[1];
     }
     
-    // LUT-based color swap - use static const for better cache locality
-	static const unsigned char lut[30] __attribute__((aligned(4))) = {
+    static const unsigned char lut[30] __attribute__((aligned(4))) = {
         14,15,30,31,46,47,62,63,78,79,94,95,110,111,142,143,
         126,127,254,255,174,175,190,191,206,207,222,223,238,239
     };
-    // Set white color once
-// vbt : on vire pour voir
-//    clut[69] = {255, 255, 255};
-
-	uint8_t is_room59 = (level==1 && room==59) ? 1:0;
-// couleur 62
+    
+    const int skip_idx = (level == 1 && room == 59) ? 6 : -1;
+    
     for (int i = 0; i < 30; i += 2) {
         int idx1 = lut[i];
         int idx2 = lut[i + 1];
+        int tmp_base = 128 + i;
         
-        // Batch the swaps
-        Color temp1 = clut[idx1];
-        Color temp2 = clut[idx2];
-
-        clut[idx2] = tmp[128 + i + 1];
-        clut[128 + i + 1] = temp2;
-
-        if(is_room59 && (i==6))
-			continue;
-
-        clut[idx1] = tmp[128 + i];
-        clut[128 + i] = temp1;
+        Color t1 = clut[idx1];
+        Color t2 = clut[idx2];
+        
+        clut[idx2] = tmp[tmp_base + 1];
+        clut[tmp_base + 1] = t2;
+        
+        if (i != skip_idx) {
+            clut[idx1] = tmp[tmp_base];
+            clut[tmp_base] = t1;
+        }
     }
 }
 #endif

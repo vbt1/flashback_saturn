@@ -167,23 +167,23 @@ void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 */
 void Video::setTextPalette() {
 	//	debug(DBG_VIDEO, "Video::setTextPalette()");
-	const uint8 *p = _textPal;
-	for (int i = 0; i < 16; ++i) { // vbt : à faire plus tard, mettre les 2 dernieres couleurs
-		uint16 color = READ_LE_UINT16(p); p += 2;
-		Color c;
-		c.b = (color & 0x00F) << 2;
-		c.g = (color & 0x0F0) >> 2;
-		c.r = (color & 0xF00) >> 6;
-		if(i < 14)
-		{
-			_stub->setPaletteEntry(0xE0 + i, &c);  // vbt : front palette
-		}
-		else
-		{
-			_stub->setPaletteEntry(68 + i - 14, &c);  // vbt : front palette
-		}
-		_stub->setPaletteEntry(0x1E0 + i, &c);  // vbt : sprite palette
-	}
+    const uint8 *p = _textPal;
+
+    for (int i = 0; i < 16; ++i) {
+        uint16 color = READ_LE_UINT16(p);
+        p += 2;
+
+        Color c;
+        uint16 t = color & 0xFFF;
+        c.b = (t << 2) & 0x3F;     // (color & 0x00F) << 2
+        c.g = (t >> 2) & 0x3F;     // (color & 0x0F0) >> 2
+        c.r = (t >> 6) & 0x3F;     // (color & 0xF00) >> 6
+
+        // Precompute palette index
+        uint16 idxFront = (i < 14) ? (0xE0 + i) : (68 + i - 14);
+        _stub->setPaletteEntry(idxFront, &c);
+        _stub->setPaletteEntry(0x1E0 + i, &c);
+    }
 }
 
 void Video::setPalette0xF() {
@@ -201,11 +201,8 @@ void Video::setPalette0xF() {
 void Video::setIconsPalette() {
 	Color clut[32];
 	_res->MAC_copyClutN(clut, 0, 0x37, 32);  // icons
-
 	const int baseColor = 12 * 16 + 256;
-	for (int i = 0; i < 32; ++i) {
-		_stub->setPaletteEntry(baseColor + i, &clut[i]);
-	}
+	_stub->setPaletteRange(baseColor, clut, 32);
 }
 
 /*
@@ -498,10 +495,9 @@ void Video::MAC_decodeMap(int level, int room) {
 		bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
 		int start = specialTextColor ? 14 : 0;
 
-		for (int i = start; i < 16; ++i) {
-			const int color = (j << 4) + i;
-			_stub->setPaletteEntry(color, &roomPalette[color]);
-		}
+		int count = 16 - start;
+		const int baseColor = (j << 4) + start;
+		_stub->setPaletteRange(baseColor, &roomPalette[baseColor], count);
 	}
 
 //vbt ajout pour sprites	
@@ -509,26 +505,21 @@ void Video::MAC_decodeMap(int level, int room) {
 		if (j == 5 || j == 7 || j == 14 /*|| j == 15*/) { // utile uniquement si on affiche les textes en sprite
 			continue;
 		}
-		for (int i = 0; i < 16; ++i) {
-			const int color = (j << 4) + i + 256;
-			_stub->setPaletteEntry(color, &roomPalette[color]);
-		}
+		const int baseColor = (j << 4) + 256;
+		_stub->setPaletteRange(baseColor, &roomPalette[baseColor], 16);
 	}
 #else
 	for (int j = 0; j < 16; ++j) {
-    bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
-    int start = specialTextColor ? 14 : 0;
-    for (int i = start; i < 16; ++i) {
-        const int color = (j << 4) + i;
-        _stub->setPaletteEntry(color, &roomPalette[color]);
-    }
+	bool specialTextColor = (j == 5 || j == 7 || j == 14 || j == 15);
+	int start = specialTextColor ? 14 : 0;
+	int count = 16 - start;
+	const int baseColor = (j << 4) + start;
+	_stub->setPaletteRange(baseColor, &roomPalette[baseColor], count);
 
-    if (j != 5 && j != 7 && j != 14) {
-        for (int i = 0; i < 16; ++i) {
-            const int color = (j << 4) + i + 256;
-            _stub->setPaletteEntry(color, &roomPalette[color]);
-        }
-    }
+	if (j != 5 && j != 7 && j != 14) {
+		const int baseColor = (j << 4) + 256;
+		_stub->setPaletteRange(baseColor, &roomPalette[baseColor], 16);
+	}
 }
 #endif
 }
