@@ -280,10 +280,10 @@ void Menu::handleOptionsScreen() {
 	};
 
 	static const char *leftOptions[] = {
-		"ENG", "YES", "YES", "YES", "YES", "YES"
+		"ENG", "YES", "YES", "MCD", "YES", "YES"
 	};
 	static const char *rightOptions[] = {
-		"FRA", "NO",  "NO",  "NO",  "NO",  "NO"
+		"FRA", "NO",  "NO",  "STD",  "NO",  "NO"
 	};
 
 	static const uint8_t yPositions[] = { 11, 13, 15, 17, 19, 21 };
@@ -562,7 +562,6 @@ bool Menu::handleLevelScreen() {
 		}
 		if (_stub->_pi.enter) {
 			_stub->_pi.enter = false;
-//			_skill = currentSkill;
 			_level = currentLevel;
 			return true;
 		}
@@ -584,14 +583,12 @@ bool Menu::handleResumeScreen() {
 
 	memset((uint8_t *)FRONT,0x00, _vid->_layerSize);
 
-	Color clut[256];
-//	_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
-//	_res->MAC_copyClut16(clut, 0x1D, 0x38);
-	_res->MAC_copyClutN(clut, 0x0C, 0x37, 32);  // icons
+	Color clut[32];
+	_res->MAC_copyClutN(clut, 0, 0x37, 32);  // icons
 
 	const int baseColor = 12 * 16;
 	for (int i = 0; i < 32; ++i) {
-		_stub->setPaletteEntry(baseColor + i, &clut[baseColor + i]);
+		_stub->setPaletteEntry(baseColor + i, &clut[i]);
 	}
 
 ///--------------------------------------
@@ -615,7 +612,7 @@ bool Menu::handleResumeScreen() {
 			drawString( description, 6 + i  * 3, 4, (currentSave == i) ? 2 : 3);
 
 			if (i == currentSave && loaded != currentSave){
-				Color clut[384];
+				Color clut[192];
 				_res->SAT_previewRoom(level, room, clut);
 
 				for (int color = 0; color < 12 * 16; ++color) {

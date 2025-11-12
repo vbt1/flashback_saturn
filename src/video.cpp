@@ -199,14 +199,12 @@ void Video::setPalette0xF() {
 }
 
 void Video::setIconsPalette() {
-	Color clut[512];
-//	_res->MAC_copyClut16(clut, 0x1C, 0x37);  // icons
-//	_res->MAC_copyClut16(clut, 0x1D, 0x38);
-	_res->MAC_copyClutN(clut, 0x1C, 0x37, 32);  // icons
+	Color clut[32];
+	_res->MAC_copyClutN(clut, 0, 0x37, 32);  // icons
 
 	const int baseColor = 12 * 16 + 256;
 	for (int i = 0; i < 32; ++i) {
-		_stub->setPaletteEntry(baseColor + i, &clut[baseColor + i]);
+		_stub->setPaletteEntry(baseColor + i, &clut[i]);
 	}
 }
 
