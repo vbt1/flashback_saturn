@@ -55,7 +55,7 @@ extern void snd_init();
 #define SYS_CDINIT2() ((**(void(**)(void))0x600029c)())
 
 /* Needed for audio */
-#define SND_BUFFER_SIZE (128)
+#define SND_BUFFER_SIZE (96)
 #define SND_BUF_SLOTS 1
 
 /* Needed for video */
@@ -111,15 +111,15 @@ typedef struct {
 */
 /* Required for audio sound buffers */
 //Uint8 buffer_filled[2];
-Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
+Uint8 ring_bufs[SND_BUFFER_SIZE * SND_BUF_SLOTS * 2];
 #ifdef SOUND
 static PcmWork pcm_work[2];
 static PcmHn pcm[2];
 #endif
-Uint8 curBuf = 0;
-Uint8 curSlot = 0;
+//Uint8 curBuf = 0;
+//Uint8 curSlot = 0;
 //static Mixer *mix = NULL;
-static volatile Uint8 audioEnabled = 1;
+//static volatile Uint8 audioEnabled = 1;
 
 /* CDDA */
 
@@ -149,14 +149,14 @@ uint8 isNTSC(void);
 /* SDL WRAPPER */
 struct SystemStub_SDL : SystemStub {
 	enum {
-		MAX_BLIT_RECTS = 200,
-		SOUND_SAMPLE_RATE = 8400,
-		JOYSTICK_COMMIT_VALUE = 3200
+//		MAX_BLIT_RECTS = 200,
+		SOUND_SAMPLE_RATE = 8400
+//		JOYSTICK_COMMIT_VALUE = 3200
 	};
 
 //	uint8 _overscanColor;
 	uint16 _pal[512];
-	uint16 _screenW, _screenH;
+//	uint16 _screenW, _screenH;
 
 	/* Controller data */
 	PerDigital *input_devices[MAX_INPUT_DEVICES];
@@ -215,9 +215,9 @@ void SystemStub_SDL::init(const char *title, uint16 w, uint16 h) {
 
 	memset(_pal, 0, sizeof(_pal));
 
-	audioEnabled = 0;
-	curBuf = 0;
-	curSlot = 0;
+//	audioEnabled = 0;
+//	curBuf = 0;
+//	curSlot = 0;
 //emu_printf("SystemStub_SDL::init\n");	
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
