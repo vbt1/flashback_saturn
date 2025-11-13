@@ -182,7 +182,7 @@ int lzw_compress(unsigned char *dst, unsigned char *src, size_t src_input_size) 
     max_available_entries = total_codes - FIRST_STRING - 1;
     max_available_code = total_codes - 2;
     available_entries = max_available_entries;
-    memset(dictionary, 0, 256 * sizeof(encoder_entry_t));
+    memset(dictionary, 0, sizeof(encoder_entry_t) << 8);
     dst[dst_index++] = (maxbits - 9);
     while (src_index < src_input_size) {
 //	emu_printf("src_index %d /%d \n",src_index,src_input_size);

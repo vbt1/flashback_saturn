@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 //#include <assert.h>
 extern "C" {
 #include <string.h>

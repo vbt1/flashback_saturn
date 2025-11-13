@@ -308,48 +308,48 @@ partial_cache:
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
     if (ptr == NULL || stream == NULL || size == 0 || nmemb == 0) 
         return 0;
-    
+
     const Uint32 f_seek_pos = stream->f_seek_pos;
     const Uint32 request_size = nmemb * size;
     const Uint32 remaining_data = stream->f_size - f_seek_pos;
     const Uint32 dataToRead = (request_size < remaining_data) ? request_size : remaining_data;
-    
+
     Uint32 skip_bytes = f_seek_pos & (SECTOR_SIZE - 1);
     Uint32 start_sector = f_seek_pos / SECTOR_SIZE;
-    
+
     if ((dataToRead + skip_bytes < CACHE_SIZE) && 
         (f_seek_pos >= cache_offset) &&
         ((f_seek_pos + dataToRead) <= (cache_offset + CACHE_SIZE))) {
-        
+
         const Uint32 offset_in_cache = f_seek_pos - cache_offset;
         memcpy(ptr, cache + offset_in_cache, dataToRead);
         stream->f_seek_pos += dataToRead;
         return dataToRead;
     }
-    
+
     if (dataToRead + skip_bytes < CACHE_SIZE) {
         start_sector = f_seek_pos / SECTOR_SIZE;
         skip_bytes = f_seek_pos & (SECTOR_SIZE - 1);
-        
+
         GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
         const Uint32 tot_bytes = CACHE_SIZE;
         const Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
         GFS_Fread(stream->fid, tot_sectors, (Uint8*)cache, tot_bytes);
         cache_offset = start_sector * SECTOR_SIZE;
-        
+
         const Uint32 offset_in_cache = f_seek_pos - cache_offset;
         memcpy(ptr, cache + offset_in_cache, dataToRead);
         stream->f_seek_pos += dataToRead;
         return dataToRead;
     }
-    
+
     start_sector = f_seek_pos / SECTOR_SIZE;
     skip_bytes = f_seek_pos & (SECTOR_SIZE - 1);
-    
+
     GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
     const Sint32 tot_bytes = dataToRead + skip_bytes;
     const Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-    
+
     Uint32 readBytes;
     if (skip_bytes) {
         Uint8 *read_buffer = (Uint8*)current_lwram;
@@ -358,7 +358,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
     } else {
         readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
     }
-    
+
     stream->f_seek_pos += (readBytes - skip_bytes);
     return (readBytes - skip_bytes);
 }

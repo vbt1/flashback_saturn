@@ -55,7 +55,7 @@ extern void snd_init();
 #define SYS_CDINIT2() ((**(void(**)(void))0x600029c)())
 
 /* Needed for audio */
-#define SND_BUFFER_SIZE (1024)
+#define SND_BUFFER_SIZE (128)
 #define SND_BUF_SLOTS 1
 
 /* Needed for video */
