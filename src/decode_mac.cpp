@@ -155,6 +155,8 @@ uint8_t* decodeLzss(File& f, uint32_t& decodedSize, const ResourceMacEntry* entr
 //		emu_printf("Lzss sz2 %d %d type %d\n", srcSize, decodedSize, entry->type);
 		batch = (uint8_t*)FRONT;
 	}
+vbt bug !!!!!!!
+batch est affecté alors que cela retourne le nombre de bits lus
 	batch = f.batchRead(batch, srcSize);
 
     uint8_t* const end = dst + decodedSize;
